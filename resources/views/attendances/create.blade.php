@@ -112,57 +112,6 @@
                                             <input type="file" id="time_stamp2" name="time_stamp2" class="form-control" accept="image/*">
                                         </div>
                                     </div>
-                                    else
-                                    <!-- Enhanced Employee Interface (Mobile App Version) -->
-                                    <div cl@ass="col-md-6 col-sm-12 mx-auto">
-                                        <input type="hidden" id="employee_id" name="employee_id" value="{{ $employees->where('first_name', Auth::user()->first_name)->first()->id }}">
-                                        <input type="hidden" id="date_attended" name="date_attended" value="{{ date('Y-m-d') }}">
-
-                                        <div class="text-center mb-4">
-                                            <div class="user-avatar mb-3">
-                                                <i class="fas fa-user-circle fa-5x text-primary"></i>
-                                            </div>
-                                            <h4 class="text-primary font-weight-bold">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h4>
-                                            <p class="text-muted">{{ date('l, F j, Y') }}</p>
-                                        </div>
-
-                                        <div class="text-center mb-4">
-                                            <div id="clock" class="display-4 text-primary font-weight-bold"></div>
-                                        </div>
-
-                                        <div id="attendance_actions" class="text-center mb-4">
-                                            <div id="time_in_group">
-                                                <button type="button" id="captureTimeIn" class="btn btn-primary btn-lg btn-block rounded-pill shadow-sm">
-                                                    <i class="fas fa-sign-in-alt mr-2"></i> Time In
-                                                </button>
-                                                <input type="hidden" id="time_in" name="time_in">
-                                                <input type="file" id="time_stamp1" name="time_stamp1" style="display: none;" accept="image/*" capture="camera">
-                                            </div>
-                                            <div id="time_out_group" style="display: none;">
-                                                <button type="button" id="captureTimeOut" class="btn btn-danger btn-lg btn-block rounded-pill shadow-sm">
-                                                    <i class="fas fa-sign-out-alt mr-2"></i> Time Out
-                                                </button>
-                                                <input type="hidden" id="time_out" name="time_out">
-                                                <input type="file" id="time_stamp2" name="time_stamp2" style="display: none;" accept="image/*" capture="camera">
-                                            </div>
-                                        </div>
-
-                                        <div id="attendance_submitted" class="text-center mb-4" style="display: none;">
-                                            <div class="alert alert-success shadow-sm">
-                                                <i class="fas fa-check-circle mr-2"></i> You have already submitted your attendance for today.
-                                            </div>
-                                        </div>
-
-                                        <div class="text-center">
-                                            <img id="capturedImage" class="img-fluid rounded shadow" style="max-width: 100%; display: none;" alt="Captured Image">
-                                        </div>
-
-                                        <div class="text-center mt-4">
-                                            <button type="submit" id="submitAttendance" class="btn btn-success btn-lg btn-block rounded-pill shadow-sm" style="display: none;">
-                                                <i class="fas fa-paper-plane mr-2"></i> Submit Attendance
-                                            </button>
-                                        </div>
-                                    </div>
                                 @endif
                             </div>
 
