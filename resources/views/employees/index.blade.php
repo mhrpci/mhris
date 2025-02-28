@@ -3,6 +3,36 @@
 @section('css')
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        .custom-file-input:lang(en)~.custom-file-label::after {
+            content: "Browse";
+        }
+        .custom-file-label {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        #importSubmitBtn:disabled {
+            cursor: not-allowed;
+        }
+        #importSubmitBtn .loading-state {
+            display: none;
+        }
+        #importSubmitBtn.loading .normal-state {
+            display: none;
+        }
+        #importSubmitBtn.loading .loading-state {
+            display: inline-block;
+        }
+        .progress {
+            border-radius: 0.25rem;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+        }
+        .progress-bar {
+            transition: width .6s ease;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -290,36 +320,49 @@
 
         <!-- Import Modal -->
         <div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="importModalLabel"><i class="fas fa-file-import"></i> Import Employees</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <h5 class="modal-title" id="importModalLabel">
+                            <i class="fas fa-file-import"></i> Import Employees
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form action="{{ route('employees.import') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('employees.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
                         @csrf
                         <div class="modal-body">
                             <div class="form-group">
-                                <label for="inputGroupFile" class="form-label">Choose file</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text" id="inputGroupFileAddon"><i class="fas fa-upload"></i></span>
-                                    </div>
-                                    <input type="file" class="form-control" id="inputGroupFile" name="file" required aria-describedby="inputGroupFileAddon">
+                                <label for="inputGroupFile" class="form-label">
+                                    <i class="fas fa-file-excel"></i> Choose Excel/CSV File
+                                </label>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="inputGroupFile" name="file" required accept=".csv,.xlsx,.xls">
+                                    <label class="custom-file-label" for="inputGroupFile">No file chosen</label>
                                 </div>
+                                <small class="form-text text-muted mt-2">
+                                    <i class="fas fa-info-circle"></i> Accepted formats: .csv, .xlsx, .xls
+                                </small>
                             </div>
-                            <div class="form-group">
-                                <div class="progress">
-                                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                            <div class="form-group mb-0">
+                                <div class="progress" style="height: 20px;">
+                                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                                 </div>
-                                <small class="form-text text-muted">Please upload a valid CSV or Excel file.</small>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Close</button>
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-file-import"></i> Import Employees</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="importSubmitBtn">
+                                <span class="normal-state">
+                                    <i class="fas fa-file-import"></i> Import Employees
+                                </span>
+                                <span class="loading-state d-none">
+                                    <i class="fas fa-spinner fa-spin"></i> Importing...
+                                </span>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -552,23 +595,73 @@
         });
     }
 
-    // Import form submission with enhanced alerts
-    $('#importModal form').on('submit', function(e) {
+    // Enhanced file input handling
+    $('.custom-file-input').on('change', function() {
+        let fileName = $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').html(fileName || 'No file chosen');
+        
+        // Validate file type
+        let fileExtension = fileName.split('.').pop().toLowerCase();
+        let allowedExtensions = ['csv', 'xlsx', 'xls'];
+        
+        if (!allowedExtensions.includes(fileExtension)) {
+            showErrorAlert('Please select a valid Excel or CSV file.');
+            $(this).val('');
+            $(this).next('.custom-file-label').html('No file chosen');
+            return false;
+        }
+    });
+
+    // Enhanced import form submission
+    $('#importForm').on('submit', function(e) {
         e.preventDefault();
         let form = this;
+        let submitBtn = $('#importSubmitBtn');
         let progressBar = $('#progressBar');
-        progressBar.css('width', '0%');
         let formData = new FormData(form);
+
+        // Validate file selection
+        if (!$('#inputGroupFile')[0].files[0]) {
+            showErrorAlert('Please select a file to import.');
+            return false;
+        }
+
+        // Reset progress bar and show initial state
+        progressBar
+            .css('width', '0%')
+            .text('Preparing upload...')
+            .removeClass('bg-danger')
+            .addClass('bg-success');
+        
+        // Disable submit button and show loading state
+        submitBtn.prop('disabled', true).addClass('loading');
 
         $.ajax({
             xhr: function() {
                 let xhr = new window.XMLHttpRequest();
+                
+                // Upload progress
+                xhr.upload.addEventListener('loadstart', function(e) {
+                    progressBar.text('Starting upload...');
+                }, false);
+                
                 xhr.upload.addEventListener('progress', function(e) {
                     if (e.lengthComputable) {
-                        let percentComplete = (e.loaded / e.total) * 100;
-                        progressBar.css('width', percentComplete + '%');
+                        let percentComplete = Math.round((e.loaded / e.total) * 100);
+                        progressBar
+                            .css('width', percentComplete + '%')
+                            .attr('aria-valuenow', percentComplete)
+                            .text(percentComplete + '%' + (percentComplete < 100 ? ' - Uploading...' : ' - Processing...'));
                     }
                 }, false);
+                
+                // Download progress (for server response)
+                xhr.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        progressBar.text('Processing data...');
+                    }
+                }, false);
+                
                 return xhr;
             },
             type: 'POST',
@@ -576,15 +669,83 @@
             data: formData,
             processData: false,
             contentType: false,
-            success: function(data) {
-                $('#importModal').modal('hide');
-                showSuccessAlert('Import completed successfully');
-                setTimeout(() => location.reload(), 2000);
+            success: function(response) {
+                // Show 100% completion
+                progressBar
+                    .css('width', '100%')
+                    .removeClass('progress-bar-animated')
+                    .text('Upload Complete!');
+                
+                setTimeout(() => {
+                    $('#importModal').modal('hide');
+                    showSuccessAlert('Import completed successfully');
+                    
+                    // Reset form and UI elements
+                    form.reset();
+                    $('.custom-file-label').html('No file chosen');
+                    progressBar
+                        .css('width', '0%')
+                        .text('0%')
+                        .addClass('progress-bar-animated');
+                    submitBtn.prop('disabled', false).removeClass('loading');
+                    
+                    // Reload page after delay
+                    setTimeout(() => location.reload(), 1000);
+                }, 500);
             },
-            error: function(data) {
-                showErrorAlert('Import failed. Please try again.');
+            error: function(xhr) {
+                let errorMessage = 'Import failed. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                // Show error state in progress bar
+                progressBar
+                    .removeClass('bg-success')
+                    .addClass('bg-danger')
+                    .text('Upload Failed')
+                    .css('width', '100%');
+                
+                showErrorAlert(errorMessage);
+                
+                // Reset UI elements after delay
+                setTimeout(() => {
+                    progressBar
+                        .removeClass('bg-danger')
+                        .addClass('bg-success')
+                        .css('width', '0%')
+                        .text('0%');
+                    submitBtn.prop('disabled', false).removeClass('loading');
+                }, 2000);
             }
         });
+    });
+
+    // Add file size validation
+    $('#inputGroupFile').on('change', function() {
+        let file = this[0]?.files[0];
+        if (file) {
+            // 10MB limit
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showErrorAlert('File size exceeds 10MB limit. Please choose a smaller file.');
+                $(this).val('');
+                $(this).next('.custom-file-label').html('No file chosen');
+                return false;
+            }
+        }
+    });
+
+    // Reset form when modal is closed
+    $('#importModal').on('hidden.bs.modal', function () {
+        $('#importForm')[0].reset();
+        $('.custom-file-label').html('No file chosen');
+        $('#progressBar')
+            .css('width', '0%')
+            .text('0%')
+            .removeClass('bg-danger')
+            .addClass('bg-success progress-bar-animated');
+        $('#importSubmitBtn').prop('disabled', false).removeClass('loading');
     });
 
     // Prevent form submission and show SweetAlert2 confirmation
