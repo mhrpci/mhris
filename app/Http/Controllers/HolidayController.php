@@ -6,6 +6,10 @@ use App\Models\Holiday;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http; // Add this line for HTTP requests
 use Carbon\Carbon; // Make sure Carbon is imported
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\HolidayImport;
+use App\Exports\HolidayExport;
+use Illuminate\Support\Facades\Log;
 
 class HolidayController extends Controller
 {
@@ -176,5 +180,46 @@ class HolidayController extends Controller
     {
         $holidays = Holiday::all();
         return view('holidays.calendar', compact('holidays'));
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            Excel::import(new HolidayImport, $request->file('file'));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Holidays imported successfully.'
+            ]);
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errors = [];
+            
+            foreach ($failures as $failure) {
+                $errors[] = 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $errors
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Holiday import error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error importing holidays. Please check your file format.'
+            ], 500);
+        }
+    }
+
+    public function export()
+    {
+        return Excel::download(new HolidayExport, 'holidays.xlsx');
     }
 }

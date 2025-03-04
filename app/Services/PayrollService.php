@@ -112,9 +112,14 @@ class PayrollService
             ->whereBetween('date_attended', [$start, $end])
             ->get();
 
+        $attendancesAbsent = Attendance::where('employee_id', $employee_id)
+            ->whereBetween('date_attended', [$start, $end])
+            ->where('remarks', 'Absent')
+            ->count();
+
         // Initialize deductions
         $total_deductions = 0;
-        $absent_deduction = 0;
+        $absent_deduction = $attendancesAbsent * $daily_salary;
         $late_deduction = 0;
         $undertime_deduction = 0;
         $overtime_pay = 0;
@@ -147,6 +152,7 @@ class PayrollService
                 $absent_deduction += $daily_salary;
             }
         }
+
 
         // Check for dates with no attendance records
         // $total_no_attendance_days = $this->calculateNoAttendanceDays($employee_id, $start_date, $end_date);

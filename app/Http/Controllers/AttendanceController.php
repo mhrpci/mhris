@@ -10,6 +10,7 @@ use App\Events\AttendanceStored;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Imports\AttendanceImport;
+use Illuminate\Support\Facades\Artisan;
 
 class AttendanceController extends Controller
 {
@@ -364,5 +365,18 @@ public function printAttendance(Request $request)
         }
 
         return view('attendances.attendance');
+    }
+
+    /**
+     * Execute the attendance:store artisan command
+     */
+    public function executeStoreCommand()
+    {
+        try {
+            \Artisan::call('attendance:store');
+            return response()->json(['message' => 'Attendance records stored successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

@@ -394,6 +394,7 @@
                 @if(isset($systemUpdate))
                     @method('PUT')
                 @endif
+                <input type="hidden" name="author_id" value="{{ auth()->id() }}">
 
                 <div class="field-group">
                     <div class="field-group-title">
@@ -478,6 +479,15 @@
                             @error('is_active')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">Author</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   value="{{ auth()->user()->first_name . ' ' . auth()->user()->last_name }}" 
+                                   readonly 
+                                   disabled>
                         </div>
                     </div>
                 </div>

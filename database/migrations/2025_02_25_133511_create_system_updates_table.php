@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('description');
             $table->timestamp('published_at')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->foreignId('author_id')->constrained('users');
             $table->timestamps();
         });
     }

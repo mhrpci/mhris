@@ -29,7 +29,16 @@ class PayrollController extends Controller
      */
     public function create()
     {
-        $employees = Employee::where('employee_status', 'Active')->get();
+        $user = auth()->user();
+        if ($user->hasRole('Finance')) {
+            $employees = Employee::where('employee_status', 'Active')->where('rank', 'Managerial')->get();
+        }
+        elseif ($user->hasRole('Super Admin')) {
+            $employees = Employee::where('employee_status', 'Active')->get();
+        }
+        else {
+            $employees = Employee::where('employee_status', 'Active')->where('rank', 'Rank File')->get();
+        }
         return view('payroll.create', compact('employees'));
     }
 
@@ -55,8 +64,15 @@ class PayrollController extends Controller
 
         if ($specific_employee_id) {
             $employeesQuery->where('id', $specific_employee_id);
-        } else {
-            if (!$user->hasRole('Super Admin')) {
+        }
+        else if ($user->hasRole('Finance')) {
+            $employeesQuery->where('rank', 'Managerial');
+        }
+        elseif ($user->hasRole('Super Admin')) {
+            $employeesQuery->where('employee_status', 'Active');
+        }
+        else {
+            if (!$user->hasRole('Super Admin', 'Finance')) {
                 $employeesQuery->where('rank', 'Rank File');
             }
 
@@ -161,7 +177,11 @@ class PayrollController extends Controller
         // Existing index logic
         if ($user->hasRole('Super Admin')) {
             $payrolls = Payroll::with('employee')->get();
-        } else {
+        } 
+        else if ($user->hasRole('Finance')) {
+            $payrolls = Payroll::with('employee')->get();
+        }
+        else {
             $payrolls = Payroll::whereHas('employee', function ($query) {
                 $query->where('rank', 'Rank File');
             })->with('employee')->get();

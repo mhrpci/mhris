@@ -79,6 +79,16 @@
                                     <button type="submit" class="btn btn-primary form-control">Filter</button>
                                 </div>
                             </div>
+                            @canany(['hrcomben', 'super-admin'])
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="button" id="store-attendance" class="btn btn-success form-control">
+                                        <i class="fas fa-sync"></i> Store Attendance
+                                    </button>
+                                </div>
+                            </div>
+                            @endcanany
                         </div>
                     </form>
 
@@ -219,6 +229,52 @@
 
             // Clear the custom filter
             $.fn.dataTable.ext.search.pop();
+        });
+
+        // Store Attendance button click handler
+        $('#store-attendance').on('click', function() {
+            // Show loading state
+            $(this).prop('disabled', true);
+            $(this).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
+            // Make AJAX request
+            $.ajax({
+                url: '{{ route("attendance.store-command") }}',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Attendance records stored successfully',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    // Reload the page to show new records
+                    setTimeout(function() {
+                        location.reload();
+                    }, 3000);
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'Error storing attendance records',
+                        text: xhr.responseJSON?.message || 'An error occurred',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                },
+                complete: function() {
+                    // Reset button state
+                    $('#store-attendance').prop('disabled', false);
+                    $('#store-attendance').html('<i class="fas fa-sync"></i> Store Attendance');
+                }
+            });
         });
     });
 </script>

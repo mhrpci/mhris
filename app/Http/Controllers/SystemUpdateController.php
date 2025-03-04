@@ -40,7 +40,8 @@ class SystemUpdateController extends Controller
             'title' => 'required|max:255',
             'description' => 'required',
             'published_at' => 'required|date',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'author_id' => 'required|exists:users,id'
         ]);
 
         $validated['published_at'] = Carbon::parse($validated['published_at']);
@@ -77,7 +78,8 @@ class SystemUpdateController extends Controller
             'title' => 'required|max:255',
             'description' => 'required',
             'published_at' => 'required|date',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'author_id' => 'required|exists:users,id'
         ]);
 
         $validated['published_at'] = Carbon::parse($validated['published_at']);

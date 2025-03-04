@@ -17,7 +17,9 @@ use App\Models\PhilhealthContribution;
 use App\Models\SssLoan;
 use App\Models\PagibigLoan;
 use App\Models\CashAdvance;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\SystemUpdate;
 
 class HomeController extends Controller
 {
@@ -170,7 +172,7 @@ class HomeController extends Controller
      */
     public function countEmployeesByDepartment()
     {
-        return Employee::select('department_id', \DB::raw('count(*) as count'))
+        return Employee::select('department_id', DB::raw('count(*) as count'))
             ->groupBy('department_id')
             ->with('department') // Assuming you have a relationship defined
             ->get()
@@ -273,6 +275,23 @@ class HomeController extends Controller
     }
 
     /**
+     * Get active system updates.
+     *
+     * @return array
+     */
+    public function getSystemUpdates()
+    {
+        $updates = SystemUpdate::where('is_active', true)
+            ->orderBy('published_at', 'desc')
+            ->get();
+
+        return [
+            'updates' => $updates,
+            'hasUnreadUpdates' => $updates->isNotEmpty()
+        ];
+    }
+
+    /**
      * Show the application dashboard.
      *
      * @return \Illuminate\Contracts\Support\Renderable
@@ -281,6 +300,7 @@ class HomeController extends Controller
     {
         // Add this line to fetch the employee data for the authenticated user
         $employees = Employee::where('email_address', Auth::user()->email)->get();
+        $employeeActive = Employee::where('employee_status', 'Active')->count();
 
         // Get counts of employees by department
         $employeesByDepartment = $this->countEmployeesByDepartment();
@@ -335,6 +355,9 @@ class HomeController extends Controller
         // Get analytics
         $analytics = $this->getAnalytics();
 
+        // Get system updates
+        $systemUpdates = $this->getSystemUpdates();
+
         // Pass the counts, sum, monthly contributions, latest posts, leave details, holidays, birthdays, and career count to the view
         return view('home', compact(
             'employees',
@@ -358,7 +381,9 @@ class HomeController extends Controller
             'employeesByDepartment',
             'greeting',
             'careerCount',
-            'analytics'
+            'analytics',
+            'employeeActive',
+            'systemUpdates'
         ));
     }
 }

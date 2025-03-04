@@ -1,4 +1,5 @@
 import './bootstrap';
+import '../css/app.css';
 
 if ('serviceWorker' in navigator && 'PushManager' in window) {
     navigator.serviceWorker.register('/service-worker.js')
@@ -28,16 +29,18 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
+// Import Echo for real-time messaging
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
 window.Pusher = Pusher;
 
+// Initialize Laravel Echo
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: import.meta.env.VITE_PUSHER_APP_KEY,
     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-    encrypted: true
+    forceTLS: true
 });
 
 window.Echo.channel('notifications')

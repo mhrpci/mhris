@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\User;
-use App\Notifications\NewPostNotification;
 
 class PostController extends Controller
 {
@@ -42,15 +41,6 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $post = Post::create($request->all());
-        
-        // Get all users with Employee role
-        $employees = User::role('Employee')->get();
-        
-        // Send notification to each employee
-        foreach ($employees as $employee) {
-            $employee->notify(new NewPostNotification($post));
-        }
-        
         return redirect()->route('posts.index')->with('success', 'Post saved successfully.');
     }
 

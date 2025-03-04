@@ -56,6 +56,8 @@ use App\Http\Controllers\MedicalProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ChatRoomController;
+use App\Http\Controllers\ChatMessageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -190,6 +192,11 @@ Route::middleware('auth')->group(function () {
     Route::post('attendances/import', [AttendanceController::class, 'import'])->name('attendances.import');
     Route::get('attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
     Route::get('/attendance', [AttendanceController::class, 'attendance'])->name('attendances.attendance');
+
+    // Attendance store command route
+    Route::post('/attendance/store-command', [AttendanceController::class, 'executeStoreCommand'])
+        ->name('attendance.store-command')
+        ->middleware(['auth', 'can:hrcomben,admin,super-admin']);
 
     // User Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -386,6 +393,11 @@ Route::middleware('auth')->group(function () {
     // Analytics routes
     Route::get('/analytics', [AnalyticsController::class, 'dashboard'])->name('analytics.dashboard');
     Route::get('/analytics/product/{productId}', [AnalyticsController::class, 'getProductAnalytics'])->name('analytics.product');
+
+    // Holiday import and export routes
+    Route::post('holidays/import', [App\Http\Controllers\HolidayController::class, 'import'])->name('holidays.import');
+    Route::post('holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
 });
+
 Auth::routes();
 

@@ -44,7 +44,6 @@
         max-width: min(1000px, 90%);
         margin: 0 auto;
     }
-
     .hero h1 {
         font-size: clamp(2rem, 5vw, 4rem);
         font-weight: 800;
@@ -386,7 +385,7 @@
             </div>
             <p class="subsidiary-description">Cebic Trading is the original business that laid the foundation for MHRPCI. Initially focused on hospital and medical supplies distribution, it has grown into a key player in the healthcare industry.</p>
             <a href="{{ route('cio') }}" class="learn-more">
-                Learn More
+                View Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </a>
         </div>
@@ -403,7 +402,7 @@
             </div>
             <p class="subsidiary-description">MHRHCI specializes in the importation and distribution of medical supplies and equipment, serving healthcare institutions across the Philippines with a commitment to quality and reliability.</p>
             <a href="{{ route('mhrhci') }}" class="learn-more">
-                Learn More
+                View Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </a>
         </div>
@@ -421,7 +420,7 @@
             <p class="subsidiary-description">Founded in 2015, BGPDI started as a small fuel distribution company and has grown into a significant player in the energy sector, providing reliable fuel solutions across the Philippines.</p>
 
             <a href="{{ route('bgpdi') }}" class="learn-more">
-                Learn More
+                View Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </a>
         </div>
@@ -438,7 +437,7 @@
             </div>
             <p class="subsidiary-description">VHI focuses on providing innovative solutions for the healthcare industry, specializing in cutting-edge medical technologies and services that enhance patient care.</p>
             <a href="{{ route('vhi') }}" class="learn-more">
-                Learn More
+                View Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </a>
         </div>
@@ -455,7 +454,7 @@
             </div>
             <p class="subsidiary-description">MAX was born out of necessity during the pandemic, turning a challenge into an opportunity by providing essential logistics and hauling services across the country.</p>
             <a href="{{ route('max') }}" class="learn-more">
-                Learn More
+                View Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </a>
         </div>
@@ -472,7 +471,7 @@
             </div>
             <p class="subsidiary-description">RCG is an investment arm under MHRPCI, responsible for managing the conglomerate's financial assets and pharmaceutical ventures, ensuring sustainable growth and development.</p>
             <a href="{{ route('rcg') }}" class="learn-more">
-                Learn More
+                View Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </a>
         </div>
@@ -489,7 +488,7 @@
             </div>
             <p class="subsidiary-description">Luscious Co. operates in the food and hospitality sector, offering high-quality dining experiences and catering services with a focus on customer satisfaction and culinary excellence.</p>
             <a href="{{ route('lus') }}" class="learn-more">
-                Learn More
+                View Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </a>
         </div>
@@ -506,7 +505,7 @@
             </div>
             <p class="subsidiary-description">MHR Construction handles various infrastructure projects, including the development of commercial, residential, and industrial properties, with a commitment to quality and innovation.</p>
             <a href="{{ route('mhrcons') }}" class="learn-more">
-                Learn More
+                View Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </a>
         </div>

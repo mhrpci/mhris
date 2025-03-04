@@ -14,6 +14,8 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
 use App\Models\Department;
 use App\Models\PushSubscription;
 use App\Models\Notification;
+use App\Models\ChatMessage;
+use App\Models\SystemUpdate;
 
 class User extends Authenticatable
 {
@@ -145,5 +147,10 @@ class User extends Authenticatable
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function systemUpdates()
+    {
+        return $this->hasMany(SystemUpdate::class);
     }
 }

@@ -1889,6 +1889,3873 @@
             gap: 0.5rem;
         }
     }
+
+    /* Add System Updates Modal Styles */
+    .system-update-modal .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .system-update-modal .modal-header {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 1.5rem;
+        border-bottom: none;
+    }
+
+    .system-update-modal .modal-title {
+        font-weight: 600;
+        font-size: 1.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .system-update-modal .modal-title i {
+        font-size: 1.5rem;
+        animation: spin 20s linear infinite;
+    }
+
+    .system-update-modal .modal-body {
+        padding: 2rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .system-update-modal .update-item {
+        border-left: 4px solid #2563eb;
+        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        animation: slideIn 0.5s ease-out;
+    }
+
+    .system-update-modal .update-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .system-update-modal .update-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: #fff;
+    }
+
+    .system-update-modal .update-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .system-update-modal .update-title::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #2563eb;
+        border-radius: 50%;
+    }
+
+    .system-update-modal .update-description {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        padding-left: 1rem;
+        border-left: 2px solid #e2e8f0;
+    }
+
+    .system-update-modal .update-date {
+        font-size: 0.85rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .system-update-modal .update-date i {
+        color: #2563eb;
+    }
+
+    .system-update-modal .modal-footer {
+        border-top: 1px solid #e2e8f0;
+        padding: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .system-update-badge {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .system-update-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .system-update-badge[data-badge]:after {
+        content: attr(data-badge);
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #ef4444;
+        color: white;
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        line-height: 20px;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-control-label {
+        color: #475569;
+        font-size: 0.9rem;
+    }
+
+    .confirmation-message {
+        font-size: 0.875rem;
+        color: #059669;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+        50% {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .system-update-modal .modal-body {
+            padding: 1.25rem;
+        }
+        
+        .system-update-modal .update-item {
+            padding: 1rem;
+        }
+
+        .system-update-modal .update-title {
+            font-size: 1rem;
+        }
+
+        .system-update-modal .update-description {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Add these styles for balloon canvas positioning */
+    #balloon-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1040; /* Just below modal backdrop (1050) */
+        pointer-events: none; /* Initially no pointer events */
+    }
+
+    /* Adjust modal styles to work with balloon backdrop */
+    #birthdayModal .modal-dialog {
+        position: relative;
+        z-index: 1060; /* Above the balloon canvas */
+    }
+
+    #birthdayModal .modal-content {
+        background: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
+        backdrop-filter: blur(5px); /* Blur effect for background */
+    }
+
+    /* Dark mode adjustment */
+    @media (prefers-color-scheme: dark) {
+        #birthdayModal .modal-content {
+            background: rgba(45, 55, 72, 0.95);
+        }
+    }
+
+    /* Add these styles */
+    .celebrant-profile-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .celebrant-avatar-large {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .celebrant-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .default-avatar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: white;
+    }
+
+    .celebrant-details {
+        padding: 1rem;
+    }
+
+    .celebrant-name {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .info-item i {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.8rem;
+    }
+
+    .birthday-message-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(45deg, rgba(78, 205, 196, 0.1), rgba(69, 183, 209, 0.1));
+        border-radius: 10px;
+    }
+
+    .birthday-wish {
+        font-size: 1.1rem;
+        color: #4a5568;
+        line-height: 1.6;
+    }
+
+    .celebrant-divider {
+        border-color: rgba(0, 0, 0, 0.1);
+        margin: 2rem 0;
+    }
+
+    .birthday-cake-animation {
+        margin-top: 1rem;
+        font-size: 2.5rem;
+    }
+
+    /* Dark mode styles */
+    @media (prefers-color-scheme: dark) {
+        .celebrant-profile-card {
+            background: rgba(45, 55, 72, 0.95);
+        }
+
+        .celebrant-name {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            -webkit-background-clip: text;
+        }
+
+        .info-item {
+            color: #e2e8f0;
+        }
+
+        .birthday-wish {
+            color: #e2e8f0;
+        }
+
+        .birthday-message-section {
+            background: linear-gradient(45deg, rgba(78, 205, 196, 0.05), rgba(69, 183, 209, 0.05));
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .celebrant-profile-card {
+            padding: 1rem;
+        }
+
+        .celebrant-avatar-large {
+            width: 120px;
+            height: 120px;
+        }
+
+        .celebrant-name {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            font-size: 0.9rem;
+        }
+
+        .birthday-wish {
+            font-size: 1rem;
+        }
+    }
+
+    /* Add styles for the MHR Family message */
+    .mhr-family-message {
+        margin-top: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #FF6B6B;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        animation: glowText 2s ease-in-out infinite;
+    }
+
+    @keyframes glowText {
+        0%, 100% {
+            text-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+        }
+        50% {
+            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+    }
+
+    /* Add some CSS for the checkbox styling */
+    .dont-show-again {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        padding: 1rem;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .dont-show-again {
+            color: #adb5bd;
+        }
+        
+        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #adb5bd;
+            border-color: #adb5bd;
+        }
+    }
+
+    /* Add styles for the confirmation message */
+    .alert-info {
+        background-color: #cce5ff;
+        border-color: #b8daff;
+        color: #004085;
+        padding: 0.5rem 1rem;
+        margin-top: 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-control-input:checked ~ .custom-control-label::before {
+        border-color: #007bff;
+        background-color: #007bff;
+    }
+
+    .custom-checkbox .custom-control-label {
+        cursor: pointer;
+    }
+
+    .custom-checkbox .custom-control-label:hover {
+        color: #007bff;
+    }
+
+    /* Add these styles for the floating action card */
+    .floating-actions-card {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 300px;
+        z-index: 1000;
+        animation: float 3s ease-in-out infinite;
+        transition: all 0.3s ease;
+    }
+
+    .floating-actions-card.minimized {
+        width: 60px;
+        height: 60px;
+        overflow: hidden;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .floating-actions-card .card-header {
+        cursor: move;
+        user-select: none;
+    }
+
+    .minimize-btn {
+        position: absolute;
+        right: 40px;
+        top: 15px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .close-float-btn {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        cursor: pointer;
+    }
+
+    .floating-action-btn {
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .floating-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        transition: 0.5s;
+    }
+
+    .floating-action-btn:hover::before {
+        left: 100%;
+    }
+
+    .floating-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        padding: 5px 8px;
+        border-radius: 50%;
+        font-size: 12px;
+        background: #dc3545;
+        color: white;
+        display: none;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .floating-actions-card {
+            bottom: 20px;
+            right: 20px;
+            width: 280px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .floating-actions-card {
+            bottom: 15px;
+            right: 15px;
+            width: 260px;
+        }
+    }
+
+    .floating-actions-card {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 280px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background: #fff;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    .floating-actions-card.minimized {
+        width: 56px;
+        height: 56px;
+        overflow: hidden;
+        border-radius: 28px;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: #4a90e2;
+        color: white;
+        border-radius: 12px 12px 0 0;
+        cursor: move;
+    }
+
+    .header-controls {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+    }
+
+    .control-btn {
+        background: none;
+        border: none;
+        color: white;
+        padding: 4px;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .control-btn:hover {
+        opacity: 1;
+    }
+
+    .quick-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+
+    .action-btn:hover {
+        transform: translateX(4px);
+        color: white;
+    }
+
+    .leave-btn {
+        background: #4a90e2;
+    }
+
+    .loan-btn {
+        background: #2ecc71;
+    }
+
+    @media (max-width: 768px) {
+        .floating-actions-card {
+            width: 240px;
+            bottom: 16px;
+            right: 16px;
+        }
+
+        .action-btn {
+            padding: 10px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .floating-actions-card {
+            width: 200px;
+        }
+    }
+
+    .holiday-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: transform 0.2s;
+    }
+
+    .holiday-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .today-holiday {
+        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+        color: white;
+    }
+
+    .holiday-icon {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .today-holiday .holiday-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .holiday-details {
+        flex: 1;
+    }
+
+    .holiday-details h4 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .holiday-description {
+        font-size: 0.9rem;
+        color: #666;
+        margin: 0;
+    }
+
+    .today-holiday .holiday-description {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .holiday-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .holiday-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .holiday-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .holiday-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    /* Enhanced Modal Styles */
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem;
+    }
+
+    .animated-icon {
+        animation: bounce 2s infinite;
+    }
+
+    .close-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .close-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    /* Holiday Card Styles */
+    .holiday-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .holiday-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .today-holiday {
+        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+        color: white;
+    }
+
+    .holiday-icon {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .holiday-icon.pulse {
+        animation: pulse 2s infinite;
+    }
+
+    /* Post Card Styles */
+    .post-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .post-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #20BF55 0%, #01BAEF 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .post-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+        color: #2d3748;
+    }
+
+    .post-body {
+        font-size: 1rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .post-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #718096;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+
+    /* Don't Show Again Styles */
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .confirmation-message {
+        font-size: 0.875rem;
+        color: #48bb78;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Animations */
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .modal-dialog {
+            margin: 1rem;
+        }
+
+        .holiday-card, .post-card {
+            padding: 1rem;
+        }
+
+        .holiday-icon, .post-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        .post-title {
+            font-size: 1.1rem;
+        }
+
+        .post-body {
+            font-size: 0.95rem;
+        }
+
+        .post-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Add System Updates Modal Styles */
+    .system-update-modal .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .system-update-modal .modal-header {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 1.5rem;
+        border-bottom: none;
+    }
+
+    .system-update-modal .modal-title {
+        font-weight: 600;
+        font-size: 1.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .system-update-modal .modal-title i {
+        font-size: 1.5rem;
+        animation: spin 20s linear infinite;
+    }
+
+    .system-update-modal .modal-body {
+        padding: 2rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .system-update-modal .update-item {
+        border-left: 4px solid #2563eb;
+        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        animation: slideIn 0.5s ease-out;
+    }
+
+    .system-update-modal .update-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .system-update-modal .update-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: #fff;
+    }
+
+    .system-update-modal .update-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .system-update-modal .update-title::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #2563eb;
+        border-radius: 50%;
+    }
+
+    .system-update-modal .update-description {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        padding-left: 1rem;
+        border-left: 2px solid #e2e8f0;
+    }
+
+    .system-update-modal .update-date {
+        font-size: 0.85rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .system-update-modal .update-date i {
+        color: #2563eb;
+    }
+
+    .system-update-modal .modal-footer {
+        border-top: 1px solid #e2e8f0;
+        padding: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .system-update-badge {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .system-update-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .system-update-badge[data-badge]:after {
+        content: attr(data-badge);
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #ef4444;
+        color: white;
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        line-height: 20px;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-control-label {
+        color: #475569;
+        font-size: 0.9rem;
+    }
+
+    .confirmation-message {
+        font-size: 0.875rem;
+        color: #059669;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+        50% {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .system-update-modal .modal-body {
+            padding: 1.25rem;
+        }
+        
+        .system-update-modal .update-item {
+            padding: 1rem;
+        }
+
+        .system-update-modal .update-title {
+            font-size: 1rem;
+        }
+
+        .system-update-modal .update-description {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Add these styles for balloon canvas positioning */
+    #balloon-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1040; /* Just below modal backdrop (1050) */
+        pointer-events: none; /* Initially no pointer events */
+    }
+
+    /* Adjust modal styles to work with balloon backdrop */
+    #birthdayModal .modal-dialog {
+        position: relative;
+        z-index: 1060; /* Above the balloon canvas */
+    }
+
+    #birthdayModal .modal-content {
+        background: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
+        backdrop-filter: blur(5px); /* Blur effect for background */
+    }
+
+    /* Dark mode adjustment */
+    @media (prefers-color-scheme: dark) {
+        #birthdayModal .modal-content {
+            background: rgba(45, 55, 72, 0.95);
+        }
+    }
+
+    /* Add these styles */
+    .celebrant-profile-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .celebrant-avatar-large {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .celebrant-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .default-avatar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: white;
+    }
+
+    .celebrant-details {
+        padding: 1rem;
+    }
+
+    .celebrant-name {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .info-item i {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.8rem;
+    }
+
+    .birthday-message-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(45deg, rgba(78, 205, 196, 0.1), rgba(69, 183, 209, 0.1));
+        border-radius: 10px;
+    }
+
+    .birthday-wish {
+        font-size: 1.1rem;
+        color: #4a5568;
+        line-height: 1.6;
+    }
+
+    .celebrant-divider {
+        border-color: rgba(0, 0, 0, 0.1);
+        margin: 2rem 0;
+    }
+
+    .birthday-cake-animation {
+        margin-top: 1rem;
+        font-size: 2.5rem;
+    }
+
+    /* Dark mode styles */
+    @media (prefers-color-scheme: dark) {
+        .celebrant-profile-card {
+            background: rgba(45, 55, 72, 0.95);
+        }
+
+        .celebrant-name {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            -webkit-background-clip: text;
+        }
+
+        .info-item {
+            color: #e2e8f0;
+        }
+
+        .birthday-wish {
+            color: #e2e8f0;
+        }
+
+        .birthday-message-section {
+            background: linear-gradient(45deg, rgba(78, 205, 196, 0.05), rgba(69, 183, 209, 0.05));
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .celebrant-profile-card {
+            padding: 1rem;
+        }
+
+        .celebrant-avatar-large {
+            width: 120px;
+            height: 120px;
+        }
+
+        .celebrant-name {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            font-size: 0.9rem;
+        }
+
+        .birthday-wish {
+            font-size: 1rem;
+        }
+    }
+
+    /* Add styles for the MHR Family message */
+    .mhr-family-message {
+        margin-top: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #FF6B6B;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        animation: glowText 2s ease-in-out infinite;
+    }
+
+    @keyframes glowText {
+        0%, 100% {
+            text-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+        }
+        50% {
+            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+    }
+
+    /* Add some CSS for the checkbox styling */
+    .dont-show-again {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        padding: 1rem;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .dont-show-again {
+            color: #adb5bd;
+        }
+        
+        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #adb5bd;
+            border-color: #adb5bd;
+        }
+    }
+
+    /* Add styles for the confirmation message */
+    .alert-info {
+        background-color: #cce5ff;
+        border-color: #b8daff;
+        color: #004085;
+        padding: 0.5rem 1rem;
+        margin-top: 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-control-input:checked ~ .custom-control-label::before {
+        border-color: #007bff;
+        background-color: #007bff;
+    }
+
+    .custom-checkbox .custom-control-label {
+        cursor: pointer;
+    }
+
+    .custom-checkbox .custom-control-label:hover {
+        color: #007bff;
+    }
+
+    /* Add these styles for the floating action card */
+    .floating-actions-card {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 300px;
+        z-index: 1000;
+        animation: float 3s ease-in-out infinite;
+        transition: all 0.3s ease;
+    }
+
+    .floating-actions-card.minimized {
+        width: 60px;
+        height: 60px;
+        overflow: hidden;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .floating-actions-card .card-header {
+        cursor: move;
+        user-select: none;
+    }
+
+    .minimize-btn {
+        position: absolute;
+        right: 40px;
+        top: 15px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .close-float-btn {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        cursor: pointer;
+    }
+
+    .floating-action-btn {
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .floating-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        transition: 0.5s;
+    }
+
+    .floating-action-btn:hover::before {
+        left: 100%;
+    }
+
+    .floating-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        padding: 5px 8px;
+        border-radius: 50%;
+        font-size: 12px;
+        background: #dc3545;
+        color: white;
+        display: none;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .floating-actions-card {
+            bottom: 20px;
+            right: 20px;
+            width: 280px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .floating-actions-card {
+            bottom: 15px;
+            right: 15px;
+            width: 260px;
+        }
+    }
+
+    .floating-actions-card {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 280px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background: #fff;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    .floating-actions-card.minimized {
+        width: 56px;
+        height: 56px;
+        overflow: hidden;
+        border-radius: 28px;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: #4a90e2;
+        color: white;
+        border-radius: 12px 12px 0 0;
+        cursor: move;
+    }
+
+    .header-controls {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+    }
+
+    .control-btn {
+        background: none;
+        border: none;
+        color: white;
+        padding: 4px;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .control-btn:hover {
+        opacity: 1;
+    }
+
+    .quick-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+
+    .action-btn:hover {
+        transform: translateX(4px);
+        color: white;
+    }
+
+    .leave-btn {
+        background: #4a90e2;
+    }
+
+    .loan-btn {
+        background: #2ecc71;
+    }
+
+    @media (max-width: 768px) {
+        .floating-actions-card {
+            width: 240px;
+            bottom: 16px;
+            right: 16px;
+        }
+
+        .action-btn {
+            padding: 10px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .floating-actions-card {
+            width: 200px;
+        }
+    }
+
+    .holiday-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: transform 0.2s;
+    }
+
+    .holiday-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .today-holiday {
+        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+        color: white;
+    }
+
+    .holiday-icon {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .today-holiday .holiday-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .holiday-details {
+        flex: 1;
+    }
+
+    .holiday-details h4 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .holiday-description {
+        font-size: 0.9rem;
+        color: #666;
+        margin: 0;
+    }
+
+    .today-holiday .holiday-description {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .holiday-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .holiday-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .holiday-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .holiday-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    /* Enhanced Modal Styles */
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem;
+    }
+
+    .animated-icon {
+        animation: bounce 2s infinite;
+    }
+
+    .close-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .close-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    /* Holiday Card Styles */
+    .holiday-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .holiday-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .today-holiday {
+        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+        color: white;
+    }
+
+    .holiday-icon {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .holiday-icon.pulse {
+        animation: pulse 2s infinite;
+    }
+
+    /* Post Card Styles */
+    .post-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .post-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #20BF55 0%, #01BAEF 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .post-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+        color: #2d3748;
+    }
+
+    .post-body {
+        font-size: 1rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .post-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #718096;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+
+    /* Don't Show Again Styles */
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .confirmation-message {
+        font-size: 0.875rem;
+        color: #48bb78;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Animations */
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .modal-dialog {
+            margin: 1rem;
+        }
+
+        .holiday-card, .post-card {
+            padding: 1rem;
+        }
+
+        .holiday-icon, .post-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        .post-title {
+            font-size: 1.1rem;
+        }
+
+        .post-body {
+            font-size: 0.95rem;
+        }
+
+        .post-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Add System Updates Modal Styles */
+    .system-update-modal .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .system-update-modal .modal-header {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 1.5rem;
+        border-bottom: none;
+    }
+
+    .system-update-modal .modal-title {
+        font-weight: 600;
+        font-size: 1.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .system-update-modal .modal-title i {
+        font-size: 1.5rem;
+        animation: spin 20s linear infinite;
+    }
+
+    .system-update-modal .modal-body {
+        padding: 2rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .system-update-modal .update-item {
+        border-left: 4px solid #2563eb;
+        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        animation: slideIn 0.5s ease-out;
+    }
+
+    .system-update-modal .update-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .system-update-modal .update-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: #fff;
+    }
+
+    .system-update-modal .update-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .system-update-modal .update-title::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #2563eb;
+        border-radius: 50%;
+    }
+
+    .system-update-modal .update-description {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        padding-left: 1rem;
+        border-left: 2px solid #e2e8f0;
+    }
+
+    .system-update-modal .update-date {
+        font-size: 0.85rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .system-update-modal .update-date i {
+        color: #2563eb;
+    }
+
+    .system-update-modal .modal-footer {
+        border-top: 1px solid #e2e8f0;
+        padding: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .system-update-badge {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .system-update-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .system-update-badge[data-badge]:after {
+        content: attr(data-badge);
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #ef4444;
+        color: white;
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        line-height: 20px;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-control-label {
+        color: #475569;
+        font-size: 0.9rem;
+    }
+
+    .confirmation-message {
+        font-size: 0.875rem;
+        color: #059669;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+        50% {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .system-update-modal .modal-body {
+            padding: 1.25rem;
+        }
+        
+        .system-update-modal .update-item {
+            padding: 1rem;
+        }
+
+        .system-update-modal .update-title {
+            font-size: 1rem;
+        }
+
+        .system-update-modal .update-description {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Add these styles for balloon canvas positioning */
+    #balloon-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1040; /* Just below modal backdrop (1050) */
+        pointer-events: none; /* Initially no pointer events */
+    }
+
+    /* Adjust modal styles to work with balloon backdrop */
+    #birthdayModal .modal-dialog {
+        position: relative;
+        z-index: 1060; /* Above the balloon canvas */
+    }
+
+    #birthdayModal .modal-content {
+        background: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
+        backdrop-filter: blur(5px); /* Blur effect for background */
+    }
+
+    /* Dark mode adjustment */
+    @media (prefers-color-scheme: dark) {
+        #birthdayModal .modal-content {
+            background: rgba(45, 55, 72, 0.95);
+        }
+    }
+
+    /* Add these styles */
+    .celebrant-profile-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .celebrant-avatar-large {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .celebrant-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .default-avatar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: white;
+    }
+
+    .celebrant-details {
+        padding: 1rem;
+    }
+
+    .celebrant-name {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .info-item i {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.8rem;
+    }
+
+    .birthday-message-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(45deg, rgba(78, 205, 196, 0.1), rgba(69, 183, 209, 0.1));
+        border-radius: 10px;
+    }
+
+    .birthday-wish {
+        font-size: 1.1rem;
+        color: #4a5568;
+        line-height: 1.6;
+    }
+
+    .celebrant-divider {
+        border-color: rgba(0, 0, 0, 0.1);
+        margin: 2rem 0;
+    }
+
+    .birthday-cake-animation {
+        margin-top: 1rem;
+        font-size: 2.5rem;
+    }
+
+    /* Dark mode styles */
+    @media (prefers-color-scheme: dark) {
+        .celebrant-profile-card {
+            background: rgba(45, 55, 72, 0.95);
+        }
+
+        .celebrant-name {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            -webkit-background-clip: text;
+        }
+
+        .info-item {
+            color: #e2e8f0;
+        }
+
+        .birthday-wish {
+            color: #e2e8f0;
+        }
+
+        .birthday-message-section {
+            background: linear-gradient(45deg, rgba(78, 205, 196, 0.05), rgba(69, 183, 209, 0.05));
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .celebrant-profile-card {
+            padding: 1rem;
+        }
+
+        .celebrant-avatar-large {
+            width: 120px;
+            height: 120px;
+        }
+
+        .celebrant-name {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            font-size: 0.9rem;
+        }
+
+        .birthday-wish {
+            font-size: 1rem;
+        }
+    }
+
+    /* Add styles for the MHR Family message */
+    .mhr-family-message {
+        margin-top: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #FF6B6B;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        animation: glowText 2s ease-in-out infinite;
+    }
+
+    @keyframes glowText {
+        0%, 100% {
+            text-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+        }
+        50% {
+            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+    }
+
+    /* Add some CSS for the checkbox styling */
+    .dont-show-again {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        padding: 1rem;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .dont-show-again {
+            color: #adb5bd;
+        }
+        
+        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #adb5bd;
+            border-color: #adb5bd;
+        }
+    }
+
+    /* Add styles for the confirmation message */
+    .alert-info {
+        background-color: #cce5ff;
+        border-color: #b8daff;
+        color: #004085;
+        padding: 0.5rem 1rem;
+        margin-top: 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-control-input:checked ~ .custom-control-label::before {
+        border-color: #007bff;
+        background-color: #007bff;
+    }
+
+    .custom-checkbox .custom-control-label {
+        cursor: pointer;
+    }
+
+    .custom-checkbox .custom-control-label:hover {
+        color: #007bff;
+    }
+
+    /* Add these styles for the floating action card */
+    .floating-actions-card {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 300px;
+        z-index: 1000;
+        animation: float 3s ease-in-out infinite;
+        transition: all 0.3s ease;
+    }
+
+    .floating-actions-card.minimized {
+        width: 60px;
+        height: 60px;
+        overflow: hidden;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .floating-actions-card .card-header {
+        cursor: move;
+        user-select: none;
+    }
+
+    .minimize-btn {
+        position: absolute;
+        right: 40px;
+        top: 15px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .close-float-btn {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        cursor: pointer;
+    }
+
+    .floating-action-btn {
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .floating-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        transition: 0.5s;
+    }
+
+    .floating-action-btn:hover::before {
+        left: 100%;
+    }
+
+    .floating-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        padding: 5px 8px;
+        border-radius: 50%;
+        font-size: 12px;
+        background: #dc3545;
+        color: white;
+        display: none;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .floating-actions-card {
+            bottom: 20px;
+            right: 20px;
+            width: 280px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .floating-actions-card {
+            bottom: 15px;
+            right: 15px;
+            width: 260px;
+        }
+    }
+
+    .floating-actions-card {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 280px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background: #fff;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    .floating-actions-card.minimized {
+        width: 56px;
+        height: 56px;
+        overflow: hidden;
+        border-radius: 28px;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: #4a90e2;
+        color: white;
+        border-radius: 12px 12px 0 0;
+        cursor: move;
+    }
+
+    .header-controls {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+    }
+
+    .control-btn {
+        background: none;
+        border: none;
+        color: white;
+        padding: 4px;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .control-btn:hover {
+        opacity: 1;
+    }
+
+    .quick-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+
+    .action-btn:hover {
+        transform: translateX(4px);
+        color: white;
+    }
+
+    .leave-btn {
+        background: #4a90e2;
+    }
+
+    .loan-btn {
+        background: #2ecc71;
+    }
+
+    @media (max-width: 768px) {
+        .floating-actions-card {
+            width: 240px;
+            bottom: 16px;
+            right: 16px;
+        }
+
+        .action-btn {
+            padding: 10px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .floating-actions-card {
+            width: 200px;
+        }
+    }
+
+    .holiday-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: transform 0.2s;
+    }
+
+    .holiday-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .today-holiday {
+        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+        color: white;
+    }
+
+    .holiday-icon {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .today-holiday .holiday-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .holiday-details {
+        flex: 1;
+    }
+
+    .holiday-details h4 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .holiday-description {
+        font-size: 0.9rem;
+        color: #666;
+        margin: 0;
+    }
+
+    .today-holiday .holiday-description {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .holiday-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .holiday-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .holiday-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .holiday-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    /* Enhanced Modal Styles */
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem;
+    }
+
+    .animated-icon {
+        animation: bounce 2s infinite;
+    }
+
+    .close-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .close-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    /* Holiday Card Styles */
+    .holiday-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .holiday-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .today-holiday {
+        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+        color: white;
+    }
+
+    .holiday-icon {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .holiday-icon.pulse {
+        animation: pulse 2s infinite;
+    }
+
+    /* Post Card Styles */
+    .post-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .post-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #20BF55 0%, #01BAEF 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .post-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+        color: #2d3748;
+    }
+
+    .post-body {
+        font-size: 1rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .post-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #718096;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+
+    /* Don't Show Again Styles */
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .confirmation-message {
+        font-size: 0.875rem;
+        color: #48bb78;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Animations */
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .modal-dialog {
+            margin: 1rem;
+        }
+
+        .holiday-card, .post-card {
+            padding: 1rem;
+        }
+
+        .holiday-icon, .post-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        .post-title {
+            font-size: 1.1rem;
+        }
+
+        .post-body {
+            font-size: 0.95rem;
+        }
+
+        .post-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Add System Updates Modal Styles */
+    .system-update-modal .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .system-update-modal .modal-header {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 1.5rem;
+        border-bottom: none;
+    }
+
+    .system-update-modal .modal-title {
+        font-weight: 600;
+        font-size: 1.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .system-update-modal .modal-title i {
+        font-size: 1.5rem;
+        animation: spin 20s linear infinite;
+    }
+
+    .system-update-modal .modal-body {
+        padding: 2rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .system-update-modal .update-item {
+        border-left: 4px solid #2563eb;
+        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        animation: slideIn 0.5s ease-out;
+    }
+
+    .system-update-modal .update-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .system-update-modal .update-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: #fff;
+    }
+
+    .system-update-modal .update-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .system-update-modal .update-title::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #2563eb;
+        border-radius: 50%;
+    }
+
+    .system-update-modal .update-description {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        padding-left: 1rem;
+        border-left: 2px solid #e2e8f0;
+    }
+
+    .system-update-modal .update-date {
+        font-size: 0.85rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .system-update-modal .update-date i {
+        color: #2563eb;
+    }
+
+    .system-update-modal .modal-footer {
+        border-top: 1px solid #e2e8f0;
+        padding: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .system-update-badge {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .system-update-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .system-update-badge[data-badge]:after {
+        content: attr(data-badge);
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #ef4444;
+        color: white;
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        line-height: 20px;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-control-label {
+        color: #475569;
+        font-size: 0.9rem;
+    }
+
+    .confirmation-message {
+        font-size: 0.875rem;
+        color: #059669;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+        50% {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .system-update-modal .modal-body {
+            padding: 1.25rem;
+        }
+        
+        .system-update-modal .update-item {
+            padding: 1rem;
+        }
+
+        .system-update-modal .update-title {
+            font-size: 1rem;
+        }
+
+        .system-update-modal .update-description {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Add these styles for balloon canvas positioning */
+    #balloon-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1040; /* Just below modal backdrop (1050) */
+        pointer-events: none; /* Initially no pointer events */
+    }
+
+    /* Adjust modal styles to work with balloon backdrop */
+    #birthdayModal .modal-dialog {
+        position: relative;
+        z-index: 1060; /* Above the balloon canvas */
+    }
+
+    #birthdayModal .modal-content {
+        background: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
+        backdrop-filter: blur(5px); /* Blur effect for background */
+    }
+
+    /* Dark mode adjustment */
+    @media (prefers-color-scheme: dark) {
+        #birthdayModal .modal-content {
+            background: rgba(45, 55, 72, 0.95);
+        }
+    }
+
+    /* Add these styles */
+    .celebrant-profile-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .celebrant-avatar-large {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .celebrant-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .default-avatar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: white;
+    }
+
+    .celebrant-details {
+        padding: 1rem;
+    }
+
+    .celebrant-name {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .info-item i {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.8rem;
+    }
+
+    .birthday-message-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(45deg, rgba(78, 205, 196, 0.1), rgba(69, 183, 209, 0.1));
+        border-radius: 10px;
+    }
+
+    .birthday-wish {
+        font-size: 1.1rem;
+        color: #4a5568;
+        line-height: 1.6;
+    }
+
+    .celebrant-divider {
+        border-color: rgba(0, 0, 0, 0.1);
+        margin: 2rem 0;
+    }
+
+    .birthday-cake-animation {
+        margin-top: 1rem;
+        font-size: 2.5rem;
+    }
+
+    /* Dark mode styles */
+    @media (prefers-color-scheme: dark) {
+        .celebrant-profile-card {
+            background: rgba(45, 55, 72, 0.95);
+        }
+
+        .celebrant-name {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            -webkit-background-clip: text;
+        }
+
+        .info-item {
+            color: #e2e8f0;
+        }
+
+        .birthday-wish {
+            color: #e2e8f0;
+        }
+
+        .birthday-message-section {
+            background: linear-gradient(45deg, rgba(78, 205, 196, 0.05), rgba(69, 183, 209, 0.05));
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .celebrant-profile-card {
+            padding: 1rem;
+        }
+
+        .celebrant-avatar-large {
+            width: 120px;
+            height: 120px;
+        }
+
+        .celebrant-name {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            font-size: 0.9rem;
+        }
+
+        .birthday-wish {
+            font-size: 1rem;
+        }
+    }
+
+    /* Add styles for the MHR Family message */
+    .mhr-family-message {
+        margin-top: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #FF6B6B;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        animation: glowText 2s ease-in-out infinite;
+    }
+
+    @keyframes glowText {
+        0%, 100% {
+            text-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+        }
+        50% {
+            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+    }
+
+    /* Add some CSS for the checkbox styling */
+    .dont-show-again {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        padding: 1rem;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .dont-show-again {
+            color: #adb5bd;
+        }
+        
+        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #adb5bd;
+            border-color: #adb5bd;
+        }
+    }
+
+    /* Add styles for the confirmation message */
+    .alert-info {
+        background-color: #cce5ff;
+        border-color: #b8daff;
+        color: #004085;
+        padding: 0.5rem 1rem;
+        margin-top: 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-control-input:checked ~ .custom-control-label::before {
+        border-color: #007bff;
+        background-color: #007bff;
+    }
+
+    .custom-checkbox .custom-control-label {
+        cursor: pointer;
+    }
+
+    .custom-checkbox .custom-control-label:hover {
+        color: #007bff;
+    }
+
+    /* Add these styles for the floating action card */
+    .floating-actions-card {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 300px;
+        z-index: 1000;
+        animation: float 3s ease-in-out infinite;
+        transition: all 0.3s ease;
+    }
+
+    .floating-actions-card.minimized {
+        width: 60px;
+        height: 60px;
+        overflow: hidden;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .floating-actions-card .card-header {
+        cursor: move;
+        user-select: none;
+    }
+
+    .minimize-btn {
+        position: absolute;
+        right: 40px;
+        top: 15px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .close-float-btn {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        cursor: pointer;
+    }
+
+    .floating-action-btn {
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .floating-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        transition: 0.5s;
+    }
+
+    .floating-action-btn:hover::before {
+        left: 100%;
+    }
+
+    .floating-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        padding: 5px 8px;
+        border-radius: 50%;
+        font-size: 12px;
+        background: #dc3545;
+        color: white;
+        display: none;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .floating-actions-card {
+            bottom: 20px;
+            right: 20px;
+            width: 280px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .floating-actions-card {
+            bottom: 15px;
+            right: 15px;
+            width: 260px;
+        }
+    }
+
+    .floating-actions-card {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 280px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background: #fff;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    .floating-actions-card.minimized {
+        width: 56px;
+        height: 56px;
+        overflow: hidden;
+        border-radius: 28px;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: #4a90e2;
+        color: white;
+        border-radius: 12px 12px 0 0;
+        cursor: move;
+    }
+
+    .header-controls {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+    }
+
+    .control-btn {
+        background: none;
+        border: none;
+        color: white;
+        padding: 4px;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .control-btn:hover {
+        opacity: 1;
+    }
+
+    .quick-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+
+    .action-btn:hover {
+        transform: translateX(4px);
+        color: white;
+    }
+
+    .leave-btn {
+        background: #4a90e2;
+    }
+
+    .loan-btn {
+        background: #2ecc71;
+    }
+
+    @media (max-width: 768px) {
+        .floating-actions-card {
+            width: 240px;
+            bottom: 16px;
+            right: 16px;
+        }
+
+        .action-btn {
+            padding: 10px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .floating-actions-card {
+            width: 200px;
+        }
+    }
+
+    .holiday-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: transform 0.2s;
+    }
+
+    .holiday-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .today-holiday {
+        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+        color: white;
+    }
+
+    .holiday-icon {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .today-holiday .holiday-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .holiday-details {
+        flex: 1;
+    }
+
+    .holiday-details h4 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .holiday-description {
+        font-size: 0.9rem;
+        color: #666;
+        margin: 0;
+    }
+
+    .today-holiday .holiday-description {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .holiday-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .holiday-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .holiday-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .holiday-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    /* Enhanced Modal Styles */
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem;
+    }
+
+    .animated-icon {
+        animation: bounce 2s infinite;
+    }
+
+    .close-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .close-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    /* Holiday Card Styles */
+    .holiday-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .holiday-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .today-holiday {
+        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+        color: white;
+    }
+
+    .holiday-icon {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .holiday-icon.pulse {
+        animation: pulse 2s infinite;
+    }
+
+    /* Post Card Styles */
+    .post-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .post-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #20BF55 0%, #01BAEF 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .post-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+        color: #2d3748;
+    }
+
+    .post-body {
+        font-size: 1rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .post-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #718096;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+
+    /* Don't Show Again Styles */
+    .dont-show-again {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .confirmation-message {
+        font-size: 0.875rem;
+        color: #48bb78;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Animations */
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .modal-dialog {
+            margin: 1rem;
+        }
+
+        .holiday-card, .post-card {
+            padding: 1rem;
+        }
+
+        .holiday-icon, .post-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        .post-title {
+            font-size: 1.1rem;
+        }
+
+        .post-body {
+            font-size: 0.95rem;
+        }
+
+        .post-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Add System Updates Modal Styles */
+    .system-update-modal .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .system-update-modal .modal-header {
+        background: linear-gradient(135deg, #4a90e2, #357abd);
+        color: white;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        padding: 1.5rem;
+    }
+
+    .system-update-modal .modal-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .system-update-modal .modal-body {
+        padding: 2rem;
+    }
+
+    .system-update-modal .update-item {
+        border-left: 4px solid #4a90e2;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0 5px 5px 0;
+        transition: all 0.3s ease;
+    }
+
+    .system-update-modal .update-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .system-update-modal .update-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .system-update-modal .update-description {
+        color: #4a5568;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .system-update-modal .update-date {
+        font-size: 0.85rem;
+        color: #718096;
+        margin-top: 0.5rem;
+    }
+
+    .system-update-badge {
+        position: relative;
+        display: inline-block;
+    }
+
+    .system-update-badge[data-badge]:after {
+        content: attr(data-badge);
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: .7em;
+        background: #e53e3e;
+        color: white;
+        width: 18px;
+        height: 18px;
+        text-align: center;
+        line-height: 18px;
+        border-radius: 50%;
+        box-shadow: 0 0 1px #333;
+    }
+
+    @media (max-width: 768px) {
+        .system-update-modal .modal-body {
+            padding: 1rem;
+        }
+        
+        .system-update-modal .update-item {
+            padding: 0.75rem;
+        }
+    }
 </style>
 <div class="container-fluid">
     <!-- Signature Reminder Alert - Moved to top and enhanced styling -->
@@ -2213,6 +6080,7 @@
                 $dashboardItems = [
                     ['icon' => 'fas fa-users', 'title' => 'Users', 'count' => $userCount, 'bg' => 'bg-info'],
                     ['icon' => 'fas fa-user-tie', 'title' => 'Employees', 'count' => $employeeCount, 'bg' => 'bg-primary'],
+                    ['icon' => 'fas fa-user-tie', 'title' => 'Active Employees', 'count' => $employeeActive, 'bg' => 'bg-success'],
                     ['icon' => 'fas fa-calendar-check', 'title' => 'All Attended', 'count' => $attendanceAllCount, 'bg' => 'bg-purple'],
                     ['icon' => 'fas fa-calendar-check', 'title' => 'Attended Today', 'count' => $attendanceCount, 'bg' => 'bg-success'],
                 ];
@@ -3317,4 +7185,84 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 </script>
+
+<!-- System Updates Modal -->
+<div class="modal fade system-update-modal" id="systemUpdatesModal" tabindex="-1" role="dialog" aria-labelledby="systemUpdatesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="systemUpdatesModalLabel">
+                    <i class="fas fa-sync-alt mr-2"></i> System Updates
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body custom-scrollbar">
+                @if($systemUpdates['updates']->isNotEmpty())
+                    @foreach($systemUpdates['updates'] as $update)
+                        <div class="update-item">
+                            <h6 class="update-title">{{ $update->title }}</h6>
+                            <div class="update-description">
+                                {!! nl2br(e($update->description)) !!}
+                            </div>
+                            <div class="update-date">
+                                <i class="far fa-clock mr-1"></i>
+                                @if($update->published_at)
+                                    {{ \Carbon\Carbon::parse($update->published_at)->format('F j, Y g:i A') }}
+                                @else
+                                    Date not available
+                                @endif
+                                <span class="text-muted">by {{ $update->author->first_name }} {{ $update->author->last_name }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="text-center py-4">
+                        <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No system updates available at this time.</p>
+                    </div>
+                @endif
+            </div>
+            <div class="modal-footer">
+                <div class="dont-show-again mr-auto">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="dontShowUpdatesAgain">
+                        <label class="custom-control-label" for="dontShowUpdatesAgain">Don't show again today</label>
+                    </div>
+                    <div class="confirmation-message"></div>
+                </div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        // Check if we should show the updates modal
+        const updatesModalShown = localStorage.getItem('updates_modal_shown');
+        const today = new Date().toDateString();
+        
+        @if($systemUpdates['hasUnreadUpdates'])
+            if (updatesModalShown !== today) {
+                $('#systemUpdatesModal').modal('show');
+            }
+        @endif
+
+        // Handle "Don't show again" for Updates Modal
+        $('#dontShowUpdatesAgain').change(function() {
+            const confirmationDiv = $(this).closest('.dont-show-again').find('.confirmation-message');
+            if (this.checked) {
+                localStorage.setItem('updates_modal_shown', today);
+                confirmationDiv.text("Update notifications won't show again today.").show();
+            } else {
+                localStorage.removeItem('updates_modal_shown');
+                confirmationDiv.hide();
+            }
+        });
+    });
+</script>
+@endpush
 @endsection

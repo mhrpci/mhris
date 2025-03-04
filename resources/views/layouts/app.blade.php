@@ -2105,6 +2105,18 @@
                         </div>
                     </div>
                 </li>
+
+                <!-- System Updates Icon -->
+                @if(isset($systemUpdates))
+                <li class="nav-item">
+                    <a class="nav-link system-updates-icon" href="#" data-toggle="modal" data-target="#systemUpdatesModal" title="System Updates">
+                        <i class="fas fa-sync-alt"></i>
+                        @if($systemUpdates['hasUnreadUpdates'])
+                            <span class="badge badge-danger navbar-badge updates-count">{{ $systemUpdates['updates']->count() }}</span>
+                        @endif
+                    </a>
+                </li>
+                @endif
                 @endauth
                 
                 <li class="nav-item">
@@ -2138,6 +2150,11 @@
                             <i class="fas fa-calendar-alt mr-2"></i> Holiday
                         </a>
                         @endcanany
+                        @can('system-admin')
+                        <a href="{{ url('system-updates') }}" class="dropdown-item">
+                            <i class="fas fa-sync-alt mr-2"></i> System Updates
+                        </a>
+                        @endcan
                     </div>
                 </li>
                 @endcanany
@@ -3885,5 +3902,67 @@
             }
         });
     </script>
-</body>
+
+    <!-- System Updates Handler -->
+    <script>
+    $(document).ready(function() {
+        // Initialize tooltip for system updates icon
+        $('.system-updates-icon').tooltip();
+
+        // Handle system updates icon click
+        $('.system-updates-icon').on('click', function(e) {
+            const today = new Date().toDateString();
+            const updatesModalShown = localStorage.getItem('updates_modal_shown');
+
+            // Check if updates should be shown
+            if (!updatesModalShown || updatesModalShown !== today) {
+                $('#systemUpdatesModal').modal('show');
+            }
+        });
+
+        // Handle "Don't show again" checkbox
+        $('#dontShowUpdatesAgain').on('change', function() {
+            const today = new Date().toDateString();
+            const confirmationDiv = $(this).closest('.dont-show-again').find('.confirmation-message');
+            
+            if (this.checked) {
+                localStorage.setItem('updates_modal_shown', today);
+                confirmationDiv.text("Update notifications won't show again today.").show();
+            } else {
+                localStorage.removeItem('updates_modal_shown');
+                confirmationDiv.hide();
+            }
+        });
+
+        // Theme-aware updates icon
+        function updateSystemUpdatesIconTheme() {
+            const isDarkMode = $('body').hasClass('dark-mode');
+            const $icon = $('.system-updates-icon');
+            
+            if (isDarkMode) {
+                $icon.addClass('text-light').removeClass('text-dark');
+            } else {
+                $icon.addClass('text-dark').removeClass('text-light');
+            }
+        }
+
+        // Update theme when dark mode changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    updateSystemUpdatesIconTheme();
+                }
+            });
+        });
+
+        observer.observe(document.body, {
+            attributes: true
+        });
+
+        // Initial theme setup
+        updateSystemUpdatesIconTheme();
+    });
+    </script>
+
+    </body>
 </html>

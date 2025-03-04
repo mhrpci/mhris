@@ -72,6 +72,7 @@
                                     <td>{{ $overtime->overtime_rate }}</td>
                                     <td>{{ number_format($overtime->overtime_pay, 2) }}</td>
                                     <td>
+                                        @can('super-admin')
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <i class="fas fa-ellipsis-v"></i>
@@ -86,6 +87,7 @@
                                                 @endcan
                                             </div>
                                         </div>
+                                        @endcan
                                     </td>
                                 </tr>
                             @endforeach

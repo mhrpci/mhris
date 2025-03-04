@@ -8,10 +8,19 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Holiday List</h3>
-                        <div class="card-tools">
+                        <div class="card-tools d-flex flex-wrap align-items-center">
                             @can('holiday-create')
-                            <a href="{{ route('holidays.create') }}" class="btn btn-success btn-sm rounded-pill">
-                                Add holiday <i class="fas fa-plus-circle"></i>
+                            <button type="button" class="btn btn-primary btn-sm rounded-pill mr-2 mb-2 d-flex align-items-center" data-toggle="modal" data-target="#importModal">
+                                <i class="fas fa-file-import mr-1"></i>
+                                <span>Import Holidays</span>
+                            </button>
+                            <a href="{{ route('holidays.export') }}" class="btn btn-info btn-sm rounded-pill mr-2 mb-2 d-flex align-items-center">
+                                <i class="fas fa-file-export mr-1"></i>
+                                <span>Export Holidays</span>
+                            </a>
+                            <a href="{{ route('holidays.create') }}" class="btn btn-success btn-sm rounded-pill mb-2 d-flex align-items-center">
+                                <i class="fas fa-plus-circle mr-1"></i>
+                                <span>Add Holiday</span>
                             </a>
                             @endcan
                         </div>
@@ -69,13 +78,74 @@
         <!-- /.row -->
     </div>
     <!-- /.container-fluid -->
+
+    <!-- Import Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="importModalLabel">
+                        <i class="fas fa-file-import mr-2"></i>Import Holidays
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="importForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="file" class="font-weight-bold">
+                                <i class="fas fa-file-excel mr-1"></i>Choose Excel File
+                            </label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="file" name="file" accept=".xlsx, .xls" required>
+                                <label class="custom-file-label" for="file">Choose file...</label>
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Please upload an Excel file (.xlsx or .xls) with the following columns: title, type, date
+                            </small>
+                        </div>
+                        <div class="alert alert-info">
+                            <h6 class="font-weight-bold">
+                                <i class="fas fa-info-circle mr-1"></i>Available Holiday Types:
+                            </h6>
+                            <ul class="mb-0 pl-4">
+                                @foreach(App\Models\Holiday::types() as $type)
+                                    <li>{{ $type }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Close
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="importSubmitBtn">
+                            <span class="normal-state">
+                                <i class="fas fa-file-import mr-1"></i>Import
+                            </span>
+                            <span class="loading-state d-none">
+                                <i class="fas fa-spinner fa-spin mr-1"></i>Importing...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('js')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
     
     <script>
         $(document).ready(function () {
+            // Initialize custom file input
+            bsCustomFileInput.init();
+
             // Common toast configuration
             const toastConfig = {
                 timer: 3000,
@@ -90,6 +160,83 @@
                     popup: 'colored-toast'
                 }
             };
+
+            // Handle import form submission
+            $('#importForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitBtn = $('#importSubmitBtn');
+                
+                // Show loading state
+                submitBtn.prop('disabled', true)
+                    .find('.normal-state').addClass('d-none')
+                    .end()
+                    .find('.loading-state').removeClass('d-none');
+                
+                $.ajax({
+                    url: '{{ route("holidays.import") }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#importModal').modal('hide');
+                        
+                        Swal.fire({
+                            ...toastConfig,
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            background: '#28a745',
+                            color: '#fff'
+                        });
+                        
+                        // Reload the page after a short delay
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An error occurred while importing.';
+                        
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.errors) {
+                                errorMessage = xhr.responseJSON.errors.join('\n');
+                            } else if (xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+                        }
+                        
+                        Swal.fire({
+                            ...toastConfig,
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage,
+                            background: '#dc3545',
+                            color: '#fff'
+                        });
+                    },
+                    complete: function() {
+                        // Reset button state
+                        submitBtn.prop('disabled', false)
+                            .find('.loading-state').addClass('d-none')
+                            .end()
+                            .find('.normal-state').removeClass('d-none');
+                    }
+                });
+            });
+
+            // Reset form and button state when modal is closed
+            $('#importModal').on('hidden.bs.modal', function () {
+                $('#importForm').trigger('reset');
+                $('.custom-file-label').html('Choose file...');
+                $('#importSubmitBtn')
+                    .prop('disabled', false)
+                    .find('.loading-state').addClass('d-none')
+                    .end()
+                    .find('.normal-state').removeClass('d-none');
+            });
 
             // Success toast
             @if(Session::has('success'))
@@ -149,6 +296,40 @@
         }
         .colored-toast.swal2-icon-error {
             box-shadow: 0 0 12px rgba(220, 53, 69, 0.4) !important;
+        }
+
+        /* Button hover effects */
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Custom file input styling */
+        .custom-file-input:focus ~ .custom-file-label {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        /* Modal animation */
+        .modal.fade .modal-dialog {
+            transition: transform 0.3s ease-out;
+            transform: scale(0.95);
+        }
+        .modal.show .modal-dialog {
+            transform: scale(1);
+        }
+
+        /* Responsive button text */
+        @media (max-width: 576px) {
+            .card-tools .btn span {
+                display: none;
+            }
+            .card-tools .btn i {
+                margin-right: 0 !important;
+            }
         }
     </style>
 @endsection
