@@ -1186,7 +1186,7 @@
     </script>
 </div>
 </script>
-
+<style>
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
             .quotation-form-header h2 {
