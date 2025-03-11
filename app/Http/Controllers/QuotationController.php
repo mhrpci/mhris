@@ -38,6 +38,15 @@ class QuotationController extends Controller
                 'updated_at' => now()
             ]);
 
+            // Send email notification to customer
+            try {
+                Mail::to($quotation->email)
+                    ->send(new \App\Mail\QuotationStatusUpdateMail($quotation, $oldStatus, $validatedData['status']));
+            } catch (\Exception $emailError) {
+                Log::error('Failed to send quotation status update email: ' . $emailError->getMessage());
+                // Continue execution even if email fails
+            }
+
             $message = 'Quotation status updated successfully from ' . ucfirst($oldStatus) . ' to ' . ucfirst($validatedData['status']);
 
             if ($request->wantsJson() || $request->ajax()) {
@@ -78,13 +87,22 @@ class QuotationController extends Controller
     public function sendRequest(Request $request)
     {
         try {
+            // Validate request data
             $validatedData = $request->validate([
-                'product_name' => 'required|string',
-                'product_id' => 'required|numeric',
-                'name' => 'required|string',
-                'email' => 'required|email',
-                'phone' => 'required|string',
-                'hospital_name' => 'required|string'
+                'product_name' => 'required|string|max:255',
+                'product_id' => 'required|numeric|exists:medical_products,id',
+                'name' => 'required|string|min:3|max:255|regex:/^[A-Za-z\s]+$/',
+                'email' => 'required|email:rfc,dns|max:255',
+                'phone' => ['required', 'string', 'min:10', 'max:20', 'regex:/^[0-9\+\-\s]+$/'],
+                'hospital_name' => 'required|string|min:3|max:255',
+                'message' => 'nullable|string|max:500'
+            ], [
+                'product_id.exists' => 'The selected product does not exist.',
+                'name.regex' => 'The name may only contain letters and spaces.',
+                'phone.regex' => 'Please enter a valid phone number.',
+                'email.email' => 'Please enter a valid email address.',
+                'email.rfc' => 'Please enter a valid email address.',
+                'email.dns' => 'Please enter a valid email domain.'
             ]);
 
             // Save to database
@@ -95,27 +113,63 @@ class QuotationController extends Controller
                 'email' => $validatedData['email'],
                 'phone' => $validatedData['phone'],
                 'hospital_name' => $validatedData['hospital_name'],
+                'message' => $validatedData['message'] ?? null,
                 'status' => 'pending'
             ]);
 
             // Send email to company
-            Mail::to('csr.mhrhealthcare@gmail.com')
-                ->send(new QuotationRequestMail($quotationRequest));
+            try {
+                Mail::to(config('mail.quotation_recipient', 'csr.mhrhealthcare@gmail.com'))
+                    ->send(new QuotationRequestMail($quotationRequest));
 
-            // Send confirmation email to customer
-            Mail::to($validatedData['email'])
-                ->send(new QuotationConfirmationMail($quotationRequest));
+                // Send confirmation email to customer
+                Mail::to($validatedData['email'])
+                    ->send(new QuotationConfirmationMail($quotationRequest));
+            } catch (\Exception $emailError) {
+                Log::error('Quotation Email Error: ' . $emailError->getMessage());
+                // Continue execution even if email fails
+                // We might want to notify admin about email failure
+                if (app()->bound('sentry')) {
+                    \Sentry\captureException($emailError);
+                }
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Quotation request sent successfully'
+                'message' => 'Quotation request sent successfully',
+                'data' => [
+                    'quotation_id' => $quotationRequest->id,
+                    'status' => $quotationRequest->status
+                ]
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Quotation Request Error: ' . $e->getMessage());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Quotation Validation Error: ' . json_encode($e->errors()));
             return response()->json([
                 'success' => false,
-                'message' => 'There was an error sending your request. Please try again.'
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Quotation Request Error: ' . $e->getMessage());
+            
+            // Log detailed error info for debugging
+            Log::error('Error details:', [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Send to error tracking service if available
+            if (app()->bound('sentry')) {
+                \Sentry\captureException($e);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'There was an error processing your request. Please try again later.'
             ], 500);
         }
     }

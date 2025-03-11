@@ -42,6 +42,8 @@ class Attendance extends Model
         'hours_worked',
         'leave_payment_status',
         'overtime_hours',
+        'time_in_address',
+        'time_out_address',
     ];
 
     public function employee(): BelongsTo

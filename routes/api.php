@@ -6,6 +6,7 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\ServerTimeController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -33,6 +34,7 @@ Route::get('/employees/{employee}/signature', function (App\Models\Employee $emp
 Route::get('/server-time', function() {
     return response()->json(['server_time' => now()->toIso8601String()]);
 });
+
 Route::get('notifications/health', [NotificationsController::class, 'healthCheck']);
 
 Route::prefix('auth')->group(function () {
@@ -80,3 +82,7 @@ Route::post('/dismiss-celebrants', function () {
     }
     return response()->json(['success' => true]);
 });
+
+// Server Time Routes
+Route::get('/server-time', [ServerTimeController::class, 'getTime']);
+Route::get('/verify-timestamp/{timestamp}/{hash}', [ServerTimeController::class, 'verifyTimestamp']);

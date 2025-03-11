@@ -17,6 +17,7 @@ class QuotationRequest extends Model
         'email',
         'phone',
         'hospital_name',
+        'message',
         'status',
         'notes'
     ];

@@ -11,9 +11,15 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Imports\AttendanceImport;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+use Spatie\Permission\Traits\HasRoles;
 
 class AttendanceController extends Controller
 {
+    use HasRoles;
+
     // Middleware for permissions
     function __construct()
     {
@@ -44,7 +50,7 @@ class AttendanceController extends Controller
         return view('attendances.create', compact('employees'));
     }
 
-        // Store a new attendance record
+    // Store a new attendance record
     public function store(Request $request)
     {
         $request->validate([
@@ -111,8 +117,9 @@ class AttendanceController extends Controller
             return redirect()->route('attendances.index')->with('success', $successMessage);
         }
     }
-        // Method to check if attendance exists (for AJAX call)
-        public function checkAttendance(Request $request)
+
+    // Method to check if attendance exists (for AJAX call)
+    public function checkAttendance(Request $request)
     {
         $employeeId = $request->query('employee_id');
         $dateAttended = $request->query('date_attended');
@@ -127,7 +134,6 @@ class AttendanceController extends Controller
             'hasTimeOut' => $attendance && $attendance->time_out != null,
         ]);
     }
-
 
     // Display a specific attendance record
     public function show(Attendance $attendance)
@@ -252,70 +258,73 @@ class AttendanceController extends Controller
     }
 
     public function checkAttendanceStatus(Request $request)
-{
-    // Validate the incoming request
-    $request->validate([
-        'employee_id' => 'required|exists:employees,id',
-        'date_attended' => 'required|date',
-    ]);
+    {
+        // Validate the incoming request
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'date_attended' => 'required|date',
+        ]);
 
-    $employeeId = $request->input('employee_id');
-    $dateAttended = $request->input('date_attended');
+        $employeeId = $request->input('employee_id');
+        $dateAttended = $request->input('date_attended');
 
-    // Retrieve the attendance record for the employee and date
-    $attendance = Attendance::where('employee_id', $employeeId)
-                            ->where('date_attended', $dateAttended)
-                            ->first();
+        // Retrieve the attendance record for the employee and date
+        $attendance = Attendance::where('employee_id', $employeeId)
+                                ->where('date_attended', $dateAttended)
+                                ->first();
 
-    // Check if attendance exists and has a time_in value
-    if ($attendance) {
+        // Check if attendance exists and has a time_in value
+        if ($attendance) {
+            return response()->json([
+                'status' => 'exists',
+                'time_in' => $attendance->time_in,
+                'time_out' => $attendance->time_out, // You may also include time_out if needed
+            ], 200);
+        }
+
+        return response()->json(['status' => 'not_found'], 200);
+    }
+
+    public function getEmployeeInfo(Request $request)
+    {
+        // Replace this with actual logic to get authenticated employee info
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         return response()->json([
-            'status' => 'exists',
-            'time_in' => $attendance->time_in,
-            'time_out' => $attendance->time_out, // You may also include time_out if needed
-        ], 200);
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+        ]);
     }
 
-    return response()->json(['status' => 'not_found'], 200);
-}
-public function getEmployeeInfo(Request $request)
-{
-    // Replace this with actual logic to get authenticated employee info
-    $user = Auth::user();
+    public function printAttendance(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'date_attended' => 'required|date',
+        ]);
 
-    if (!$user) {
-        return response()->json(['error' => 'Unauthorized'], 401);
+        $employeeId = $request->input('employee_id');
+        $dateAttended = $request->input('date_attended');
+
+        $attendance = Attendance::where('employee_id', $employeeId)
+                                ->where('date_attended', $dateAttended)
+                                ->first();
+
+        if (!$attendance) {
+            return redirect()->back()->withErrors(['error' => 'Attendance record not found.']);
+        }
+
+        // Pass the attendance data to the print view
+        return view('attendances.print', [
+            'attendance' => $attendance
+        ]);
     }
 
-    return response()->json([
-        'id' => $user->id,
-        'first_name' => $user->first_name,
-    ]);
-}
-public function printAttendance(Request $request)
-{
-    $request->validate([
-        'employee_id' => 'required|exists:employees,id',
-        'date_attended' => 'required|date',
-    ]);
-
-    $employeeId = $request->input('employee_id');
-    $dateAttended = $request->input('date_attended');
-
-    $attendance = Attendance::where('employee_id', $employeeId)
-                            ->where('date_attended', $dateAttended)
-                            ->first();
-
-    if (!$attendance) {
-        return redirect()->back()->withErrors(['error' => 'Attendance record not found.']);
-    }
-
-    // Pass the attendance data to the print view
-    return view('attendances.print', [
-        'attendance' => $attendance
-    ]);
-}
-/**
+    /**
      * Show the form for importing attendance records.
      *
      * @return \Illuminate\View\View
@@ -364,7 +373,9 @@ public function printAttendance(Request $request)
             abort(403, 'Unauthorized access.');
         }
 
-        return view('attendances.attendance');
+        $employee = Employee::where('email_address', $user->email)->first();
+
+        return view('attendances.attendance', compact('employee'));
     }
 
     /**
@@ -377,6 +388,217 @@ public function printAttendance(Request $request)
             return response()->json(['message' => 'Attendance records stored successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function capturePreview()
+    {
+        $user = Auth::user();
+        $employee = Employee::where('email_address', $user->email)->first();
+        
+        if (!$employee) {
+            \Log::warning('Employee not found for user email: ' . $user->email);
+        }
+        
+        return view('attendances.capture-preview', compact('employee'));
+    }
+
+    /**
+     * Helper method to store timestamp images
+     * 
+     * @param string $imageData Base64 encoded image
+     * @param string $timestamp Timestamp for filename
+     * @return string|false Returns the stored image path or false on failure
+     */
+    private function storeTimestampImage($imageData, $timestamp)
+    {
+        try {
+            // Check if storage link exists
+            if (!file_exists(public_path('storage'))) {
+                \Artisan::call('storage:link');
+            }
+
+            // Create time_stamps directory if it doesn't exist
+            $directory = 'time_stamps';
+            if (!Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory);
+            }
+
+            // Clean the base64 string
+            $cleanImageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
+            
+            // Generate unique filename with timestamp
+            $filename = uniqid() . '_' . Carbon::parse($timestamp)->format('Ymd_His') . '.jpg';
+            $fullPath = $directory . '/' . $filename;
+
+            // Store the image
+            if (Storage::disk('public')->put($fullPath, $cleanImageData)) {
+                return $fullPath;
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            \Log::error('Error storing timestamp image: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function storeAttendanceCapture(Request $request)
+    {
+        try {
+            // Validate the request
+            $request->validate([
+                'type' => 'required|in:in,out',
+                'image' => 'required|string', // Base64 encoded image
+                'location' => 'required|string',
+                'timestamp' => 'required|string',
+            ]);
+
+            // Get the authenticated user
+            $user = Auth::user();
+            
+            // Find the employee by email
+            $employee = Employee::where('email_address', $user->email)->first();
+            
+            if (!$employee) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Employee not found for the current user.'
+                ], 404);
+            }
+
+            // Parse the timestamp
+            $timestamp = Carbon::parse($request->timestamp);
+            $currentDate = $timestamp->format('Y-m-d');
+            $currentTime = $timestamp->format('H:i:s');
+
+            // Find existing attendance for today
+            $attendance = Attendance::where('employee_id', $employee->id)
+                                 ->where('date_attended', $currentDate)
+                                 ->first();
+
+            // Store the image and get the path
+            $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
+            
+            if (!$imagePath) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to store timestamp image.'
+                ], 500);
+            }
+
+            // Handle Clock In
+            if ($request->type === 'in') {
+                if ($attendance) {
+                    // Check if already clocked in
+                    if ($attendance->time_in && $attendance->time_stamp1) {
+                        // Delete the newly stored image since we won't use it
+                        Storage::disk('public')->delete($imagePath);
+                        
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Already clocked in for today.'
+                        ], 400);
+                    }
+                    
+                    // Update existing attendance with clock in
+                    $attendance->time_in = $currentTime;
+                    $attendance->time_stamp1 = $imagePath;
+                    $attendance->time_in_address = $request->location;
+                    $attendance->save();
+                } else {
+                    // Create new attendance record with time_stamp1
+                    $attendance = Attendance::create([
+                        'employee_id' => $employee->id,
+                        'date_attended' => $currentDate,
+                        'time_in' => $currentTime,
+                        'time_stamp1' => $imagePath,
+                        'time_in_address' => $request->location,
+                    ]);
+                }
+
+                $message = 'Clock in recorded successfully.';
+            } 
+            // Handle Clock Out
+            else {
+                if (!$attendance || !$attendance->time_in || !$attendance->time_stamp1) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
+                    
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Must clock in first before clocking out.'
+                    ], 400);
+                }
+
+                if ($attendance->time_out && $attendance->time_stamp2) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
+                    
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Already clocked out for today.'
+                    ], 400);
+                }
+
+                // Update attendance with clock out and time_stamp2
+                $attendance->time_out = $currentTime;
+                $attendance->time_stamp2 = $imagePath;
+                $attendance->time_out_address = $request->location;
+                $attendance->save();
+
+                $message = 'Clock out recorded successfully.';
+            }
+
+            // Calculate hours worked and update remarks if the method exists
+            if (method_exists($attendance, 'calculateRemarksAndHoursWorked')) {
+                $attendance->calculateRemarksAndHoursWorked();
+                $attendance->save();
+            }
+
+            // Return success response with detailed information
+            return response()->json([
+                'status' => 'success',
+                'message' => $message,
+                'data' => [
+                    'attendance' => [
+                        'id' => $attendance->id,
+                        'date' => $attendance->date_attended,
+                        'time_in' => $attendance->time_in,
+                        'time_out' => $attendance->time_out,
+                        'time_stamp1' => $attendance->time_stamp1 ? asset('storage/' . $attendance->time_stamp1) : null,
+                        'time_stamp2' => $attendance->time_stamp2 ? asset('storage/' . $attendance->time_stamp2) : null,
+                        'hours_worked' => $attendance->hours_worked,
+                        'remarks' => $attendance->remarks
+                    ],
+                    'employee' => [
+                        'name' => $employee->first_name . ' ' . $employee->last_name,
+                        'position' => $employee->position->name,
+                        'department' => $employee->department->name
+                    ]
+                ]
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Attendance capture error: ' . $e->getMessage());
+            
+            // Delete any stored image if there was an error
+            if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing your request.',
+                'debug' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
         }
     }
 }

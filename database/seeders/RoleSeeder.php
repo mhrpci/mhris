@@ -103,7 +103,6 @@ class RoleSeeder extends Seeder
             'contribution-create',
             'contribution-edit',
             'employee-list',
-            'employee-create',
             'employee-edit',
             'overtime-list',
             'overtime-create',

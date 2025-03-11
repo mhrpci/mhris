@@ -2056,17 +2056,6 @@
                 <li class="nav-item d-none d-sm-inline-block">
                     {{-- <a href="{{ url('/') }}" class="nav-link">Home</a> --}}
                 </li>
-                <!-- Our Policies link with larger text and icon -->
-                <li class="nav-item d-none d-sm-inline-block">
-                    <a href="{{ url('/policies-page') }}" class="nav-link">
-                        <i class="fas fa-file-alt mr-2"></i> Terms and Policy of Usage
-                    </a>
-                </li>
-                {{-- <li class="nav-item d-none d-sm-inline-block">
-                    <a href="{{ url('/calendar') }}" class="nav-link" style="font-size: 1.2rem; font-weight: 200;">
-                        <i class="fas fa-calendar"></i> Our Calendar
-                    </a>
-                </li> --}}
                 <!-- Add more nav items here -->
             </ul>
 
@@ -2081,30 +2070,6 @@
                     </button>
                 </li>
                 @endif
-                <!-- Existing notifications and other items -->
-                @auth
-                <li class="nav-item dropdown">
-                    <a class="nav-link" data-toggle="dropdown" href="#" id="notifications-dropdown">
-                        <i class="far fa-bell"></i>
-                        <span class="badge badge-warning navbar-badge notification-count">0</span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" id="notification-list">
-                        <div class="dropdown-header bg-primary text-white d-flex justify-content-between align-items-center">
-                            <h6 class="m-0">Notifications</h6>
-                            <a href="{{ route('notifications.all') }}" class="text-white small">
-                                <i class="fas fa-external-link-alt"></i>
-                            </a>
-                        </div>
-                        <div class="notification-scroll notifications-list">
-                            <!-- Notifications will be inserted here dynamically -->
-                        </div>
-                        <div class="dropdown-footer p-2 text-center">
-                            <a href="{{ route('notifications.all') }}" class="text-dark">
-                                <small>View All Notifications</small>
-                            </a>
-                        </div>
-                    </div>
-                </li>
 
                 <!-- System Updates Icon -->
                 @if(isset($systemUpdates))
@@ -2117,13 +2082,34 @@
                     </a>
                 </li>
                 @endif
-                @endauth
-                
-                <li class="nav-item">
-                    <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
-                        <i class="fas fa-table-columns"></i>
+                <!-- Notifications Dropdown Menu -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#" id="notifications-dropdown">
+                        <i class="far fa-bell"></i>
+                        <span class="badge badge-warning navbar-badge" id="notifications-count">0</span>
                     </a>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" id="notification-list">
+                        <span class="dropdown-header">
+                            <i class="fas fa-bell mr-2"></i>Notifications
+                            <span class="float-right">
+                                <a href="#" class="text-sm mark-all-read">Mark all as read</a>
+                            </span>
+                        </span>
+                        <div class="dropdown-divider"></div>
+                        <div class="notification-scroll" id="notifications-container">
+                            <!-- Notifications will be dynamically inserted here -->
+                            <div class="empty-notifications text-center p-3">
+                                <i class="fas fa-bell-slash mb-3"></i>
+                                <p class="text-muted">No new notifications</p>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ route('notifications.all') }}" class="dropdown-footer dropdown-item text-center">
+                            See All Notifications
+                        </a>
+                    </div>
                 </li>
+            
                 @canany(['admin', 'super-admin', 'hrcomben', 'hrcompliance', 'hrpolicy'])
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#">
@@ -2368,7 +2354,13 @@
                                     <i class="fas fa-link"></i>
                                     Link Another Account
                                 </a>
-
+                                @if(auth()->user()->hasRole('Super Admin'))
+                                <div class="dropdown-divider"></div>
+                                <a href="{{ route('route-management.index') }}" class="dropdown-item">
+                                    <i class="fas fa-route"></i>
+                                    Route Management
+                                </a>
+                                @endif
                                 <div class="dropdown-divider"></div>
                                 <a href="{{ route('login.history') }}" class="dropdown-item logout-item">
                                     <i class="fas fa-history"></i>
@@ -2384,6 +2376,11 @@
                             </div>
                         </div>
                     </li>
+                    <li class="nav-item">
+                    <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
                 @endguest
             </ul>
         </nav>
@@ -2614,8 +2611,8 @@
                         @endcan
 
                         @canany(['admin', 'super-admin', 'hrcompliance', 'it-staff', 'hrpolicy'])
-                        <li class="nav-item has-treeview {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'policies*', 'subsidiaries*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'policies*', 'subsidiaries*') ? 'active' : '' }}">
+                        <li class="nav-item has-treeview {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'subsidiaries*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'subsidiaries*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
                                     Others
@@ -2647,14 +2644,6 @@
                                     </a>
                                 </li>
                                 @endcanany
-                                <!-- @canany(['admin', 'super-admin', 'hrpolicy'])
-                                <li class="nav-item">
-                                    <a href="{{ route('policies.index') }}" class="nav-link {{ Request::is('policies*') ? 'active' : '' }}">
-                                        <i class="fas fa-file-alt nav-icon"></i>
-                                        <p>Company Policy</p>
-                                    </a>
-                                </li>
-                                @endcanany -->
                             </ul>
                         </li>
                         @endcanany
@@ -2683,7 +2672,7 @@
                         @canany(['product-manager', 'super-admin'])
                         <li class="nav-item">
                             <a href="{{ route('analytics.dashboard') }}" class="nav-link {{ Request::is('analytics*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <i class="nav-icon fas fa-pills"></i>
                                 <p>MHRHCI Management</p>
                             </a>
                         </li>

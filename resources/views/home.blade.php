@@ -6074,7 +6074,6 @@
     </div>
 
     <!-- Admin dashboard section -->
-    @canany(['super-admin', 'admin', 'hrcomben', 'hrcompliance'])
         <div class="row">
             @php
                 $dashboardItems = [
@@ -6087,6 +6086,7 @@
             @endphp
 
             @foreach($dashboardItems as $item)
+            @canany(['super-admin', 'admin', 'hrcomben', 'hrcompliance'])
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="card dashboard-card {{ $item['bg'] }} text-white">
                         <div class="card-body">
@@ -6100,6 +6100,7 @@
                         </div>
                     </div>
                 </div>
+            @endcanany  
             @endforeach
         </div>
 
@@ -6115,6 +6116,7 @@
             @endphp
 
             @foreach($leaveItems as $item)
+            @canany(['super-admin', 'admin', 'hrcomben', 'hrcompliance', 'supervisor'])
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="card {{ $item['bg'] }} text-white">
                         <div class="card-body">
@@ -6128,8 +6130,8 @@
                         </div>
                     </div>
                 </div>
-            @endforeach
             @endcanany
+            @endforeach
             @can('hrhiring')
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="card bg-info text-white">

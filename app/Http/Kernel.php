@@ -40,6 +40,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\UserActivity::class,
             \App\Http\Middleware\LogUserActivity::class,
             \App\Http\Middleware\RedirectProductManager::class,
+            \App\Http\Middleware\CheckRouteStatus::class,
         ],
 
         'api' => [
@@ -71,6 +72,7 @@ class Kernel extends HttpKernel
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        'super.admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
     ];
     protected $routeMiddleware = [
         // other middleware entries

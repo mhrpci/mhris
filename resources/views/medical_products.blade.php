@@ -832,6 +832,457 @@
                 color: #a0aec0;
             }
         }
+
+        /* Quotation Form Styles */
+        .quotation-form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .quotation-form-header h2 {
+            color: #2c5282;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .quotation-form-header p {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .quotation-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            color: #2c5282;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group label i {
+            color: #4299e1;
+        }
+
+        .form-control {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .form-control:disabled,
+        .form-control[readonly] {
+            background-color: #f7fafc;
+            cursor: not-allowed;
+        }
+
+        .form-text {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(44, 82, 130, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .form-footer {
+                flex-direction: column-reverse;
+                gap: 0.75rem;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .quotation-form-header h2 {
+                color: #4299e1;
+            }
+
+            .form-control {
+                background-color: #2d3748;
+                border-color: #4a5568;
+                color: #e2e8f0;
+            }
+
+            .form-control:focus {
+                border-color: #4299e1;
+                box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+            }
+
+            .form-control[readonly] {
+                background-color: #1a202c;
+            }
+
+            .btn-secondary {
+                background: #4a5568;
+                color: #e2e8f0;
+            }
+
+            .btn-secondary:hover {
+                background: #2d3748;
+            }
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-left: 4px solid #48bb78;
+        }
+
+        .notification.error {
+            border-left: 4px solid #f56565;
+        }
+
+        .notification i {
+            font-size: 1.25rem;
+        }
+
+        .notification.success i {
+            color: #48bb78;
+        }
+
+        .notification.error i {
+            color: #f56565;
+        }
+
+        .notification p {
+            margin: 0;
+            color: #4a5568;
+        }
+
+        @media (max-width: 768px) {
+            .notification {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .notification {
+                background: #2d3748;
+            }
+
+            .notification p {
+                color: #e2e8f0;
+            }
+        }
+    </style>
+
+    <script>
+        // ... existing code ...
+
+        function submitQuotation(event) {
+            event.preventDefault();
+            
+            // Get form data
+            const form = event.target;
+            const formData = {
+                product_name: form.querySelector('#quotationProductName').value,
+                product_id: currentProduct.id,
+                name: form.querySelector('#quotationName').value,
+                email: form.querySelector('#quotationEmail').value,
+                phone: form.querySelector('#quotationPhone').value,
+                hospital_name: form.querySelector('#quotationHospital').value,
+                message: form.querySelector('#quotationMessage').value
+            };
+
+            // Validate form data
+            if (!validateForm(formData)) {
+                return;
+            }
+
+            // Show loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+            // Send AJAX request
+            fetch('/api/quotation-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showNotification('success', 'Your quotation request has been sent successfully! We will contact you soon.');
+                    form.reset();
+                    closeQuotationModal();
+                } else {
+                    throw new Error(data.message || 'Failed to send request');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('error', 'There was an error sending your request. Please try again.');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            });
+        }
+
+        function validateForm(data) {
+            const nameRegex = /^[A-Za-z\s]+$/;
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            const phoneRegex = /^[0-9\+\-\s]+$/;
+
+            if (!nameRegex.test(data.name)) {
+                showNotification('error', 'Please enter a valid name (letters and spaces only)');
+                return false;
+            }
+
+            if (!emailRegex.test(data.email)) {
+                showNotification('error', 'Please enter a valid email address');
+                return false;
+            }
+
+            if (!phoneRegex.test(data.phone) || data.phone.length < 10) {
+                showNotification('error', 'Please enter a valid phone number');
+                return false;
+            }
+
+            if (data.hospital_name.length < 3) {
+                showNotification('error', 'Hospital name must be at least 3 characters long');
+                return false;
+            }
+
+            return true;
+        }
+
+        function showNotification(type, message) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <p>${message}</p>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Character counter for message field
+        document.getElementById('quotationMessage').addEventListener('input', function(e) {
+            const counter = document.getElementById('messageCounter');
+            counter.textContent = `${e.target.value.length}/500`;
+        });
+    </script>
+</div>
+</script>
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .quotation-form-header h2 {
+                color: #4299e1;
+            }
+
+            .form-control {
+                background-color: #2d3748;
+                border-color: #4a5568;
+                color: #e2e8f0;
+            }
+
+            .form-control:focus {
+                border-color: #4299e1;
+                box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+            }
+
+            .form-control[readonly] {
+                background-color: #1a202c;
+            }
+
+            .btn-secondary {
+                background: #4a5568;
+                color: #e2e8f0;
+            }
+
+            .btn-secondary:hover {
+                background: #2d3748;
+            }
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-left: 4px solid #48bb78;
+        }
+
+        .notification.error {
+            border-left: 4px solid #f56565;
+        }
+
+        .notification i {
+            font-size: 1.25rem;
+        }
+
+        .notification.success i {
+            color: #48bb78;
+        }
+
+        .notification.error i {
+            color: #f56565;
+        }
+
+        .notification p {
+            margin: 0;
+            color: #4a5568;
+        }
+
+        @media (max-width: 768px) {
+            .notification {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .notification {
+                background: #2d3748;
+            }
+
+            .notification p {
+                color: #e2e8f0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -932,37 +1383,107 @@
 
     <!-- Add new quotation modal -->
     <div class="modal" id="quotationModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <span class="close-modal" onclick="closeQuotationModal()">&times;</span>
-            <h2 class="product-title">Request Quotation</h2>
-            <form id="quotationForm" onsubmit="submitQuotation(event)">
-                <div style="margin-bottom: 1.5rem;">
-                    <label for="productName" style="display: block; margin-bottom: 0.5rem; color: #2c5282;">Product</label>
-                    <input type="text" id="quotationProductName" readonly 
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 4px;">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-modal" onclick="closeQuotationModal()">
+                <i class="fas fa-times"></i>
+            </span>
+            
+            <div class="quotation-form-header">
+                <h2><i class="fas fa-file-invoice"></i> Request Quotation</h2>
+                <p>Please fill in the details below to request a quotation for the selected product.</p>
+            </div>
+
+            <form id="quotationForm" onsubmit="submitQuotation(event)" class="quotation-form">
+                <div class="form-group">
+                    <label for="quotationProductName">
+                        <i class="fas fa-box"></i> Product Name
+                    </label>
+                    <input type="text" id="quotationProductName" readonly class="form-control">
                 </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label for="quotationName" style="display: block; margin-bottom: 0.5rem; color: #2c5282;">Full Name</label>
-                    <input type="text" id="quotationName" name="name" placeholder="Enter your full name" required
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 4px;">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quotationName">
+                            <i class="fas fa-user"></i> Full Name
+                        </label>
+                        <input type="text" 
+                               id="quotationName" 
+                               name="name" 
+                               class="form-control" 
+                               placeholder="Enter your full name"
+                               required
+                               minlength="3"
+                               pattern="[A-Za-z\s]+"
+                               title="Please enter a valid name (letters and spaces only)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quotationEmail">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        <input type="email" 
+                               id="quotationEmail" 
+                               name="email" 
+                               class="form-control" 
+                               placeholder="Enter your email address"
+                               required
+                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                               title="Please enter a valid email address">
+                    </div>
                 </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label for="quotationEmail" style="display: block; margin-bottom: 0.5rem; color: #2c5282;">Email Address</label>
-                    <input type="email" id="quotationEmail" name="email" placeholder="Enter your email address" required
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 4px;">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quotationPhone">
+                            <i class="fas fa-phone"></i> Contact Number
+                        </label>
+                        <input type="tel" 
+                               id="quotationPhone" 
+                               name="phone" 
+                               class="form-control" 
+                               placeholder="Enter your contact number"
+                               required
+                               pattern="[0-9\+\-\s]+"
+                               title="Please enter a valid phone number"
+                               minlength="10">
+                        <small class="form-text">Format: +63 XXX XXX XXXX or 09XX XXX XXXX</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quotationHospital">
+                            <i class="fas fa-hospital"></i> Hospital/Institution Name
+                        </label>
+                        <input type="text" 
+                               id="quotationHospital" 
+                               name="hospital_name" 
+                               class="form-control" 
+                               placeholder="Enter your hospital/institution name"
+                               required
+                               minlength="3">
+                    </div>
                 </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label for="quotationPhone" style="display: block; margin-bottom: 0.5rem; color: #2c5282;">Contact Number</label>
-                    <input type="tel" id="quotationPhone" name="phone" placeholder="Enter your contact number" required 
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 4px;">
+
+                <div class="form-group">
+                    <label for="quotationMessage">
+                        <i class="fas fa-comment"></i> Additional Message (Optional)
+                    </label>
+                    <textarea id="quotationMessage" 
+                              name="message" 
+                              class="form-control" 
+                              placeholder="Enter any additional information or specific requirements"
+                              rows="3"
+                              maxlength="500"></textarea>
+                    <small class="form-text text-right" id="messageCounter">0/500</small>
                 </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label for="quotationHospital" style="display: block; margin-bottom: 0.5rem; color: #2c5282;">Hospital Name</label>
-                    <input type="text" id="quotationHospital" name="hospital_name" placeholder="Enter your hospital name" required 
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 4px;">
+
+                <div class="form-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeQuotationModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
                 </div>
-                <button type="submit" class="product-button">Send Request</button>
-                <div class="modal-actions" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
             </form>
         </div>
     </div>
@@ -1113,23 +1634,32 @@
 
         function submitQuotation(event) {
             event.preventDefault();
-            const formData = {
-                product_name: document.getElementById('quotationProductName').value,
-                name: document.getElementById('quotationName').value,
-                email: document.getElementById('quotationEmail').value,
-                phone: document.getElementById('quotationPhone').value,
-                hospital_name: document.getElementById('quotationHospital').value,
-                product_id: currentProduct.id
-            };
             
+            // Get form data
+            const form = event.target;
+            const formData = {
+                product_name: form.querySelector('#quotationProductName').value,
+                product_id: currentProduct.id,
+                name: form.querySelector('#quotationName').value,
+                email: form.querySelector('#quotationEmail').value,
+                phone: form.querySelector('#quotationPhone').value,
+                hospital_name: form.querySelector('#quotationHospital').value,
+                message: form.querySelector('#quotationMessage').value
+            };
+
+            // Validate form data
+            if (!validateForm(formData)) {
+                return;
+            }
+
             // Show loading state
-            const submitButton = event.target.querySelector('button[type="submit"]');
+            const submitButton = form.querySelector('button[type="submit"]');
             const originalText = submitButton.innerHTML;
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-            
-            // Send AJAX request to server
-            fetch('/send-quotation-request', {
+
+            // Send AJAX request
+            fetch('/api/quotation-request', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1137,27 +1667,83 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    alert('Your quotation request has been sent successfully! We will contact you soon.');
-                    // Reset form
-                    document.getElementById('quotationForm').reset();
+                    showNotification('success', 'Your quotation request has been sent successfully! We will contact you soon.');
+                    form.reset();
+                    closeQuotationModal();
                 } else {
-                    alert(data.message || 'There was an error sending your request. Please try again.');
+                    throw new Error(data.message || 'Failed to send request');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('There was an error sending your request. Please try again.');
+                showNotification('error', 'There was an error sending your request. Please try again.');
             })
             .finally(() => {
-                // Reset button state
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalText;
-                closeQuotationModal();
             });
         }
+
+        function validateForm(data) {
+            const nameRegex = /^[A-Za-z\s]+$/;
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            const phoneRegex = /^[0-9\+\-\s]+$/;
+
+            if (!nameRegex.test(data.name)) {
+                showNotification('error', 'Please enter a valid name (letters and spaces only)');
+                return false;
+            }
+
+            if (!emailRegex.test(data.email)) {
+                showNotification('error', 'Please enter a valid email address');
+                return false;
+            }
+
+            if (!phoneRegex.test(data.phone) || data.phone.length < 10) {
+                showNotification('error', 'Please enter a valid phone number');
+                return false;
+            }
+
+            if (data.hospital_name.length < 3) {
+                showNotification('error', 'Hospital name must be at least 3 characters long');
+                return false;
+            }
+
+            return true;
+        }
+
+        function showNotification(type, message) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <p>${message}</p>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Character counter for message field
+        document.getElementById('quotationMessage').addEventListener('input', function(e) {
+            const counter = document.getElementById('messageCounter');
+            counter.textContent = `${e.target.value.length}/500`;
+        });
 
         // Search functionality
         const searchInput = document.getElementById('searchInput');

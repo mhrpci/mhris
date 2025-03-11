@@ -58,6 +58,7 @@
                                 <th>Remarks</th>
                                 <th>Late Time</th>
                                 <th>Hours Worked</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -71,6 +72,11 @@
                                     <td>{{ $attendance->remarks }}</td>
                                     <td>{{ $attendance->calculateLateTime() }}</td>
                                     <td>{{ $attendance->hours_worked }}</td>
+                                    <td>
+                                        <a href="{{ route('attendances.show', $attendance->id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

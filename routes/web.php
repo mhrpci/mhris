@@ -33,17 +33,14 @@ use App\Http\Controllers\SssController;
 use App\Http\Controllers\PagibigController;
 use App\Http\Controllers\PhilhealthController;
 use App\Http\Controllers\GoogleAuthController;
-use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\SssLoanController;
-use App\Http\Controllers\OpenAIController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CashAdvanceController;
 use App\Http\Controllers\PagibigLoanController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\EmployeeBirthdayController;
 use App\Http\Controllers\ControllerAnalysisController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserActivityController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ContactController;
@@ -56,8 +53,7 @@ use App\Http\Controllers\MedicalProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\AnalyticsController;
-use App\Http\Controllers\ChatRoomController;
-use App\Http\Controllers\ChatMessageController;
+use App\Http\Controllers\RouteManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +112,8 @@ Route::get('/rcgpharmaceutical', [WelcomeController::class, 'showRcg'])->name('r
 Route::post('/contactmhrhci', [ContactController::class, 'sendEmailMhrhci'])->name('contact.sendmhrhci');
 Route::post('/contactbgpdi', [ContactController::class, 'sendEmailBgpdi'])->name('contact.sendbgpdi');
 
+// Quotation routes
+Route::post('/api/quotation-request', [QuotationController::class, 'sendRequest'])->name('quotation.request');
    // Terms and Privacy routes
    Route::get('/terms', function () {
     return view('terms');
@@ -158,7 +156,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('hirings', HiringController::class);
     Route::resource('pagibig', PagibigController::class);
     Route::resource('accountabilities', AccountabilityController::class);
-    Route::resource('policies', PolicyController::class);
     Route::resource('loan_sss', SssLoanController::class);
     Route::resource('cash_advances', CashAdvanceController::class);
     Route::resource('loan_pagibig', PagibigLoanController::class);
@@ -283,9 +280,6 @@ Route::middleware('auth')->group(function () {
     //Logout routes
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-    // Policy routes
-    Route::get('/policies-page', [PolicyController::class, 'showPolicy'])->name('policies.show-page');
-
     // Inventory routes
     Route::post('inventory/import', [ItInventoryController::class, 'import'])->name('inventory.import');
 
@@ -298,7 +292,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/{id}/read', [NotificationsController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/clear-all', [NotificationsController::class, 'clearAll'])->name('notifications.clear');
     Route::post('/notifications/mark-all-as-read', [NotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-
+    Route::get('/notifications/get', [NotificationsController::class, 'getNotificationsData']);
+    Route::post('/notifications/mark-as-read', [NotificationsController::class, 'markAsRead']);
+    Route::delete('/notifications/clear', [NotificationsController::class, 'clearAll']);
+    Route::get('/notifications/all', [NotificationsController::class, 'showAllNotifications'])->name('notifications.all');
+    
     // Report routes
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::post('/reports/loans', [ReportController::class, 'generateLoanReport'])->name('reports.loans');
@@ -341,11 +339,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/accountabilities/{accountability}/transfer', [AccountabilityController::class, 'transfer'])->name('accountabilities.transfer');
     Route::post('/accountabilities/{accountability}/process-transfer', [AccountabilityController::class, 'processTransfer'])->name('accountabilities.process-transfer');
-    
-    Route::get('/notifications/get', [NotificationsController::class, 'getNotificationsData']);
-    Route::post('/notifications/mark-as-read', [NotificationsController::class, 'markAsRead']);
-    Route::delete('/notifications/clear', [NotificationsController::class, 'clearAll']);
-    Route::get('/notifications/all', [NotificationsController::class, 'showAllNotifications'])->name('notifications.all');
 
     Route::post('/employees/update-profile', [EmployeeController::class, 'updateProfile'])->name('employees.update-profile');
 
@@ -384,11 +377,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('categories', CategoryController::class);
 
     // Quotation routes
-    Route::post('/send-quotation-request', [QuotationController::class, 'sendRequest']);
-
-    // Quotation management routes
-    Route::get('/quotations', [QuotationController::class, 'index'])->name('quotations.index');
-    Route::put('/quotations/{id}', [QuotationController::class, 'update'])->name('quotations.update');
+    Route::post('/send-quotation-request', [QuotationController::class, 'sendRequest'])->name('quotation.send-request');
+    Route::get('/quotations', [QuotationController::class, 'index'])->name('quotations.index')->middleware(['auth', 'verified']);
+    Route::put('/quotations/{id}', [QuotationController::class, 'update'])->name('quotations.update')->middleware(['auth', 'verified']);
 
     // Analytics routes
     Route::get('/analytics', [AnalyticsController::class, 'dashboard'])->name('analytics.dashboard');
@@ -397,6 +388,19 @@ Route::middleware('auth')->group(function () {
     // Holiday import and export routes
     Route::post('holidays/import', [App\Http\Controllers\HolidayController::class, 'import'])->name('holidays.import');
     Route::post('holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
+
+    Route::get('/attendance/preview', [AttendanceController::class, 'capturePreview'])->name('attendance.capture-preview');
+
+    Route::post('/attendance/capture', [AttendanceController::class, 'storeAttendanceCapture'])->name('attendance.capture');
+});
+
+// Route Management routes
+Route::middleware(['auth', 'super.admin'])->prefix('route-management')->name('route-management.')->group(function () {
+    Route::get('/', [RouteManagementController::class, 'index'])->name('index');
+    Route::get('/sync', [RouteManagementController::class, 'sync'])->name('sync');
+    Route::post('/{route}/toggle', [RouteManagementController::class, 'toggleStatus'])->name('toggle');
+    Route::put('/{route}', [RouteManagementController::class, 'update'])->name('update');
+    Route::post('/bulk-toggle', [RouteManagementController::class, 'bulkToggle'])->name('bulk-toggle');
 });
 
 Auth::routes();
