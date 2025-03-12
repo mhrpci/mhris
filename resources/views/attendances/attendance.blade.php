@@ -179,221 +179,7 @@
         z-index: 9999;
     }
     
-    /* Camera interface enhancements */
-    .camera-interface {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
-        pointer-events: none;
-        z-index: 1001;
-    }
-
-    .camera-frame {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 85%;
-        height: 70vh;
-        border: 2px solid rgba(255, 255, 255, 0.5);
-        border-radius: 20px;
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-    }
-
-    .camera-corners {
-        position: absolute;
-        width: 30px;
-        height: 30px;
-        border: 3px solid #4285f4;
-    }
-
-    .corner-top-left {
-        top: -3px;
-        left: -3px;
-        border-right: none;
-        border-bottom: none;
-        border-top-left-radius: 8px;
-    }
-
-    .corner-top-right {
-        top: -3px;
-        right: -3px;
-        border-left: none;
-        border-bottom: none;
-        border-top-right-radius: 8px;
-    }
-
-    .corner-bottom-left {
-        bottom: -3px;
-        left: -3px;
-        border-right: none;
-        border-top: none;
-        border-bottom-left-radius: 8px;
-    }
-
-    .corner-bottom-right {
-        bottom: -3px;
-        right: -3px;
-        border-left: none;
-        border-top: none;
-        border-bottom-right-radius: 8px;
-    }
-
-    .camera-guide-text {
-        position: absolute;
-        top: 15%;
-        left: 50%;
-        transform: translateX(-50%);
-        color: white;
-        font-size: 1.1rem;
-        text-align: center;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        background: rgba(0, 0, 0, 0.6);
-        padding: 8px 16px;
-        border-radius: 20px;
-        white-space: nowrap;
-    }
-
-    /* Enhanced status badge */
-    .camera-status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(8px);
-        padding: 8px 16px;
-        border-radius: 30px;
-        margin-bottom: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .camera-status-badge.in {
-        background: rgba(16, 185, 129, 0.2);
-        border-color: rgba(16, 185, 129, 0.4);
-    }
-
-    .camera-status-badge.out {
-        background: rgba(239, 68, 68, 0.2);
-        border-color: rgba(239, 68, 68, 0.4);
-    }
-
-    .camera-status-badge i {
-        font-size: 1.2rem;
-    }
-
-    /* Enhanced capture button */
-    .btn-capture {
-        background: rgba(66, 133, 244, 0.9);
-        color: white;
-        border: none;
-        padding: 1rem 3rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(8px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    .btn-capture:hover {
-        background: #4285f4;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .btn-capture:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .btn-capture i {
-        font-size: 1.3rem;
-    }
-
-    /* Camera controls container */
-    .camera-controls {
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        display: flex;
-        gap: 1rem;
-        z-index: 1002;
-    }
-
-    /* Enhanced camera buttons */
-    .camera-btn {
-        width: 45px;
-        height: 45px;
-        border: none;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(8px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .btn-switch-camera {
-        background: rgba(255, 255, 255, 0.15);
-        color: white;
-    }
-
-    .btn-close-camera {
-        background: rgba(255, 255, 255, 0.15);
-        color: #ff4444;
-    }
-
-    .camera-btn:hover {
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .btn-close-camera:hover {
-        background: #ff4444;
-        color: white;
-    }
-
-    /* Camera flash animation */
-    @keyframes cameraFlash {
-        0% { opacity: 0; }
-        50% { opacity: 1; }
-        100% { opacity: 0; }
-    }
-
-    .camera-flash {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
-        background: white;
-        opacity: 0;
-        pointer-events: none;
-        z-index: 1003;
-    }
-
-    .flash-active {
-        animation: cameraFlash 0.3s ease-out;
-    }
-
-    /* Hide app content when camera is open */
-    body.camera-active {
-        overflow: hidden;
-        position: fixed;
-        width: 100%;
-    }
-
-    body.camera-active .app-content {
-        display: none;
-    }
-
+    /* Modern camera interface */
     .camera-container {
         position: fixed;
         top: 0;
@@ -404,33 +190,260 @@
         flex-direction: column;
         background: #000;
     }
-    
+
     #camera-feed {
         width: 100%;
         height: 100vh;
-        object-fit: cover; /* Changed to cover for full screen */
+        object-fit: cover;
         background: #000;
         position: fixed;
         top: 0;
         left: 0;
     }
-    
-    .camera-buttons {
+
+    /* Beautification Controls Panel */
+    .beautify-controls {
         position: fixed;
-        bottom: 0;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 1rem;
+        z-index: 1002;
+        width: 280px;
+        transition: transform 0.3s ease;
+    }
+
+    .beautify-controls.collapsed {
+        transform: translateX(calc(100% - 48px)) translateY(-50%);
+    }
+
+    .beautify-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        color: white;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .beautify-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .toggle-controls {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: background 0.3s ease;
+    }
+
+    .toggle-controls:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .beautify-slider-group {
+        margin-bottom: 1rem;
+    }
+
+    .slider-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .slider-value {
+        color: rgba(255, 255, 255, 0.7);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .beautify-slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        outline: none;
+        margin: 0.5rem 0;
+    }
+
+    .beautify-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #4285f4;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+    }
+
+    .beautify-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+    }
+
+    .beautify-slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #4285f4;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+        border: none;
+    }
+
+    .beautify-slider::-moz-range-thumb:hover {
+        transform: scale(1.2);
+    }
+
+    /* Modern Camera Controls */
+    .camera-controls {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        z-index: 1002;
+    }
+
+    .camera-btn {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        border: none;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-capture {
+        width: 72px;
+        height: 72px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .btn-capture:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+
+    .camera-btn:not(.btn-capture):hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+
+    /* Top Controls */
+    .top-controls {
+        position: fixed;
+        top: 1rem;
         left: 0;
         width: 100%;
         display: flex;
-        justify-content: center;
-        padding: 1.5rem;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-        height: 100px;
-        z-index: 1001;
+        justify-content: space-between;
+        padding: 0 1rem;
+        z-index: 1002;
     }
-    
-    .btn-capture:hover, .btn-switch-camera:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+    .btn-close-camera {
+        color: #ff4444;
+    }
+
+    .btn-close-camera:hover {
+        background: #ff4444;
+        color: white;
+    }
+
+    /* Camera Overlay Info */
+    .camera-overlay {
+        position: fixed;
+        left: 1rem;
+        bottom: 2rem;
+        color: white;
+        z-index: 1002;
+        font-family: 'Inter', sans-serif;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        padding: 1rem;
+        border-radius: 12px;
+        max-width: 320px;
+    }
+
+    .camera-overlay-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .beautify-controls {
+            right: 0;
+            width: 240px;
+        }
+
+        .camera-controls {
+            bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .btn-capture {
+            width: 64px;
+            height: 64px;
+        }
+
+        .camera-btn {
+            width: 42px;
+            height: 42px;
+        }
+
+        .camera-overlay {
+            left: 0.5rem;
+            bottom: 1.5rem;
+            padding: 0.8rem;
+            max-width: 280px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .beautify-controls {
+            width: 200px;
+        }
+
+        .camera-controls {
+            bottom: 1rem;
+        }
+
+        .btn-capture {
+            width: 56px;
+            height: 56px;
+        }
+
+        .camera-btn {
+            width: 38px;
+            height: 38px;
+            font-size: 1rem;
+        }
     }
 
     /* Logo styles */
@@ -453,23 +466,6 @@
         height: auto;
         opacity: 0.8;
         display: block;
-    }
-    
-    /* Updated Camera overlay text styles */
-    .camera-overlay {
-        position: fixed;
-        left: 0;
-        bottom: 80px;
-        width: 100%;
-        color: white;
-        z-index: 1002;
-        font-family: 'Inter', sans-serif;
-        padding: 20px;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
-    }
-
-    .camera-overlay-content {
-        max-width: 80%;
     }
 
     /* Updated font sizes */
@@ -530,119 +526,6 @@
 
     .camera-status-large.out {
         color: rgba(220, 53, 69, 0.15);
-    }
-
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .attendance-container {
-            padding: 1rem 0;
-        }
-        
-        .profile-section {
-            padding: 2rem 1.5rem;
-        }
-        
-        .profile-initial {
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-        }
-        
-        .time {
-            font-size: 3rem;
-        }
-        
-        .date {
-            font-size: 1.1rem;
-        }
-        
-        .action-buttons {
-            padding: 1.5rem;
-            gap: 1rem;
-        }
-        
-        .btn-clock-in, .btn-clock-out {
-            padding: 1rem;
-        }
-
-        .camera-overlay {
-            padding: 15px;
-        }
-
-        .camera-overlay-content {
-            max-width: 100%;
-        }
-
-        .overlay-time {
-            font-size: 1.8rem;
-        }
-
-        .overlay-date {
-            font-size: 1.1rem;
-        }
-
-        .overlay-name {
-            font-size: 1rem;
-        }
-
-        .overlay-location {
-            font-size: 0.9rem;
-        }
-
-        .camera-status-badge {
-            padding: 8px 20px;
-            font-size: 1.2rem;
-        }
-
-        .camera-status-large {
-            font-size: 4rem;
-        }
-
-        .btn-capture {
-            padding: 0.8rem 2rem;
-            font-size: 1rem;
-        }
-
-        .btn-switch-camera {
-            width: 40px;
-            height: 40px;
-        }
-
-        .camera-logo-container {
-            padding: 6px;
-        }
-        
-        .camera-logo {
-            width: 80px;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .time {
-            font-size: 2.5rem;
-        }
-        
-        .action-buttons {
-            grid-template-columns: 1fr;
-        }
-        
-        .camera-buttons {
-            padding: 0.8rem;
-            gap: 1rem;
-        }
-        
-        .btn-capture {
-            padding: 0.8rem 1.8rem;
-            font-size: 0.9rem;
-        }
-
-        .camera-logo-container {
-            padding: 4px;
-        }
-        
-        .camera-logo {
-            width: 60px;
-        }
     }
 
     /* Profile Preview Modal */
@@ -773,31 +656,70 @@
 
 <!-- Camera Modal -->
 <div class="camera-modal" id="cameraModal">
-    <div class="camera-controls">
-        <button class="camera-btn btn-switch-camera" onclick="switchCamera()">
-            <i class="fas fa-sync"></i>
-        </button>
+    <div class="top-controls">
         <button class="camera-btn btn-close-camera" onclick="closeCamera()">
             <i class="fas fa-times"></i>
         </button>
-    </div>
-    
-    <div class="camera-logo-container">
-        <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="camera-logo">
+        <div class="camera-logo-container">
+            <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="camera-logo">
+        </div>
     </div>
     
     <div class="camera-container">
+        <canvas id="beautify-canvas"></canvas>
         <video id="camera-feed" autoplay playsinline></video>
         
-        <div class="camera-interface">
-            <div class="camera-frame">
-                <div class="camera-corners corner-top-left"></div>
-                <div class="camera-corners corner-top-right"></div>
-                <div class="camera-corners corner-bottom-left"></div>
-                <div class="camera-corners corner-bottom-right"></div>
+        <div class="beautify-controls" id="beautifyControls">
+            <div class="beautify-header">
+                <span class="beautify-title">Beautify</span>
+                <button class="toggle-controls" onclick="toggleBeautifyControls()">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
             </div>
-            <div class="camera-guide-text">
-                Position your face within the frame
+            
+            <div class="beautify-slider-group">
+                <div class="slider-label">
+                    <span>Smoothness</span>
+                    <span class="slider-value" id="smoothnessValue">0</span>
+                </div>
+                <input type="range" class="beautify-slider" id="smoothnessSlider" 
+                       min="0" max="100" value="0" oninput="updateBeautifyEffect('smoothness')">
+            </div>
+            
+            <div class="beautify-slider-group">
+                <div class="slider-label">
+                    <span>Brightness</span>
+                    <span class="slider-value" id="brightnessValue">0</span>
+                </div>
+                <input type="range" class="beautify-slider" id="brightnessSlider" 
+                       min="-100" max="100" value="0" oninput="updateBeautifyEffect('brightness')">
+            </div>
+            
+            <div class="beautify-slider-group">
+                <div class="slider-label">
+                    <span>Contrast</span>
+                    <span class="slider-value" id="contrastValue">0</span>
+                </div>
+                <input type="range" class="beautify-slider" id="contrastSlider" 
+                       min="-100" max="100" value="0" oninput="updateBeautifyEffect('contrast')">
+            </div>
+            
+            <div class="beautify-slider-group">
+                <div class="slider-label">
+                    <span>Warmth</span>
+                    <span class="slider-value" id="warmthValue">0</span>
+                </div>
+                <input type="range" class="beautify-slider" id="warmthSlider" 
+                       min="-100" max="100" value="0" oninput="updateBeautifyEffect('warmth')">
+            </div>
+            
+            <div class="beautify-slider-group">
+                <div class="slider-label">
+                    <span>Saturation</span>
+                    <span class="slider-value" id="saturationValue">0</span>
+                </div>
+                <input type="range" class="beautify-slider" id="saturationSlider" 
+                       min="-100" max="100" value="0" oninput="updateBeautifyEffect('saturation')">
             </div>
         </div>
 
@@ -821,10 +743,15 @@
             </div>
         </div>
         
-        <div class="camera-buttons">
-            <button class="btn-capture" onclick="captureImage()">
+        <div class="camera-controls">
+            <button class="camera-btn" onclick="switchCamera()">
+                <i class="fas fa-sync"></i>
+            </button>
+            <button class="camera-btn btn-capture" onclick="captureImage()">
                 <i class="fas fa-camera"></i>
-                Capture
+            </button>
+            <button class="camera-btn" onclick="toggleBeautifyControls()">
+                <i class="fas fa-magic"></i>
             </button>
         </div>
     </div>
@@ -838,6 +765,16 @@
     let currentFacingMode = 'user';
     let locationWatchId = null;
     let currentAttendanceType = 'in';
+    let beautifyCanvas = null;
+    let beautifyContext = null;
+    let beautifyShaderProgram = null;
+    let beautifySettings = {
+        smoothness: 0,
+        brightness: 0,
+        contrast: 0,
+        warmth: 0,
+        saturation: 0
+    };
 
     // Profile Preview Functions
     function openProfilePreview(imageSrc) {
@@ -1045,9 +982,7 @@
                 video: {
                     facingMode: facingMode,
                     width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    zoom: 1.0,
-                    advanced: [{ zoom: 1.0 }]
+                    height: { ideal: 720 }
                 }
             };
 
@@ -1055,21 +990,17 @@
             const videoElement = document.getElementById('camera-feed');
             videoElement.srcObject = currentStream;
             
+            // Initialize beautify canvas if not already done
+            if (!beautifyCanvas) {
+                initBeautifyCanvas();
+            }
+            
             // Apply mirroring only for front camera
             videoElement.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
-            
-            // Ensure video maintains aspect ratio
-            videoElement.style.objectFit = 'contain';
-            
             currentFacingMode = facingMode;
-
-            // Get video track and set zoom to 1x if capabilities allow
-            const videoTrack = currentStream.getVideoTracks()[0];
-            if (videoTrack.getCapabilities && videoTrack.getCapabilities().zoom) {
-                await videoTrack.applyConstraints({
-                    advanced: [{ zoom: 1.0 }]
-                });
-            }
+            
+            // Start rendering loop
+            requestAnimationFrame(renderFrame);
         } catch (error) {
             console.error('Error accessing camera:', error);
             alert('Unable to access camera. Please ensure camera permissions are granted.');
@@ -1168,6 +1099,154 @@
             console.error('Error capturing image:', error);
             alert('Error capturing image. Please try again.');
         }
+    }
+
+    // Initialize WebGL for beautification
+    function initBeautifyCanvas() {
+        beautifyCanvas = document.getElementById('beautify-canvas');
+        beautifyCanvas.width = window.innerWidth;
+        beautifyCanvas.height = window.innerHeight;
+        
+        try {
+            beautifyContext = beautifyCanvas.getContext('webgl') || beautifyCanvas.getContext('experimental-webgl');
+        } catch (e) {
+            console.error('WebGL not supported:', e);
+            return;
+        }
+        
+        // Initialize shader program
+        const vertexShader = createShader(beautifyContext.VERTEX_SHADER, `
+            attribute vec2 a_position;
+            attribute vec2 a_texCoord;
+            varying vec2 v_texCoord;
+            void main() {
+                gl_Position = vec4(a_position, 0, 1);
+                v_texCoord = a_texCoord;
+            }
+        `);
+        
+        const fragmentShader = createShader(beautifyContext.FRAGMENT_SHADER, `
+            precision mediump float;
+            uniform sampler2D u_image;
+            uniform float u_smoothness;
+            uniform float u_brightness;
+            uniform float u_contrast;
+            uniform float u_warmth;
+            uniform float u_saturation;
+            varying vec2 v_texCoord;
+            
+            void main() {
+                vec4 color = texture2D(u_image, v_texCoord);
+                
+                // Apply smoothness (Gaussian blur)
+                if (u_smoothness > 0.0) {
+                    vec4 blur = vec4(0.0);
+                    float total = 0.0;
+                    for (float x = -2.0; x <= 2.0; x += 1.0) {
+                        for (float y = -2.0; y <= 2.0; y += 1.0) {
+                            vec2 offset = vec2(x, y) * u_smoothness / 100.0;
+                            blur += texture2D(u_image, v_texCoord + offset);
+                            total += 1.0;
+                        }
+                    }
+                    color = mix(color, blur / total, u_smoothness / 100.0);
+                }
+                
+                // Apply brightness
+                color.rgb += u_brightness / 100.0;
+                
+                // Apply contrast
+                color.rgb = (color.rgb - 0.5) * (1.0 + u_contrast / 100.0) + 0.5;
+                
+                // Apply warmth
+                color.r += u_warmth / 200.0;
+                color.b -= u_warmth / 200.0;
+                
+                // Apply saturation
+                float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+                color.rgb = mix(vec3(gray), color.rgb, 1.0 + u_saturation / 100.0);
+                
+                gl_FragColor = color;
+            }
+        `);
+        
+        // Create shader program
+        beautifyShaderProgram = createProgram(vertexShader, fragmentShader);
+        beautifyContext.useProgram(beautifyShaderProgram);
+    }
+
+    // Create shader helper function
+    function createShader(type, source) {
+        const shader = beautifyContext.createShader(type);
+        beautifyContext.shaderSource(shader, source);
+        beautifyContext.compileShader(shader);
+        
+        if (!beautifyContext.getShaderParameter(shader, beautifyContext.COMPILE_STATUS)) {
+            console.error('Shader compile error:', beautifyContext.getShaderInfoLog(shader));
+            beautifyContext.deleteShader(shader);
+            return null;
+        }
+        
+        return shader;
+    }
+
+    // Create program helper function
+    function createProgram(vertexShader, fragmentShader) {
+        const program = beautifyContext.createProgram();
+        beautifyContext.attachShader(program, vertexShader);
+        beautifyContext.attachShader(program, fragmentShader);
+        beautifyContext.linkProgram(program);
+        
+        if (!beautifyContext.getProgramParameter(program, beautifyContext.LINK_STATUS)) {
+            console.error('Program link error:', beautifyContext.getProgramInfoLog(program));
+            beautifyContext.deleteProgram(program);
+            return null;
+        }
+        
+        return program;
+    }
+
+    // Update beautify effect
+    function updateBeautifyEffect(type) {
+        const value = document.getElementById(`${type}Slider`).value;
+        document.getElementById(`${type}Value`).textContent = value;
+        beautifySettings[type] = parseInt(value);
+        
+        if (beautifyShaderProgram) {
+            const location = beautifyContext.getUniformLocation(beautifyShaderProgram, `u_${type}`);
+            beautifyContext.uniform1f(location, beautifySettings[type]);
+        }
+    }
+
+    // Toggle beautify controls
+    function toggleBeautifyControls() {
+        const controls = document.getElementById('beautifyControls');
+        controls.classList.toggle('collapsed');
+    }
+
+    // Render frame function
+    function renderFrame() {
+        if (!currentStream || !beautifyContext || !beautifyShaderProgram) {
+            requestAnimationFrame(renderFrame);
+            return;
+        }
+        
+        const video = document.getElementById('camera-feed');
+        
+        // Update canvas size if needed
+        if (beautifyCanvas.width !== video.videoWidth || beautifyCanvas.height !== video.videoHeight) {
+            beautifyCanvas.width = video.videoWidth;
+            beautifyCanvas.height = video.videoHeight;
+            beautifyContext.viewport(0, 0, beautifyCanvas.width, beautifyCanvas.height);
+        }
+        
+        // Draw video frame to canvas with effects
+        beautifyContext.drawImage(video, 0, 0);
+        
+        // Apply beautification effects
+        // ... (WebGL rendering code here)
+        
+        requestAnimationFrame(renderFrame);
     }
 
     // Initialize with server time sync
