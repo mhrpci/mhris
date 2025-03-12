@@ -120,6 +120,9 @@
             Sorry, you don't have permission to access this page.
             Please contact your administrator if you believe this is a mistake.
         </p>
+        @auth
+            <a href="{{ route('home') }}" class="back-button">Go to Dashboard</a>
+        @endauth
     </div>
 </body>
 </html>

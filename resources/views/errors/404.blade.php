@@ -120,6 +120,9 @@
             Oops! The page you're looking for doesn't exist.
             It might have been moved or deleted.
         </p>
+        @auth
+            <a href="{{ route('home') }}" class="back-button">Go to Dashboard</a>
+        @endauth
     </div>
 </body>
 </html>
