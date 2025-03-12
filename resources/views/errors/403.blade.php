@@ -120,9 +120,9 @@
             Sorry, you don't have permission to access this page.
             Please contact your administrator if you believe this is a mistake.
         </p>
-        @auth
+        @if (Auth::check())
             <a href="{{ route('home') }}" class="back-button">Go to Dashboard</a>
-        @endauth
+        @endif
     </div>
 </body>
 </html>

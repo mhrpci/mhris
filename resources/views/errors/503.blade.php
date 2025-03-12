@@ -132,9 +132,9 @@
             We're currently performing maintenance on our servers.
             We'll be back online shortly. Thank you for your patience.
         </p>
-        @auth
+        @if (Auth::check())
             <a href="{{ route('home') }}" class="back-button">Go to Dashboard</a>
-        @endauth
+        @endif
     </div>
 
     <script>

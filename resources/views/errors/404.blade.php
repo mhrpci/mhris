@@ -120,9 +120,9 @@
             Oops! The page you're looking for doesn't exist.
             It might have been moved or deleted.
         </p>
-        @auth
+        @if (Auth::check())
             <a href="{{ route('home') }}" class="back-button">Go to Dashboard</a>
-        @endauth
+        @endif
     </div>
 </body>
 </html>

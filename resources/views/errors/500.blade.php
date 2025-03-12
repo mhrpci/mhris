@@ -123,9 +123,9 @@
             Oops! Something went wrong on our servers.
             We're working to fix the issue. Please try again later.
         </p>
-        @auth
+        @if (Auth::check())
             <a href="{{ route('home') }}" class="back-button">Go to Dashboard</a>
-        @endauth
+        @endif
     </div>
 </body>
 </html>
