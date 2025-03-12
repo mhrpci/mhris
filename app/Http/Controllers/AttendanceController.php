@@ -463,7 +463,7 @@ class AttendanceController extends Controller
             if (!$employee) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Employee not found for the current user.'
+                    'message' => 'Employee record not found for the current user.'
                 ], 404);
             }
 
@@ -489,25 +489,19 @@ class AttendanceController extends Controller
 
             // Handle Clock In
             if ($request->type === 'in') {
-                if ($attendance) {
-                    // Check if already clocked in
-                    if ($attendance->time_in && $attendance->time_stamp1) {
-                        // Delete the newly stored image since we won't use it
-                        Storage::disk('public')->delete($imagePath);
-                        
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Already clocked in for today.'
-                        ], 400);
-                    }
+                // Check if already clocked in
+                if ($attendance && $attendance->time_in) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
                     
-                    // Update existing attendance with clock in
-                    $attendance->time_in = $currentTime;
-                    $attendance->time_stamp1 = $imagePath;
-                    $attendance->time_in_address = $request->location;
-                    $attendance->save();
-                } else {
-                    // Create new attendance record with time_stamp1
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Already clocked in for today.'
+                    ], 400);
+                }
+                
+                if (!$attendance) {
+                    // Create new attendance record
                     $attendance = Attendance::create([
                         'employee_id' => $employee->id,
                         'date_attended' => $currentDate,
@@ -515,13 +509,23 @@ class AttendanceController extends Controller
                         'time_stamp1' => $imagePath,
                         'time_in_address' => $request->location,
                     ]);
+                } else {
+                    // Update existing attendance with clock in
+                    $attendance->time_in = $currentTime;
+                    $attendance->time_stamp1 = $imagePath;
+                    $attendance->time_in_address = $request->location;
+                    $attendance->save();
                 }
 
-                $message = 'Clock in recorded successfully.';
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Clock in recorded successfully.'
+                ]);
             } 
             // Handle Clock Out
             else {
-                if (!$attendance || !$attendance->time_in || !$attendance->time_stamp1) {
+                // Check if attendance record exists and has time_in
+                if (!$attendance || !$attendance->time_in) {
                     // Delete the newly stored image since we won't use it
                     Storage::disk('public')->delete($imagePath);
                     
@@ -531,7 +535,8 @@ class AttendanceController extends Controller
                     ], 400);
                 }
 
-                if ($attendance->time_out && $attendance->time_stamp2) {
+                // Check if already clocked out
+                if ($attendance->time_out) {
                     // Delete the newly stored image since we won't use it
                     Storage::disk('public')->delete($imagePath);
                     
@@ -541,43 +546,17 @@ class AttendanceController extends Controller
                     ], 400);
                 }
 
-                // Update attendance with clock out and time_stamp2
+                // Update attendance with clock out
                 $attendance->time_out = $currentTime;
                 $attendance->time_stamp2 = $imagePath;
                 $attendance->time_out_address = $request->location;
                 $attendance->save();
 
-                $message = 'Clock out recorded successfully.';
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Clock out recorded successfully.'
+                ]);
             }
-
-            // Calculate hours worked and update remarks if the method exists
-            if (method_exists($attendance, 'calculateRemarksAndHoursWorked')) {
-                $attendance->calculateRemarksAndHoursWorked();
-                $attendance->save();
-            }
-
-            // Return success response with detailed information
-            return response()->json([
-                'status' => 'success',
-                'message' => $message,
-                'data' => [
-                    'attendance' => [
-                        'id' => $attendance->id,
-                        'date' => $attendance->date_attended,
-                        'time_in' => $attendance->time_in,
-                        'time_out' => $attendance->time_out,
-                        'time_stamp1' => $attendance->time_stamp1 ? asset('storage/' . $attendance->time_stamp1) : null,
-                        'time_stamp2' => $attendance->time_stamp2 ? asset('storage/' . $attendance->time_stamp2) : null,
-                        'hours_worked' => $attendance->hours_worked,
-                        'remarks' => $attendance->remarks
-                    ],
-                    'employee' => [
-                        'name' => $employee->first_name . ' ' . $employee->last_name,
-                        'position' => $employee->position->name,
-                        'department' => $employee->department->name
-                    ]
-                ]
-            ], 200);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Handle validation errors
@@ -590,7 +569,7 @@ class AttendanceController extends Controller
             \Log::error('Attendance capture error: ' . $e->getMessage());
             
             // Delete any stored image if there was an error
-            if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
+            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
             
@@ -598,6 +577,81 @@ class AttendanceController extends Controller
                 'status' => 'error',
                 'message' => 'An error occurred while processing your request.',
                 'debug' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    public function getAttendanceStatus()
+    {
+        try {
+            $user = Auth::user();
+            
+            // Check if user has Employee or Supervisor role
+            if (!$user->hasRole(['Employee', 'Supervisor'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Find employee by email
+            $employee = Employee::where('email_address', $user->email)->first();
+            
+            if (!$employee) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Employee record not found'
+                ], 404);
+            }
+
+            // Get current date in Y-m-d format
+            $currentDate = Carbon::now()->format('Y-m-d');
+
+            // First, check if there's any attendance record for today
+            $attendance = Attendance::where('employee_id', $employee->id)
+                                 ->where('date_attended', $currentDate)
+                                 ->first();
+
+            // If no attendance record exists for today
+            if (!$attendance) {
+                return response()->json([
+                    'status' => 'success',
+                    'action' => 'clock_in',
+                    'message' => 'Ready to clock in'
+                ]);
+            }
+
+            // Check if attendance record exists and has time_in
+            if ($attendance && $attendance->time_in) {
+                // If both time_in and time_out exist
+                if ($attendance->time_out) {
+                    return response()->json([
+                        'status' => 'success',
+                        'action' => 'completed',
+                        'message' => "You've already submitted your attendance today"
+                    ]);
+                }
+
+                // If has time_in but no time_out
+                return response()->json([
+                    'status' => 'success',
+                    'action' => 'clock_out',
+                    'message' => 'Ready to clock out'
+                ]);
+            }
+
+            // Fallback case (should not normally happen)
+            return response()->json([
+                'status' => 'success',
+                'action' => 'clock_in',
+                'message' => 'Ready to clock in'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error checking attendance status: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while checking attendance status'
             ], 500);
         }
     }

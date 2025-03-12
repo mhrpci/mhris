@@ -940,6 +940,32 @@
                 confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 confirmBtn.disabled = true;
 
+                // First, check current attendance status
+                const statusResponse = await fetch('/attendance/status', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                const statusResult = await statusResponse.json();
+                if (!statusResponse.ok) {
+                    throw new Error(statusResult.message || 'Failed to verify attendance status');
+                }
+
+                const type = new URLSearchParams(window.location.search).get('type') || 'in';
+
+                // Verify that the action matches the current status
+                if (type === 'in' && statusResult.action !== 'clock_in') {
+                    throw new Error('You have already clocked in for today.');
+                } else if (type === 'out' && statusResult.action !== 'clock_out') {
+                    if (statusResult.action === 'clock_in') {
+                        throw new Error('You must clock in first before clocking out.');
+                    } else if (statusResult.action === 'completed') {
+                        throw new Error('You have already completed your attendance for today.');
+                    }
+                }
+
                 // Capture the final preview image
                 finalImageBlob = await capturePreview();
                 if (!finalImageBlob) {
@@ -955,7 +981,6 @@
 
                 // Get stored data
                 const location = localStorage.getItem('userLocation');
-                const type = new URLSearchParams(window.location.search).get('type') || 'in';
 
                 // Prepare the request data
                 const data = {

@@ -103,48 +103,235 @@
     /* Action buttons */
     .action-buttons {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
         padding: 2rem;
         background: #f8fafc;
+        width: 100%;
+        transition: all 0.3s ease;
     }
     
     .btn-clock-in, .btn-clock-out {
         border: none;
-        padding: 1.2rem;
-        border-radius: 12px;
+        padding: 1.5rem;
+        border-radius: 16px;
         font-weight: 600;
         transition: all 0.3s ease;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 0.8rem;
+        min-height: 150px;
+        position: relative;
+        overflow: hidden;
     }
     
     .btn-clock-in {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: white;
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
     }
     
     .btn-clock-out {
         background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         color: white;
+        box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
     }
     
     .btn-clock-in:hover, .btn-clock-out:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-clock-in:active, .btn-clock-out:active {
+        transform: translateY(0);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
     
     .btn-clock-in i, .btn-clock-out i {
-        font-size: 1.5rem;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .btn-clock-in span, .btn-clock-out span {
+        font-size: 1.25rem;
+        font-weight: 700;
         margin-bottom: 0.3rem;
+        position: relative;
+        z-index: 1;
     }
     
     .btn-clock-in div, .btn-clock-out div {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         opacity: 0.9;
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        line-height: 1.4;
+    }
+    
+    /* Button background effects */
+    .btn-clock-in::before, .btn-clock-out::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .btn-clock-in:hover::before, .btn-clock-out:hover::before {
+        opacity: 1;
+    }
+    
+    /* Alert styles within action buttons */
+    .action-buttons .alert {
+        grid-column: 1 / -1;
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .action-buttons .alert i {
+        font-size: 1.5rem;
+    }
+    
+    .action-buttons .alert-info {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border: none;
+    }
+    
+    .action-buttons .alert-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border: none;
+    }
+    
+    /* Responsive design for action buttons */
+    @media (max-width: 1200px) {
+        .action-buttons {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            padding: 1.8rem;
+            gap: 1.2rem;
+        }
+        
+        .btn-clock-in, .btn-clock-out {
+            min-height: 140px;
+            padding: 1.3rem;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .action-buttons {
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            padding: 1.5rem;
+            gap: 1rem;
+        }
+        
+        .btn-clock-in i, .btn-clock-out i {
+            font-size: 1.8rem;
+        }
+        
+        .btn-clock-in span, .btn-clock-out span {
+            font-size: 1.15rem;
+        }
+        
+        .btn-clock-in div, .btn-clock-out div {
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .action-buttons {
+            grid-template-columns: 1fr;
+            padding: 1.2rem;
+        }
+        
+        .btn-clock-in, .btn-clock-out {
+            min-height: 130px;
+            padding: 1.2rem;
+        }
+        
+        .action-buttons .alert {
+            padding: 1.2rem;
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .action-buttons {
+            padding: 1rem;
+        }
+        
+        .btn-clock-in, .btn-clock-out {
+            min-height: 120px;
+            padding: 1rem;
+        }
+        
+        .btn-clock-in i, .btn-clock-out i {
+            font-size: 1.6rem;
+        }
+        
+        .btn-clock-in span, .btn-clock-out span {
+            font-size: 1.1rem;
+        }
+        
+        .btn-clock-in div, .btn-clock-out div {
+            font-size: 0.85rem;
+        }
+        
+        .action-buttons .alert {
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .action-buttons {
+            background: #1a1a1a;
+        }
+        
+        .btn-clock-in {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+        
+        .btn-clock-out {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+        
+        .action-buttons .alert-info {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        
+        .action-buttons .alert-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+    }
+    
+    /* High contrast mode support */
+    @media (forced-colors: active) {
+        .btn-clock-in, .btn-clock-out {
+            border: 2px solid currentColor;
+        }
+        
+        .action-buttons .alert {
+            border: 2px solid currentColor;
+        }
     }
     
     /* Location info */
@@ -716,46 +903,13 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-md-8 col-lg-6">
                     <div class="attendance-card">
-                        @if($employee)
-                        <div class="profile-section">
-                            <div class="profile-initial">
-                                @if($employee->profile)   
-                                <img src="{{ asset('storage/' . $employee->profile) }}" alt="Employee Photo" class="profile-photo" onclick="openProfilePreview(this.src)">
-                                @else
-                                {{ substr($employee->first_name, 0, 1) }}{{ substr($employee->last_name, 0, 1) }}
-                                @endif
-                            </div>
-                            <h4>{{ $employee->first_name }} {{ $employee->last_name }}</h4>
-                            <p>{{ $employee->email_address }}</p>
-                        </div>
-                        @endif
-
-                        <!-- Profile Preview Modal -->
-                        <div class="profile-preview-modal" id="profilePreviewModal">
-                            <div class="profile-preview-content">
-                                <button class="profile-preview-close" onclick="closeProfilePreview()">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                                <img class="profile-preview-image" id="profilePreviewImage" src="" alt="Profile Preview">
-                            </div>
-                        </div>
-
                         <div class="clock-display">
                             <div class="time" id="current-time">00:00:00</div>
                             <div class="date" id="current-date"></div>
                         </div>
 
-                        <div class="action-buttons">
-                            <button class="btn-clock-in" onclick="startAttendance('in')">
-                                <i class="fas fa-sign-in-alt"></i>
-                                <span>Clock In</span>
-                                <div>Start your workday</div>
-                            </button>
-                            <button class="btn-clock-out" onclick="startAttendance('out')">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Clock Out</span>
-                                <div>End your workday</div>
-                            </button>
+                        <div class="action-buttons" id="attendance-buttons">
+                            <!-- Buttons will be dynamically inserted here -->
                         </div>
 
                         <div class="location-info">
@@ -1170,10 +1324,75 @@
         }
     }
 
+    // Add new function to update attendance buttons
+    function updateAttendanceButtons() {
+        fetch('/attendance/status')
+            .then(response => response.json())
+            .then(data => {
+                const buttonsContainer = document.getElementById('attendance-buttons');
+                
+                if (data.status === 'success') {
+                    let buttonHtml = '';
+                    
+                    switch(data.action) {
+                        case 'clock_in':
+                            buttonHtml = `
+                                <button class="btn-clock-in" onclick="startAttendance('in')">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    <span>Clock In</span>
+                                    <div>Start your workday</div>
+                                </button>
+                            `;
+                            break;
+                            
+                        case 'clock_out':
+                            buttonHtml = `
+                                <button class="btn-clock-out" onclick="startAttendance('out')">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Clock Out</span>
+                                    <div>End your workday</div>
+                                </button>
+                            `;
+                            break;
+                            
+                        case 'completed':
+                            buttonHtml = `
+                                <div class="alert alert-info text-center" role="alert">
+                                    <i class="fas fa-check-circle"></i>
+                                    ${data.message}
+                                </div>
+                            `;
+                            break;
+                    }
+                    
+                    buttonsContainer.innerHTML = buttonHtml;
+                } else {
+                    // Handle error state
+                    buttonsContainer.innerHTML = `
+                        <div class="alert alert-danger text-center" role="alert">
+                            <i class="fas fa-exclamation-circle"></i>
+                            ${data.message}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching attendance status:', error);
+                const buttonsContainer = document.getElementById('attendance-buttons');
+                buttonsContainer.innerHTML = `
+                    <div class="alert alert-danger text-center" role="alert">
+                        <i class="fas fa-exclamation-circle"></i>
+                        An error occurred while checking attendance status
+                    </div>
+                `;
+            });
+    }
+
     // Initialize with server time sync
     document.addEventListener('DOMContentLoaded', () => {
         // Initial update
         updateDateTime();
+        updateAttendanceButtons();
         
         // Set up periodic updates every second, but fetch from server every minute
         let secondsCounter = 0;
@@ -1183,6 +1402,7 @@
                 // Fetch fresh server time every minute
                 secondsCounter = 0;
                 await updateDateTime();
+                updateAttendanceButtons();
             } else {
                 // For intermediate seconds, just update the display
                 const timeDisplay = document.getElementById('current-time');

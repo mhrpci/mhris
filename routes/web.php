@@ -189,6 +189,7 @@ Route::middleware('auth')->group(function () {
     Route::post('attendances/import', [AttendanceController::class, 'import'])->name('attendances.import');
     Route::get('attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
     Route::get('/attendance', [AttendanceController::class, 'attendance'])->name('attendances.attendance');
+    Route::get('/attendance/status', [AttendanceController::class, 'getAttendanceStatus'])->name('attendance.status');
 
     // Attendance store command route
     Route::post('/attendance/store-command', [AttendanceController::class, 'executeStoreCommand'])
