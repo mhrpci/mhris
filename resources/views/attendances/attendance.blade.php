@@ -350,11 +350,6 @@
         color: #ff4444;
     }
 
-    .btn-filter {
-        background: rgba(255, 255, 255, 0.15);
-        color: #00c6ff;
-    }
-
     .camera-btn:hover {
         transform: translateY(-2px) scale(1.05);
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
@@ -363,154 +358,6 @@
     .btn-close-camera:hover {
         background: #ff4444;
         color: white;
-    }
-
-    .btn-filter:hover {
-        background: #00c6ff;
-        color: white;
-    }
-
-    /* Filter Panel Styles */
-    .filter-panel {
-        position: fixed;
-        top: 1rem;
-        left: 5rem;
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 1rem;
-        z-index: 1002;
-        display: none;
-        transition: all 0.3s ease;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .filter-panel.active {
-        display: block;
-        animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .filter-options {
-        display: flex;
-        flex-direction: column;
-        gap: 0.8rem;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .filter-label {
-        color: white;
-        font-size: 0.9rem;
-        font-weight: 500;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .filter-slider {
-        -webkit-appearance: none;
-        width: 200px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 2px;
-        outline: none;
-    }
-
-    .filter-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 16px;
-        height: 16px;
-        background: #00c6ff;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .filter-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.2);
-        box-shadow: 0 0 10px rgba(0, 198, 255, 0.5);
-    }
-
-    .filter-preset {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
-
-    .preset-btn {
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        border-radius: 8px;
-        padding: 0.5rem;
-        color: white;
-        font-size: 0.8rem;
-        transition: all 0.2s ease;
-        cursor: pointer;
-    }
-
-    .preset-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
-    }
-
-    .preset-btn.active {
-        background: #00c6ff;
-        color: white;
-    }
-
-    /* Camera quality indicator */
-    .quality-indicator {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(4px);
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        color: white;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        z-index: 1002;
-    }
-
-    .quality-indicator i {
-        color: #00c6ff;
-    }
-
-    /* Enhanced video feed */
-    #camera-feed {
-        width: 100%;
-        height: 100vh;
-        object-fit: cover;
-        background: #000;
-        position: fixed;
-        top: 0;
-        left: 0;
-        filter: none;
-        transition: filter 0.3s ease;
-    }
-
-    #camera-feed.beauty-mode {
-        filter: brightness(1.1) contrast(1.1) saturate(1.2);
     }
 
     /* Camera flash animation */
@@ -933,9 +780,6 @@
         <button class="camera-btn btn-close-camera" onclick="closeCamera()">
             <i class="fas fa-times"></i>
         </button>
-        <button class="camera-btn btn-filter" onclick="toggleFilter()">
-            <i class="fas fa-filter"></i>
-        </button>
     </div>
     
     <div class="camera-logo-container">
@@ -982,54 +826,6 @@
                 <i class="fas fa-camera"></i>
                 Capture
             </button>
-        </div>
-    </div>
-</div>
-
-<!-- Filter Panel -->
-<div class="filter-panel" id="filterPanel">
-    <div class="filter-options">
-        <div class="filter-group">
-            <label class="filter-label">Brightness</label>
-            <input type="range" class="filter-slider" min="0" max="2" step="0.01" value="1">
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">Contrast</label>
-            <input type="range" class="filter-slider" min="0" max="2" step="0.01" value="1">
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">Saturation</label>
-            <input type="range" class="filter-slider" min="0" max="2" step="0.01" value="1">
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">Sharpness</label>
-            <input type="range" class="filter-slider" min="0" max="2" step="0.01" value="1">
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">Temperature</label>
-            <input type="range" class="filter-slider" min="2000" max="10000" step="1" value="5000">
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">Tint</label>
-            <input type="range" class="filter-slider" min="-100" max="100" step="1" value="0">
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">Exposure</label>
-            <input type="range" class="filter-slider" min="0" max="2" step="0.01" value="1">
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">ISO</label>
-            <input type="range" class="filter-slider" min="100" max="800" step="1" value="400">
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">Focus</label>
-            <input type="range" class="filter-slider" min="0" max="100" step="1" value="50">
-        </div>
-        <div class="filter-preset">
-            <button class="preset-btn" onclick="applyPreset('natural')">Natural</button>
-            <button class="preset-btn" onclick="applyPreset('warm')">Warm</button>
-            <button class="preset-btn" onclick="applyPreset('cool')">Cool</button>
-            <button class="preset-btn" onclick="applyPreset('daylight')">Daylight</button>
         </div>
     </div>
 </div>
@@ -1248,16 +1044,10 @@
             const constraints = {
                 video: {
                     facingMode: facingMode,
-                    width: { ideal: 3840 }, // 4K UHD
-                    height: { ideal: 2160 },
-                    frameRate: { ideal: 30 },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
                     zoom: 1.0,
-                    advanced: [
-                        { zoom: 1.0 },
-                        { whiteBalanceMode: "continuous" },
-                        { exposureMode: "continuous" },
-                        { focusMode: "continuous" }
-                    ]
+                    advanced: [{ zoom: 1.0 }]
                 }
             };
 
@@ -1273,131 +1063,16 @@
             
             currentFacingMode = facingMode;
 
-            // Get video track capabilities
+            // Get video track and set zoom to 1x if capabilities allow
             const videoTrack = currentStream.getVideoTracks()[0];
-            const capabilities = videoTrack.getCapabilities();
-            
-            // Initialize quality indicator
-            updateQualityIndicator(videoTrack);
-
-            // Initialize filter controls based on capabilities
-            initializeFilterControls(capabilities);
-
+            if (videoTrack.getCapabilities && videoTrack.getCapabilities().zoom) {
+                await videoTrack.applyConstraints({
+                    advanced: [{ zoom: 1.0 }]
+                });
+            }
         } catch (error) {
             console.error('Error accessing camera:', error);
             alert('Unable to access camera. Please ensure camera permissions are granted.');
-        }
-    }
-
-    // Update quality indicator
-    function updateQualityIndicator(videoTrack) {
-        const settings = videoTrack.getSettings();
-        const quality = document.createElement('div');
-        quality.className = 'quality-indicator';
-        
-        let qualityText = 'HD';
-        if (settings.width >= 3840) {
-            qualityText = '4K UHD';
-        } else if (settings.width >= 1920) {
-            qualityText = 'Full HD';
-        }
-        
-        quality.innerHTML = `
-            <i class="fas fa-video"></i>
-            <span>${qualityText} (${settings.width}×${settings.height})</span>
-        `;
-        
-        // Remove existing quality indicator if any
-        const existingQuality = document.querySelector('.quality-indicator');
-        if (existingQuality) {
-            existingQuality.remove();
-        }
-        
-        document.querySelector('.camera-container').appendChild(quality);
-    }
-
-    // Initialize filter controls
-    function initializeFilterControls(capabilities) {
-        const sliders = document.querySelectorAll('.filter-slider');
-        sliders.forEach(slider => {
-            slider.addEventListener('input', updateFilters);
-        });
-    }
-
-    // Update filters based on slider values
-    function updateFilters() {
-        const video = document.getElementById('camera-feed');
-        const brightness = document.querySelector('.filter-slider[min="0"][max="2"]').value;
-        const contrast = document.querySelectorAll('.filter-slider[min="0"][max="2"]')[1].value;
-        const saturation = document.querySelectorAll('.filter-slider[min="0"][max="2"]')[2].value;
-        const sharpness = document.querySelectorAll('.filter-slider[min="0"][max="2"]')[3].value;
-        
-        let filterString = `
-            brightness(${brightness})
-            contrast(${contrast})
-            saturate(${saturation})
-        `;
-        
-        if (sharpness > 1) {
-            filterString += ` url(data:image/svg+xml;base64,${btoa(`
-                <svg xmlns="http://www.w3.org/2000/svg">
-                    <filter id="sharpen">
-                        <feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -${sharpness-1} 0 -${sharpness-1} ${sharpness*4} -${sharpness-1} 0 -${sharpness-1} 0"/>
-                    </filter>
-                </svg>
-            `)})`;
-        }
-        
-        video.style.filter = filterString;
-    }
-
-    // Apply preset filters
-    function applyPreset(preset) {
-        const sliders = document.querySelectorAll('.filter-slider');
-        const presetButtons = document.querySelectorAll('.preset-btn');
-        
-        // Remove active class from all preset buttons
-        presetButtons.forEach(btn => btn.classList.remove('active'));
-        
-        // Add active class to selected preset button
-        event.target.classList.add('active');
-        
-        let values;
-        switch(preset) {
-            case 'natural':
-                values = [1, 1, 1, 1, 5500, 0, 1, 400, 50];
-                break;
-            case 'warm':
-                values = [1.1, 1.1, 1.2, 1, 6500, 10, 1.1, 400, 50];
-                break;
-            case 'cool':
-                values = [1, 1.1, 0.9, 1, 4500, -10, 1, 400, 50];
-                break;
-            case 'daylight':
-                values = [1.2, 1.1, 1.1, 1, 5500, 0, 1.2, 200, 50];
-                break;
-        }
-        
-        // Update slider values
-        sliders.forEach((slider, index) => {
-            slider.value = values[index];
-        });
-        
-        // Apply filters
-        updateFilters();
-    }
-
-    // Toggle filter panel
-    function toggleFilter() {
-        const filterPanel = document.getElementById('filterPanel');
-        const filterBtn = document.querySelector('.btn-filter');
-        
-        if (filterPanel.classList.contains('active')) {
-            filterPanel.classList.remove('active');
-            filterBtn.style.background = 'rgba(255, 255, 255, 0.15)';
-        } else {
-            filterPanel.classList.add('active');
-            filterBtn.style.background = '#00c6ff';
         }
     }
 
