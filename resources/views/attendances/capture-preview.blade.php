@@ -112,8 +112,8 @@
     /* Status badge */
     .preview-status-badge {
         position: absolute;
-        top: 24px;
-        left: 24px;
+        bottom: 220px;
+        left: 32px;
         display: inline-flex;
         align-items: center;
         gap: 10px;
@@ -149,7 +149,7 @@
         transform: translate(-50%, -50%);
         font-size: 12rem;
         font-weight: 900;
-        color: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.05);
         text-transform: uppercase;
         pointer-events: none;
         z-index: 9991;
@@ -159,11 +159,11 @@
     }
 
     .preview-status-large.in {
-        color: rgba(16, 185, 129, 0.08);
+        color: rgba(16, 185, 129, 0.05);
     }
 
     .preview-status-large.out {
-        color: rgba(239, 68, 68, 0.08);
+        color: rgba(239, 68, 68, 0.05);
     }
     
     /* Info overlay */
@@ -175,8 +175,8 @@
         color: white;
         z-index: 9992;
         padding: 32px;
-        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
-        backdrop-filter: blur(8px);
+        background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+        backdrop-filter: blur(4px);
     }
     
     .preview-overlay-content {
@@ -250,8 +250,8 @@
         display: flex;
         justify-content: center;
         padding: 24px;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 50%, transparent 100%);
-        backdrop-filter: blur(12px);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
+        backdrop-filter: blur(4px);
         z-index: 9992;
         gap: 20px;
     }
@@ -397,6 +397,11 @@
             font-size: 1rem;
             min-width: 160px;
         }
+        
+        .preview-status-badge {
+            bottom: 200px;
+            left: 24px;
+        }
     }
     
     @media (max-width: 768px) {
@@ -408,7 +413,7 @@
         }
         
         .preview-status-badge {
-            top: 20px;
+            bottom: 180px;
             left: 20px;
             padding: 12px 24px;
             font-size: 1rem;
@@ -449,7 +454,7 @@
         }
         
         .preview-status-badge {
-            top: 16px;
+            bottom: 160px;
             left: 16px;
             padding: 10px 20px;
             font-size: 0.9rem;
@@ -517,6 +522,12 @@
             padding: 10px 20px;
             font-size: 0.85rem;
             min-width: 120px;
+        }
+        
+        .preview-status-badge {
+            bottom: 150px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
         }
     }
 </style>
