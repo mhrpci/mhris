@@ -4,65 +4,64 @@
 
 @section('content')
 <style>
-    /* Hide layout elements during preview */
-    #app > div:not(.preview-container) {
-        display: none !important;
-    }
-    
-    /* Override any layout styles that might interfere */
-    body {
-        margin: 0 !important;
-        padding: 0 !important;
-        font-family: 'Inter', sans-serif !important;
-        background: #000 !important;
-        height: 100vh !important;
-        overflow: hidden !important;
-    }
-
-    #app {
-        height: 100vh !important;
-        overflow: hidden !important;
-    }
-
-    /* Ensure preview container takes full viewport */
+    /* Ensure preview takes full viewport and overlays everything */
     .preview-container {
-        position: relative !important;
-        width: 100% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
         height: 100vh !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
         background: #000 !important;
-        z-index: 9999 !important;
+        z-index: 999999 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
-    /* Rest of your existing styles */
-    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
-    @font-face {
-        font-family: 'Font Awesome 5 Free';
-        font-style: normal;
-        font-weight: 900;
-        font-display: block;
-        src: url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2) format('woff2'),
-             url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff) format('woff'),
-             url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.ttf) format('truetype');
+    /* Hide all other layout elements */
+    #app > div:not(.preview-container),
+    .main-header,
+    .main-sidebar,
+    .content-wrapper,
+    .main-footer {
+        display: none !important;
     }
 
+    /* Reset body and app container */
+    body, #app {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+        background: #000 !important;
+    }
+
+    /* Enhanced image container */
     .preview-image-container {
         position: relative;
         width: 100%;
         height: 100%;
         background: #000;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
+    /* Improved image quality */
     .preview-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        object-position: center;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
     }
 
+    /* Enhanced overlay gradient */
     .preview-overlay {
         position: absolute;
         top: 0;
@@ -71,13 +70,18 @@
         height: 100%;
         background: linear-gradient(
             to bottom,
-            rgba(0, 0, 0, 0.4) 0%,
-            rgba(0, 0, 0, 0) 30%,
+            rgba(0, 0, 0, 0.5) 0%,
+            rgba(0, 0, 0, 0.2) 20%,
+            rgba(0, 0, 0, 0) 40%,
             rgba(0, 0, 0, 0) 60%,
-            rgba(0, 0, 0, 0.8) 100%
+            rgba(0, 0, 0, 0.3) 80%,
+            rgba(0, 0, 0, 0.9) 100%
         );
+        backdrop-filter: blur(1px);
+        -webkit-backdrop-filter: blur(1px);
     }
 
+    /* Improved content layout */
     .preview-content {
         position: absolute;
         top: 0;
@@ -87,102 +91,124 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 1rem;
+        padding: 1.5rem;
         box-sizing: border-box;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
 
+    /* Enhanced header */
     .preview-header {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: flex-start;
         padding: 0.5rem;
     }
 
+    /* Improved logo */
     .preview-logo {
-        width: 60px;
+        width: 70px;
         height: auto;
         position: absolute;
-        top: 1rem;
-        right: 1rem;
+        top: 1.5rem;
+        right: 1.5rem;
         background: white;
-        padding: 8px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
     }
 
+    .preview-logo:hover {
+        transform: scale(1.05);
+    }
+
+    /* Enhanced status badge */
     .clock-in-badge {
         display: inline-flex;
         align-items: center;
-        background: #28a745;
+        background: rgba(40, 167, 69, 0.95);
         color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
         font-weight: 600;
-        font-size: 1.1rem;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        gap: 0.6rem;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
     }
 
     .clock-in-badge.out {
-        background: #dc3545;
+        background: rgba(220, 53, 69, 0.95);
     }
 
+    /* Improved text styling */
     .preview-info {
-        padding: 1rem;
+        padding: 1.2rem;
         color: white;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
 
     .preview-time {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: 700;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.3rem;
+        letter-spacing: -0.5px;
     }
 
     .preview-date {
-        font-size: 1.3rem;
-        margin-bottom: 1rem;
-        opacity: 0.9;
+        font-size: 1.4rem;
+        margin-bottom: 1.2rem;
+        opacity: 0.95;
+        font-weight: 500;
     }
 
     .preview-location {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         display: flex;
         align-items: flex-start;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-        opacity: 0.9;
+        gap: 0.6rem;
+        margin-bottom: 0.6rem;
+        opacity: 0.95;
+        font-weight: 500;
     }
 
     .preview-location i {
-        margin-top: 0.3rem;
+        margin-top: 0.4rem;
+        font-size: 1.1rem;
     }
 
     .preview-name {
-        font-size: 1.2rem;
-        margin-bottom: 0.25rem;
+        font-size: 1.4rem;
+        margin-bottom: 0.3rem;
+        font-weight: 600;
     }
 
     .preview-company {
-        font-size: 1rem;
-        opacity: 0.9;
-        margin-bottom: 0.25rem;
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin-bottom: 0.3rem;
+        font-weight: 500;
     }
 
     .preview-position {
-        font-size: 1rem;
-        opacity: 0.9;
-        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin-bottom: 1.2rem;
+        font-weight: 500;
     }
 
     .preview-code {
-        font-size: 0.9rem;
-        opacity: 0.7;
+        font-size: 1rem;
+        opacity: 0.8;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.6rem;
+        font-weight: 500;
     }
 
+    /* Enhanced buttons */
     .preview-buttons {
         position: fixed;
         bottom: 0;
@@ -190,66 +216,86 @@
         width: 100%;
         display: flex;
         justify-content: center;
-        gap: 1rem;
-        padding: 1.5rem;
-        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, transparent 100%);
+        gap: 1.2rem;
+        padding: 2rem;
+        background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
     }
 
     .btn-retake, .btn-confirm {
-        padding: 0.8rem 2rem;
+        padding: 1rem 2.5rem;
         border: none;
-        border-radius: 5px;
-        font-size: 1rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
         font-weight: 600;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.6rem;
         transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .btn-retake {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.15);
         color: white;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
     }
 
     .btn-confirm {
-        background: #28a745;
+        background: rgba(40, 167, 69, 0.95);
         color: white;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
     }
 
     .btn-retake:hover {
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
     }
 
     .btn-confirm:hover {
-        background: #218838;
+        background: rgba(40, 167, 69, 1);
+        transform: translateY(-1px);
     }
 
+    /* Responsive adjustments */
     @media (max-width: 768px) {
         .preview-time {
-            font-size: 2rem;
+            font-size: 2.5rem;
         }
 
         .preview-date {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
         }
 
         .preview-location,
         .preview-name,
         .preview-company,
         .preview-position {
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
         .clock-in-badge {
-            font-size: 1rem;
-            padding: 0.4rem 0.8rem;
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
         }
 
         .preview-logo {
-            width: 50px;
-            padding: 6px;
+            width: 60px;
+            padding: 8px;
+        }
+
+        .preview-buttons {
+            padding: 1.5rem;
+            gap: 1rem;
+        }
+
+        .btn-retake, .btn-confirm {
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
         }
     }
 </style>
