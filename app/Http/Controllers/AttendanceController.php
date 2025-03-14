@@ -658,21 +658,85 @@ class AttendanceController extends Controller
             $message .= "Position: " . ($employee->position ? $employee->position->name : 'N/A') . "\n";
             $message .= "Location: {$location}";
 
-            // Send to Telegram
-            $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
-            $data = [
-                'chat_id' => $chatId,
-                'text' => $message,
-                'parse_mode' => 'Markdown'
-            ];
-
             $client = new Client();
-            $response = $client->post($url, [
-                'json' => $data
-            ]);
 
-            if ($response->getStatusCode() !== 200) {
-                throw new \Exception('Failed to send Telegram notification');
+            // Get the latest attendance record for the employee
+            $attendance = Attendance::where('employee_id', $employee->id)
+                ->where('date_attended', Carbon::parse($time)->format('Y-m-d'))
+                ->first();
+
+            // Determine which timestamp to use
+            $timestampField = $type === 'in' ? 'time_stamp1' : 'time_stamp2';
+            
+            if ($attendance && $attendance->$timestampField) {
+                // First send the message
+                $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
+                $messageData = [
+                    'chat_id' => $chatId,
+                    'text' => $message,
+                    'parse_mode' => 'Markdown'
+                ];
+
+                $messageResponse = $client->post($messageUrl, [
+                    'json' => $messageData
+                ]);
+
+                if ($messageResponse->getStatusCode() !== 200) {
+                    throw new \Exception('Failed to send Telegram message');
+                }
+
+                // Then send the image
+                $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
+                $imagePath = Storage::disk('public')->path($attendance->$timestampField);
+                
+                if (file_exists($imagePath)) {
+                    $imageData = [
+                        'chat_id' => $chatId,
+                        'photo' => fopen($imagePath, 'r'),
+                        'caption' => "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
+                                    ($type === 'in' ? 'Clock In' : 'Clock Out') . 
+                                    " at {$formattedTime}"
+                    ];
+
+                    $imageResponse = $client->post($imageUrl, [
+                        'multipart' => [
+                            [
+                                'name' => 'chat_id',
+                                'contents' => $chatId
+                            ],
+                            [
+                                'name' => 'photo',
+                                'contents' => fopen($imagePath, 'r')
+                            ],
+                            [
+                                'name' => 'caption',
+                                'contents' => $imageData['caption']
+                            ]
+                        ]
+                    ]);
+
+                    if ($imageResponse->getStatusCode() !== 200) {
+                        throw new \Exception('Failed to send Telegram image');
+                    }
+                } else {
+                    \Log::warning("Timestamp image not found: {$imagePath}");
+                }
+            } else {
+                // If no image is available, just send the message
+                $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
+                $messageData = [
+                    'chat_id' => $chatId,
+                    'text' => $message,
+                    'parse_mode' => 'Markdown'
+                ];
+
+                $response = $client->post($messageUrl, [
+                    'json' => $messageData
+                ]);
+
+                if ($response->getStatusCode() !== 200) {
+                    throw new \Exception('Failed to send Telegram message');
+                }
             }
 
         } catch (\Exception $e) {
