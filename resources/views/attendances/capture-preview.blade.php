@@ -152,67 +152,126 @@
         display: none;
     }
     
-    /* Info overlay - Adjusted for new status badge position */
-    .preview-info-overlay {
+    /* Info overlay - Professional and compact */
+    .preview-info-container {
         position: absolute;
         left: 0;
         bottom: 0;
         width: 100%;
+        padding: 25px;
+        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
         color: white;
         z-index: 9992;
-        padding: 30px 20px;
-        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, transparent 100%);
     }
     
-    .preview-overlay-content {
-        max-width: 80%;
+    .preview-info-content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 100%;
+        backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 15px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .preview-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .preview-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    
+    .preview-status.in {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    
+    .preview-status.out {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    
+    .preview-status i {
+        font-size: 1.2rem;
+    }
+    
+    .preview-datetime {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-left: auto;
     }
     
     .preview-time {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 700;
-        margin-bottom: 4px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        letter-spacing: 0.5px;
+        color: rgba(255, 255, 255, 0.95);
     }
     
     .preview-date {
-        font-size: 1.1rem;
-        font-weight: 500;
-        color: rgba(255,255,255,0.9);
-        margin-bottom: 12px;
-    }
-    
-    .preview-name {
         font-size: 1rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .preview-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 5px;
+    }
+    
+    .preview-detail-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .preview-detail-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.5px;
+    }
+    
+    .preview-detail-value {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.9);
         font-weight: 500;
-        color: rgba(255,255,255,0.95);
-        margin-bottom: 8px;
-    }
-    
-    .preview-position {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
-        margin-bottom: 8px;
-    }
-    
-    .preview-department {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
-        margin-bottom: 12px;
     }
     
     .preview-location {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
-        line-height: 1.4;
         display: flex;
         align-items: flex-start;
         gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .preview-location i {
-        margin-top: 4px;
         color: #4285f4;
+        margin-top: 3px;
+    }
+    
+    .preview-location-text {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.4;
     }
     
     /* Action buttons */
@@ -342,7 +401,7 @@
         font-size: 1.2rem;
     }
     
-    /* Responsive design updates */
+    /* Responsive adjustments */
     @media (max-width: 768px) {
         .preview-logo {
             width: 80px;
@@ -350,34 +409,37 @@
             right: 15px;
         }
         
-        .preview-status-badge {
-            bottom: 180px;
-            padding: 12px 25px;
-            min-width: 160px;
+        .preview-info-container {
+            padding: 20px;
         }
         
-        .preview-status-badge i {
-            font-size: 1.3rem;
+        .preview-info-content {
+            padding: 15px;
         }
         
-        .preview-status-badge span {
-            font-size: 1.1rem;
+        .preview-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
         }
         
-        .preview-info-overlay {
-            padding: 25px 15px;
-        }
-        
-        .preview-overlay-content {
-            max-width: 100%;
+        .preview-datetime {
+            margin-left: 0;
+            flex-direction: column;
+            gap: 5px;
         }
         
         .preview-time {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
         }
         
         .preview-date {
-            font-size: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .preview-details {
+            grid-template-columns: 1fr;
+            gap: 12px;
         }
         
         .preview-actions {
@@ -397,33 +459,25 @@
             right: 10px;
         }
         
-        .preview-status-badge {
-            bottom: 160px;
-            left: 15px;
-            padding: 10px 20px;
-            min-width: 140px;
-            border-radius: 12px;
+        .preview-info-container {
+            padding: 15px;
         }
         
-        .preview-status-badge i {
-            font-size: 1.1rem;
+        .preview-info-content {
+            padding: 12px;
         }
         
-        .preview-status-badge span {
+        .preview-status {
             font-size: 1rem;
-            letter-spacing: 0.3px;
+            padding: 6px 12px;
         }
         
         .preview-time {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
         
-        .preview-date {
+        .preview-detail-value {
             font-size: 0.9rem;
-        }
-        
-        .preview-name, .preview-position, .preview-department {
-            font-size: 0.8rem;
         }
         
         .preview-actions {
@@ -434,198 +488,6 @@
         .btn-confirm, .btn-retake {
             padding: 0.6rem 1.2rem;
             font-size: 0.8rem;
-        }
-        
-        .preview-info-overlay {
-            padding: 20px 15px;
-        }
-    }
-
-    /* Professional identification section */
-    .preview-identification {
-        position: absolute;
-        left: 20px;
-        bottom: 30px;
-        width: calc(100% - 40px);
-        background: linear-gradient(to right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.75));
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 25px;
-        color: white;
-        z-index: 9992;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    .identification-header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .clock-status {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 20px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        font-weight: 600;
-        min-width: 160px;
-    }
-
-    .clock-status.in {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
-        border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .clock-status.out {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
-        border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    .clock-status i {
-        font-size: 1.4rem;
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .clock-status span {
-        font-size: 1.2rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .datetime-display {
-        flex-grow: 1;
-        text-align: right;
-    }
-
-    .time-display {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 4px;
-        background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        letter-spacing: 1px;
-    }
-
-    .date-display {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.8);
-        font-weight: 500;
-    }
-
-    .identification-details {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-
-    .employee-info, .workplace-info {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .info-label {
-        font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.6);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .info-value {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 500;
-    }
-
-    .location-info {
-        grid-column: 1 / -1;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 10px;
-        padding-top: 15px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .location-info i {
-        color: #4285f4;
-        font-size: 1.2rem;
-    }
-
-    .location-info .info-value {
-        font-size: 1rem;
-    }
-
-    @media (max-width: 768px) {
-        .preview-identification {
-            padding: 20px;
-            left: 15px;
-            width: calc(100% - 30px);
-        }
-
-        .identification-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .datetime-display {
-            text-align: left;
-        }
-
-        .time-display {
-            font-size: 1.8rem;
-        }
-
-        .date-display {
-            font-size: 1rem;
-        }
-
-        .identification-details {
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .preview-identification {
-            padding: 15px;
-            left: 10px;
-            width: calc(100% - 20px);
-        }
-
-        .clock-status {
-            padding: 8px 15px;
-            min-width: 140px;
-        }
-
-        .clock-status i {
-            font-size: 1.2rem;
-        }
-
-        .clock-status span {
-            font-size: 1rem;
-        }
-
-        .time-display {
-            font-size: 1.6rem;
-        }
-
-        .info-label {
-            font-size: 0.8rem;
-        }
-
-        .info-value {
-            font-size: 1rem;
         }
     }
 </style>
@@ -638,36 +500,42 @@
         
         <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="preview-logo">
         
-        <div class="preview-identification">
-            <div class="identification-header">
-                <div class="clock-status" id="clock-status">
-                    <i class="fas fa-clock"></i>
-                    <span id="status-text">Clock In</span>
-                </div>
-                <div class="datetime-display">
-                    <div class="time-display" id="preview-time"></div>
-                    <div class="date-display" id="preview-date"></div>
-                </div>
-            </div>
-            <div class="identification-details">
-                <div class="employee-info">
-                    <div class="info-label">Employee Name</div>
-                    <div class="info-value" id="preview-name"></div>
-                </div>
-                <div class="workplace-info">
-                    <div class="info-label">Position</div>
-                    <div class="info-value" id="preview-position"></div>
-                </div>
-                <div class="workplace-info">
-                    <div class="info-label">Department</div>
-                    <div class="info-value" id="preview-department"></div>
-                </div>
-                <div class="location-info">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <div>
-                        <div class="info-label">Location</div>
-                        <div class="info-value" id="preview-location"></div>
+        <div id="preview-status-badge" class="preview-status-badge">
+            <i class="fas fa-clock"></i>
+            <span id="status-text">Clock In</span>
+        </div>
+        
+        <div class="preview-info-container">
+            <div class="preview-info-content">
+                <div class="preview-header">
+                    <div id="preview-status" class="preview-status in">
+                        <i class="fas fa-clock"></i>
+                        <span id="status-text">Clock In</span>
                     </div>
+                    <div class="preview-datetime">
+                        <div class="preview-time" id="preview-time">--:-- --</div>
+                        <div class="preview-date" id="preview-date">--- --, ----</div>
+                    </div>
+                </div>
+                
+                <div class="preview-details">
+                    <div class="preview-detail-group">
+                        <div class="preview-detail-label">Employee Name</div>
+                        <div class="preview-detail-value" id="preview-name">Loading...</div>
+                    </div>
+                    <div class="preview-detail-group">
+                        <div class="preview-detail-label">Position</div>
+                        <div class="preview-detail-value" id="preview-position">Loading...</div>
+                    </div>
+                    <div class="preview-detail-group">
+                        <div class="preview-detail-label">Department</div>
+                        <div class="preview-detail-value" id="preview-department">Loading...</div>
+                    </div>
+                </div>
+                
+                <div class="preview-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div class="preview-location-text" id="preview-location">Fetching location...</div>
                 </div>
             </div>
         </div>
@@ -738,10 +606,10 @@
             document.getElementById('preview-image').src = capturedImage;
             
             // Set the status badge and large status text
-            const statusBadge = document.getElementById('clock-status');
+            const statusBadge = document.getElementById('preview-status-badge');
             const statusText = document.getElementById('status-text');
             
-            statusBadge.className = `clock-status ${attendanceType}`;
+            statusBadge.className = `preview-status-badge ${attendanceType}`;
             statusText.textContent = attendanceType === 'in' ? 'Clock In' : 'Clock Out';
             
             // Get server time for display
@@ -981,14 +849,18 @@
         const width = canvas.width;
         const height = canvas.height;
         
-        // Add a professional gradient overlay
-        const overlayHeight = height * 0.3;
-        const gradient = ctx.createLinearGradient(0, height - overlayHeight, 0, height);
+        // Add a gradient footer for additional information
+        const footerHeight = 60;
+        const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
         gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.75)');
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, height - overlayHeight, width, overlayHeight);
+        ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
+        
+        // Set text style for main verification text
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.font = 'bold 16px Arial';
+        ctx.textBaseline = 'middle';
         
         // Format timestamp
         const timestamp = new Date(details.timestamp);
@@ -1004,52 +876,51 @@
             second: '2-digit',
             hour12: true
         });
-
-        // Set up text styles
-        ctx.textBaseline = 'middle';
         
-        // Add Clock In/Out status with large text
-        ctx.font = 'bold 24px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.textAlign = 'left';
-        ctx.fillText(`${details.type.toUpperCase()} VERIFICATION`, 30, height - overlayHeight + 40);
-
-        // Add timestamp and details
-        ctx.font = '16px Arial';
+        // Add detailed verification text
+        const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
+        ctx.fillText(verificationText, 20, height - footerHeight + 15);
+        
+        // Add timestamp details
+        ctx.font = '14px Arial';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
+        ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
         
-        // Left column - Time details
-        const leftX = 30;
-        ctx.textAlign = 'left';
-        ctx.fillText(formattedTime, leftX, height - overlayHeight + 70);
-        ctx.fillText(formattedDate, leftX, height - overlayHeight + 95);
-        
-        // Right column - Employee details
-        const rightX = width - 30;
+        // Add employee details on the right
         ctx.textAlign = 'right';
-        ctx.fillText(details.name, rightX, height - overlayHeight + 70);
-        ctx.fillText(`${details.position} - ${details.department}`, rightX, height - overlayHeight + 95);
+        ctx.fillText(`${details.name}`, width - 20, height - footerHeight + 15);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillText(`${details.position}`, width - 20, height - footerHeight + 35);
+        ctx.fillText(`${details.department}`, width - 20, height - footerHeight + 55);
         
-        // Center - Location and verification
+        // Add location in the middle
         ctx.textAlign = 'center';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`Location: ${details.location}`, width/2, height - overlayHeight + 70);
+        ctx.fillText(`Location: ${details.location}`, width/2, height - footerHeight + 35);
         
-        // Add verification details
-        ctx.font = 'bold 14px Arial';
+        // Add system verification text
+        ctx.font = 'bold 12px Arial';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        const systemText = 'HRIS ATTENDANCE SYSTEM';
+        ctx.fillText(systemText, width/2, height - footerHeight + 55);
+        
+        // Add unique verification ID
         const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-        ctx.fillText(`${verificationId} | HRIS ATTENDANCE SYSTEM`, width/2, height - overlayHeight + 95);
+        ctx.fillText(verificationId, width/2, height - footerHeight + 15);
         
-        // Add subtle watermark
+        // Add professional watermark
         ctx.save();
         ctx.globalAlpha = 0.07;
-        ctx.font = 'bold 150px Arial';
+        ctx.font = 'bold 120px Arial';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.translate(width/2, height/2);
-        ctx.rotate(-Math.PI/6);
-        ctx.fillText(`${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`, 0, 0);
-        ctx.font = 'bold 80px Arial';
-        ctx.fillText('VERIFIED', 0, 100);
+        ctx.rotate(-Math.PI/6); // Rotate -30 degrees
+        const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
+        ctx.fillText(watermarkText, 0, 0);
+        ctx.font = 'bold 60px Arial';
+        ctx.fillText('VERIFIED', 0, 80);
         ctx.restore();
     }
     
