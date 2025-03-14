@@ -100,69 +100,68 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     
-    /* Status badge */
+    /* Status badge - Professional styling */
     .preview-status-badge {
         position: absolute;
-        bottom: 160px; /* Position above the datetime */
+        bottom: 200px; /* Adjusted position */
         left: 20px;
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(8px);
-        padding: 12px 24px;
-        border-radius: 30px;
+        gap: 12px;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(10px);
+        padding: 15px 30px;
+        border-radius: 15px;
         color: white;
-        font-weight: bold;
+        font-weight: 600;
         z-index: 9992;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 1.2rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        min-width: 180px;
+    }
+    
+    .preview-status-badge i {
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .preview-status-badge span {
+        font-size: 1.3rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     
     .preview-status-badge.in {
-        background: rgba(16, 185, 129, 0.2);
-        border-color: rgba(16, 185, 129, 0.4);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.85) 0%, rgba(5, 150, 105, 0.85) 100%);
+        border: 1px solid rgba(16, 185, 129, 0.4);
     }
     
     .preview-status-badge.out {
-        background: rgba(239, 68, 68, 0.2);
-        border-color: rgba(239, 68, 68, 0.4);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.85) 0%, rgba(220, 38, 38, 0.85) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.4);
     }
     
-    /* Large status indicator */
+    /* Remove large status indicator as it's no longer needed */
     .preview-status-large {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 8rem;
-        font-weight: 900;
-        color: rgba(255, 255, 255, 0.15);
-        text-transform: uppercase;
-        pointer-events: none;
-        z-index: 9991;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        letter-spacing: 4px;
-    }
-
-    .preview-status-large.in {
-        color: rgba(40, 167, 69, 0.15);
-    }
-
-    .preview-status-large.out {
-        color: rgba(220, 53, 69, 0.15);
+        display: none;
     }
     
-    /* Info overlay */
+    /* Info overlay - Adjusted for new status badge position */
     .preview-info-overlay {
         position: absolute;
         left: 0;
-        bottom: 80px;
+        bottom: 0;
         width: 100%;
         color: white;
         z-index: 9992;
-        padding: 20px;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+        padding: 30px 20px;
+        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, transparent 100%);
     }
     
     .preview-overlay-content {
@@ -343,7 +342,7 @@
         font-size: 1.2rem;
     }
     
-    /* Responsive design */
+    /* Responsive design updates */
     @media (max-width: 768px) {
         .preview-logo {
             width: 80px;
@@ -352,14 +351,21 @@
         }
         
         .preview-status-badge {
-            top: 15px;
-            left: 15px;
-            padding: 6px 12px;
-            font-size: 0.9rem;
+            bottom: 180px;
+            padding: 12px 25px;
+            min-width: 160px;
+        }
+        
+        .preview-status-badge i {
+            font-size: 1.3rem;
+        }
+        
+        .preview-status-badge span {
+            font-size: 1.1rem;
         }
         
         .preview-info-overlay {
-            padding: 15px;
+            padding: 25px 15px;
         }
         
         .preview-overlay-content {
@@ -382,10 +388,6 @@
             padding: 0.7rem 1.5rem;
             font-size: 0.9rem;
         }
-        
-        .preview-status-large {
-            font-size: 4rem;
-        }
     }
     
     @media (max-width: 480px) {
@@ -396,10 +398,20 @@
         }
         
         .preview-status-badge {
-            top: 10px;
-            left: 10px;
-            padding: 5px 10px;
-            font-size: 0.8rem;
+            bottom: 160px;
+            left: 15px;
+            padding: 10px 20px;
+            min-width: 140px;
+            border-radius: 12px;
+        }
+        
+        .preview-status-badge i {
+            font-size: 1.1rem;
+        }
+        
+        .preview-status-badge span {
+            font-size: 1rem;
+            letter-spacing: 0.3px;
         }
         
         .preview-time {
@@ -423,6 +435,10 @@
             padding: 0.6rem 1.2rem;
             font-size: 0.8rem;
         }
+        
+        .preview-info-overlay {
+            padding: 20px 15px;
+        }
     }
 </style>
 @endsection
@@ -438,8 +454,6 @@
             <i class="fas fa-clock"></i>
             <span id="status-text">Clock In</span>
         </div>
-        
-        <div class="preview-status-large" id="preview-status-large">IN</div>
         
         <div class="preview-info-overlay">
             <div class="preview-overlay-content">
@@ -523,13 +537,9 @@
             // Set the status badge and large status text
             const statusBadge = document.getElementById('preview-status-badge');
             const statusText = document.getElementById('status-text');
-            const statusLarge = document.getElementById('preview-status-large');
             
             statusBadge.className = `preview-status-badge ${attendanceType}`;
             statusText.textContent = attendanceType === 'in' ? 'Clock In' : 'Clock Out';
-            
-            statusLarge.textContent = attendanceType === 'in' ? 'IN' : 'OUT';
-            statusLarge.className = `preview-status-large ${attendanceType}`;
             
             // Get server time for display
             await updateTimeDisplay();
