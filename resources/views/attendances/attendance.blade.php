@@ -897,62 +897,28 @@
 @endsection
 
 @section('content')
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Attendance</h3>
-                </div>
-
-                <div class="card-body">
-                    @if(session('error'))
-                        <div class="alert alert-danger">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    @if(session('success'))
-                        <div class="alert alert-success">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-
-                    @if($employee)
-                        <div class="text-center mb-4">
-                            <h4>Welcome, {{ $employee->first_name }} {{ $employee->last_name }}</h4>
-                            <p>{{ $employee->position->name }} - {{ $employee->department->name }}</p>
+<div class="app-content">
+    <div class="attendance-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="attendance-card">
+                        <div class="clock-display">
+                            <div class="time" id="current-time">00:00:00</div>
+                            <div class="date" id="current-date"></div>
                         </div>
 
-                        <div id="camera-container" class="text-center">
-                            <div id="camera-wrapper" class="mb-3">
-                                <video id="camera" autoplay playsinline style="width: 100%; max-width: 640px;"></video>
-                                <canvas id="canvas" style="display: none;"></canvas>
-                            </div>
-
-                            <div id="camera-controls" class="mb-3">
-                                <button id="capture-btn" class="btn btn-primary" style="display: none;">
-                                    <i class="fas fa-camera"></i> Take Photo
-                                </button>
-                                <div id="loading-indicator" style="display: none;">
-                                    <i class="fas fa-spinner fa-spin"></i> Processing...
-                                </div>
-                            </div>
-
-                            <div id="status-message" class="alert" style="display: none;"></div>
+                        <div class="action-buttons" id="attendance-buttons">
+                            <!-- Buttons will be dynamically inserted here -->
                         </div>
 
-                        <form id="attendance-form" style="display: none;">
-                            @csrf
-                            <input type="hidden" name="image" id="captured-image">
-                            <input type="hidden" name="location" id="user-location">
-                            <input type="hidden" name="type" id="attendance-type">
-                        </form>
-                    @else
-                        <div class="alert alert-warning">
-                            No employee record found for your account. Please contact HR.
+                        <div class="location-info">
+                            <p class="location-text">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="current-location">Fetching location...</span>
+                            </p>
                         </div>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -1225,6 +1191,12 @@
     // Initialize camera
     async function initializeCamera(facingMode = 'user') {
         try {
+            // First check if the device has a camera
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera API is not supported on this device or browser.');
+            }
+
+            // Stop any existing stream
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
@@ -1233,35 +1205,49 @@
                 video: {
                     facingMode: facingMode,
                     width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    zoom: 1.0,
-                    advanced: [{ zoom: 1.0 }]
+                    height: { ideal: 720 }
                 }
             };
 
-            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (permissionError) {
+                if (permissionError.name === 'NotAllowedError') {
+                    throw new Error('Camera permission was denied. Please allow camera access and try again.');
+                } else if (permissionError.name === 'NotFoundError') {
+                    throw new Error('No camera found on this device.');
+                } else {
+                    throw permissionError;
+                }
+            }
+
             const videoElement = document.getElementById('camera-feed');
             videoElement.srcObject = currentStream;
             
             // Apply mirroring only for front camera
             videoElement.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
             
-            // Ensure video maintains aspect ratio
-            videoElement.style.objectFit = 'contain';
+            // Wait for video to be ready
+            await new Promise((resolve) => {
+                videoElement.onloadedmetadata = () => {
+                    videoElement.play().then(resolve).catch(resolve);
+                };
+            });
             
             currentFacingMode = facingMode;
 
-            // Get video track and set zoom to 1x if capabilities allow
-            const videoTrack = currentStream.getVideoTracks()[0];
-            if (videoTrack.getCapabilities && videoTrack.getCapabilities().zoom) {
-                await videoTrack.applyConstraints({
-                    advanced: [{ zoom: 1.0 }]
-                });
-            }
         } catch (error) {
             console.error('Error accessing camera:', error);
-            alert('Unable to access camera. Please ensure camera permissions are granted.');
+            
+            // Show user-friendly error message
+            const errorMessage = error.message || 'Unable to access camera. Please ensure camera permissions are granted.';
+            alert(errorMessage);
+            
+            // Close camera modal and return to main view
+            closeCamera();
+            return false;
         }
+        return true;
     }
 
     // Close camera

@@ -10,12 +10,16 @@ use App\Events\AttendanceStored;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Imports\AttendanceImport;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Spatie\Permission\Traits\HasRoles;
 
 class AttendanceController extends Controller
 {
+    use HasRoles;
+
     // Middleware for permissions
     function __construct()
     {
@@ -28,10 +32,9 @@ class AttendanceController extends Controller
     // Display all attendance records
     public function index()
     {
-        $user = auth()->user();
-        if ($user->hasRole('Supervisor')) {
-            $attendances = Attendance::whereHas('employee', function($query) use ($user) {
-                $query->where('department_id', $user->department_id);
+        if (auth()->user()->hasRole('Supervisor')) {
+            $attendances = Attendance::whereHas('employee', function($query) {
+                $query->where('department_id', auth()->user()->department_id);
             })->get();
         } else {
             $attendances = Attendance::all();
@@ -61,21 +64,25 @@ class AttendanceController extends Controller
             'hours_worked' => 'nullable',
         ]);
 
+        // Check if attendance already exists for the given date_attended and employee_id
         $existingAttendance = Attendance::where('employee_id', $request->employee_id)
-                                      ->where('date_attended', $request->date_attended)
-                                      ->first();
+                                        ->where('date_attended', $request->date_attended)
+                                        ->first();
 
-        $user = auth()->user();
+        // Get the authenticated user
+        $user = Auth::user();
+
         $successMessage = '';
 
         if ($existingAttendance) {
             if ($existingAttendance->time_out && $existingAttendance->time_stamp2) {
-                if ($user->hasRole(['Super Admin', 'Admin'])) {
+                if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
                     $successMessage = 'Attendance for this employee on this date already has time out and time stamp.';
                 } else {
                     $successMessage = 'Your attendance on this date already has time out and time stamp.';
                 }
             } else {
+                // Update existing attendance with time_out if time_in exists and time_out doesn't
                 $existingAttendance->time_out = $request->time_out;
                 if ($request->hasFile('time_stamp2')) {
                     $existingAttendance->time_stamp2 = $request->file('time_stamp2')->store('time_stamps', 'public');
@@ -87,6 +94,7 @@ class AttendanceController extends Controller
                 $successMessage = 'You have successfully timed out.';
             }
         } else {
+            // Create new attendance record with time_in
             $newAttendance = new Attendance;
             $newAttendance->employee_id = $request->employee_id;
             $newAttendance->date_attended = $request->date_attended;
@@ -101,8 +109,9 @@ class AttendanceController extends Controller
             $successMessage = 'You have successfully timed in.';
         }
 
+        // Check user role and return appropriate view
         if ($user->hasRole('Employee')) {
-            $employees = Employee::all();
+            $employees = Employee::all(); // Fetch employees to pass to the view
             return view('attendances.create', compact('employees'))->with('successMessage', $successMessage);
         } else {
             return redirect()->route('attendances.index')->with('success', $successMessage);
@@ -188,8 +197,10 @@ class AttendanceController extends Controller
     // Generate timesheets or attendance records for all employees
     public function generateTimesheets()
     {
-        $user = auth()->user();
+        // Get authenticated user
+        $user = Auth::user();
         
+        // Get employees based on user role
         $employees = $user->hasRole('Super Admin') 
             ? Employee::all()
             : Employee::where('employee_status', 'Active')->get();
@@ -217,7 +228,7 @@ class AttendanceController extends Controller
     // Show the logged-in employee's timesheet
     public function myTimesheet()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Find the employee record corresponding to the logged-in user
         $employee = Employee::where('first_name', $user->first_name)->first();
@@ -236,9 +247,10 @@ class AttendanceController extends Controller
     // Check user role and execute appropriate function
     public function checkUserAndShowTimesheet()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if ($user->hasRole(['admin', 'super-admin'])) {
+        // Assuming roles are defined and you have a method to check user roles
+        if ($user->hasRole('admin') || $user->hasRole('super-admin')) {
             return redirect()->route('attendances.index');
         } else {
             return $this->myTimesheet();
@@ -355,7 +367,7 @@ class AttendanceController extends Controller
 
     public function attendance()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         if (!$user->hasRole(['Employee', 'Supervisor'])) {
             abort(403, 'Unauthorized access.');
@@ -372,8 +384,7 @@ class AttendanceController extends Controller
     public function executeStoreCommand()
     {
         try {
-            $kernel = app(\Illuminate\Contracts\Console\Kernel::class);
-            $exitCode = $kernel->call('attendance:store');
+            \Artisan::call('attendance:store');
             return response()->json(['message' => 'Attendance records stored successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -573,9 +584,10 @@ class AttendanceController extends Controller
     public function getAttendanceStatus()
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
             
-            if (!$user->hasAnyRole(['Employee', 'Supervisor'])) {
+            // Check if user has Employee or Supervisor role
+            if (!$user->hasRole(['Employee', 'Supervisor'])) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unauthorized access'
