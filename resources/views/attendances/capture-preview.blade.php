@@ -325,23 +325,10 @@
                 }
                 
                 const data = await response.json();
-                if (!data || typeof data.timestamp !== 'string') {
-                    throw new Error('Invalid timestamp format received from server');
-                }
-
                 const serverTime = new Date(data.timestamp);
-                if (isNaN(serverTime.getTime())) {
-                    throw new Error('Invalid date format received from server');
-                }
                 
-                // Store the hash for verification - ensure it's properly encoded
-                if (data.hash) {
-                    localStorage.setItem('timestamp_hash', data.hash);
-                }
-                
-                // Format and store the ISO timestamp
-                const isoTimestamp = serverTime.toISOString();
-                localStorage.setItem('serverTimestamp', isoTimestamp);
+                // Store the hash for verification
+                localStorage.setItem('timestamp_hash', data.hash);
                 
                 // Update time displays with server time
                 document.getElementById('preview-time').textContent = new Intl.DateTimeFormat('en-US', { 
@@ -358,6 +345,19 @@
                     day: '2-digit',
                     year: 'numeric'
                 }).format(serverTime);
+
+                // Update status badge if needed
+                const urlParams = new URLSearchParams(window.location.search);
+                const type = urlParams.get('type') || 'in';
+                const statusElement = document.getElementById('preview-status');
+                if (statusElement) {
+                    const statusText = type === 'in' ? 'Clock In' : 'Clock Out';
+                    statusElement.innerHTML = `<i class="fas fa-clock"></i><span>${statusText}</span>`;
+                    statusElement.className = `clock-in-badge ${type}`;
+                }
+
+                // Store server timestamp for verification
+                localStorage.setItem('serverTimestamp', data.timestamp);
                 
                 // Calculate server time offset
                 const clientNow = new Date();
@@ -366,23 +366,6 @@
                 
             } catch (error) {
                 console.error('Error updating time:', error);
-                // Show error message to user
-                const errorMessage = document.createElement('div');
-                errorMessage.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: #dc3545;
-                    color: white;
-                    padding: 15px 30px;
-                    border-radius: 5px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                    z-index: 1000;
-                `;
-                errorMessage.textContent = 'Error syncing with server time. Please refresh the page.';
-                document.body.appendChild(errorMessage);
-                setTimeout(() => errorMessage.remove(), 5000);
             }
         }
 
@@ -945,28 +928,66 @@
                 if (!storedTimestamp || !storedHash) {
                     throw new Error('Missing timestamp verification data');
                 }
-
-                // Ensure timestamp is in valid ISO format
-                const timestamp = new Date(storedTimestamp);
-                if (isNaN(timestamp.getTime())) {
-                    throw new Error('Invalid timestamp format');
+                
+                const isValid = await verifyTimestamp(storedTimestamp, storedHash);
+                if (!isValid) {
+                    throw new Error('Timestamp verification failed. Please try again.');
                 }
 
-                // Format timestamp for API request
-                const formattedTimestamp = timestamp.toISOString();
-                
                 // Show loading state
                 const confirmBtn = document.querySelector('.btn-confirm');
                 const originalBtnContent = confirmBtn.innerHTML;
                 confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 confirmBtn.disabled = true;
 
+                // First, check current attendance status
+                const statusResponse = await fetch('/attendance/status', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                const statusResult = await statusResponse.json();
+                if (!statusResponse.ok) {
+                    throw new Error(statusResult.message || 'Failed to verify attendance status');
+                }
+
+                const type = new URLSearchParams(window.location.search).get('type') || 'in';
+
+                // Verify that the action matches the current status
+                if (type === 'in' && statusResult.action !== 'clock_in') {
+                    throw new Error('You have already clocked in for today.');
+                } else if (type === 'out' && statusResult.action !== 'clock_out') {
+                    if (statusResult.action === 'clock_in') {
+                        throw new Error('You must clock in first before clocking out.');
+                    } else if (statusResult.action === 'completed') {
+                        throw new Error('You have already completed your attendance for today.');
+                    }
+                }
+
+                // Capture the final preview image
+                finalImageBlob = await capturePreview();
+                if (!finalImageBlob) {
+                    throw new Error('Failed to capture preview image');
+                }
+
+                // Convert blob to base64
+                const base64Image = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(finalImageBlob);
+                });
+
+                // Get stored data
+                const location = localStorage.getItem('userLocation');
+
                 // Prepare the request data
                 const data = {
-                    type: new URLSearchParams(window.location.search).get('type') || 'in',
-                    image: await capturePreview(),
-                    location: localStorage.getItem('userLocation') || 'Unknown Location',
-                    timestamp: formattedTimestamp
+                    type: type,
+                    image: base64Image,
+                    location: location,
+                    timestamp: storedTimestamp
                 };
 
                 // Send the request to the server
