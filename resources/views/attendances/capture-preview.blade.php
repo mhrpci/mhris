@@ -8,6 +8,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
+        background: #000;
     }
     
     .preview-container {
@@ -18,6 +19,9 @@
         height: 100vh;
         background: #000;
         z-index: 9990;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     /* Image preview section */
@@ -27,6 +31,8 @@
         height: 100vh;
         overflow: hidden;
         background-color: #000;
+        max-width: 1440px;
+        margin: 0 auto;
     }
     
     .preview-image {
@@ -36,6 +42,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        filter: brightness(0.95);
     }
     
     /* Camera interface elements */
@@ -89,44 +96,49 @@
     /* Logo overlay */
     .preview-logo {
         position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 100px;
+        top: 24px;
+        right: 24px;
+        width: 120px;
         height: auto;
         z-index: 9992;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 8px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.95);
+        padding: 12px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
     }
     
     /* Status badge */
     .preview-status-badge {
         position: absolute;
-        bottom: 160px; /* Position above the datetime */
-        left: 20px;
+        top: 24px;
+        left: 24px;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(8px);
-        padding: 12px 24px;
-        border-radius: 30px;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        padding: 14px 28px;
+        border-radius: 16px;
         color: white;
-        font-weight: bold;
+        font-weight: 600;
         z-index: 9992;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 1.2rem;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
     }
     
     .preview-status-badge.in {
-        background: rgba(16, 185, 129, 0.2);
-        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.15);
+        border-color: rgba(16, 185, 129, 0.3);
     }
     
     .preview-status-badge.out {
-        background: rgba(239, 68, 68, 0.2);
-        border-color: rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.3);
     }
     
     /* Large status indicator */
@@ -135,85 +147,98 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        font-size: 8rem;
+        font-size: 12rem;
         font-weight: 900;
-        color: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.08);
         text-transform: uppercase;
         pointer-events: none;
         z-index: 9991;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        letter-spacing: 4px;
+        text-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        letter-spacing: 8px;
+        transition: all 0.5s ease;
     }
 
     .preview-status-large.in {
-        color: rgba(40, 167, 69, 0.15);
+        color: rgba(16, 185, 129, 0.08);
     }
 
     .preview-status-large.out {
-        color: rgba(220, 53, 69, 0.15);
+        color: rgba(239, 68, 68, 0.08);
     }
     
     /* Info overlay */
     .preview-info-overlay {
         position: absolute;
         left: 0;
-        bottom: 80px;
+        bottom: 100px;
         width: 100%;
         color: white;
         z-index: 9992;
-        padding: 20px;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+        padding: 32px;
+        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+        backdrop-filter: blur(8px);
     }
     
     .preview-overlay-content {
-        max-width: 80%;
+        max-width: 800px;
+        margin: 0 auto;
     }
     
     .preview-time {
-        font-size: 1.8rem;
+        font-size: 2.5rem;
         font-weight: 700;
         margin-bottom: 4px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        letter-spacing: 1px;
     }
     
     .preview-date {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 500;
-        color: rgba(255,255,255,0.9);
-        margin-bottom: 12px;
+        color: rgba(255,255,255,0.95);
+        margin-bottom: 20px;
+        letter-spacing: 0.5px;
     }
     
     .preview-name {
-        font-size: 1rem;
-        font-weight: 500;
-        color: rgba(255,255,255,0.95);
-        margin-bottom: 8px;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: rgba(255,255,255,1);
+        margin-bottom: 12px;
+        letter-spacing: 0.5px;
     }
     
     .preview-position {
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: rgba(255,255,255,0.9);
         margin-bottom: 8px;
+        letter-spacing: 0.3px;
     }
     
     .preview-department {
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: rgba(255,255,255,0.9);
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+        letter-spacing: 0.3px;
     }
     
     .preview-location {
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: rgba(255,255,255,0.9);
-        line-height: 1.4;
+        line-height: 1.5;
         display: flex;
-        align-items: flex-start;
-        gap: 8px;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        backdrop-filter: blur(8px);
+        max-width: fit-content;
     }
     
     .preview-location i {
-        margin-top: 4px;
         color: #4285f4;
+        font-size: 1.2rem;
     }
     
     /* Action buttons */
@@ -224,51 +249,46 @@
         width: 100%;
         display: flex;
         justify-content: center;
-        padding: 1.5rem;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-        height: 100px;
+        padding: 24px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 50%, transparent 100%);
+        backdrop-filter: blur(12px);
         z-index: 9992;
-        gap: 1.5rem;
+        gap: 20px;
+    }
+    
+    .btn-confirm, .btn-retake {
+        padding: 16px 36px;
+        border-radius: 16px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        color: white;
+        cursor: pointer;
+        min-width: 180px;
+        justify-content: center;
     }
     
     .btn-confirm {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
     }
     
     .btn-retake {
-        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.2);
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        box-shadow: 0 4px 20px rgba(75, 85, 99, 0.2);
     }
     
     .btn-confirm:hover, .btn-retake:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
     
     .btn-confirm:active, .btn-retake:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transform: translateY(1px);
     }
     
     /* Loading overlay */
@@ -279,7 +299,8 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(12px);
         z-index: 9999;
         justify-content: center;
         align-items: center;
@@ -287,43 +308,42 @@
     }
     
     .loading-spinner {
-        border: 5px solid rgba(255, 255, 255, 0.3);
+        border: 4px solid rgba(255, 255, 255, 0.2);
         border-radius: 50%;
-        border-top: 5px solid #4285f4;
-        width: 50px;
-        height: 50px;
+        border-top: 4px solid #4285f4;
+        width: 60px;
+        height: 60px;
         animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
+        margin-bottom: 24px;
     }
     
     .loading-text {
         color: white;
         font-size: 1.2rem;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        font-weight: 500;
+        letter-spacing: 0.5px;
     }
     
     /* Alert messages */
     .alert-message {
         position: fixed;
-        top: 20px;
+        top: 24px;
         left: 50%;
         transform: translateX(-50%);
-        padding: 15px 25px;
-        border-radius: 10px;
+        padding: 16px 32px;
+        border-radius: 16px;
         color: white;
         font-weight: 500;
         z-index: 9999;
         display: flex;
         align-items: center;
-        gap: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        gap: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
         opacity: 0;
-        transition: opacity 0.3s ease, transform 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         max-width: 90%;
+        backdrop-filter: blur(12px);
+        letter-spacing: 0.3px;
     }
     
     .alert-message.show {
@@ -332,96 +352,171 @@
     }
     
     .alert-message.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
     }
     
     .alert-message.error {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
     }
     
     .alert-message i {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
     
     /* Responsive design */
-    @media (max-width: 768px) {
-        .preview-logo {
-            width: 80px;
-            top: 15px;
-            right: 15px;
-        }
-        
-        .preview-status-badge {
-            top: 15px;
-            left: 15px;
-            padding: 6px 12px;
-            font-size: 0.9rem;
-        }
-        
-        .preview-info-overlay {
-            padding: 15px;
-        }
-        
-        .preview-overlay-content {
-            max-width: 100%;
+    @media (max-width: 1200px) {
+        .preview-status-large {
+            font-size: 10rem;
         }
         
         .preview-time {
-            font-size: 1.5rem;
+            font-size: 2.2rem;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .preview-status-large {
+            font-size: 8rem;
         }
         
-        .preview-date {
-            font-size: 1rem;
+        .preview-info-overlay {
+            padding: 24px;
         }
         
-        .preview-actions {
-            padding: 1.2rem;
+        .preview-time {
+            font-size: 2rem;
         }
         
         .btn-confirm, .btn-retake {
-            padding: 0.7rem 1.5rem;
+            padding: 14px 32px;
+            font-size: 1rem;
+            min-width: 160px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .preview-logo {
+            width: 100px;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+        }
+        
+        .preview-status-badge {
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            font-size: 1rem;
+        }
+        
+        .preview-status-large {
+            font-size: 6rem;
+        }
+        
+        .preview-info-overlay {
+            padding: 20px;
+            bottom: 90px;
+        }
+        
+        .preview-time {
+            font-size: 1.8rem;
+        }
+        
+        .preview-date {
+            font-size: 1.1rem;
+        }
+        
+        .preview-name {
+            font-size: 1.2rem;
+        }
+        
+        .preview-location {
+            padding: 10px 16px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .preview-logo {
+            width: 80px;
+            top: 16px;
+            right: 16px;
+            padding: 8px;
+        }
+        
+        .preview-status-badge {
+            top: 16px;
+            left: 16px;
+            padding: 10px 20px;
             font-size: 0.9rem;
         }
         
         .preview-status-large {
             font-size: 4rem;
         }
-    }
-    
-    @media (max-width: 480px) {
-        .preview-logo {
-            width: 60px;
-            top: 10px;
-            right: 10px;
-        }
         
-        .preview-status-badge {
-            top: 10px;
-            left: 10px;
-            padding: 5px 10px;
-            font-size: 0.8rem;
+        .preview-info-overlay {
+            padding: 16px;
+            bottom: 85px;
         }
         
         .preview-time {
-            font-size: 1.3rem;
+            font-size: 1.6rem;
         }
         
         .preview-date {
+            font-size: 1rem;
+            margin-bottom: 16px;
+        }
+        
+        .preview-name {
+            font-size: 1.1rem;
+        }
+        
+        .preview-position,
+        .preview-department {
             font-size: 0.9rem;
         }
         
-        .preview-name, .preview-position, .preview-department {
-            font-size: 0.8rem;
+        .preview-location {
+            font-size: 0.9rem;
+            padding: 8px 14px;
         }
         
         .preview-actions {
-            padding: 1rem;
-            gap: 0.8rem;
+            padding: 16px;
+            gap: 12px;
         }
         
         .btn-confirm, .btn-retake {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.8rem;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            min-width: 140px;
+        }
+        
+        .alert-message {
+            padding: 12px 24px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 360px) {
+        .preview-status-large {
+            font-size: 3rem;
+        }
+        
+        .preview-time {
+            font-size: 1.4rem;
+        }
+        
+        .btn-confirm, .btn-retake {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            min-width: 120px;
         }
     }
 </style>
