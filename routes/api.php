@@ -31,10 +31,6 @@ Route::get('/employees/{employee}/signature', function (App\Models\Employee $emp
     ]);
 });
 
-Route::get('/server-time', function() {
-    return response()->json(['server_time' => now()->toIso8601String()]);
-});
-
 Route::get('notifications/health', [NotificationsController::class, 'healthCheck']);
 
 Route::prefix('auth')->group(function () {

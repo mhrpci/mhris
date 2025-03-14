@@ -30,7 +30,10 @@ class ServerTimeController extends Controller
                 'time' => $timestamp->format('H:i:s'),
                 'full' => $timestamp->format('Y-m-d H:i:s')
             ]
-        ]);
+        ])->header('Access-Control-Allow-Origin', '*')
+          ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+          ->header('Access-Control-Allow-Headers', 'Accept, X-Requested-With')
+          ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     /**
@@ -62,12 +65,18 @@ class ServerTimeController extends Controller
                 'timezone' => 'Asia/Manila',
                 'server_time' => $now->toIso8601String(),
                 'diff_minutes' => $parsedTime->diffInMinutes($now)
-            ]);
+            ])->header('Access-Control-Allow-Origin', '*')
+              ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+              ->header('Access-Control-Allow-Headers', 'Accept, X-Requested-With')
+              ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
         } catch (\Exception $e) {
             return response()->json([
                 'valid' => false,
                 'error' => 'Invalid timestamp format'
-            ], 400);
+            ], 400)->header('Access-Control-Allow-Origin', '*')
+                  ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                  ->header('Access-Control-Allow-Headers', 'Accept, X-Requested-With')
+                  ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
         }
     }
 } 
