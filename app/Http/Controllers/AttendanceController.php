@@ -14,9 +14,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use App\Models\User;
 use Spatie\Permission\Traits\HasRoles;
-use Spatie\Permission\Models\Role;
 
 class AttendanceController extends Controller
 {
@@ -34,10 +32,9 @@ class AttendanceController extends Controller
     // Display all attendance records
     public function index()
     {
-        $user = Auth::user();
-        if ($user instanceof User && $user->hasRole('Supervisor')) {
-            $attendances = Attendance::whereHas('employee', function($query) use ($user) {
-                $query->where('department_id', $user->department_id);
+        if (auth()->user()->hasRole('Supervisor')) {
+            $attendances = Attendance::whereHas('employee', function($query) {
+                $query->where('department_id', auth()->user()->department_id);
             })->get();
         } else {
             $attendances = Attendance::all();
@@ -79,7 +76,7 @@ class AttendanceController extends Controller
 
         if ($existingAttendance) {
             if ($existingAttendance->time_out && $existingAttendance->time_stamp2) {
-                if ($user instanceof User && ($user->hasRole('Super Admin') || $user->hasRole('Admin'))) {
+                if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
                     $successMessage = 'Attendance for this employee on this date already has time out and time stamp.';
                 } else {
                     $successMessage = 'Your attendance on this date already has time out and time stamp.';
@@ -113,8 +110,8 @@ class AttendanceController extends Controller
         }
 
         // Check user role and return appropriate view
-        if ($user instanceof User && $user->hasRole('Employee')) {
-            $employees = Employee::all();
+        if ($user->hasRole('Employee')) {
+            $employees = Employee::all(); // Fetch employees to pass to the view
             return view('attendances.create', compact('employees'))->with('successMessage', $successMessage);
         } else {
             return redirect()->route('attendances.index')->with('success', $successMessage);
@@ -200,9 +197,11 @@ class AttendanceController extends Controller
     // Generate timesheets or attendance records for all employees
     public function generateTimesheets()
     {
+        // Get authenticated user
         $user = Auth::user();
         
-        $employees = ($user instanceof User && $user->hasRole('Super Admin'))
+        // Get employees based on user role
+        $employees = $user->hasRole('Super Admin') 
             ? Employee::all()
             : Employee::where('employee_status', 'Active')->get();
             
@@ -250,7 +249,8 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
-        if ($user instanceof User && ($user->hasRole('admin') || $user->hasRole('super-admin'))) {
+        // Assuming roles are defined and you have a method to check user roles
+        if ($user->hasRole('admin') || $user->hasRole('super-admin')) {
             return redirect()->route('attendances.index');
         } else {
             return $this->myTimesheet();
@@ -369,7 +369,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user instanceof User || !$user->hasRole(['Employee', 'Supervisor'])) {
+        if (!$user->hasRole(['Employee', 'Supervisor'])) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -384,7 +384,7 @@ class AttendanceController extends Controller
     public function executeStoreCommand()
     {
         try {
-            Artisan::call('attendance:store');
+            \Artisan::call('attendance:store');
             return response()->json(['message' => 'Attendance records stored successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -397,7 +397,7 @@ class AttendanceController extends Controller
         $employee = Employee::where('email_address', $user->email)->first();
         
         if (!$employee) {
-            Log::warning('Employee not found for user email: ' . $user->email);
+            \Log::warning('Employee not found for user email: ' . $user->email);
         }
         
         return view('attendances.capture-preview', compact('employee'));
@@ -415,7 +415,7 @@ class AttendanceController extends Controller
         try {
             // Check if storage link exists
             if (!file_exists(public_path('storage'))) {
-                Artisan::call('storage:link');
+                \Artisan::call('storage:link');
             }
 
             // Create time_stamps directory if it doesn't exist
@@ -438,7 +438,7 @@ class AttendanceController extends Controller
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error storing timestamp image: ' . $e->getMessage());
+            \Log::error('Error storing timestamp image: ' . $e->getMessage());
             return false;
         }
     }
@@ -451,7 +451,7 @@ class AttendanceController extends Controller
                 'type' => 'required|in:in,out',
                 'image' => 'required|string', // Base64 encoded image
                 'location' => 'required|string',
-                'timestamp' => 'required|date_format:Y-m-d\TH:i:s.u\Z', // Validate ISO 8601 format
+                'timestamp' => 'required|string',
             ]);
 
             // Get the authenticated user
@@ -467,8 +467,8 @@ class AttendanceController extends Controller
                 ], 404);
             }
 
-            // Parse the timestamp using Carbon for proper timezone handling
-            $timestamp = Carbon::parse($request->timestamp)->setTimezone('Asia/Manila');
+            // Parse the timestamp
+            $timestamp = Carbon::parse($request->timestamp);
             $currentDate = $timestamp->format('Y-m-d');
             $currentTime = $timestamp->format('H:i:s');
 
@@ -478,7 +478,7 @@ class AttendanceController extends Controller
                                  ->first();
 
             // Store the image and get the path
-            $imagePath = $this->storeTimestampImage($request->image, $timestamp->format('Y-m-d H:i:s'));
+            $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
             
             if (!$imagePath) {
                 return response()->json([
@@ -566,7 +566,7 @@ class AttendanceController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Attendance capture error: ' . $e->getMessage());
+            \Log::error('Attendance capture error: ' . $e->getMessage());
             
             // Delete any stored image if there was an error
             if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
@@ -586,7 +586,8 @@ class AttendanceController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user instanceof User || !$user->hasRole(['Employee', 'Supervisor'])) {
+            // Check if user has Employee or Supervisor role
+            if (!$user->hasRole(['Employee', 'Supervisor'])) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unauthorized access'
@@ -647,7 +648,7 @@ class AttendanceController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error checking attendance status: ' . $e->getMessage());
+            \Log::error('Error checking attendance status: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while checking attendance status'
