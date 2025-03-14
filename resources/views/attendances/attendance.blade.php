@@ -1481,7 +1481,29 @@
         
         // Add message text
         const textSpan = document.createElement('span');
-        textSpan.textContent = message;
+        
+        // Format the message with current time if it's a success message
+        if (type === 'success') {
+            // Get current time
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            // Check if it's a clock in or clock out message
+            if (message.toLowerCase().includes('clock in')) {
+                textSpan.innerHTML = `<strong>Clock In Successful!</strong><br>You clocked in at ${timeStr}. Have a productive day!`;
+            } else if (message.toLowerCase().includes('clock out')) {
+                textSpan.innerHTML = `<strong>Clock Out Successful!</strong><br>You clocked out at ${timeStr}. Have a great rest of your day!`;
+            } else {
+                textSpan.textContent = message;
+            }
+        } else {
+            textSpan.textContent = message;
+        }
+        
         messageElement.appendChild(textSpan);
         
         // Add close button

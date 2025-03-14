@@ -505,6 +505,8 @@
 @endsection
 
 @section('scripts')
+<!-- Include html2canvas library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
     // Variables to store attendance data
     let capturedImage = '';
@@ -672,10 +674,17 @@
             // Show loading overlay
             document.getElementById('loading-overlay').style.display = 'flex';
             
+            // Capture the entire preview with overlays
+            const previewImage = await capturePreviewWithOverlays();
+            
+            if (!previewImage) {
+                throw new Error('Failed to capture preview image');
+            }
+            
             // Prepare data for submission
             const attendanceData = {
                 type: attendanceType,
-                image: capturedImage,
+                image: previewImage, // Use the captured preview image with overlays
                 location: userLocation,
                 timestamp: serverTimestamp
             };
@@ -723,6 +732,98 @@
             // Show error message
             showAlert(error.message || 'Failed to record attendance. Please try again.', 'error');
         }
+    }
+    
+    // Capture the preview with all overlays
+    async function capturePreviewWithOverlays() {
+        try {
+            // Hide the buttons and alert message during capture
+            const actionsElement = document.querySelector('.preview-actions');
+            const alertElement = document.getElementById('alert-message');
+            const originalActionsDisplay = actionsElement.style.display;
+            const originalAlertDisplay = alertElement.style.display;
+            
+            actionsElement.style.display = 'none';
+            alertElement.style.display = 'none';
+            
+            // Use html2canvas to capture the entire preview container
+            const previewContainer = document.querySelector('.image-preview-container');
+            
+            // Wait a moment for display changes to take effect
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Use html2canvas library to capture the preview with overlays
+            const canvas = await html2canvas(previewContainer, {
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#000000',
+                scale: 2, // Higher quality
+                logging: false
+            });
+            
+            // Restore the buttons and alert
+            actionsElement.style.display = originalActionsDisplay;
+            alertElement.style.display = originalAlertDisplay;
+            
+            // Add additional information to the image
+            enhanceCanvasWithDetails(canvas, {
+                name: employeeName,
+                position: employeePosition,
+                department: employeeDepartment,
+                location: userLocation,
+                timestamp: serverTimestamp,
+                type: attendanceType
+            });
+            
+            // Convert canvas to base64 image
+            const imageData = canvas.toDataURL('image/jpeg', 0.95);
+            
+            return imageData;
+        } catch (error) {
+            console.error('Error capturing preview with overlays:', error);
+            return null;
+        }
+    }
+    
+    // Add additional information to the canvas
+    function enhanceCanvasWithDetails(canvas, details) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // Add a semi-transparent footer for additional information
+        const footerHeight = 40;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, height - footerHeight, width, footerHeight);
+        
+        // Set text style
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.font = '14px Arial';
+        ctx.textBaseline = 'middle';
+        
+        // Format timestamp
+        const timestamp = new Date(details.timestamp);
+        const formattedTimestamp = timestamp.toISOString();
+        
+        // Add verification text with timestamp
+        const verificationText = `${details.type === 'in' ? 'Clock In' : 'Clock Out'} | ${formattedTimestamp} | ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+        ctx.fillText(verificationText, 10, height - footerHeight/2);
+        
+        // Add system verification on the right
+        const systemText = 'HRIS ATTENDANCE SYSTEM';
+        const systemTextWidth = ctx.measureText(systemText).width;
+        ctx.fillText(systemText, width - systemTextWidth - 10, height - footerHeight/2);
+        
+        // Add watermark
+        ctx.save();
+        ctx.globalAlpha = 0.05;
+        ctx.font = '60px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.translate(width/2, height/2);
+        ctx.rotate(-Math.PI/6); // Rotate -30 degrees
+        ctx.fillText(`${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'} VERIFIED`, 0, 0);
+        ctx.restore();
     }
     
     // Clean up when leaving the page
