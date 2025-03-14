@@ -958,7 +958,7 @@
                 // Verify that the action matches the current status
                 if (type === 'in' && statusResult.action !== 'clock_in') {
                     throw new Error('You have already clocked in for today.');
-                } else if (type === 'out' && statusResult.action !== 'clock_out') {
+                } else if (type === 'out') {
                     if (statusResult.action === 'clock_in') {
                         throw new Error('You must clock in first before clocking out.');
                     } else if (statusResult.action === 'completed') {
