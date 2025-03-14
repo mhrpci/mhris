@@ -525,67 +525,6 @@
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    // Toast and Loading Functions
-    function showToast(message, type = 'info', duration = 3000) {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        
-        // Set icon based on type
-        let icon = 'info-circle';
-        switch(type) {
-            case 'success':
-                icon = 'check-circle';
-                break;
-            case 'error':
-                icon = 'exclamation-circle';
-                break;
-            case 'warning':
-                icon = 'exclamation-triangle';
-                break;
-        }
-
-        toast.innerHTML = `
-            <i class="fas fa-${icon}"></i>
-            <div class="toast-content">${message}</div>
-            <button class="toast-close" onclick="this.parentElement.remove()">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-
-        container.appendChild(toast);
-
-        // Trigger reflow
-        toast.offsetHeight;
-
-        // Show toast
-        toast.classList.add('show');
-
-        // Auto remove after duration
-        if (duration > 0) {
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
-        }
-
-        return toast;
-    }
-
-    function showLoading(message = 'Processing...', submessage = 'Please wait') {
-        const overlay = document.createElement('div');
-        overlay.className = 'loading-overlay';
-        overlay.innerHTML = `
-            <div class="loading-content">
-                <i class="fas fa-spinner fa-spin loading-spinner"></i>
-                <div class="loading-text">${message}</div>
-                <div class="loading-subtext">${submessage}</div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        return overlay;
-    }
-
     let imageBlob = null;
     let finalImageBlob = null;
     let assetsLoaded = {
@@ -1020,8 +959,31 @@
     // Modified saveImage function
     async function saveImage() {
         try {
-            const loadingOverlay = showLoading('Saving attendance image...', 'Please allow storage permission if prompted');
-            
+            // Show loading overlay with mobile-friendly styling
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                backdrop-filter: blur(5px);
+                -webkit-backdrop-filter: blur(5px);
+            `;
+            loadingOverlay.innerHTML = `
+                <div style="color: white; text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <div style="margin-top: 1.5rem; font-size: 1.2rem; font-weight: 500;">Saving attendance image...</div>
+                    <div style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">Please allow storage permission if prompted</div>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+
             // Check mobile storage permission
             const hasPermission = await checkStoragePermission();
             if (!hasPermission) {
@@ -1084,22 +1046,75 @@
                 }
             }
 
-            // Replace success message with toast
-            showToast('Image saved successfully!', 'success');
+            // Show mobile-friendly success message
+            const successMessage = document.createElement('div');
+            successMessage.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #28a745;
+                color: white;
+                padding: 15px 30px;
+                border-radius: 5px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                max-width: 90%;
+                text-align: center;
+            `;
+            successMessage.innerHTML = '<i class="fas fa-check-circle"></i> Image saved successfully!';
+            document.body.appendChild(successMessage);
+
+            // Animate success message
+            setTimeout(() => {
+                successMessage.style.opacity = '1';
+                setTimeout(() => {
+                    successMessage.style.opacity = '0';
+                    setTimeout(() => successMessage.remove(), 300);
+                }, 3000);
+            }, 100);
 
             // Remove loading overlay
-            loadingOverlay.remove();
+            document.body.removeChild(loadingOverlay);
             return true;
 
         } catch (error) {
             console.error('Error saving image:', error);
-            const loadingOverlay = document.querySelector('.loading-overlay');
+            const loadingOverlay = document.querySelector('div[style*="position: fixed"]');
             if (loadingOverlay) {
-                loadingOverlay.remove();
+                document.body.removeChild(loadingOverlay);
             }
 
-            // Replace error message with toast
-            showToast(error.message, 'error');
+            // Show mobile-friendly error message
+            const errorMessage = document.createElement('div');
+            errorMessage.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #dc3545;
+                color: white;
+                padding: 15px 30px;
+                border-radius: 5px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                max-width: 90%;
+                text-align: center;
+            `;
+            errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${error.message}`;
+            document.body.appendChild(errorMessage);
+
+            // Remove error message after 5 seconds
+            setTimeout(() => errorMessage.remove(), 5000);
+            
             throw error;
         }
     }
@@ -1140,8 +1155,7 @@
                 throw new Error('Timestamp verification failed. Please try again.');
             }
 
-            // Show loading state with new overlay
-            const loadingOverlay = showLoading('Saving attendance...', 'Please wait while we process your request');
+            // Show loading state
             const confirmBtn = document.querySelector('.btn-confirm');
             const originalBtnContent = confirmBtn.innerHTML;
             confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
@@ -1215,17 +1229,49 @@
             }
 
             if (result.status === 'success') {
+                // Save the image locally if needed
                 await saveImage();
-                showToast(result.message, 'success');
-                
-                // Clear stored data and redirect
+
+                // Show success message with animation
+                const successMessage = document.createElement('div');
+                successMessage.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #28a745;
+                    color: white;
+                    padding: 15px 30px;
+                    border-radius: 5px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                `;
+                successMessage.innerHTML = '<i class="fas fa-check-circle"></i> ' + result.message;
+                document.body.appendChild(successMessage);
+
+                // Animate success message and redirect
                 setTimeout(() => {
-                    localStorage.removeItem('capturedImage');
-                    localStorage.removeItem('userLocation');
-                    localStorage.removeItem('serverTimestamp');
-                    localStorage.removeItem('timestamp_hash');
-                    window.location.href = '/attendance';
-                }, 2000);
+                    successMessage.style.opacity = '1';
+                    setTimeout(() => {
+                        successMessage.style.opacity = '0';
+                        setTimeout(() => {
+                            successMessage.remove();
+                            // Clear stored data
+                            localStorage.removeItem('capturedImage');
+                            localStorage.removeItem('userLocation');
+                            localStorage.removeItem('serverTimestamp');
+                            localStorage.removeItem('timestamp_hash');
+                            
+                            // Redirect back to attendance page
+                            window.location.href = '/attendance';
+                        }, 300);
+                    }, 2000);
+                }, 100);
             } else {
                 throw new Error(result.message || 'Unknown error occurred');
             }
@@ -1237,14 +1283,38 @@
             confirmBtn.innerHTML = '<i class="fas fa-check"></i> Save';
             confirmBtn.disabled = false;
             
-            // Show error toast
-            showToast(error.message, 'error');
-        } finally {
-            // Remove loading overlay
-            const loadingOverlay = document.querySelector('.loading-overlay');
-            if (loadingOverlay) {
-                loadingOverlay.remove();
-            }
+            // Show error message with animation
+            const errorMessage = document.createElement('div');
+            errorMessage.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #dc3545;
+                color: white;
+                padding: 15px 30px;
+                border-radius: 5px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                max-width: 90%;
+                text-align: center;
+            `;
+            errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + error.message;
+            document.body.appendChild(errorMessage);
+
+            // Animate error message
+            setTimeout(() => {
+                errorMessage.style.opacity = '1';
+                setTimeout(() => {
+                    errorMessage.style.opacity = '0';
+                    setTimeout(() => errorMessage.remove(), 300);
+                }, 3000);
+            }, 100);
         }
     }
 </script>
