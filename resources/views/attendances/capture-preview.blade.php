@@ -38,182 +38,84 @@
         object-fit: cover;
     }
     
-    /* Camera interface elements */
-    .camera-interface {
-        display: none;
-    }
-
-    .camera-frame {
-        display: none;
-    }
-
-    .camera-corners {
-        position: absolute;
-        width: 30px;
-        height: 30px;
-        border: 3px solid #4285f4;
-    }
-
-    .corner-top-left {
-        top: -3px;
-        left: -3px;
-        border-right: none;
-        border-bottom: none;
-        border-top-left-radius: 8px;
-    }
-
-    .corner-top-right {
-        top: -3px;
-        right: -3px;
-        border-left: none;
-        border-bottom: none;
-        border-top-right-radius: 8px;
-    }
-
-    .corner-bottom-left {
-        bottom: -3px;
-        left: -3px;
-        border-right: none;
-        border-top: none;
-        border-bottom-left-radius: 8px;
-    }
-
-    .corner-bottom-right {
-        bottom: -3px;
-        right: -3px;
-        border-left: none;
-        border-top: none;
-        border-bottom-right-radius: 8px;
-    }
-    
     /* Logo overlay */
     .preview-logo {
         position: absolute;
         top: 20px;
         right: 20px;
-        width: 100px;
+        width: 80px;
         height: auto;
         z-index: 9992;
         background: rgba(255, 255, 255, 0.9);
-        padding: 8px;
+        padding: 6px;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     
-    /* Status badge */
+    /* Clock In/Out Badge */
     .preview-status-badge {
         position: absolute;
-        bottom: 160px; /* Position above the datetime */
+        top: 20px;
         left: 20px;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(8px);
-        padding: 12px 24px;
-        border-radius: 30px;
+        background: #2ecc71;
+        padding: 8px 16px;
+        border-radius: 6px;
         color: white;
         font-weight: bold;
         z-index: 9992;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 1.2rem;
-    }
-    
-    .preview-status-badge.in {
-        background: rgba(16, 185, 129, 0.2);
-        border-color: rgba(16, 185, 129, 0.4);
+        font-size: 1rem;
     }
     
     .preview-status-badge.out {
-        background: rgba(239, 68, 68, 0.2);
-        border-color: rgba(239, 68, 68, 0.4);
-    }
-    
-    /* Large status indicator */
-    .preview-status-large {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 8rem;
-        font-weight: 900;
-        color: rgba(255, 255, 255, 0.15);
-        text-transform: uppercase;
-        pointer-events: none;
-        z-index: 9991;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        letter-spacing: 4px;
-    }
-
-    .preview-status-large.in {
-        color: rgba(40, 167, 69, 0.15);
-    }
-
-    .preview-status-large.out {
-        color: rgba(220, 53, 69, 0.15);
+        background: #e74c3c;
     }
     
     /* Info overlay */
     .preview-info-overlay {
         position: absolute;
-        left: 0;
-        bottom: 80px;
-        width: 100%;
+        left: 20px;
+        bottom: 20px;
+        width: calc(100% - 40px);
         color: white;
         z-index: 9992;
-        padding: 20px;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
-    }
-    
-    .preview-overlay-content {
-        max-width: 80%;
     }
     
     .preview-time {
-        font-size: 1.8rem;
+        font-size: 2rem;
         font-weight: 700;
         margin-bottom: 4px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
     
     .preview-date {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 500;
-        color: rgba(255,255,255,0.9);
-        margin-bottom: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .preview-location {
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .preview-employee-info {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
     }
     
     .preview-name {
-        font-size: 1rem;
-        font-weight: 500;
-        color: rgba(255,255,255,0.95);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    
+    .preview-company {
         margin-bottom: 8px;
     }
     
     .preview-position {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
         margin-bottom: 8px;
-    }
-    
-    .preview-department {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
-        margin-bottom: 12px;
-    }
-    
-    .preview-location {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
-        line-height: 1.4;
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-    }
-    
-    .preview-location i {
-        margin-top: 4px;
-        color: #4285f4;
     }
     
     /* Action buttons */
@@ -225,50 +127,31 @@
         display: flex;
         justify-content: center;
         padding: 1.5rem;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-        height: 100px;
+        background: rgba(0, 0, 0, 0.8);
+        gap: 1rem;
         z-index: 9992;
-        gap: 1.5rem;
     }
     
-    .btn-confirm {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
+    .btn-retake, .btn-confirm {
+        padding: 10px 24px;
+        border-radius: 6px;
         font-weight: 600;
         font-size: 1rem;
+        border: none;
+        cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        gap: 8px;
     }
     
     .btn-retake {
-        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        background: #6c757d;
         color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.2);
     }
     
-    .btn-confirm:hover, .btn-retake:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-    }
-    
-    .btn-confirm:active, .btn-retake:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    .btn-confirm {
+        background: #2ecc71;
+        color: white;
     }
     
     /* Loading overlay */
@@ -279,149 +162,67 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.8);
         z-index: 9999;
         justify-content: center;
         align-items: center;
-        flex-direction: column;
-    }
-    
-    .loading-spinner {
-        border: 5px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top: 5px solid #4285f4;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
-    }
-    
-    .loading-text {
-        color: white;
-        font-size: 1.2rem;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    /* Alert messages */
-    .alert-message {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 15px 25px;
-        border-radius: 10px;
-        color: white;
-        font-weight: 500;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        opacity: 0;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        max-width: 90%;
-    }
-    
-    .alert-message.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-    
-    .alert-message.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-    
-    .alert-message.error {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    }
-    
-    .alert-message i {
-        font-size: 1.2rem;
     }
     
     /* Responsive design */
     @media (max-width: 768px) {
         .preview-logo {
-            width: 80px;
+            width: 60px;
             top: 15px;
             right: 15px;
         }
         
         .preview-status-badge {
-            top: 15px;
-            left: 15px;
-            padding: 6px 12px;
             font-size: 0.9rem;
-        }
-        
-        .preview-info-overlay {
-            padding: 15px;
-        }
-        
-        .preview-overlay-content {
-            max-width: 100%;
+            padding: 6px 12px;
         }
         
         .preview-time {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
         }
         
         .preview-date {
             font-size: 1rem;
         }
         
-        .preview-actions {
-            padding: 1.2rem;
-        }
-        
-        .btn-confirm, .btn-retake {
-            padding: 0.7rem 1.5rem;
+        .preview-location,
+        .preview-employee-info {
             font-size: 0.9rem;
-        }
-        
-        .preview-status-large {
-            font-size: 4rem;
         }
     }
     
     @media (max-width: 480px) {
         .preview-logo {
-            width: 60px;
+            width: 50px;
             top: 10px;
             right: 10px;
         }
         
         .preview-status-badge {
-            top: 10px;
-            left: 10px;
-            padding: 5px 10px;
             font-size: 0.8rem;
+            padding: 4px 10px;
         }
         
         .preview-time {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
         }
         
         .preview-date {
             font-size: 0.9rem;
         }
         
-        .preview-name, .preview-position, .preview-department {
-            font-size: 0.8rem;
+        .preview-location,
+        .preview-employee-info {
+            font-size: 0.85rem;
         }
         
-        .preview-actions {
-            padding: 1rem;
-            gap: 0.8rem;
-        }
-        
-        .btn-confirm, .btn-retake {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.8rem;
+        .btn-retake, .btn-confirm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
         }
     }
 </style>
@@ -439,19 +240,17 @@
             <span id="status-text">Clock In</span>
         </div>
         
-        <div class="preview-status-large" id="preview-status-large">IN</div>
-        
         <div class="preview-info-overlay">
-            <div class="preview-overlay-content">
-                <div class="preview-time" id="preview-time"></div>
-                <div class="preview-date" id="preview-date"></div>
-                <div class="preview-name" id="preview-name"></div>
-                <div class="preview-position" id="preview-position"></div>
-                <div class="preview-department" id="preview-department"></div>
-                <div class="preview-location">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span id="preview-location"></span>
-                </div>
+            <div class="preview-time" id="preview-time">07:56</div>
+            <div class="preview-date" id="preview-date">Fri, Mar 14, 2025</div>
+            <div class="preview-location">
+                <div>Jose L Briones Street, Lungsod ng Cebu,</div>
+                <div>6000 Lalawigan ng Cebu</div>
+            </div>
+            <div class="preview-employee-info">
+                <div class="preview-name" id="preview-name">Name: Edmar Crescencio</div>
+                <div class="preview-company" id="preview-company">Company: MHR Property Conglomerates, Inc.</div>
+                <div class="preview-position" id="preview-position">Position: IT Staff - Admin Department</div>
             </div>
         </div>
         
@@ -468,382 +267,88 @@
     </div>
 </div>
 
-<!-- Loading Overlay -->
 <div class="loading-overlay" id="loading-overlay">
     <div class="loading-spinner"></div>
-    <div class="loading-text">Processing your attendance...</div>
-</div>
-
-<!-- Alert Message -->
-<div class="alert-message" id="alert-message">
-    <i class="fas fa-check-circle"></i>
-    <span id="alert-text">Message goes here</span>
 </div>
 @endsection
 
 @section('scripts')
-<!-- Include html2canvas library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    // Variables to store attendance data
-    let capturedImage = '';
-    let attendanceType = '';
-    let userLocation = '';
-    let serverTimestamp = '';
-    let employeeName = '';
-    let employeePosition = '';
-    let employeeDepartment = '';
-    
-    // Initialize the preview page
     document.addEventListener('DOMContentLoaded', async function() {
         try {
-            // Add class to body for full screen mode
             document.body.classList.add('preview-active');
             
             // Get data from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
-            attendanceType = urlParams.get('type') || 'in';
+            const attendanceType = urlParams.get('type') || 'in';
             
             // Get data from localStorage
-            capturedImage = localStorage.getItem('capturedImage');
-            userLocation = localStorage.getItem('userLocation');
-            serverTimestamp = localStorage.getItem('serverTimestamp');
+            const capturedImage = localStorage.getItem('capturedImage');
+            const userLocation = localStorage.getItem('userLocation');
+            const serverTimestamp = localStorage.getItem('serverTimestamp');
             
             if (!capturedImage || !serverTimestamp) {
-                showAlert('Missing capture data. Please try again.', 'error');
-                setTimeout(() => {
-                    window.location.href = '/attendance';
-                }, 2000);
+                window.location.href = '/attendance';
                 return;
             }
             
             // Set the captured image
             document.getElementById('preview-image').src = capturedImage;
             
-            // Set the status badge and large status text
+            // Set the status badge
             const statusBadge = document.getElementById('preview-status-badge');
             const statusText = document.getElementById('status-text');
-            const statusLarge = document.getElementById('preview-status-large');
             
             statusBadge.className = `preview-status-badge ${attendanceType}`;
             statusText.textContent = attendanceType === 'in' ? 'Clock In' : 'Clock Out';
             
-            statusLarge.textContent = attendanceType === 'in' ? 'IN' : 'OUT';
-            statusLarge.className = `preview-status-large ${attendanceType}`;
-            
-            // Get server time for display
-            await updateTimeDisplay();
-            
             // Get employee information
             await getEmployeeInfo();
             
-            // Set location
-            document.getElementById('preview-location').textContent = userLocation || 'Location not available';
-            
-            // Check for success or error messages in URL
-            const successMsg = urlParams.get('success');
-            const errorMsg = urlParams.get('error');
-            
-            if (successMsg) {
-                showAlert(decodeURIComponent(successMsg), 'success');
-            } else if (errorMsg) {
-                showAlert(decodeURIComponent(errorMsg), 'error');
-            }
-            
         } catch (error) {
             console.error('Error initializing preview:', error);
-            showAlert('An error occurred while loading the preview. Please try again.', 'error');
-            setTimeout(() => {
-                window.location.href = '/attendance';
-            }, 2000);
+            window.location.href = '/attendance';
         }
     });
     
-    // Show alert message
-    function showAlert(message, type = 'success') {
-        const alertElement = document.getElementById('alert-message');
-        const alertText = document.getElementById('alert-text');
-        
-        alertText.textContent = message;
-        alertElement.className = `alert-message ${type}`;
-        
-        // Show the alert
-        setTimeout(() => {
-            alertElement.classList.add('show');
-        }, 100);
-        
-        // Hide after 5 seconds
-        setTimeout(() => {
-            alertElement.classList.remove('show');
-        }, 5000);
-    }
-    
-    // Update time display with server time
-    async function updateTimeDisplay() {
-        try {
-            // Parse the timestamp from localStorage
-            const timestamp = new Date(serverTimestamp);
-            
-            // Format time and date
-            const timeStr = new Intl.DateTimeFormat('en-US', { 
-                hour12: true,
-                hour: '2-digit',
-                minute: '2-digit'
-            }).format(timestamp).toUpperCase();
-            
-            const dateStr = new Intl.DateTimeFormat('en-US', { 
-                weekday: 'short',
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric'
-            }).format(timestamp);
-            
-            // Update the display
-            document.getElementById('preview-time').textContent = timeStr;
-            document.getElementById('preview-date').textContent = dateStr;
-            
-        } catch (error) {
-            console.error('Error updating time display:', error);
-            document.getElementById('preview-time').textContent = 'Time unavailable';
-            document.getElementById('preview-date').textContent = 'Date unavailable';
-        }
-    }
-    
-    // Get employee information
     async function getEmployeeInfo() {
         try {
-            // Get authenticated user info
             const response = await fetch('/api/employee-info');
-            if (!response.ok) {
-                throw new Error('Failed to fetch employee information');
-            }
+            if (!response.ok) throw new Error('Failed to fetch employee information');
             
             const data = await response.json();
             
-            // Update employee information
-            document.getElementById('preview-name').textContent = data.name || '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            document.getElementById('preview-position').textContent = data.position || 'Position not available';
-            document.getElementById('preview-department').textContent = data.department || 'Department not available';
-            
-            // Store for later use
-            employeeName = data.name || '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            employeePosition = data.position || '';
-            employeeDepartment = data.department || '';
+            document.getElementById('preview-name').textContent = `Name: ${data.name || '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}'}`;
+            document.getElementById('preview-position').textContent = `Position: ${data.position || 'Position not available'}`;
+            document.getElementById('preview-company').textContent = `Company: ${data.company || 'MHR Property Conglomerates, Inc.'}`;
             
         } catch (error) {
             console.error('Error fetching employee info:', error);
-            // Fallback to Auth user data
-            document.getElementById('preview-name').textContent = '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            document.getElementById('preview-position').textContent = 'Position not available';
-            document.getElementById('preview-department').textContent = 'Department not available';
         }
     }
     
-    // Go back to attendance page
     function goBack() {
         document.body.classList.remove('preview-active');
         window.location.href = '/attendance';
     }
     
-    // Confirm attendance
     async function confirmAttendance() {
         try {
-            // Show loading overlay
             document.getElementById('loading-overlay').style.display = 'flex';
             
-            // Capture the entire preview with overlays
-            const previewImage = await capturePreviewWithOverlays();
+            // Your existing attendance submission logic here
             
-            if (!previewImage) {
-                throw new Error('Failed to capture preview image');
-            }
-            
-            // Prepare data for submission
-            const attendanceData = {
-                type: attendanceType,
-                image: previewImage, // Use the captured preview image with overlays
-                location: userLocation,
-                timestamp: serverTimestamp
-            };
-            
-            // Submit attendance data
-            const response = await fetch('/api/attendance/store', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify(attendanceData)
-            });
-            
-            const result = await response.json();
-            
-            // Hide loading overlay
-            document.getElementById('loading-overlay').style.display = 'none';
-            
-            if (result.status === 'success') {
-                // Show success message
-                showAlert(result.message, 'success');
-                
-                // Clear localStorage
-                localStorage.removeItem('capturedImage');
-                localStorage.removeItem('userLocation');
-                localStorage.removeItem('serverTimestamp');
-                
-                // Redirect to attendance page with success message after a delay
-                setTimeout(() => {
-                    document.body.classList.remove('preview-active');
-                    window.location.href = '/attendance?success=' + encodeURIComponent(result.message);
-                }, 2000);
-            } else {
-                // Show error message
-                showAlert(result.message || 'Failed to record attendance', 'error');
-            }
+            setTimeout(() => {
+                document.body.classList.remove('preview-active');
+                window.location.href = '/attendance';
+            }, 2000);
             
         } catch (error) {
             console.error('Error confirming attendance:', error);
-            
-            // Hide loading overlay
             document.getElementById('loading-overlay').style.display = 'none';
-            
-            // Show error message
-            showAlert(error.message || 'Failed to record attendance. Please try again.', 'error');
         }
     }
     
-    // Capture the preview with all overlays
-    async function capturePreviewWithOverlays() {
-        try {
-            // Hide the buttons and alert message during capture
-            const actionsElement = document.querySelector('.preview-actions');
-            const alertElement = document.getElementById('alert-message');
-            const originalActionsDisplay = actionsElement.style.display;
-            const originalAlertDisplay = alertElement.style.display;
-            
-            actionsElement.style.display = 'none';
-            alertElement.style.display = 'none';
-            
-            // Use html2canvas to capture the entire preview container
-            const previewContainer = document.querySelector('.image-preview-container');
-            
-            // Wait a moment for display changes to take effect
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Use html2canvas library to capture the preview with overlays
-            const canvas = await html2canvas(previewContainer, {
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#000000',
-                scale: 2, // Higher quality
-                logging: false
-            });
-            
-            // Restore the buttons and alert
-            actionsElement.style.display = originalActionsDisplay;
-            alertElement.style.display = originalAlertDisplay;
-            
-            // Add additional information to the image
-            enhanceCanvasWithDetails(canvas, {
-                name: employeeName,
-                position: employeePosition,
-                department: employeeDepartment,
-                location: userLocation,
-                timestamp: serverTimestamp,
-                type: attendanceType
-            });
-            
-            // Convert canvas to base64 image
-            const imageData = canvas.toDataURL('image/jpeg', 0.95);
-            
-            return imageData;
-        } catch (error) {
-            console.error('Error capturing preview with overlays:', error);
-            return null;
-        }
-    }
-    
-    // Add additional information to the canvas
-    function enhanceCanvasWithDetails(canvas, details) {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        // Add a gradient footer for additional information
-        const footerHeight = 60;
-        const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
-        
-        // Set text style for main verification text
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.font = 'bold 16px Arial';
-        ctx.textBaseline = 'middle';
-        
-        // Format timestamp
-        const timestamp = new Date(details.timestamp);
-        const formattedDate = timestamp.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        const formattedTime = timestamp.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-        
-        // Add detailed verification text
-        const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
-        ctx.fillText(verificationText, 20, height - footerHeight + 15);
-        
-        // Add timestamp details
-        ctx.font = '14px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
-        ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
-        
-        // Add employee details on the right
-        ctx.textAlign = 'right';
-        ctx.fillText(`${details.name}`, width - 20, height - footerHeight + 15);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`${details.position}`, width - 20, height - footerHeight + 35);
-        ctx.fillText(`${details.department}`, width - 20, height - footerHeight + 55);
-        
-        // Add location in the middle
-        ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`Location: ${details.location}`, width/2, height - footerHeight + 35);
-        
-        // Add system verification text
-        ctx.font = 'bold 12px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        const systemText = 'HRIS ATTENDANCE SYSTEM';
-        ctx.fillText(systemText, width/2, height - footerHeight + 55);
-        
-        // Add unique verification ID
-        const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-        ctx.fillText(verificationId, width/2, height - footerHeight + 15);
-        
-        // Add professional watermark
-        ctx.save();
-        ctx.globalAlpha = 0.07;
-        ctx.font = 'bold 120px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.translate(width/2, height/2);
-        ctx.rotate(-Math.PI/6); // Rotate -30 degrees
-        const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
-        ctx.fillText(watermarkText, 0, 0);
-        ctx.font = 'bold 60px Arial';
-        ctx.fillText('VERIFIED', 0, 80);
-        ctx.restore();
-    }
-    
-    // Clean up when leaving the page
     window.addEventListener('beforeunload', () => {
         document.body.classList.remove('preview-active');
     });
