@@ -159,7 +159,11 @@
         bottom: 0;
         width: 100%;
         padding: 25px;
-        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
+        background: linear-gradient(to top, 
+            rgba(0, 0, 0, 0.95) 0%, 
+            rgba(0, 0, 0, 0.8) 30%, 
+            rgba(0, 0, 0, 0.6) 60%, 
+            transparent 100%);
         color: white;
         z-index: 9992;
     }
@@ -167,111 +171,137 @@
     .preview-info-content {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 12px;
         max-width: 100%;
-        backdrop-filter: blur(10px);
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 15px;
-        padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
     
     .preview-header {
         display: flex;
         align-items: center;
-        gap: 15px;
-        margin-bottom: 10px;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .preview-status {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 1.1rem;
+        gap: 10px;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.2rem;
         letter-spacing: 0.5px;
         text-transform: uppercase;
+        transition: all 0.3s ease;
     }
     
     .preview-status.in {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+        background: linear-gradient(135deg, 
+            rgba(16, 185, 129, 0.95) 0%, 
+            rgba(5, 150, 105, 0.95) 100%);
         border: 1px solid rgba(16, 185, 129, 0.4);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
     }
     
     .preview-status.out {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%);
+        background: linear-gradient(135deg, 
+            rgba(239, 68, 68, 0.95) 0%, 
+            rgba(220, 38, 38, 0.95) 100%);
         border: 1px solid rgba(239, 68, 68, 0.4);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
     }
     
     .preview-status i {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
     
     .preview-datetime {
         display: flex;
-        align-items: baseline;
-        gap: 12px;
-        margin-left: auto;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
     }
     
     .preview-time {
-        font-size: 1.6rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        color: rgba(255, 255, 255, 0.95);
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        font-family: 'Inter', sans-serif;
     }
     
     .preview-date {
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+        letter-spacing: 0.5px;
     }
     
     .preview-details {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-top: 5px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .preview-detail-group {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
     }
     
     .preview-detail-label {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(255, 255, 255, 0.7);
         letter-spacing: 0.5px;
+        font-weight: 600;
     }
     
     .preview-detail-value {
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 500;
+        font-size: 1.1rem;
+        color: white;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
     
     .preview-location {
         display: flex;
         align-items: flex-start;
-        gap: 8px;
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        gap: 12px;
+        margin-top: 5px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .preview-location i {
         color: #4285f4;
-        margin-top: 3px;
+        font-size: 1.2rem;
+        margin-top: 2px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
     
     .preview-location-text {
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.8);
-        line-height: 1.4;
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.5;
+        font-weight: 500;
     }
     
     /* Action buttons */
@@ -414,32 +444,31 @@
         }
         
         .preview-info-content {
-            padding: 15px;
+            padding: 20px;
         }
         
         .preview-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 10px;
+            gap: 15px;
         }
         
         .preview-datetime {
-            margin-left: 0;
-            flex-direction: column;
-            gap: 5px;
+            align-items: flex-start;
         }
         
         .preview-time {
-            font-size: 1.4rem;
+            font-size: 1.8rem;
         }
         
         .preview-date {
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         
         .preview-details {
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 15px;
+            padding: 12px;
         }
         
         .preview-actions {
@@ -464,19 +493,28 @@
         }
         
         .preview-info-content {
-            padding: 12px;
+            padding: 16px;
         }
         
         .preview-status {
-            font-size: 1rem;
-            padding: 6px 12px;
+            font-size: 1.1rem;
+            padding: 8px 16px;
         }
         
         .preview-time {
-            font-size: 1.2rem;
+            font-size: 1.6rem;
         }
         
-        .preview-detail-value {
+        .preview-details {
+            padding: 10px;
+            gap: 12px;
+        }
+        
+        .preview-location {
+            padding: 12px;
+        }
+        
+        .preview-location-text {
             font-size: 0.9rem;
         }
         
@@ -585,14 +623,17 @@
             // Add class to body for full screen mode
             document.body.classList.add('preview-active');
             
-            // Get data from URL parameters
+            // Get attendance type from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
-            attendanceType = urlParams.get('type') || 'in';
+            const attendanceType = urlParams.get('type') || 'in';
+            
+            // Update all status elements
+            updateAttendanceStatus(attendanceType);
             
             // Get data from localStorage
-            capturedImage = localStorage.getItem('capturedImage');
-            userLocation = localStorage.getItem('userLocation');
-            serverTimestamp = localStorage.getItem('serverTimestamp');
+            const capturedImage = localStorage.getItem('capturedImage');
+            const userLocation = localStorage.getItem('userLocation');
+            const serverTimestamp = localStorage.getItem('serverTimestamp');
             
             if (!capturedImage || !serverTimestamp) {
                 showAlert('Missing capture data. Please try again.', 'error');
@@ -605,17 +646,8 @@
             // Set the captured image
             document.getElementById('preview-image').src = capturedImage;
             
-            // Set the status badge and large status text
-            const statusBadge = document.getElementById('preview-status-badge');
-            const statusText = document.getElementById('status-text');
-            
-            statusBadge.className = `preview-status-badge ${attendanceType}`;
-            statusText.textContent = attendanceType === 'in' ? 'Clock In' : 'Clock Out';
-            
-            // Get server time for display
-            await updateTimeDisplay();
-            
-            // Get employee information
+            // Update time display and employee info
+            await updateTimeDisplay(serverTimestamp);
             await getEmployeeInfo();
             
             // Set location
@@ -660,24 +692,24 @@
     }
     
     // Update time display with server time
-    async function updateTimeDisplay() {
+    async function updateTimeDisplay(timestamp) {
         try {
-            // Parse the timestamp from localStorage
-            const timestamp = new Date(serverTimestamp);
+            const date = new Date(timestamp);
             
-            // Format time and date
-            const timeStr = new Intl.DateTimeFormat('en-US', { 
-                hour12: true,
+            // Format time with larger text and AM/PM
+            const timeStr = date.toLocaleTimeString('en-US', {
                 hour: '2-digit',
-                minute: '2-digit'
-            }).format(timestamp).toUpperCase();
+                minute: '2-digit',
+                hour12: true
+            }).toUpperCase();
             
-            const dateStr = new Intl.DateTimeFormat('en-US', { 
-                weekday: 'short',
-                month: 'short',
-                day: '2-digit',
+            // Format date with full month name and day
+            const dateStr = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
                 year: 'numeric'
-            }).format(timestamp);
+            });
             
             // Update the display
             document.getElementById('preview-time').textContent = timeStr;
@@ -928,5 +960,25 @@
     window.addEventListener('beforeunload', () => {
         document.body.classList.remove('preview-active');
     });
+
+    function updateAttendanceStatus(type) {
+        // Update status badge
+        const statusBadge = document.getElementById('preview-status-badge');
+        const statusText = document.getElementById('status-text');
+        const statusElement = document.getElementById('preview-status');
+        
+        // Update all status elements with the same type
+        [statusBadge, statusElement].forEach(element => {
+            if (element) {
+                element.className = element.className.replace(/(in|out)/g, '') + ' ' + type;
+            }
+        });
+        
+        // Update all status text elements
+        const statusLabel = type === 'in' ? 'Clock In' : 'Clock Out';
+        document.querySelectorAll('#status-text').forEach(element => {
+            element.textContent = statusLabel;
+        });
+    }
 </script>
 @endsection
