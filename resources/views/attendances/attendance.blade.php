@@ -1191,6 +1191,12 @@
     // Initialize camera
     async function initializeCamera(facingMode = 'user') {
         try {
+            // First check if the device has a camera
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera API is not supported on this device or browser.');
+            }
+
+            // Stop any existing stream
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
@@ -1199,35 +1205,49 @@
                 video: {
                     facingMode: facingMode,
                     width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    zoom: 1.0,
-                    advanced: [{ zoom: 1.0 }]
+                    height: { ideal: 720 }
                 }
             };
 
-            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (permissionError) {
+                if (permissionError.name === 'NotAllowedError') {
+                    throw new Error('Camera permission was denied. Please allow camera access and try again.');
+                } else if (permissionError.name === 'NotFoundError') {
+                    throw new Error('No camera found on this device.');
+                } else {
+                    throw permissionError;
+                }
+            }
+
             const videoElement = document.getElementById('camera-feed');
             videoElement.srcObject = currentStream;
             
             // Apply mirroring only for front camera
             videoElement.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
             
-            // Ensure video maintains aspect ratio
-            videoElement.style.objectFit = 'contain';
+            // Wait for video to be ready
+            await new Promise((resolve) => {
+                videoElement.onloadedmetadata = () => {
+                    videoElement.play().then(resolve).catch(resolve);
+                };
+            });
             
             currentFacingMode = facingMode;
 
-            // Get video track and set zoom to 1x if capabilities allow
-            const videoTrack = currentStream.getVideoTracks()[0];
-            if (videoTrack.getCapabilities && videoTrack.getCapabilities().zoom) {
-                await videoTrack.applyConstraints({
-                    advanced: [{ zoom: 1.0 }]
-                });
-            }
         } catch (error) {
             console.error('Error accessing camera:', error);
-            alert('Unable to access camera. Please ensure camera permissions are granted.');
+            
+            // Show user-friendly error message
+            const errorMessage = error.message || 'Unable to access camera. Please ensure camera permissions are granted.';
+            alert(errorMessage);
+            
+            // Close camera modal and return to main view
+            closeCamera();
+            return false;
         }
+        return true;
     }
 
     // Close camera
