@@ -628,7 +628,7 @@ class AttendanceController extends Controller
             $chatId = config('services.telegram.chat_id');
 
             if (!$botToken || !$chatId) {
-                \Log::warning('Telegram credentials not configured');
+                Log::warning('Telegram credentials not configured');
                 return;
             }
 
@@ -669,57 +669,85 @@ class AttendanceController extends Controller
             $timestampField = $type === 'in' ? 'time_stamp1' : 'time_stamp2';
             
             if ($attendance && $attendance->$timestampField) {
-                // First send the message
-                $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
-                $messageData = [
-                    'chat_id' => $chatId,
-                    'text' => $message,
-                    'parse_mode' => 'Markdown'
-                ];
-
-                $messageResponse = $client->post($messageUrl, [
-                    'json' => $messageData
-                ]);
-
-                if ($messageResponse->getStatusCode() !== 200) {
-                    throw new \Exception('Failed to send Telegram message');
-                }
-
-                // Then send the image
-                $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
-                $imagePath = Storage::disk('public')->path($attendance->$timestampField);
-                
-                if (file_exists($imagePath)) {
-                    $imageData = [
+                try {
+                    // First send the message
+                    $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
+                    $messageData = [
                         'chat_id' => $chatId,
-                        'photo' => fopen($imagePath, 'r'),
-                        'caption' => "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
-                                    ($type === 'in' ? 'Clock In' : 'Clock Out') . 
-                                    " at {$formattedTime}"
+                        'text' => $message,
+                        'parse_mode' => 'Markdown'
                     ];
 
+                    $messageResponse = $client->post($messageUrl, [
+                        'json' => $messageData
+                    ]);
+
+                    if ($messageResponse->getStatusCode() !== 200) {
+                        throw new \Exception('Failed to send Telegram message');
+                    }
+
+                    // Then send the image
+                    $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
+                    
+                    // Get the full URL for the image
+                    $imagePath = Storage::disk('public')->url($attendance->$timestampField);
+                    $fullImageUrl = url($imagePath);
+
+                    // Prepare image data
+                    $imageCaption = "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
+                                   ($type === 'in' ? 'Clock In' : 'Clock Out') . 
+                                   " at {$formattedTime}";
+
+                    // Send image using URL
                     $imageResponse = $client->post($imageUrl, [
-                        'multipart' => [
-                            [
-                                'name' => 'chat_id',
-                                'contents' => $chatId
-                            ],
-                            [
-                                'name' => 'photo',
-                                'contents' => fopen($imagePath, 'r')
-                            ],
-                            [
-                                'name' => 'caption',
-                                'contents' => $imageData['caption']
-                            ]
+                        'form_params' => [
+                            'chat_id' => $chatId,
+                            'photo' => $fullImageUrl,
+                            'caption' => $imageCaption,
+                            'parse_mode' => 'Markdown'
                         ]
                     ]);
 
                     if ($imageResponse->getStatusCode() !== 200) {
                         throw new \Exception('Failed to send Telegram image');
                     }
-                } else {
-                    \Log::warning("Timestamp image not found: {$imagePath}");
+
+                } catch (\Exception $e) {
+                    // If sending image fails, try sending as file
+                    try {
+                        $documentUrl = "https://api.telegram.org/bot{$botToken}/sendDocument";
+                        $filePath = Storage::disk('public')->path($attendance->$timestampField);
+                        
+                        if (file_exists($filePath)) {
+                            $imageResponse = $client->post($documentUrl, [
+                                'multipart' => [
+                                    [
+                                        'name' => 'chat_id',
+                                        'contents' => $chatId
+                                    ],
+                                    [
+                                        'name' => 'document',
+                                        'contents' => fopen($filePath, 'r'),
+                                        'filename' => basename($filePath)
+                                    ],
+                                    [
+                                        'name' => 'caption',
+                                        'contents' => "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
+                                                    ($type === 'in' ? 'Clock In' : 'Clock Out') . 
+                                                    " at {$formattedTime}"
+                                    ]
+                                ]
+                            ]);
+
+                            if ($imageResponse->getStatusCode() !== 200) {
+                                throw new \Exception('Failed to send Telegram document');
+                            }
+                        } else {
+                            Log::warning("Timestamp image file not found: {$filePath}");
+                        }
+                    } catch (\Exception $docError) {
+                        Log::error('Failed to send image as document: ' . $docError->getMessage());
+                    }
                 }
             } else {
                 // If no image is available, just send the message
@@ -740,7 +768,7 @@ class AttendanceController extends Controller
             }
 
         } catch (\Exception $e) {
-            \Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+            Log::error('Failed to send Telegram notification: ' . $e->getMessage());
         }
     }
 
@@ -811,7 +839,7 @@ class AttendanceController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error checking attendance status: ' . $e->getMessage());
+            Log::error('Error checking attendance status: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while checking attendance status'
