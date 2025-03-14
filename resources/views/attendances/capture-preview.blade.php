@@ -100,208 +100,120 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     
-    /* Status badge - Professional styling */
+    /* Status badge */
     .preview-status-badge {
         position: absolute;
-        bottom: 200px; /* Adjusted position */
+        bottom: 160px; /* Position above the datetime */
         left: 20px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 12px;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(10px);
-        padding: 15px 30px;
-        border-radius: 15px;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        padding: 12px 24px;
+        border-radius: 30px;
         color: white;
-        font-weight: 600;
+        font-weight: bold;
         z-index: 9992;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        min-width: 180px;
-    }
-    
-    .preview-status-badge i {
-        font-size: 1.5rem;
-        background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    .preview-status-badge span {
-        font-size: 1.3rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 1.2rem;
     }
     
     .preview-status-badge.in {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.85) 0%, rgba(5, 150, 105, 0.85) 100%);
-        border: 1px solid rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.4);
     }
     
     .preview-status-badge.out {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.85) 0%, rgba(220, 38, 38, 0.85) 100%);
-        border: 1px solid rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
     }
     
-    /* Remove large status indicator as it's no longer needed */
+    /* Large status indicator */
     .preview-status-large {
-        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 8rem;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.15);
+        text-transform: uppercase;
+        pointer-events: none;
+        z-index: 9991;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        letter-spacing: 4px;
+    }
+
+    .preview-status-large.in {
+        color: rgba(40, 167, 69, 0.15);
+    }
+
+    .preview-status-large.out {
+        color: rgba(220, 53, 69, 0.15);
     }
     
-    /* Info overlay - Professional and compact */
-    .preview-info-container {
+    /* Info overlay */
+    .preview-info-overlay {
         position: absolute;
         left: 0;
-        bottom: 0;
+        bottom: 80px;
         width: 100%;
-        padding: 25px;
-        background: linear-gradient(to top, 
-            rgba(0, 0, 0, 0.95) 0%, 
-            rgba(0, 0, 0, 0.8) 30%, 
-            rgba(0, 0, 0, 0.6) 60%, 
-            transparent 100%);
         color: white;
         z-index: 9992;
+        padding: 20px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
     }
     
-    .preview-info-content {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        max-width: 100%;
-        backdrop-filter: blur(12px);
-        background: rgba(0, 0, 0, 0.4);
-        border-radius: 16px;
-        padding: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    }
-    
-    .preview-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        margin-bottom: 15px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .preview-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 20px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 1.2rem;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        transition: all 0.3s ease;
-    }
-    
-    .preview-status.in {
-        background: linear-gradient(135deg, 
-            rgba(16, 185, 129, 0.95) 0%, 
-            rgba(5, 150, 105, 0.95) 100%);
-        border: 1px solid rgba(16, 185, 129, 0.4);
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    }
-    
-    .preview-status.out {
-        background: linear-gradient(135deg, 
-            rgba(239, 68, 68, 0.95) 0%, 
-            rgba(220, 38, 38, 0.95) 100%);
-        border: 1px solid rgba(239, 68, 68, 0.4);
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-    }
-    
-    .preview-status i {
-        font-size: 1.3rem;
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    }
-    
-    .preview-datetime {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 5px;
+    .preview-overlay-content {
+        max-width: 80%;
     }
     
     .preview-time {
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        font-family: 'Inter', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
     
     .preview-date {
         font-size: 1.1rem;
         font-weight: 500;
-        color: rgba(255, 255, 255, 0.9);
-        letter-spacing: 0.5px;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 12px;
     }
     
-    .preview-details {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        padding: 15px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+    .preview-name {
+        font-size: 1rem;
+        font-weight: 500;
+        color: rgba(255,255,255,0.95);
+        margin-bottom: 8px;
     }
     
-    .preview-detail-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+    .preview-position {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 8px;
     }
     
-    .preview-detail-label {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.7);
-        letter-spacing: 0.5px;
-        font-weight: 600;
-    }
-    
-    .preview-detail-value {
-        font-size: 1.1rem;
-        color: white;
-        font-weight: 600;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    .preview-department {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 12px;
     }
     
     .preview-location {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.9);
+        line-height: 1.4;
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        margin-top: 5px;
-        padding: 15px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        gap: 8px;
     }
     
     .preview-location i {
+        margin-top: 4px;
         color: #4285f4;
-        font-size: 1.2rem;
-        margin-top: 2px;
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    }
-    
-    .preview-location-text {
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.9);
-        line-height: 1.5;
-        font-weight: 500;
     }
     
     /* Action buttons */
@@ -431,7 +343,7 @@
         font-size: 1.2rem;
     }
     
-    /* Responsive adjustments */
+    /* Responsive design */
     @media (max-width: 768px) {
         .preview-logo {
             width: 80px;
@@ -439,36 +351,27 @@
             right: 15px;
         }
         
-        .preview-info-container {
-            padding: 20px;
+        .preview-status-badge {
+            top: 15px;
+            left: 15px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
         }
         
-        .preview-info-content {
-            padding: 20px;
+        .preview-info-overlay {
+            padding: 15px;
         }
         
-        .preview-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-        
-        .preview-datetime {
-            align-items: flex-start;
+        .preview-overlay-content {
+            max-width: 100%;
         }
         
         .preview-time {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
         }
         
         .preview-date {
             font-size: 1rem;
-        }
-        
-        .preview-details {
-            grid-template-columns: 1fr;
-            gap: 15px;
-            padding: 12px;
         }
         
         .preview-actions {
@@ -479,6 +382,10 @@
             padding: 0.7rem 1.5rem;
             font-size: 0.9rem;
         }
+        
+        .preview-status-large {
+            font-size: 4rem;
+        }
     }
     
     @media (max-width: 480px) {
@@ -488,34 +395,23 @@
             right: 10px;
         }
         
-        .preview-info-container {
-            padding: 15px;
-        }
-        
-        .preview-info-content {
-            padding: 16px;
-        }
-        
-        .preview-status {
-            font-size: 1.1rem;
-            padding: 8px 16px;
+        .preview-status-badge {
+            top: 10px;
+            left: 10px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
         }
         
         .preview-time {
-            font-size: 1.6rem;
+            font-size: 1.3rem;
         }
         
-        .preview-details {
-            padding: 10px;
-            gap: 12px;
-        }
-        
-        .preview-location {
-            padding: 12px;
-        }
-        
-        .preview-location-text {
+        .preview-date {
             font-size: 0.9rem;
+        }
+        
+        .preview-name, .preview-position, .preview-department {
+            font-size: 0.8rem;
         }
         
         .preview-actions {
@@ -543,37 +439,18 @@
             <span id="status-text">Clock In</span>
         </div>
         
-        <div class="preview-info-container">
-            <div class="preview-info-content">
-                <div class="preview-header">
-                    <div id="preview-status" class="preview-status in">
-                        <i class="fas fa-clock"></i>
-                        <span id="status-text">Clock In</span>
-                    </div>
-                    <div class="preview-datetime">
-                        <div class="preview-time" id="preview-time">--:-- --</div>
-                        <div class="preview-date" id="preview-date">--- --, ----</div>
-                    </div>
-                </div>
-                
-                <div class="preview-details">
-                    <div class="preview-detail-group">
-                        <div class="preview-detail-label">Employee Name</div>
-                        <div class="preview-detail-value" id="preview-name">Loading...</div>
-                    </div>
-                    <div class="preview-detail-group">
-                        <div class="preview-detail-label">Position</div>
-                        <div class="preview-detail-value" id="preview-position">Loading...</div>
-                    </div>
-                    <div class="preview-detail-group">
-                        <div class="preview-detail-label">Department</div>
-                        <div class="preview-detail-value" id="preview-department">Loading...</div>
-                    </div>
-                </div>
-                
+        <div class="preview-status-large" id="preview-status-large">IN</div>
+        
+        <div class="preview-info-overlay">
+            <div class="preview-overlay-content">
+                <div class="preview-time" id="preview-time"></div>
+                <div class="preview-date" id="preview-date"></div>
+                <div class="preview-name" id="preview-name"></div>
+                <div class="preview-position" id="preview-position"></div>
+                <div class="preview-department" id="preview-department"></div>
                 <div class="preview-location">
                     <i class="fas fa-map-marker-alt"></i>
-                    <div class="preview-location-text" id="preview-location">Fetching location...</div>
+                    <span id="preview-location"></span>
                 </div>
             </div>
         </div>
@@ -623,17 +500,14 @@
             // Add class to body for full screen mode
             document.body.classList.add('preview-active');
             
-            // Get attendance type from URL parameters
+            // Get data from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
-            const attendanceType = urlParams.get('type') || 'in';
-            
-            // Update all status elements
-            updateAttendanceStatus(attendanceType);
+            attendanceType = urlParams.get('type') || 'in';
             
             // Get data from localStorage
-            const capturedImage = localStorage.getItem('capturedImage');
-            const userLocation = localStorage.getItem('userLocation');
-            const serverTimestamp = localStorage.getItem('serverTimestamp');
+            capturedImage = localStorage.getItem('capturedImage');
+            userLocation = localStorage.getItem('userLocation');
+            serverTimestamp = localStorage.getItem('serverTimestamp');
             
             if (!capturedImage || !serverTimestamp) {
                 showAlert('Missing capture data. Please try again.', 'error');
@@ -646,8 +520,21 @@
             // Set the captured image
             document.getElementById('preview-image').src = capturedImage;
             
-            // Update time display and employee info
-            await updateTimeDisplay(serverTimestamp);
+            // Set the status badge and large status text
+            const statusBadge = document.getElementById('preview-status-badge');
+            const statusText = document.getElementById('status-text');
+            const statusLarge = document.getElementById('preview-status-large');
+            
+            statusBadge.className = `preview-status-badge ${attendanceType}`;
+            statusText.textContent = attendanceType === 'in' ? 'Clock In' : 'Clock Out';
+            
+            statusLarge.textContent = attendanceType === 'in' ? 'IN' : 'OUT';
+            statusLarge.className = `preview-status-large ${attendanceType}`;
+            
+            // Get server time for display
+            await updateTimeDisplay();
+            
+            // Get employee information
             await getEmployeeInfo();
             
             // Set location
@@ -692,24 +579,24 @@
     }
     
     // Update time display with server time
-    async function updateTimeDisplay(timestamp) {
+    async function updateTimeDisplay() {
         try {
-            const date = new Date(timestamp);
+            // Parse the timestamp from localStorage
+            const timestamp = new Date(serverTimestamp);
             
-            // Format time with larger text and AM/PM
-            const timeStr = date.toLocaleTimeString('en-US', {
+            // Format time and date
+            const timeStr = new Intl.DateTimeFormat('en-US', { 
+                hour12: true,
                 hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            }).toUpperCase();
+                minute: '2-digit'
+            }).format(timestamp).toUpperCase();
             
-            // Format date with full month name and day
-            const dateStr = date.toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
+            const dateStr = new Intl.DateTimeFormat('en-US', { 
+                weekday: 'short',
+                month: 'short',
+                day: '2-digit',
                 year: 'numeric'
-            });
+            }).format(timestamp);
             
             // Update the display
             document.getElementById('preview-time').textContent = timeStr;
@@ -960,25 +847,5 @@
     window.addEventListener('beforeunload', () => {
         document.body.classList.remove('preview-active');
     });
-
-    function updateAttendanceStatus(type) {
-        // Update status badge
-        const statusBadge = document.getElementById('preview-status-badge');
-        const statusText = document.getElementById('status-text');
-        const statusElement = document.getElementById('preview-status');
-        
-        // Update all status elements with the same type
-        [statusBadge, statusElement].forEach(element => {
-            if (element) {
-                element.className = element.className.replace(/(in|out)/g, '') + ' ' + type;
-            }
-        });
-        
-        // Update all status text elements
-        const statusLabel = type === 'in' ? 'Clock In' : 'Clock Out';
-        document.querySelectorAll('#status-text').forEach(element => {
-            element.textContent = statusLabel;
-        });
-    }
 </script>
 @endsection
