@@ -582,26 +582,41 @@
     }
 
     .camera-container {
-        position: fixed;
-        top: 0;
-        left: 0;
+        position: relative;
         width: 100%;
         height: 100vh;
+        background: #000;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #videoElement {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1);
         background: #000;
     }
-    
-    #camera-feed {
-        width: 100%;
-        height: 100vh;
-        object-fit: cover; /* Changed to cover for full screen */
-        background: #000;
-        position: fixed;
+
+    .camera-overlay {
+        position: absolute;
         top: 0;
         left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.4) 0%,
+            rgba(0, 0, 0, 0) 30%,
+            rgba(0, 0, 0, 0) 60%,
+            rgba(0, 0, 0, 0.8) 100%
+        );
+        pointer-events: none;
     }
-    
+
     .camera-buttons {
         position: fixed;
         bottom: 0;
@@ -643,18 +658,6 @@
     }
     
     /* Updated Camera overlay text styles */
-    .camera-overlay {
-        position: fixed;
-        left: 0;
-        bottom: 80px;
-        width: 100%;
-        color: white;
-        z-index: 1002;
-        font-family: 'Inter', sans-serif;
-        padding: 20px;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
-    }
-
     .camera-overlay-content {
         max-width: 80%;
     }
@@ -941,7 +944,7 @@
     </div>
     
     <div class="camera-container">
-        <video id="camera-feed" autoplay playsinline></video>
+        <video id="videoElement" autoplay playsinline></video>
         
         <div class="camera-interface">
             <div class="camera-frame">
@@ -1197,16 +1200,17 @@
 
             const constraints = {
                 video: {
-                    facingMode: facingMode,
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    zoom: 1.0,
-                    advanced: [{ zoom: 1.0 }]
-                }
+                    facingMode: 'user',
+                    width: { ideal: 3840 }, // 4K resolution
+                    height: { ideal: 2160 },
+                    frameRate: { ideal: 30 },
+                    aspectRatio: { ideal: 1.777777778 }
+                },
+                audio: false
             };
 
             currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-            const videoElement = document.getElementById('camera-feed');
+            const videoElement = document.getElementById('videoElement');
             videoElement.srcObject = currentStream;
             
             // Apply mirroring only for front camera
@@ -1282,7 +1286,7 @@
                 flash.classList.remove('flash-active');
             }, 300);
 
-            const video = document.getElementById('camera-feed');
+            const video = document.getElementById('videoElement');
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
