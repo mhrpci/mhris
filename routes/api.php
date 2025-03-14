@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CelebrantsController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ServerTimeController;
+use App\Http\Controllers\AttendanceController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -48,3 +49,9 @@ Route::get('notifications/health', [NotificationsController::class, 'healthCheck
 // Server Time Routes
 Route::get('/server-time', [ServerTimeController::class, 'getTime']);
 Route::get('/verify-timestamp/{timestamp}/{hash}', [ServerTimeController::class, 'verifyTimestamp']);
+
+// Employee information API endpoint
+Route::get('/employee-info', [AttendanceController::class, 'getEmployeeInfo'])->middleware('auth');
+
+// Store attendance capture
+Route::post('/attendance/store', [AttendanceController::class, 'storeAttendanceCapture'])->middleware('auth');

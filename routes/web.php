@@ -190,6 +190,7 @@ Route::middleware('auth')->group(function () {
     Route::get('attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
     Route::get('/attendance', [AttendanceController::class, 'attendance'])->name('attendances.attendance');
     Route::get('/attendance/status', [AttendanceController::class, 'getAttendanceStatus'])->name('attendance.status');
+    Route::get('/attendance/preview', [AttendanceController::class, 'capturePreview'])->name('attendance.preview');
 
     // Attendance store command route
     Route::post('/attendance/store-command', [AttendanceController::class, 'executeStoreCommand'])
@@ -389,8 +390,6 @@ Route::middleware('auth')->group(function () {
     // Holiday import and export routes
     Route::post('holidays/import', [App\Http\Controllers\HolidayController::class, 'import'])->name('holidays.import');
     Route::post('holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
-
-    Route::get('/attendance/preview', [AttendanceController::class, 'capturePreview'])->name('attendance.capture-preview');
 
     Route::post('/attendance/capture', [AttendanceController::class, 'storeAttendanceCapture'])->name('attendance.capture');
 });

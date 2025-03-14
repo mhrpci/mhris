@@ -287,16 +287,34 @@ class AttendanceController extends Controller
 
     public function getEmployeeInfo(Request $request)
     {
-        // Replace this with actual logic to get authenticated employee info
+        // Get authenticated user
         $user = Auth::user();
 
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Find employee by email
+        $employee = Employee::where('email_address', $user->email)->first();
+        
+        if (!$employee) {
+            return response()->json([
+                'name' => $user->first_name . ' ' . $user->last_name,
+                'id' => $user->id,
+                'position' => null,
+                'department' => null
+            ]);
+        }
+        
+        // Get position and department information
+        $position = $employee->position ? $employee->position->name : null;
+        $department = $employee->department ? $employee->department->name : null;
+
         return response()->json([
-            'id' => $user->id,
-            'first_name' => $user->first_name,
+            'name' => $employee->first_name . ' ' . $employee->last_name,
+            'id' => $employee->id,
+            'position' => $position,
+            'department' => $department
         ]);
     }
 

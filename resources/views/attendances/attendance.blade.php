@@ -1332,9 +1332,7 @@
             
             // Redirect to preview page with necessary parameters
             const params = new URLSearchParams({
-                type: currentAttendanceType,
-                name: '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}',
-                timestamp: serverTimestamp
+                type: currentAttendanceType
             });
             
             window.location.href = `/attendance/preview?${params.toString()}`;
