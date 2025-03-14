@@ -35,7 +35,6 @@
             align-items: center;
             justify-content: center;
             background: #000;
-            overflow: hidden;
         }
 
         .preview-image-container {
@@ -50,8 +49,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
         }
 
         .preview-overlay {
@@ -67,8 +64,6 @@
                 rgba(0, 0, 0, 0) 60%,
                 rgba(0, 0, 0, 0.8) 100%
             );
-            backdrop-filter: blur(1px);
-            -webkit-backdrop-filter: blur(1px);
         }
 
         .preview-content {
@@ -80,7 +75,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 1.5rem;
+            padding: 1rem;
             box-sizing: border-box;
         }
 
@@ -92,116 +87,88 @@
         }
 
         .preview-logo {
-            width: 80px;
+            width: 60px;
             height: auto;
             position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
+            top: 1rem;
+            right: 1rem;
             background: white;
-            padding: 12px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
-        }
-
-        .preview-logo:hover {
-            transform: scale(1.05);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .clock-in-badge {
             display: inline-flex;
             align-items: center;
-            background: rgba(40, 167, 69, 0.95);
+            background: #28a745;
             color: white;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
             font-weight: 600;
-            font-size: 1.2rem;
-            gap: 0.8rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            font-size: 1.1rem;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         .clock-in-badge.out {
-            background: rgba(220, 53, 69, 0.95);
+            background: #dc3545;
         }
 
         .preview-info {
-            padding: 1.5rem;
+            padding: 1rem;
             color: white;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         .preview-time {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
-            letter-spacing: 1px;
+            margin-bottom: 0.25rem;
         }
 
         .preview-date {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.95;
-            letter-spacing: 0.5px;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
         }
 
         .preview-location {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             display: flex;
             align-items: flex-start;
-            gap: 0.8rem;
-            margin-bottom: 0.8rem;
-            opacity: 0.95;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.8rem 1.2rem;
-            border-radius: 8px;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
         }
 
         .preview-location i {
-            margin-top: 0.4rem;
-            color: #28a745;
+            margin-top: 0.3rem;
         }
 
         .preview-name {
-            font-size: 1.4rem;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
         }
 
         .preview-company {
-            font-size: 1.1rem;
-            opacity: 0.95;
-            margin-bottom: 0.5rem;
-            color: #e9ecef;
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
         }
 
         .preview-position {
-            font-size: 1.1rem;
-            opacity: 0.95;
-            margin-bottom: 1.5rem;
-            color: #e9ecef;
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
         }
 
         .preview-code {
-            font-size: 1rem;
-            opacity: 0.9;
+            font-size: 0.9rem;
+            opacity: 0.7;
             display: flex;
             align-items: center;
-            gap: 0.8rem;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.8rem 1.2rem;
-            border-radius: 8px;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-
-        .preview-code i {
-            color: #28a745;
+            gap: 0.5rem;
         }
 
         .preview-buttons {
@@ -211,32 +178,27 @@
             width: 100%;
             display: flex;
             justify-content: center;
-            gap: 1.5rem;
-            padding: 2rem;
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, transparent 100%);
         }
 
         .btn-retake, .btn-confirm {
-            padding: 1rem 2.5rem;
+            padding: 0.8rem 2rem;
             border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
+            border-radius: 5px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.5rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .btn-retake {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.2);
             color: white;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
         }
 
         .btn-confirm {
@@ -245,13 +207,11 @@
         }
 
         .btn-retake:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .btn-confirm:hover {
             background: #218838;
-            transform: translateY(-2px);
         }
 
         @media (max-width: 768px) {
@@ -736,21 +696,23 @@
                 
                 // Configure html2canvas options for better quality
                 const canvas = await html2canvas(previewContainer, {
-                    scale: 4, // Increased scale for higher resolution
-                    useCORS: true,
+                    scale: 2, // Increase quality
+                    useCORS: true, // Allow cross-origin images
                     allowTaint: true,
                     backgroundColor: '#000000',
                     logging: false,
                     removeContainer: false,
                     foreignObjectRendering: true,
-                    imageTimeout: 30000, // Increased timeout
+                    imageTimeout: 15000, // Increase timeout for image loading
                     onclone: function(clonedDoc) {
+                        // Ensure logo and icons are visible in cloned document
                         const clonedLogo = clonedDoc.querySelector('.preview-logo');
                         if (clonedLogo) {
                             clonedLogo.style.visibility = 'visible';
                             clonedLogo.style.opacity = '1';
                         }
                         
+                        // Ensure Font Awesome icons are rendered
                         clonedDoc.querySelectorAll('.fas').forEach(icon => {
                             icon.style.fontFamily = 'Font Awesome 5 Free';
                             icon.style.fontWeight = '900';
