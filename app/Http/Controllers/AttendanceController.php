@@ -21,45 +21,20 @@ class AttendanceController extends Controller
     use HasRoles;
 
     // Middleware for permissions
-    public function __construct()
+    function __construct()
     {
-        $this->middleware(['auth']);  // Ensure user is authenticated
         $this->middleware(['permission:attendance-list|attendance-create|attendance-edit|attendance-delete'], ['only' => ['index', 'show']]);
         $this->middleware(['permission:attendance-create'], ['only' => ['create', 'store']]);
         $this->middleware(['permission:attendance-edit'], ['only' => ['edit', 'update']]);
         $this->middleware(['permission:attendance-delete'], ['only' => ['destroy']]);
     }
 
-    protected function checkUserRole($roles)
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return false;
-        }
-        
-        if (is_array($roles)) {
-            foreach ($roles as $role) {
-                if ($user->hasRole($role)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        return $user->hasRole($roles);
-    }
-
     // Display all attendance records
     public function index()
     {
-        $user = Auth::user();
-        if (!$user) {
-            abort(403, 'Unauthorized access');
-        }
-
-        if ($this->checkUserRole('Supervisor')) {
-            $attendances = Attendance::whereHas('employee', function($query) use ($user) {
-                $query->where('department_id', $user->department_id);
+        if (auth()->user()->hasRole('Supervisor')) {
+            $attendances = Attendance::whereHas('employee', function($query) {
+                $query->where('department_id', auth()->user()->department_id);
             })->get();
         } else {
             $attendances = Attendance::all();
@@ -89,27 +64,25 @@ class AttendanceController extends Controller
             'hours_worked' => 'nullable',
         ]);
 
-        $user = Auth::user();
-        if (!$user) {
-            abort(403, 'Unauthorized access');
-        }
-
-        // Check if attendance already exists
+        // Check if attendance already exists for the given date_attended and employee_id
         $existingAttendance = Attendance::where('employee_id', $request->employee_id)
-                                      ->where('date_attended', $request->date_attended)
-                                      ->first();
+                                        ->where('date_attended', $request->date_attended)
+                                        ->first();
+
+        // Get the authenticated user
+        $user = Auth::user();
 
         $successMessage = '';
 
         if ($existingAttendance) {
             if ($existingAttendance->time_out && $existingAttendance->time_stamp2) {
-                if ($this->checkUserRole(['Super Admin', 'Admin'])) {
+                if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
                     $successMessage = 'Attendance for this employee on this date already has time out and time stamp.';
                 } else {
                     $successMessage = 'Your attendance on this date already has time out and time stamp.';
                 }
             } else {
-                // Update existing attendance
+                // Update existing attendance with time_out if time_in exists and time_out doesn't
                 $existingAttendance->time_out = $request->time_out;
                 if ($request->hasFile('time_stamp2')) {
                     $existingAttendance->time_stamp2 = $request->file('time_stamp2')->store('time_stamps', 'public');
@@ -121,7 +94,7 @@ class AttendanceController extends Controller
                 $successMessage = 'You have successfully timed out.';
             }
         } else {
-            // Create new attendance
+            // Create new attendance record with time_in
             $newAttendance = new Attendance;
             $newAttendance->employee_id = $request->employee_id;
             $newAttendance->date_attended = $request->date_attended;
@@ -136,12 +109,13 @@ class AttendanceController extends Controller
             $successMessage = 'You have successfully timed in.';
         }
 
-        if ($this->checkUserRole('Employee')) {
-            $employees = Employee::all();
+        // Check user role and return appropriate view
+        if ($user->hasRole('Employee')) {
+            $employees = Employee::all(); // Fetch employees to pass to the view
             return view('attendances.create', compact('employees'))->with('successMessage', $successMessage);
+        } else {
+            return redirect()->route('attendances.index')->with('success', $successMessage);
         }
-
-        return redirect()->route('attendances.index')->with('success', $successMessage);
     }
 
     // Method to check if attendance exists (for AJAX call)
@@ -223,12 +197,11 @@ class AttendanceController extends Controller
     // Generate timesheets or attendance records for all employees
     public function generateTimesheets()
     {
+        // Get authenticated user
         $user = Auth::user();
-        if (!$user) {
-            abort(403, 'Unauthorized access');
-        }
-
-        $employees = $this->checkUserRole('Super Admin')
+        
+        // Get employees based on user role
+        $employees = $user->hasRole('Super Admin') 
             ? Employee::all()
             : Employee::where('employee_status', 'Active')->get();
             
@@ -276,7 +249,8 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
-        if ($user && ($user->hasRole('admin') || $user->hasRole('super-admin'))) {
+        // Assuming roles are defined and you have a method to check user roles
+        if ($user->hasRole('admin') || $user->hasRole('super-admin')) {
             return redirect()->route('attendances.index');
         } else {
             return $this->myTimesheet();
@@ -394,15 +368,12 @@ class AttendanceController extends Controller
     public function attendance()
     {
         $user = Auth::user();
-        if (!$user || !$this->checkUserRole(['Employee', 'Supervisor'])) {
+        
+        if (!$user->hasRole(['Employee', 'Supervisor'])) {
             abort(403, 'Unauthorized access.');
         }
 
         $employee = Employee::where('email_address', $user->email)->first();
-        if (!$employee) {
-            Log::warning('Employee not found for user email: ' . $user->email);
-            abort(404, 'Employee record not found');
-        }
 
         return view('attendances.attendance', compact('employee'));
     }
@@ -413,7 +384,7 @@ class AttendanceController extends Controller
     public function executeStoreCommand()
     {
         try {
-            Artisan::call('attendance:store');
+            \Artisan::call('attendance:store');
             return response()->json(['message' => 'Attendance records stored successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -426,7 +397,7 @@ class AttendanceController extends Controller
         $employee = Employee::where('email_address', $user->email)->first();
         
         if (!$employee) {
-            Log::warning('Employee not found for user email: ' . $user->email);
+            \Log::warning('Employee not found for user email: ' . $user->email);
         }
         
         return view('attendances.capture-preview', compact('employee'));
@@ -442,8 +413,9 @@ class AttendanceController extends Controller
     private function storeTimestampImage($imageData, $timestamp)
     {
         try {
+            // Check if storage link exists
             if (!file_exists(public_path('storage'))) {
-                Artisan::call('storage:link');
+                \Artisan::call('storage:link');
             }
 
             // Create time_stamps directory if it doesn't exist
@@ -466,7 +438,7 @@ class AttendanceController extends Controller
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error storing timestamp image: ' . $e->getMessage());
+            \Log::error('Error storing timestamp image: ' . $e->getMessage());
             return false;
         }
     }
@@ -594,7 +566,7 @@ class AttendanceController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Attendance capture error: ' . $e->getMessage());
+            \Log::error('Attendance capture error: ' . $e->getMessage());
             
             // Delete any stored image if there was an error
             if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
@@ -614,7 +586,8 @@ class AttendanceController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user || !$this->checkUserRole(['Employee', 'Supervisor'])) {
+            // Check if user has Employee or Supervisor role
+            if (!$user->hasRole(['Employee', 'Supervisor'])) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unauthorized access'
@@ -675,7 +648,7 @@ class AttendanceController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error checking attendance status: ' . $e->getMessage());
+            \Log::error('Error checking attendance status: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while checking attendance status'
