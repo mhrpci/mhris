@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Spatie\Permission\Traits\HasRoles;
+use GuzzleHttp\Client;
 
 class AttendanceController extends Controller
 {
@@ -547,6 +548,9 @@ class AttendanceController extends Controller
                     $attendance->save();
                 }
 
+                // Send Telegram notification for clock in
+                $this->sendTelegramNotification($employee, 'in', $currentTime, $request->location);
+
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Clock in recorded successfully.'
@@ -582,6 +586,9 @@ class AttendanceController extends Controller
                 $attendance->time_out_address = $request->location;
                 $attendance->save();
 
+                // Send Telegram notification for clock out
+                $this->sendTelegramNotification($employee, 'out', $currentTime, $request->location);
+
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Clock out recorded successfully.'
@@ -608,6 +615,68 @@ class AttendanceController extends Controller
                 'message' => 'An error occurred while processing your request.',
                 'debug' => config('app.debug') ? $e->getMessage() : null
             ], 500);
+        }
+    }
+
+    /**
+     * Send attendance notification to Telegram group
+     */
+    private function sendTelegramNotification($employee, $type, $time, $location)
+    {
+        try {
+            $botToken = config('services.telegram.bot_token');
+            $chatId = config('services.telegram.chat_id');
+
+            if (!$botToken || !$chatId) {
+                \Log::warning('Telegram credentials not configured');
+                return;
+            }
+
+            // Get department name
+            $departmentName = $employee->department ? $employee->department->name : 'N/A';
+
+            // Determine company name based on department
+            $companyName = match(strtoupper($departmentName)) {
+                'MHRHCI' => 'Medical & Resources Health Care, Inc.',
+                'BGPDI' => 'Bay Gas and Petroleum Distribution, Inc.',
+                'VHI' => 'Verbena Hotel Inc.',
+                default => 'MHR Property Conglomerates, Inc.'
+            };
+
+            // Format time for display
+            $formattedTime = Carbon::parse($time)->format('h:i A');
+            $formattedDate = Carbon::parse($time)->format('F d, Y');
+
+            // Create message
+            $message = "🏢 *{$companyName}*\n\n";
+            $message .= "📍 *Attendance Update*\n";
+            $message .= "Type: " . ($type === 'in' ? '🟢 Clock In' : '🔴 Clock Out') . "\n";
+            $message .= "Date: {$formattedDate}\n";
+            $message .= "Time: {$formattedTime}\n";
+            $message .= "Employee: {$employee->first_name} {$employee->last_name}\n";
+            $message .= "Department: {$departmentName}\n";
+            $message .= "Position: " . ($employee->position ? $employee->position->name : 'N/A') . "\n";
+            $message .= "Location: {$location}";
+
+            // Send to Telegram
+            $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
+            $data = [
+                'chat_id' => $chatId,
+                'text' => $message,
+                'parse_mode' => 'Markdown'
+            ];
+
+            $client = new Client();
+            $response = $client->post($url, [
+                'json' => $data
+            ]);
+
+            if ($response->getStatusCode() !== 200) {
+                throw new \Exception('Failed to send Telegram notification');
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send Telegram notification: ' . $e->getMessage());
         }
     }
 
