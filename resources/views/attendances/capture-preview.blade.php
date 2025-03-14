@@ -157,63 +157,184 @@
     .preview-info-overlay {
         position: absolute;
         left: 0;
-        bottom: 80px;
+        bottom: 0;
         width: 100%;
         color: white;
         z-index: 9992;
-        padding: 20px;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+        padding: 25px;
+        background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.4) 85%, transparent 100%);
     }
     
     .preview-overlay-content {
-        max-width: 80%;
+        max-width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .preview-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .preview-status-badge {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        padding: 8px 16px;
+        border-radius: 30px;
+        color: white;
+        font-weight: bold;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 1rem;
+    }
+    
+    .preview-datetime {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
     }
     
     .preview-time {
-        font-size: 1.8rem;
+        font-size: 2rem;
         font-weight: 700;
-        margin-bottom: 4px;
+        line-height: 1;
+        margin: 0;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        letter-spacing: 0.5px;
     }
     
     .preview-date {
         font-size: 1.1rem;
         font-weight: 500;
         color: rgba(255,255,255,0.9);
-        margin-bottom: 12px;
+        margin: 0;
+    }
+    
+    .preview-details {
+        display: grid;
+        gap: 12px;
+        margin-top: 5px;
     }
     
     .preview-name {
-        font-size: 1rem;
-        font-weight: 500;
+        font-size: 1.2rem;
+        font-weight: 600;
         color: rgba(255,255,255,0.95);
-        margin-bottom: 8px;
+        margin: 0;
+        letter-spacing: 0.3px;
     }
     
-    .preview-position {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
-        margin-bottom: 8px;
+    .preview-info-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
     }
     
-    .preview-department {
-        font-size: 0.9rem;
+    .preview-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .preview-info-label {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .preview-info-value {
+        font-size: 0.95rem;
         color: rgba(255,255,255,0.9);
-        margin-bottom: 12px;
+        font-weight: 500;
     }
     
     .preview-location {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
-        line-height: 1.4;
         display: flex;
         align-items: flex-start;
         gap: 8px;
+        margin-top: 5px;
     }
     
     .preview-location i {
-        margin-top: 4px;
+        margin-top: 3px;
         color: #4285f4;
+        font-size: 1rem;
+    }
+    
+    .preview-location-text {
+        font-size: 0.95rem;
+        color: rgba(255,255,255,0.9);
+        line-height: 1.4;
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .preview-info-overlay {
+            padding: 20px;
+        }
+        
+        .preview-time {
+            font-size: 1.8rem;
+        }
+        
+        .preview-date {
+            font-size: 1rem;
+        }
+        
+        .preview-name {
+            font-size: 1.1rem;
+        }
+        
+        .preview-info-value {
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .preview-info-overlay {
+            padding: 15px;
+        }
+        
+        .preview-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .preview-time {
+            font-size: 1.6rem;
+        }
+        
+        .preview-date {
+            font-size: 0.9rem;
+        }
+        
+        .preview-name {
+            font-size: 1rem;
+        }
+        
+        .preview-info-row {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .preview-info-value {
+            font-size: 0.85rem;
+        }
+        
+        .preview-status-badge {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+        }
     }
     
     /* Action buttons */
@@ -342,88 +463,6 @@
     .alert-message i {
         font-size: 1.2rem;
     }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .preview-logo {
-            width: 80px;
-            top: 15px;
-            right: 15px;
-        }
-        
-        .preview-status-badge {
-            top: 15px;
-            left: 15px;
-            padding: 6px 12px;
-            font-size: 0.9rem;
-        }
-        
-        .preview-info-overlay {
-            padding: 15px;
-        }
-        
-        .preview-overlay-content {
-            max-width: 100%;
-        }
-        
-        .preview-time {
-            font-size: 1.5rem;
-        }
-        
-        .preview-date {
-            font-size: 1rem;
-        }
-        
-        .preview-actions {
-            padding: 1.2rem;
-        }
-        
-        .btn-confirm, .btn-retake {
-            padding: 0.7rem 1.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .preview-status-large {
-            font-size: 4rem;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .preview-logo {
-            width: 60px;
-            top: 10px;
-            right: 10px;
-        }
-        
-        .preview-status-badge {
-            top: 10px;
-            left: 10px;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-        }
-        
-        .preview-time {
-            font-size: 1.3rem;
-        }
-        
-        .preview-date {
-            font-size: 0.9rem;
-        }
-        
-        .preview-name, .preview-position, .preview-department {
-            font-size: 0.8rem;
-        }
-        
-        .preview-actions {
-            padding: 1rem;
-            gap: 0.8rem;
-        }
-        
-        .btn-confirm, .btn-retake {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.8rem;
-        }
-    }
 </style>
 @endsection
 
@@ -434,23 +473,40 @@
         
         <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="preview-logo">
         
-        <div id="preview-status-badge" class="preview-status-badge">
-            <i class="fas fa-clock"></i>
-            <span id="status-text">Clock In</span>
-        </div>
-        
         <div class="preview-status-large" id="preview-status-large">IN</div>
         
         <div class="preview-info-overlay">
             <div class="preview-overlay-content">
-                <div class="preview-time" id="preview-time"></div>
-                <div class="preview-date" id="preview-date"></div>
-                <div class="preview-name" id="preview-name"></div>
-                <div class="preview-position" id="preview-position"></div>
-                <div class="preview-department" id="preview-department"></div>
-                <div class="preview-location">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span id="preview-location"></span>
+                <div class="preview-header">
+                    <div id="preview-status-badge" class="preview-status-badge">
+                        <i class="fas fa-clock"></i>
+                        <span id="status-text">Clock In</span>
+                    </div>
+                    
+                    <div class="preview-datetime">
+                        <div class="preview-time" id="preview-time"></div>
+                        <div class="preview-date" id="preview-date"></div>
+                    </div>
+                </div>
+                
+                <div class="preview-details">
+                    <div class="preview-name" id="preview-name"></div>
+                    
+                    <div class="preview-info-row">
+                        <div class="preview-info-item">
+                            <span class="preview-info-label">Position</span>
+                            <span class="preview-info-value" id="preview-position"></span>
+                        </div>
+                        <div class="preview-info-item">
+                            <span class="preview-info-label">Department</span>
+                            <span class="preview-info-value" id="preview-department"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="preview-location-text" id="preview-location"></span>
+                    </div>
                 </div>
             </div>
         </div>
