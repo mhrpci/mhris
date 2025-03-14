@@ -1408,6 +1408,21 @@
 
     // Initialize with server time sync
     document.addEventListener('DOMContentLoaded', () => {
+        // Check for success or error messages in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const successMsg = urlParams.get('success');
+        const errorMsg = urlParams.get('error');
+        
+        if (successMsg) {
+            showStatusMessage(decodeURIComponent(successMsg), 'success');
+            // Remove the message from URL to prevent showing it again on refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (errorMsg) {
+            showStatusMessage(decodeURIComponent(errorMsg), 'error');
+            // Remove the message from URL to prevent showing it again on refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
         // Initial update
         updateDateTime();
         updateAttendanceButtons();
@@ -1435,6 +1450,92 @@
 
         initializeLocation();
     });
+
+    // Show status message
+    function showStatusMessage(message, type = 'success') {
+        // Create message element if it doesn't exist
+        let messageContainer = document.getElementById('status-message-container');
+        if (!messageContainer) {
+            messageContainer = document.createElement('div');
+            messageContainer.id = 'status-message-container';
+            messageContainer.style.position = 'fixed';
+            messageContainer.style.top = '20px';
+            messageContainer.style.left = '50%';
+            messageContainer.style.transform = 'translateX(-50%)';
+            messageContainer.style.zIndex = '9999';
+            messageContainer.style.maxWidth = '90%';
+            document.body.appendChild(messageContainer);
+        }
+        
+        // Create message element
+        const messageElement = document.createElement('div');
+        messageElement.className = `alert alert-${type === 'success' ? 'success' : 'danger'} d-flex align-items-center`;
+        messageElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        messageElement.style.minWidth = '300px';
+        messageElement.style.animation = 'fadeInDown 0.5s ease-out';
+        
+        // Add icon based on type
+        const icon = document.createElement('i');
+        icon.className = type === 'success' ? 'fas fa-check-circle mr-2' : 'fas fa-exclamation-circle mr-2';
+        messageElement.appendChild(icon);
+        
+        // Add message text
+        const textSpan = document.createElement('span');
+        textSpan.textContent = message;
+        messageElement.appendChild(textSpan);
+        
+        // Add close button
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'close ml-auto';
+        closeButton.innerHTML = '&times;';
+        closeButton.addEventListener('click', () => {
+            messageElement.remove();
+        });
+        messageElement.appendChild(closeButton);
+        
+        // Add to container
+        messageContainer.appendChild(messageElement);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (messageElement.parentNode) {
+                messageElement.style.animation = 'fadeOutUp 0.5s ease-out';
+                setTimeout(() => {
+                    if (messageElement.parentNode) {
+                        messageElement.remove();
+                    }
+                }, 500);
+            }
+        }, 5000);
+    }
+
+    // Add CSS for animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+    `;
+    document.head.appendChild(style);
 
     // Clean up
     window.addEventListener('beforeunload', () => {

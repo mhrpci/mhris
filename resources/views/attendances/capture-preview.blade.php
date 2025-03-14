@@ -3,27 +3,28 @@
 @section('styles')
 <style>
     /* Base styles */
-    .preview-container {
-        min-height: calc(100vh - 80px);
-        padding: 2rem 0;
-        background: linear-gradient(135deg, #f6f9fc 0%, #ecf3f8 100%);
+    body.preview-active {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
     }
     
-    /* Card styles */
-    .preview-card {
-        background: #ffffff;
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        transition: transform 0.3s ease;
+    .preview-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: #000;
+        z-index: 9990;
     }
     
     /* Image preview section */
     .image-preview-container {
         position: relative;
         width: 100%;
-        height: 0;
-        padding-bottom: 75%; /* 4:3 aspect ratio */
+        height: 100vh;
         overflow: hidden;
         background-color: #000;
     }
@@ -37,6 +38,69 @@
         object-fit: cover;
     }
     
+    /* Camera interface elements */
+    .camera-interface {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 9991;
+    }
+
+    .camera-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 85%;
+        height: 70vh;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        pointer-events: none;
+    }
+
+    .camera-corners {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border: 3px solid #4285f4;
+    }
+
+    .corner-top-left {
+        top: -3px;
+        left: -3px;
+        border-right: none;
+        border-bottom: none;
+        border-top-left-radius: 8px;
+    }
+
+    .corner-top-right {
+        top: -3px;
+        right: -3px;
+        border-left: none;
+        border-bottom: none;
+        border-top-right-radius: 8px;
+    }
+
+    .corner-bottom-left {
+        bottom: -3px;
+        left: -3px;
+        border-right: none;
+        border-top: none;
+        border-bottom-left-radius: 8px;
+    }
+
+    .corner-bottom-right {
+        bottom: -3px;
+        right: -3px;
+        border-left: none;
+        border-top: none;
+        border-bottom-right-radius: 8px;
+    }
+    
     /* Logo overlay */
     .preview-logo {
         position: absolute;
@@ -44,7 +108,7 @@
         right: 20px;
         width: 100px;
         height: auto;
-        z-index: 10;
+        z-index: 9992;
         background: rgba(255, 255, 255, 0.9);
         padding: 8px;
         border-radius: 8px;
@@ -65,7 +129,7 @@
         border-radius: 30px;
         color: white;
         font-weight: bold;
-        z-index: 10;
+        z-index: 9992;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
@@ -79,16 +143,44 @@
         border-color: rgba(239, 68, 68, 0.4);
     }
     
+    /* Large status indicator */
+    .preview-status-large {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 8rem;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.15);
+        text-transform: uppercase;
+        pointer-events: none;
+        z-index: 9991;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        letter-spacing: 4px;
+    }
+
+    .preview-status-large.in {
+        color: rgba(40, 167, 69, 0.15);
+    }
+
+    .preview-status-large.out {
+        color: rgba(220, 53, 69, 0.15);
+    }
+    
     /* Info overlay */
     .preview-info-overlay {
         position: absolute;
         left: 0;
-        bottom: 0;
+        bottom: 80px;
         width: 100%;
         color: white;
-        z-index: 10;
+        z-index: 9992;
         padding: 20px;
         background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+    }
+    
+    .preview-overlay-content {
+        max-width: 80%;
     }
     
     .preview-time {
@@ -140,10 +232,17 @@
     
     /* Action buttons */
     .preview-actions {
-        padding: 1.5rem;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
         display: flex;
-        gap: 1rem;
         justify-content: center;
+        padding: 1.5rem;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
+        height: 100px;
+        z-index: 9992;
+        gap: 1.5rem;
     }
     
     .btn-confirm {
@@ -221,12 +320,45 @@
         100% { transform: rotate(360deg); }
     }
     
+    /* Alert messages */
+    .alert-message {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 500;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        max-width: 90%;
+    }
+    
+    .alert-message.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    
+    .alert-message.success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .alert-message.error {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    
+    .alert-message i {
+        font-size: 1.2rem;
+    }
+    
     /* Responsive design */
     @media (max-width: 768px) {
-        .preview-container {
-            padding: 1rem 0;
-        }
-        
         .preview-logo {
             width: 80px;
             top: 15px;
@@ -244,6 +376,10 @@
             padding: 15px;
         }
         
+        .preview-overlay-content {
+            max-width: 100%;
+        }
+        
         .preview-time {
             font-size: 1.5rem;
         }
@@ -254,12 +390,52 @@
         
         .preview-actions {
             padding: 1.2rem;
-            flex-direction: column;
         }
         
         .btn-confirm, .btn-retake {
-            width: 100%;
-            justify-content: center;
+            padding: 0.7rem 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .preview-status-large {
+            font-size: 4rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .preview-logo {
+            width: 60px;
+            top: 10px;
+            right: 10px;
+        }
+        
+        .preview-status-badge {
+            top: 10px;
+            left: 10px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        
+        .preview-time {
+            font-size: 1.3rem;
+        }
+        
+        .preview-date {
+            font-size: 0.9rem;
+        }
+        
+        .preview-name, .preview-position, .preview-department {
+            font-size: 0.8rem;
+        }
+        
+        .preview-actions {
+            padding: 1rem;
+            gap: 0.8rem;
+        }
+        
+        .btn-confirm, .btn-retake {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.8rem;
         }
     }
 </style>
@@ -267,41 +443,50 @@
 
 @section('content')
 <div class="preview-container">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6">
-                <div class="preview-card">
-                    <div class="image-preview-container">
-                        <img id="preview-image" class="preview-image" src="" alt="Attendance Capture">
-                        <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="preview-logo">
-                        <div id="preview-status-badge" class="preview-status-badge">
-                            <i class="fas fa-clock"></i>
-                            <span id="status-text">Clock In</span>
-                        </div>
-                        <div class="preview-info-overlay">
-                            <div class="preview-time" id="preview-time"></div>
-                            <div class="preview-date" id="preview-date"></div>
-                            <div class="preview-name" id="preview-name"></div>
-                            <div class="preview-position" id="preview-position"></div>
-                            <div class="preview-department" id="preview-department"></div>
-                            <div class="preview-location">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span id="preview-location"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="preview-actions">
-                        <button class="btn-retake" onclick="goBack()">
-                            <i class="fas fa-redo"></i>
-                            Retake
-                        </button>
-                        <button class="btn-confirm" onclick="confirmAttendance()">
-                            <i class="fas fa-check"></i>
-                            Confirm
-                        </button>
-                    </div>
+    <div class="image-preview-container">
+        <img id="preview-image" class="preview-image" src="" alt="Attendance Capture">
+        
+        <div class="camera-interface">
+            <div class="camera-frame">
+                <div class="camera-corners corner-top-left"></div>
+                <div class="camera-corners corner-top-right"></div>
+                <div class="camera-corners corner-bottom-left"></div>
+                <div class="camera-corners corner-bottom-right"></div>
+            </div>
+        </div>
+        
+        <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="preview-logo">
+        
+        <div id="preview-status-badge" class="preview-status-badge">
+            <i class="fas fa-clock"></i>
+            <span id="status-text">Clock In</span>
+        </div>
+        
+        <div class="preview-status-large" id="preview-status-large">IN</div>
+        
+        <div class="preview-info-overlay">
+            <div class="preview-overlay-content">
+                <div class="preview-time" id="preview-time"></div>
+                <div class="preview-date" id="preview-date"></div>
+                <div class="preview-name" id="preview-name"></div>
+                <div class="preview-position" id="preview-position"></div>
+                <div class="preview-department" id="preview-department"></div>
+                <div class="preview-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span id="preview-location"></span>
                 </div>
             </div>
+        </div>
+        
+        <div class="preview-actions">
+            <button class="btn-retake" onclick="goBack()">
+                <i class="fas fa-redo"></i>
+                Retake
+            </button>
+            <button class="btn-confirm" onclick="confirmAttendance()">
+                <i class="fas fa-check"></i>
+                Confirm
+            </button>
         </div>
     </div>
 </div>
@@ -310,6 +495,12 @@
 <div class="loading-overlay" id="loading-overlay">
     <div class="loading-spinner"></div>
     <div class="loading-text">Processing your attendance...</div>
+</div>
+
+<!-- Alert Message -->
+<div class="alert-message" id="alert-message">
+    <i class="fas fa-check-circle"></i>
+    <span id="alert-text">Message goes here</span>
 </div>
 @endsection
 
@@ -327,6 +518,9 @@
     // Initialize the preview page
     document.addEventListener('DOMContentLoaded', async function() {
         try {
+            // Add class to body for full screen mode
+            document.body.classList.add('preview-active');
+            
             // Get data from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             attendanceType = urlParams.get('type') || 'in';
@@ -337,19 +531,26 @@
             serverTimestamp = localStorage.getItem('serverTimestamp');
             
             if (!capturedImage || !serverTimestamp) {
-                alert('Missing capture data. Please try again.');
-                window.location.href = '/attendance';
+                showAlert('Missing capture data. Please try again.', 'error');
+                setTimeout(() => {
+                    window.location.href = '/attendance';
+                }, 2000);
                 return;
             }
             
             // Set the captured image
             document.getElementById('preview-image').src = capturedImage;
             
-            // Set the status badge
+            // Set the status badge and large status text
             const statusBadge = document.getElementById('preview-status-badge');
             const statusText = document.getElementById('status-text');
+            const statusLarge = document.getElementById('preview-status-large');
+            
             statusBadge.className = `preview-status-badge ${attendanceType}`;
             statusText.textContent = attendanceType === 'in' ? 'Clock In' : 'Clock Out';
+            
+            statusLarge.textContent = attendanceType === 'in' ? 'IN' : 'OUT';
+            statusLarge.className = `preview-status-large ${attendanceType}`;
             
             // Get server time for display
             await updateTimeDisplay();
@@ -360,12 +561,43 @@
             // Set location
             document.getElementById('preview-location').textContent = userLocation || 'Location not available';
             
+            // Check for success or error messages in URL
+            const successMsg = urlParams.get('success');
+            const errorMsg = urlParams.get('error');
+            
+            if (successMsg) {
+                showAlert(decodeURIComponent(successMsg), 'success');
+            } else if (errorMsg) {
+                showAlert(decodeURIComponent(errorMsg), 'error');
+            }
+            
         } catch (error) {
             console.error('Error initializing preview:', error);
-            alert('An error occurred while loading the preview. Please try again.');
-            window.location.href = '/attendance';
+            showAlert('An error occurred while loading the preview. Please try again.', 'error');
+            setTimeout(() => {
+                window.location.href = '/attendance';
+            }, 2000);
         }
     });
+    
+    // Show alert message
+    function showAlert(message, type = 'success') {
+        const alertElement = document.getElementById('alert-message');
+        const alertText = document.getElementById('alert-text');
+        
+        alertText.textContent = message;
+        alertElement.className = `alert-message ${type}`;
+        
+        // Show the alert
+        setTimeout(() => {
+            alertElement.classList.add('show');
+        }, 100);
+        
+        // Hide after 5 seconds
+        setTimeout(() => {
+            alertElement.classList.remove('show');
+        }, 5000);
+    }
     
     // Update time display with server time
     async function updateTimeDisplay() {
@@ -430,6 +662,7 @@
     
     // Go back to attendance page
     function goBack() {
+        document.body.classList.remove('preview-active');
         window.location.href = '/attendance';
     }
     
@@ -459,25 +692,42 @@
             
             const result = await response.json();
             
+            // Hide loading overlay
+            document.getElementById('loading-overlay').style.display = 'none';
+            
             if (result.status === 'success') {
+                // Show success message
+                showAlert(result.message, 'success');
+                
                 // Clear localStorage
                 localStorage.removeItem('capturedImage');
                 localStorage.removeItem('userLocation');
                 localStorage.removeItem('serverTimestamp');
                 
-                // Redirect to attendance page with success message
-                window.location.href = '/attendance?success=' + encodeURIComponent(result.message);
+                // Redirect to attendance page with success message after a delay
+                setTimeout(() => {
+                    document.body.classList.remove('preview-active');
+                    window.location.href = '/attendance?success=' + encodeURIComponent(result.message);
+                }, 2000);
             } else {
-                throw new Error(result.message || 'Failed to record attendance');
+                // Show error message
+                showAlert(result.message || 'Failed to record attendance', 'error');
             }
             
         } catch (error) {
             console.error('Error confirming attendance:', error);
-            alert('Error: ' + (error.message || 'Failed to record attendance. Please try again.'));
             
             // Hide loading overlay
             document.getElementById('loading-overlay').style.display = 'none';
+            
+            // Show error message
+            showAlert(error.message || 'Failed to record attendance. Please try again.', 'error');
         }
     }
+    
+    // Clean up when leaving the page
+    window.addEventListener('beforeunload', () => {
+        document.body.classList.remove('preview-active');
+    });
 </script>
 @endsection

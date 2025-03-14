@@ -411,14 +411,26 @@ class AttendanceController extends Controller
 
     public function capturePreview()
     {
-        $user = Auth::user();
-        $employee = Employee::where('email_address', $user->email)->first();
-        
-        if (!$employee) {
-            \Log::warning('Employee not found for user email: ' . $user->email);
+        try {
+            $user = Auth::user();
+            
+            // Check if user has Employee or Supervisor role
+            if (!$user->hasRole(['Employee', 'Supervisor'])) {
+                return redirect()->route('home')->with('error', 'Unauthorized access.');
+            }
+            
+            // Find employee by email
+            $employee = Employee::where('email_address', $user->email)->first();
+            
+            if (!$employee) {
+                \Log::warning('Employee not found for user email: ' . $user->email);
+            }
+            
+            return view('attendances.capture-preview', compact('employee'));
+        } catch (\Exception $e) {
+            \Log::error('Error in capture preview: ' . $e->getMessage());
+            return redirect()->route('attendances.attendance')->with('error', 'An error occurred while loading the preview page.');
         }
-        
-        return view('attendances.capture-preview', compact('employee'));
     }
 
     /**
