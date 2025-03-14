@@ -172,6 +172,20 @@
         gap: 8px;
     }
     
+    .preview-company-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 5px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(4px);
+    }
+    
     .preview-header {
         display: flex;
         align-items: center;
@@ -297,6 +311,11 @@
         .preview-info-value {
             font-size: 0.9rem;
         }
+        
+        .preview-company-name {
+            font-size: 0.9rem;
+            padding: 6px 10px;
+        }
     }
     
     @media (max-width: 480px) {
@@ -334,6 +353,11 @@
         .preview-status-badge {
             font-size: 0.9rem;
             padding: 6px 12px;
+        }
+        
+        .preview-company-name {
+            font-size: 0.8rem;
+            padding: 5px 8px;
         }
     }
     
@@ -477,6 +501,7 @@
         
         <div class="preview-info-overlay">
             <div class="preview-overlay-content">
+                <div class="preview-company-name" id="preview-company-name"></div>
                 <div class="preview-header">
                     <div id="preview-status-badge" class="preview-status-badge">
                         <i class="fas fa-clock"></i>
@@ -686,12 +711,33 @@
             employeePosition = data.position || '';
             employeeDepartment = data.department || '';
             
+            // Update company name based on department
+            const department = data.department || '{{ Auth::user()->department }}';
+            let companyName = '';
+            
+            switch(department.toUpperCase()) {
+                case 'MHRHCI':
+                    companyName = 'Medical & Resources Health Care, Inc.';
+                    break;
+                case 'BGPDI':
+                    companyName = 'Bay Gas and Petroleum Distribution, Inc.';
+                    break;
+                case 'VHI':
+                    companyName = 'Verbena Hotel Inc.';
+                    break;
+                default:
+                    companyName = 'MHR Property Conglomerates, Inc.';
+            }
+            
+            document.getElementById('preview-company-name').textContent = companyName;
+            
         } catch (error) {
             console.error('Error fetching employee info:', error);
             // Fallback to Auth user data
             document.getElementById('preview-name').textContent = '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
             document.getElementById('preview-position').textContent = 'Position not available';
             document.getElementById('preview-department').textContent = 'Department not available';
+            document.getElementById('preview-company-name').textContent = 'MHR Property Conglomerates, Inc.';
         }
     }
     
