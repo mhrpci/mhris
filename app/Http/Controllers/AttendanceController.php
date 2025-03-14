@@ -443,274 +443,141 @@ class AttendanceController extends Controller
         }
     }
 
-    /**
-     * Store attendance capture with image and location data
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function storeAttendanceCapture(Request $request)
     {
-        // Initialize variables
-        $imagePath = null;
-        $attendance = null;
-
         try {
-            // 1. Request Validation with detailed messages
+            // Validate the request
             $request->validate([
                 'type' => 'required|in:in,out',
-                'image' => [
-                    'required',
-                    'string',
-                    function ($attribute, $value, $fail) {
-                        if (!preg_match('/^data:image\/[a-zA-Z]+;base64,/', $value)) {
-                            $fail('The image must be a valid base64 encoded image.');
-                        }
-                    },
-                ],
-                'location' => 'required|string|max:500',
-                'timestamp' => [
-                    'required',
-                    'string',
-                    'date',
-                    function ($attribute, $value, $fail) {
-                        $timestamp = Carbon::parse($value);
-                        $now = Carbon::now();
-                        
-                        if ($timestamp->diffInMinutes($now) > 5) {
-                            $fail('The timestamp is too far from the current time.');
-                        }
-                    },
-                ],
-            ], [
-                'type.required' => 'Please specify whether you are clocking in or out.',
-                'type.in' => 'Invalid attendance type specified.',
-                'image.required' => 'The captured image is required.',
-                'image.string' => 'Invalid image format provided.',
-                'location.required' => 'Location information is required.',
-                'location.max' => 'Location information is too long.',
-                'timestamp.required' => 'Timestamp is required.',
-                'timestamp.date' => 'Invalid timestamp format.',
+                'image' => 'required|string', // Base64 encoded image
+                'location' => 'required|string',
+                'timestamp' => 'required|string',
             ]);
 
-            // 2. User Authentication Check
+            // Get the authenticated user
             $user = Auth::user();
-            if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'User not authenticated.'
-                ], 401);
-            }
-
-            // 3. Employee Record Check
-            $employee = Employee::where('email_address', $user->email)
-                              ->where('employee_status', 'Active')
-                              ->first();
+            
+            // Find the employee by email
+            $employee = Employee::where('email_address', $user->email)->first();
             
             if (!$employee) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'No active employee record found for the current user.'
+                    'message' => 'Employee record not found for the current user.'
                 ], 404);
             }
 
-            // 4. Parse and Validate Timestamp
-            try {
-                $timestamp = Carbon::parse($request->timestamp);
-                $currentDate = $timestamp->format('Y-m-d');
-                $currentTime = $timestamp->format('H:i:s');
-            } catch (\Exception $e) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Invalid timestamp format provided.'
-                ], 400);
-            }
+            // Parse the timestamp
+            $timestamp = Carbon::parse($request->timestamp);
+            $currentDate = $timestamp->format('Y-m-d');
+            $currentTime = $timestamp->format('H:i:s');
 
-            // 5. Check for Existing Attendance
+            // Find existing attendance for today
             $attendance = Attendance::where('employee_id', $employee->id)
-                                  ->where('date_attended', $currentDate)
-                                  ->first();
+                                 ->where('date_attended', $currentDate)
+                                 ->first();
 
-            // 6. Store Image with Error Handling
+            // Store the image and get the path
             $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
+            
             if (!$imagePath) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Failed to store the captured image. Please try again.'
+                    'message' => 'Failed to store timestamp image.'
                 ], 500);
             }
 
-            // 7. Process Clock In/Out Based on Type
+            // Handle Clock In
             if ($request->type === 'in') {
-                return $this->handleClockIn($employee, $attendance, $currentDate, $currentTime, $imagePath, $request->location);
-            } else {
-                return $this->handleClockOut($employee, $attendance, $currentTime, $imagePath, $request->location);
+                // Check if already clocked in
+                if ($attendance && $attendance->time_in) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
+                    
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Already clocked in for today.'
+                    ], 400);
+                }
+                
+                if (!$attendance) {
+                    // Create new attendance record
+                    $attendance = Attendance::create([
+                        'employee_id' => $employee->id,
+                        'date_attended' => $currentDate,
+                        'time_in' => $currentTime,
+                        'time_stamp1' => $imagePath,
+                        'time_in_address' => $request->location,
+                    ]);
+                } else {
+                    // Update existing attendance with clock in
+                    $attendance->time_in = $currentTime;
+                    $attendance->time_stamp1 = $imagePath;
+                    $attendance->time_in_address = $request->location;
+                    $attendance->save();
+                }
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Clock in recorded successfully.'
+                ]);
+            } 
+            // Handle Clock Out
+            else {
+                // Check if attendance record exists and has time_in
+                if (!$attendance || !$attendance->time_in) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
+                    
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Must clock in first before clocking out.'
+                    ], 400);
+                }
+
+                // Check if already clocked out
+                if ($attendance->time_out) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
+                    
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Already clocked out for today.'
+                    ], 400);
+                }
+
+                // Update attendance with clock out
+                $attendance->time_out = $currentTime;
+                $attendance->time_stamp2 = $imagePath;
+                $attendance->time_out_address = $request->location;
+                $attendance->save();
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Clock out recorded successfully.'
+                ]);
             }
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Clean up any stored image if validation fails
-            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
-            }
-            
+            // Handle validation errors
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            // Log the error for debugging
             \Log::error('Attendance capture error: ' . $e->getMessage());
             
-            // Clean up any stored image if there's an error
-            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
+            // Delete any stored image if there was an error
+            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
             
             return response()->json([
                 'status' => 'error',
-                'message' => 'An unexpected error occurred while processing your request.',
+                'message' => 'An error occurred while processing your request.',
                 'debug' => config('app.debug') ? $e->getMessage() : null
             ], 500);
-        }
-    }
-
-    /**
-     * Handle clock in process
-     * 
-     * @param Employee $employee
-     * @param Attendance|null $attendance
-     * @param string $currentDate
-     * @param string $currentTime
-     * @param string $imagePath
-     * @param string $location
-     * @return \Illuminate\Http\JsonResponse
-     */
-    private function handleClockIn($employee, $attendance, $currentDate, $currentTime, $imagePath, $location)
-    {
-        // Check if already clocked in
-        if ($attendance && $attendance->time_in) {
-            Storage::disk('public')->delete($imagePath);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You have already clocked in for today.'
-            ], 400);
-        }
-
-        try {
-            if (!$attendance) {
-                // Create new attendance record
-                $attendance = Attendance::create([
-                    'employee_id' => $employee->id,
-                    'date_attended' => $currentDate,
-                    'time_in' => $currentTime,
-                    'time_stamp1' => $imagePath,
-                    'time_in_address' => $location,
-                ]);
-            } else {
-                // Update existing attendance with clock in
-                $attendance->time_in = $currentTime;
-                $attendance->time_stamp1 = $imagePath;
-                $attendance->time_in_address = $location;
-                $attendance->save();
-            }
-
-            // Calculate hours if both time_in and time_out exist
-            if ($attendance->time_in && $attendance->time_out) {
-                $this->calculateAndUpdateHours($attendance);
-            }
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Clock in recorded successfully.',
-                'data' => [
-                    'attendance_id' => $attendance->id,
-                    'time_in' => $attendance->time_in,
-                    'date' => $attendance->date_attended
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Storage::disk('public')->delete($imagePath);
-            throw $e;
-        }
-    }
-
-    /**
-     * Handle clock out process
-     * 
-     * @param Employee $employee
-     * @param Attendance|null $attendance
-     * @param string $currentTime
-     * @param string $imagePath
-     * @param string $location
-     * @return \Illuminate\Http\JsonResponse
-     */
-    private function handleClockOut($employee, $attendance, $currentTime, $imagePath, $location)
-    {
-        // Verify attendance record exists and has time_in
-        if (!$attendance || !$attendance->time_in) {
-            Storage::disk('public')->delete($imagePath);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You must clock in first before clocking out.'
-            ], 400);
-        }
-
-        // Check if already clocked out
-        if ($attendance->time_out) {
-            Storage::disk('public')->delete($imagePath);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You have already clocked out for today.'
-            ], 400);
-        }
-
-        try {
-            // Update attendance with clock out
-            $attendance->time_out = $currentTime;
-            $attendance->time_stamp2 = $imagePath;
-            $attendance->time_out_address = $location;
-            
-            // Calculate hours worked
-            $this->calculateAndUpdateHours($attendance);
-            
-            $attendance->save();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Clock out recorded successfully.',
-                'data' => [
-                    'attendance_id' => $attendance->id,
-                    'time_in' => $attendance->time_in,
-                    'time_out' => $attendance->time_out,
-                    'hours_worked' => $attendance->hours_worked
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Storage::disk('public')->delete($imagePath);
-            throw $e;
-        }
-    }
-
-    /**
-     * Calculate and update hours worked for an attendance record
-     * 
-     * @param Attendance $attendance
-     * @return void
-     */
-    private function calculateAndUpdateHours($attendance)
-    {
-        if ($attendance->time_in && $attendance->time_out) {
-            $timeIn = Carbon::parse($attendance->time_in);
-            $timeOut = Carbon::parse($attendance->time_out);
-            
-            // Calculate hours worked
-            $hoursWorked = $timeOut->diffInMinutes($timeIn) / 60;
-            
-            // Round to 2 decimal places
-            $attendance->hours_worked = round($hoursWorked, 2);
         }
     }
 
