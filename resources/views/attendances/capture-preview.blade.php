@@ -319,22 +319,12 @@
         async function updateDateTime() {
             try {
                 // Fetch server time
-                const response = await fetch('/api/server-time', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                
+                const response = await fetch('/api/server-time');
                 if (!response.ok) {
                     throw new Error('Failed to fetch server time');
                 }
                 
                 const data = await response.json();
-                if (!data || !data.timestamp) {
-                    throw new Error('Invalid server response');
-                }
-
                 const serverTime = new Date(data.timestamp);
                 
                 // Store the hash for verification
@@ -373,32 +363,9 @@
                 const clientNow = new Date();
                 serverTimeOffset = serverTime.getTime() - clientNow.getTime();
                 lastServerSync = clientNow.getTime();
+                
             } catch (error) {
                 console.error('Error updating time:', error);
-                // Show error message to user
-                const errorMessage = document.createElement('div');
-                errorMessage.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: #dc3545;
-                    color: white;
-                    padding: 15px 30px;
-                    border-radius: 5px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                    z-index: 1000;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    max-width: 90%;
-                    text-align: center;
-                `;
-                errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${error.message}`;
-                document.body.appendChild(errorMessage);
-
-                // Remove error message after 5 seconds
-                setTimeout(() => errorMessage.remove(), 5000);
             }
         }
 

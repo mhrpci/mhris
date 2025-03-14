@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 
 class EmployeeController extends Controller
 {
@@ -958,6 +959,14 @@ public function updateProfile(Request $request)
             'message' => 'Failed to update profile image: ' . $e->getMessage()
         ], 500);
     }
+}
+
+public function getSignature(Employee $employee): JsonResponse
+{
+    return response()->json([
+        'signature' => $employee->signature ? Storage::url($employee->signature) : null,
+        'signature_path' => $employee->signature
+    ]);
 }
 
 }
