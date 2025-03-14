@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\File;
 
 class AttendanceController extends Controller
 {
@@ -403,53 +404,13 @@ class AttendanceController extends Controller
         return view('attendances.capture-preview', compact('employee'));
     }
 
-    /**
-     * Helper method to store timestamp images
-     * 
-     * @param string $imageData Base64 encoded image
-     * @param string $timestamp Timestamp for filename
-     * @return string|false Returns the stored image path or false on failure
-     */
-    private function storeTimestampImage($imageData, $timestamp)
-    {
-        try {
-            // Check if storage link exists
-            if (!file_exists(public_path('storage'))) {
-                \Artisan::call('storage:link');
-            }
-
-            // Create time_stamps directory if it doesn't exist
-            $directory = 'time_stamps';
-            if (!Storage::disk('public')->exists($directory)) {
-                Storage::disk('public')->makeDirectory($directory);
-            }
-
-            // Clean the base64 string
-            $cleanImageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
-            
-            // Generate unique filename with timestamp
-            $filename = uniqid() . '_' . Carbon::parse($timestamp)->format('Ymd_His') . '.jpg';
-            $fullPath = $directory . '/' . $filename;
-
-            // Store the image
-            if (Storage::disk('public')->put($fullPath, $cleanImageData)) {
-                return $fullPath;
-            }
-
-            return false;
-        } catch (\Exception $e) {
-            \Log::error('Error storing timestamp image: ' . $e->getMessage());
-            return false;
-        }
-    }
-
     public function storeAttendanceCapture(Request $request)
     {
         try {
             // Validate the request
             $request->validate([
                 'type' => 'required|in:in,out',
-                'image' => 'required|string', // Base64 encoded image
+                'image' => 'required|string',
                 'location' => 'required|string',
                 'timestamp' => 'required|string',
             ]);
@@ -457,13 +418,20 @@ class AttendanceController extends Controller
             // Get the authenticated user
             $user = Auth::user();
             
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated.'
+                ], 401);
+            }
+            
             // Find the employee by email
             $employee = Employee::where('email_address', $user->email)->first();
             
             if (!$employee) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Employee record not found for the current user.'
+                    'message' => 'Employee record not found.'
                 ], 404);
             }
 
@@ -477,107 +445,145 @@ class AttendanceController extends Controller
                                  ->where('date_attended', $currentDate)
                                  ->first();
 
-            // Store the image and get the path
-            $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
-            
-            if (!$imagePath) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Failed to store timestamp image.'
-                ], 500);
-            }
-
-            // Handle Clock In
-            if ($request->type === 'in') {
-                // Check if already clocked in
-                if ($attendance && $attendance->time_in) {
-                    // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
-                    
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Already clocked in for today.'
-                    ], 400);
-                }
+            try {
+                // Store the image and get the path
+                $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
                 
-                if (!$attendance) {
-                    // Create new attendance record
-                    $attendance = Attendance::create([
-                        'employee_id' => $employee->id,
-                        'date_attended' => $currentDate,
-                        'time_in' => $currentTime,
-                        'time_stamp1' => $imagePath,
-                        'time_in_address' => $request->location,
+                if (!$imagePath) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Failed to store image.'
+                    ], 500);
+                }
+
+                // Handle Clock In
+                if ($request->type === 'in') {
+                    if ($attendance && $attendance->time_in) {
+                        Storage::disk('public')->delete($imagePath);
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Already clocked in for today.'
+                        ], 400);
+                    }
+                    
+                    if (!$attendance) {
+                        $attendance = new Attendance([
+                            'employee_id' => $employee->id,
+                            'date_attended' => $currentDate,
+                            'time_in' => $currentTime,
+                            'time_stamp1' => $imagePath,
+                            'time_in_address' => $request->location,
+                        ]);
+                        $attendance->save();
+                    } else {
+                        $attendance->update([
+                            'time_in' => $currentTime,
+                            'time_stamp1' => $imagePath,
+                            'time_in_address' => $request->location,
+                        ]);
+                    }
+
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'Clock in recorded successfully.'
                     ]);
-                } else {
-                    // Update existing attendance with clock in
-                    $attendance->time_in = $currentTime;
-                    $attendance->time_stamp1 = $imagePath;
-                    $attendance->time_in_address = $request->location;
-                    $attendance->save();
-                }
+                } 
+                // Handle Clock Out
+                else {
+                    if (!$attendance || !$attendance->time_in) {
+                        Storage::disk('public')->delete($imagePath);
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Must clock in first before clocking out.'
+                        ], 400);
+                    }
 
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Clock in recorded successfully.'
-                ]);
-            } 
-            // Handle Clock Out
-            else {
-                // Check if attendance record exists and has time_in
-                if (!$attendance || !$attendance->time_in) {
-                    // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
-                    
+                    if ($attendance->time_out) {
+                        Storage::disk('public')->delete($imagePath);
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Already clocked out for today.'
+                        ], 400);
+                    }
+
+                    $attendance->update([
+                        'time_out' => $currentTime,
+                        'time_stamp2' => $imagePath,
+                        'time_out_address' => $request->location,
+                    ]);
+
                     return response()->json([
-                        'status' => 'error',
-                        'message' => 'Must clock in first before clocking out.'
-                    ], 400);
+                        'status' => 'success',
+                        'message' => 'Clock out recorded successfully.'
+                    ]);
                 }
 
-                // Check if already clocked out
-                if ($attendance->time_out) {
-                    // Delete the newly stored image since we won't use it
+            } catch (\Exception $e) {
+                if (isset($imagePath)) {
                     Storage::disk('public')->delete($imagePath);
-                    
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Already clocked out for today.'
-                    ], 400);
                 }
-
-                // Update attendance with clock out
-                $attendance->time_out = $currentTime;
-                $attendance->time_stamp2 = $imagePath;
-                $attendance->time_out_address = $request->location;
-                $attendance->save();
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Clock out recorded successfully.'
-                ]);
+                throw $e;
             }
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Handle validation errors
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Attendance capture error: ' . $e->getMessage());
-            
-            // Delete any stored image if there was an error
-            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
-            }
+            Log::error('Attendance capture error: ' . $e->getMessage());
             
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while processing your request.',
                 'debug' => config('app.debug') ? $e->getMessage() : null
             ], 500);
+        }
+    }
+
+    private function storeTimestampImage($imageData, $timestamp)
+    {
+        try {
+            // Check if storage link exists
+            if (!File::exists(public_path('storage'))) {
+                Artisan::call('storage:link');
+            }
+
+            // Create time_stamps directory if it doesn't exist
+            $directory = 'time_stamps';
+            if (!Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory);
+            }
+
+            // Clean and validate the base64 string
+            $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
+            if (!$imageData) {
+                Log::error('Invalid image data provided');
+                return false;
+            }
+
+            // Decode and validate the image data
+            $decodedImage = base64_decode($imageData);
+            if (!$decodedImage) {
+                Log::error('Failed to decode image data');
+                return false;
+            }
+
+            // Generate unique filename with timestamp
+            $filename = uniqid() . '_' . Carbon::parse($timestamp)->format('Ymd_His') . '.jpg';
+            $fullPath = $directory . '/' . $filename;
+
+            // Store the image
+            if (Storage::disk('public')->put($fullPath, $decodedImage)) {
+                return $fullPath;
+            }
+
+            Log::error('Failed to store image to disk');
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Error storing timestamp image: ' . $e->getMessage());
+            return false;
         }
     }
 
