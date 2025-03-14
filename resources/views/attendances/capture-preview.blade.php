@@ -40,26 +40,11 @@
     
     /* Camera interface elements */
     .camera-interface {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
-        pointer-events: none;
-        z-index: 9991;
+        display: none;
     }
 
     .camera-frame {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 85%;
-        height: 70vh;
-        border: 2px solid rgba(255, 255, 255, 0.5);
-        border-radius: 20px;
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-        pointer-events: none;
+        display: none;
     }
 
     .camera-corners {
@@ -118,19 +103,20 @@
     /* Status badge */
     .preview-status-badge {
         position: absolute;
-        top: 20px;
+        bottom: 160px; /* Position above the datetime */
         left: 20px;
         display: inline-flex;
         align-items: center;
         gap: 8px;
         background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(8px);
-        padding: 8px 16px;
+        padding: 12px 24px;
         border-radius: 30px;
         color: white;
         font-weight: bold;
         z-index: 9992;
         border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 1.2rem;
     }
     
     .preview-status-badge.in {
@@ -445,15 +431,6 @@
 <div class="preview-container">
     <div class="image-preview-container">
         <img id="preview-image" class="preview-image" src="" alt="Attendance Capture">
-        
-        <div class="camera-interface">
-            <div class="camera-frame">
-                <div class="camera-corners corner-top-left"></div>
-                <div class="camera-corners corner-top-right"></div>
-                <div class="camera-corners corner-bottom-left"></div>
-                <div class="camera-corners corner-bottom-right"></div>
-            </div>
-        </div>
         
         <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="preview-logo">
         
@@ -791,38 +768,78 @@
         const width = canvas.width;
         const height = canvas.height;
         
-        // Add a semi-transparent footer for additional information
-        const footerHeight = 40;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, height - footerHeight, width, footerHeight);
+        // Add a gradient footer for additional information
+        const footerHeight = 60;
+        const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
         
-        // Set text style
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.font = '14px Arial';
+        // Set text style for main verification text
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.font = 'bold 16px Arial';
         ctx.textBaseline = 'middle';
         
         // Format timestamp
         const timestamp = new Date(details.timestamp);
-        const formattedTimestamp = timestamp.toISOString();
+        const formattedDate = timestamp.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const formattedTime = timestamp.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
         
-        // Add verification text with timestamp
-        const verificationText = `${details.type === 'in' ? 'Clock In' : 'Clock Out'} | ${formattedTimestamp} | ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-        ctx.fillText(verificationText, 10, height - footerHeight/2);
+        // Add detailed verification text
+        const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
+        ctx.fillText(verificationText, 20, height - footerHeight + 15);
         
-        // Add system verification on the right
+        // Add timestamp details
+        ctx.font = '14px Arial';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
+        ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
+        
+        // Add employee details on the right
+        ctx.textAlign = 'right';
+        ctx.fillText(`${details.name}`, width - 20, height - footerHeight + 15);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillText(`${details.position}`, width - 20, height - footerHeight + 35);
+        ctx.fillText(`${details.department}`, width - 20, height - footerHeight + 55);
+        
+        // Add location in the middle
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillText(`Location: ${details.location}`, width/2, height - footerHeight + 35);
+        
+        // Add system verification text
+        ctx.font = 'bold 12px Arial';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         const systemText = 'HRIS ATTENDANCE SYSTEM';
-        const systemTextWidth = ctx.measureText(systemText).width;
-        ctx.fillText(systemText, width - systemTextWidth - 10, height - footerHeight/2);
+        ctx.fillText(systemText, width/2, height - footerHeight + 55);
         
-        // Add watermark
+        // Add unique verification ID
+        const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+        ctx.fillText(verificationId, width/2, height - footerHeight + 15);
+        
+        // Add professional watermark
         ctx.save();
-        ctx.globalAlpha = 0.05;
-        ctx.font = '60px Arial';
+        ctx.globalAlpha = 0.07;
+        ctx.font = 'bold 120px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.translate(width/2, height/2);
         ctx.rotate(-Math.PI/6); // Rotate -30 degrees
-        ctx.fillText(`${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'} VERIFIED`, 0, 0);
+        const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
+        ctx.fillText(watermarkText, 0, 0);
+        ctx.font = 'bold 60px Arial';
+        ctx.fillText('VERIFIED', 0, 80);
         ctx.restore();
     }
     
