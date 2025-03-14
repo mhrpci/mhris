@@ -352,8 +352,8 @@
                 const statusElement = document.getElementById('preview-status');
                 if (statusElement) {
                     const statusText = type === 'in' ? 'Clock In' : 'Clock Out';
-                    statusElement.innerHTML = `<i class="fas fa-clock"></i><span>${statusText}</span>`;
-                    statusElement.className = `clock-in-badge ${type}`;
+                    statusElement.innerHTML = '<i class="fas fa-clock"></i><span>' + statusText + '</span>';
+                    statusElement.className = 'clock-in-badge ' + type;
                 }
 
                 // Store server timestamp for verification
@@ -379,7 +379,7 @@
         // Verify timestamp hasn't been tampered with
         async function verifyTimestamp(timestamp, hash) {
             try {
-                const response = await fetch(`/api/verify-timestamp/${encodeURIComponent(timestamp)}/${encodeURIComponent(hash)}`);
+                const response = await fetch('/api/verify-timestamp/' + encodeURIComponent(timestamp) + '/' + encodeURIComponent(hash));
                 const data = await response.json();
                 return data.valid;
             } catch (error) {
@@ -650,8 +650,8 @@
                     const statusElement = document.getElementById('preview-status');
                     if (statusElement) {
                         const statusText = type === 'in' ? 'Clock In' : 'Clock Out';
-                        statusElement.innerHTML = `<i class="fas fa-clock"></i><span>${statusText}</span>`;
-                        statusElement.className = `clock-in-badge ${type}`;
+                        statusElement.innerHTML = '<i class="fas fa-clock"></i><span>' + statusText + '</span>';
+                        statusElement.className = 'clock-in-badge ' + type;
                     }
                 } else {
                     console.error('Required data not found in localStorage');
@@ -754,13 +754,12 @@
                     backdrop-filter: blur(5px);
                     -webkit-backdrop-filter: blur(5px);
                 `;
-                loadingOverlay.innerHTML = `
-                    <div style="color: white; text-align: center; padding: 2rem;">
-                        <i class="fas fa-spinner fa-spin fa-3x"></i>
-                        <div style="margin-top: 1.5rem; font-size: 1.2rem; font-weight: 500;">Saving attendance image...</div>
-                        <div style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">Please allow storage permission if prompted</div>
-                    </div>
-                `;
+                loadingOverlay.innerHTML = 
+                    '<div style="color: white; text-align: center; padding: 2rem;">' +
+                    '<i class="fas fa-spinner fa-spin fa-3x"></i>' +
+                    '<div style="margin-top: 1.5rem; font-size: 1.2rem; font-weight: 500;">Saving attendance image...</div>' +
+                    '<div style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">Please allow storage permission if prompted</div>' +
+                    '</div>';
                 document.body.appendChild(loadingOverlay);
 
                 // Check mobile storage permission
@@ -791,7 +790,7 @@
                 const sanitizedName = fullName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
 
                 // Create filename
-                const fileName = `attendance_${dateStr}_${timeStr}_clock${clockType}_${sanitizedName}.jpg`;
+                const fileName = 'attendance_' + dateStr + '_' + timeStr + '_clock' + clockType + '_' + sanitizedName + '.jpg';
 
                 // Try to save to device storage with mobile-specific handling
                 const savedToDevice = await saveToDeviceStorage(finalImageBlob, fileName);
@@ -888,7 +887,7 @@
                     max-width: 90%;
                     text-align: center;
                 `;
-                errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${error.message}`;
+                errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + error.message;
                 document.body.appendChild(errorMessage);
 
                 // Remove error message after 5 seconds
