@@ -897,28 +897,62 @@
 @endsection
 
 @section('content')
-<div class="app-content">
-    <div class="attendance-container">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-12 col-md-8 col-lg-6">
-                    <div class="attendance-card">
-                        <div class="clock-display">
-                            <div class="time" id="current-time">00:00:00</div>
-                            <div class="date" id="current-date"></div>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Attendance</h3>
+                </div>
+
+                <div class="card-body">
+                    @if(session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    @if(session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if($employee)
+                        <div class="text-center mb-4">
+                            <h4>Welcome, {{ $employee->first_name }} {{ $employee->last_name }}</h4>
+                            <p>{{ $employee->position->name }} - {{ $employee->department->name }}</p>
                         </div>
 
-                        <div class="action-buttons" id="attendance-buttons">
-                            <!-- Buttons will be dynamically inserted here -->
+                        <div id="camera-container" class="text-center">
+                            <div id="camera-wrapper" class="mb-3">
+                                <video id="camera" autoplay playsinline style="width: 100%; max-width: 640px;"></video>
+                                <canvas id="canvas" style="display: none;"></canvas>
+                            </div>
+
+                            <div id="camera-controls" class="mb-3">
+                                <button id="capture-btn" class="btn btn-primary" style="display: none;">
+                                    <i class="fas fa-camera"></i> Take Photo
+                                </button>
+                                <div id="loading-indicator" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin"></i> Processing...
+                                </div>
+                            </div>
+
+                            <div id="status-message" class="alert" style="display: none;"></div>
                         </div>
 
-                        <div class="location-info">
-                            <p class="location-text">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span id="current-location">Fetching location...</span>
-                            </p>
+                        <form id="attendance-form" style="display: none;">
+                            @csrf
+                            <input type="hidden" name="image" id="captured-image">
+                            <input type="hidden" name="location" id="user-location">
+                            <input type="hidden" name="type" id="attendance-type">
+                        </form>
+                    @else
+                        <div class="alert alert-warning">
+                            No employee record found for your account. Please contact HR.
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>

@@ -940,26 +940,16 @@
                 confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 confirmBtn.disabled = true;
 
-                // Get CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]');
-                if (!csrfToken) {
-                    throw new Error('CSRF token not found. Please refresh the page.');
-                }
-
                 // First, check current attendance status
                 const statusResponse = await fetch('/attendance/status', {
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken.content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 });
 
-                if (!statusResponse.ok) {
-                    throw new Error('Failed to verify attendance status');
-                }
-
                 const statusResult = await statusResponse.json();
-                if (statusResult.status === 'error') {
+                if (!statusResponse.ok) {
                     throw new Error(statusResult.message || 'Failed to verify attendance status');
                 }
 
@@ -968,7 +958,7 @@
                 // Verify that the action matches the current status
                 if (type === 'in' && statusResult.action !== 'clock_in') {
                     throw new Error('You have already clocked in for today.');
-                } else if (type === 'out') {
+                } else if (type === 'out' && statusResult.action !== 'clock_out') {
                     if (statusResult.action === 'clock_in') {
                         throw new Error('You must clock in first before clocking out.');
                     } else if (statusResult.action === 'completed') {
@@ -1005,7 +995,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken.content,
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify(data)
