@@ -331,20 +331,25 @@
                 localStorage.setItem('timestamp_hash', data.hash);
                 
                 // Update time displays with server time
-                document.getElementById('preview-time').textContent = new Intl.DateTimeFormat('en-US', { 
-                    timeZone: 'Asia/Manila',
-                    hour12: true,
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }).format(serverTime).toUpperCase();
+                const timeElement = document.getElementById('preview-time');
+                const dateElement = document.getElementById('preview-date');
                 
-                document.getElementById('preview-date').textContent = new Intl.DateTimeFormat('en-US', { 
-                    timeZone: 'Asia/Manila',
-                    weekday: 'short',
-                    month: 'short',
-                    day: '2-digit',
-                    year: 'numeric'
-                }).format(serverTime);
+                if (timeElement && dateElement) {
+                    timeElement.textContent = new Intl.DateTimeFormat('en-US', { 
+                        timeZone: 'Asia/Manila',
+                        hour12: true,
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }).format(serverTime).toUpperCase();
+                    
+                    dateElement.textContent = new Intl.DateTimeFormat('en-US', { 
+                        timeZone: 'Asia/Manila',
+                        weekday: 'short',
+                        month: 'short',
+                        day: '2-digit',
+                        year: 'numeric'
+                    }).format(serverTime);
+                }
 
                 // Update status badge if needed
                 const urlParams = new URLSearchParams(window.location.search);
@@ -366,6 +371,7 @@
                 
             } catch (error) {
                 console.error('Error updating time:', error);
+                throw error; // Re-throw to handle in caller
             }
         }
 
@@ -537,26 +543,31 @@
 
         // Preload logo
         function preloadLogo() {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const logo = document.querySelector('.preview-logo');
                 const logoUrl = "{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}";
+                
+                if (!logo) {
+                    reject(new Error('Logo element not found'));
+                    return;
+                }
                 
                 // Create a new image to preload
                 const preloadImg = new Image();
                 preloadImg.crossOrigin = "anonymous";
                 
                 preloadImg.onload = function() {
-                    // Create a canvas to convert the image
-                    const canvas = document.createElement('canvas');
-                    canvas.width = this.naturalWidth;
-                    canvas.height = this.naturalHeight;
-                    
-                    // Draw the image to canvas
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(this, 0, 0);
-                    
-                    // Convert to data URL and set as source
                     try {
+                        // Create a canvas to convert the image
+                        const canvas = document.createElement('canvas');
+                        canvas.width = this.naturalWidth;
+                        canvas.height = this.naturalHeight;
+                        
+                        // Draw the image to canvas
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(this, 0, 0);
+                        
+                        // Convert to data URL and set as source
                         const dataUrl = canvas.toDataURL('image/png');
                         logo.src = dataUrl;
                         assetsLoaded.logo = true;
@@ -569,8 +580,8 @@
                     }
                 };
                 
-                preloadImg.onerror = function() {
-                    console.warn('Logo preload failed, trying direct load');
+                preloadImg.onerror = function(error) {
+                    console.warn('Logo preload failed, trying direct load:', error);
                     logo.src = logoUrl;
                     assetsLoaded.logo = true;
                     resolve();
@@ -582,6 +593,7 @@
         }
 
         // Initialize preview with server time
+        let updateInterval = null;
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // Preload assets
@@ -595,21 +607,28 @@
                 
                 // Set up periodic updates
                 let secondsCounter = 0;
-                setInterval(async () => {
-                    secondsCounter++;
-                    if (secondsCounter >= 60) {
-                        // Fetch fresh server time every minute
-                        secondsCounter = 0;
-                        await updateDateTime();
-                    } else {
-                        // Update display using calculated server time
-                        const serverTime = getCurrentServerTime();
-                        document.getElementById('preview-time').textContent = new Intl.DateTimeFormat('en-US', { 
-                            timeZone: 'Asia/Manila',
-                            hour12: true,
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        }).format(serverTime).toUpperCase();
+                updateInterval = setInterval(async () => {
+                    try {
+                        secondsCounter++;
+                        if (secondsCounter >= 60) {
+                            // Fetch fresh server time every minute
+                            secondsCounter = 0;
+                            await updateDateTime();
+                        } else {
+                            // Update display using calculated server time
+                            const serverTime = getCurrentServerTime();
+                            const timeElement = document.getElementById('preview-time');
+                            if (timeElement) {
+                                timeElement.textContent = new Intl.DateTimeFormat('en-US', { 
+                                    timeZone: 'Asia/Manila',
+                                    hour12: true,
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }).format(serverTime).toUpperCase();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error in time update interval:', error);
                     }
                 }, 1000);
 
@@ -622,9 +641,7 @@
                     // Verify the timestamp
                     const isValid = await verifyTimestamp(storedTimestamp, storedHash);
                     if (!isValid) {
-                        alert('Warning: The timestamp verification failed. The image may have been tampered with.');
-                        window.location.href = '/attendance';
-                        return;
+                        throw new Error('Timestamp verification failed. The image may have been tampered with.');
                     }
                     
                     // Display the image
@@ -633,8 +650,13 @@
                         previewImage.src = storedImage;
                         
                         // Create a blob from the base64 image for later use
-                        const response = await fetch(storedImage);
-                        imageBlob = await response.blob();
+                        try {
+                            const response = await fetch(storedImage);
+                            imageBlob = await response.blob();
+                        } catch (error) {
+                            console.error('Error creating image blob:', error);
+                            throw new Error('Failed to process captured image');
+                        }
                     }
                     
                     // Set location if available
@@ -654,13 +676,19 @@
                         statusElement.className = `clock-in-badge ${type}`;
                     }
                 } else {
-                    console.error('Required data not found in localStorage');
-                    window.location.href = '/attendance';
+                    throw new Error('Required data not found in localStorage');
                 }
             } catch (error) {
                 console.error('Error initializing preview:', error);
-                alert('Error initializing preview. Please try again.');
+                alert(error.message);
                 window.location.href = '/attendance';
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) {
+                clearInterval(updateInterval);
             }
         });
 
@@ -936,131 +964,141 @@
 
                 // Show loading state
                 const confirmBtn = document.querySelector('.btn-confirm');
+                if (!confirmBtn) {
+                    throw new Error('Confirm button not found');
+                }
                 const originalBtnContent = confirmBtn.innerHTML;
                 confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 confirmBtn.disabled = true;
 
-                // First, check current attendance status
-                const statusResponse = await fetch('/attendance/status', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                try {
+                    // First, check current attendance status
+                    const statusResponse = await fetch('/attendance/status', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+
+                    const statusResult = await statusResponse.json();
+                    if (!statusResponse.ok) {
+                        throw new Error(statusResult.message || 'Failed to verify attendance status');
                     }
-                });
 
-                const statusResult = await statusResponse.json();
-                if (!statusResponse.ok) {
-                    throw new Error(statusResult.message || 'Failed to verify attendance status');
-                }
+                    const type = new URLSearchParams(window.location.search).get('type') || 'in';
 
-                const type = new URLSearchParams(window.location.search).get('type') || 'in';
-
-                // Verify that the action matches the current status
-                if (type === 'in' && statusResult.action !== 'clock_in') {
-                    throw new Error('You have already clocked in for today.');
-                } else if (type === 'out' && statusResult.action !== 'clock_out') {
-                    if (statusResult.action === 'clock_in') {
-                        throw new Error('You must clock in first before clocking out.');
-                    } else if (statusResult.action === 'completed') {
-                        throw new Error('You have already completed your attendance for today.');
+                    // Verify that the action matches the current status
+                    if (type === 'in' && statusResult.action !== 'clock_in') {
+                        throw new Error('You have already clocked in for today.');
+                    } else if (type === 'out') {
+                        if (statusResult.action === 'clock_in') {
+                            throw new Error('You must clock in first before clocking out.');
+                        } else if (statusResult.action === 'completed') {
+                            throw new Error('You have already completed your attendance for today.');
+                        }
                     }
-                }
 
-                // Capture the final preview image
-                finalImageBlob = await capturePreview();
-                if (!finalImageBlob) {
-                    throw new Error('Failed to capture preview image');
-                }
+                    // Capture the final preview image
+                    finalImageBlob = await capturePreview();
+                    if (!finalImageBlob) {
+                        throw new Error('Failed to capture preview image');
+                    }
 
-                // Convert blob to base64
-                const base64Image = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(finalImageBlob);
-                });
+                    // Convert blob to base64
+                    const base64Image = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = () => reject(new Error('Failed to convert image'));
+                        reader.readAsDataURL(finalImageBlob);
+                    });
 
-                // Get stored data
-                const location = localStorage.getItem('userLocation');
+                    // Get stored data
+                    const location = localStorage.getItem('userLocation');
 
-                // Prepare the request data
-                const data = {
-                    type: type,
-                    image: base64Image,
-                    location: location,
-                    timestamp: storedTimestamp
-                };
+                    // Prepare the request data
+                    const data = {
+                        type: type,
+                        image: base64Image,
+                        location: location,
+                        timestamp: storedTimestamp
+                    };
 
-                // Send the request to the server
-                const response = await fetch('/attendance/capture', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
+                    // Send the request to the server
+                    const response = await fetch('/attendance/capture', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
 
-                const result = await response.json();
+                    const result = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to save attendance');
-                }
+                    if (!response.ok) {
+                        throw new Error(result.message || 'Failed to save attendance');
+                    }
 
-                if (result.status === 'success') {
-                    // Save the image locally if needed
-                    await saveImage();
+                    if (result.status === 'success') {
+                        // Save the image locally if needed
+                        await saveImage();
 
-                    // Show success message with animation
-                    const successMessage = document.createElement('div');
-                    successMessage.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        left: 50%;
-                        transform: translateX(-50%);
-                        background: #28a745;
-                        color: white;
-                        padding: 15px 30px;
-                        border-radius: 5px;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                        z-index: 1000;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                        opacity: 0;
-                        transition: opacity 0.3s ease;
-                    `;
-                    successMessage.innerHTML = '<i class="fas fa-check-circle"></i> ' + result.message;
-                    document.body.appendChild(successMessage);
+                        // Show success message with animation
+                        const successMessage = document.createElement('div');
+                        successMessage.style.cssText = `
+                            position: fixed;
+                            top: 20px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            background: #28a745;
+                            color: white;
+                            padding: 15px 30px;
+                            border-radius: 5px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                            z-index: 1000;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            opacity: 0;
+                            transition: opacity 0.3s ease;
+                        `;
+                        successMessage.innerHTML = '<i class="fas fa-check-circle"></i> ' + result.message;
+                        document.body.appendChild(successMessage);
 
-                    // Animate success message and redirect
-                    setTimeout(() => {
-                        successMessage.style.opacity = '1';
+                        // Animate success message and redirect
                         setTimeout(() => {
-                            successMessage.style.opacity = '0';
+                            successMessage.style.opacity = '1';
                             setTimeout(() => {
-                                successMessage.remove();
-                                // Clear stored data
-                                localStorage.removeItem('capturedImage');
-                                localStorage.removeItem('userLocation');
-                                localStorage.removeItem('serverTimestamp');
-                                localStorage.removeItem('timestamp_hash');
-                                
-                                // Redirect back to attendance page
-                                window.location.href = '/attendance';
-                            }, 300);
-                        }, 2000);
-                    }, 100);
-                } else {
-                    throw new Error(result.message || 'Unknown error occurred');
+                                successMessage.style.opacity = '0';
+                                setTimeout(() => {
+                                    successMessage.remove();
+                                    // Clear stored data
+                                    localStorage.removeItem('capturedImage');
+                                    localStorage.removeItem('userLocation');
+                                    localStorage.removeItem('serverTimestamp');
+                                    localStorage.removeItem('timestamp_hash');
+                                    
+                                    // Redirect back to attendance page
+                                    window.location.href = '/attendance';
+                                }, 300);
+                            }, 2000);
+                        }, 100);
+                    } else {
+                        throw new Error(result.message || 'Unknown error occurred');
+                    }
+                } catch (error) {
+                    throw error;
+                } finally {
+                    // Reset button state if still in DOM
+                    const confirmBtn = document.querySelector('.btn-confirm');
+                    if (confirmBtn) {
+                        confirmBtn.innerHTML = '<i class="fas fa-check"></i> Save';
+                        confirmBtn.disabled = false;
+                    }
                 }
             } catch (error) {
                 console.error('Error during confirmation:', error);
-                
-                // Reset button state
-                const confirmBtn = document.querySelector('.btn-confirm');
-                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Save';
-                confirmBtn.disabled = false;
                 
                 // Show error message with animation
                 const errorMessage = document.createElement('div');
