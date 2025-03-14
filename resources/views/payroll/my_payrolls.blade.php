@@ -1,4 +1,6 @@
 @extends('layouts.app')
+
+@section('content')
 <style>
     /* Enhanced UI Styles */
     body {
@@ -102,7 +104,6 @@
     }
 </style>
 
-@section('content')
 <div class="container-fluid">
     <h1>My Payrolls</h1>
     <div class="card">

@@ -13,9 +13,6 @@ window.Echo = new Echo({
 
 class NotificationHandler {
     constructor() {
-        this.notificationCount = 0;
-        this.notificationList = document.getElementById('notification-list');
-        this.notificationBadge = document.querySelector('.navbar-badge');
         this.initializeNotifications();
     }
 
@@ -23,6 +20,7 @@ class NotificationHandler {
         if (window.Laravel.user) {
             this.listenForNotifications();
             this.loadExistingNotifications();
+            this.setupEventListeners();
         }
     }
 
@@ -44,104 +42,166 @@ class NotificationHandler {
         }
     }
 
-    handleNewNotification(notification) {
-        this.notificationCount++;
-        this.updateNotificationCount(this.notificationCount);
-        this.addNotificationToList(notification);
-        this.showToast(notification);
-    }
+    setupEventListeners() {
+        // Toggle notification dropdown
+        $(document).on('click', '#notificationsDropdown', (e) => {
+            e.preventDefault();
+            $('#notificationsMenu').toggleClass('show');
+        });
 
-    updateNotificationCount(count) {
-        this.notificationCount = count;
-        if (this.notificationBadge) {
-            this.notificationBadge.textContent = count;
-            this.notificationBadge.style.display = count > 0 ? 'block' : 'none';
-        }
-    }
+        // Close dropdown when clicking outside
+        $(document).on('click', (e) => {
+            if (!$(e.target).closest('#notificationsDropdown, #notificationsMenu').length) {
+                $('#notificationsMenu').removeClass('show');
+            }
+        });
 
-    addNotificationToList(notification) {
-        if (!this.notificationList) return;
+        // Mark all as read
+        $(document).on('click', '.mark-all-read', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/notifications/mark-all-read', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    $('.notification-item').removeClass('unread');
+                    $('.notification-count').hide();
+                }
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+            }
+        });
 
-        const notificationHtml = this.createNotificationHtml(notification);
-        this.notificationList.insertAdjacentHTML('afterbegin', notificationHtml);
-    }
-
-    createNotificationHtml(notification) {
-        let icon, title, description;
-
-        if (notification.type.includes('LeaveRequestNotification')) {
-            icon = 'fa-calendar';
-            title = 'Leave Request';
-            description = `${notification.employee_name} - ${notification.leave_type}`;
-        } else if (notification.type.includes('CashAdvanceNotification')) {
-            icon = 'fa-money-bill';
-            title = 'Cash Advance Request';
-            description = `${notification.employee_name} - ₱${notification.amount}`;
-        }
-
-        return `
-            <a href="#" class="dropdown-item notification-item ${notification.read_at ? '' : 'unread'}" 
-               data-notification-id="${notification.id}">
-                <div class="notification-icon">
-                    <i class="fas ${icon}"></i>
-                </div>
-                <div class="notification-content">
-                    <div class="notification-title">${title}</div>
-                    <div class="notification-text">${description}</div>
-                    <div class="notification-time">
-                        ${moment(notification.timestamp).fromNow()}
-                    </div>
-                </div>
-            </a>
-        `;
-    }
-
-    showToast(notification) {
-        const toast = new bootstrap.Toast(document.createElement('div'));
-        toast.element.innerHTML = this.createToastHtml(notification);
-        document.querySelector('.toast-container').appendChild(toast.element);
-        toast.show();
-
-        // Remove toast after it's hidden
-        toast.element.addEventListener('hidden.bs.toast', () => {
-            toast.element.remove();
+        // Mark individual notification as read
+        $(document).on('click', '.notification-item', async function() {
+            const notificationId = $(this).data('notification-id');
+            try {
+                const response = await fetch(`/notifications/mark-as-read/${notificationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    $(this).removeClass('unread');
+                    const unreadCount = $('.notification-item.unread').length;
+                    if (unreadCount === 0) {
+                        $('.notification-count').hide();
+                    } else {
+                        $('.notification-count').text(unreadCount);
+                    }
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
         });
     }
 
-    createToastHtml(notification) {
-        let icon, title;
-        
-        if (notification.type.includes('LeaveRequestNotification')) {
-            icon = 'fa-calendar';
-            title = 'New Leave Request';
-        } else if (notification.type.includes('CashAdvanceNotification')) {
-            icon = 'fa-money-bill';
-            title = 'New Cash Advance Request';
+    updateNotificationCount(count) {
+        const badge = $('.notification-count');
+        if (count > 0) {
+            badge.text(count).show();
+        } else {
+            badge.hide();
+        }
+    }
+
+    renderNotifications(notifications) {
+        const container = $('.notifications-list');
+        container.empty();
+
+        if (notifications.length === 0) {
+            container.html(`
+                <div class="dropdown-item text-center text-muted">
+                    <i class="fas fa-bell-slash mr-2"></i>No notifications
+                </div>
+            `);
+            return;
         }
 
-        return `
+        notifications.forEach(notification => {
+            const timeAgo = this.timeAgo(new Date(notification.created_at));
+            const html = `
+                <div class="notification-item ${notification.read_at ? '' : 'unread'}" 
+                     data-notification-id="${notification.id}">
+                    <div class="notification-title">${notification.title}</div>
+                    <div class="notification-text">${notification.message}</div>
+                    <div class="notification-time">${timeAgo}</div>
+                </div>
+            `;
+            container.append(html);
+        });
+    }
+
+    handleNewNotification(notification) {
+        // Update notification count
+        const currentCount = parseInt($('.notification-count').text()) || 0;
+        this.updateNotificationCount(currentCount + 1);
+
+        // Add new notification to list
+        const timeAgo = this.timeAgo(new Date(notification.created_at));
+        const html = `
+            <div class="notification-item unread" data-notification-id="${notification.id}">
+                <div class="notification-title">${notification.title}</div>
+                <div class="notification-text">${notification.message}</div>
+                <div class="notification-time">${timeAgo}</div>
+            </div>
+        `;
+        $('.notifications-list').prepend(html);
+
+        // Show toast notification
+        this.showToast(notification);
+    }
+
+    showToast(notification) {
+        const toast = $(`
             <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="5000">
                 <div class="toast-header">
-                    <i class="fas ${icon} mr-2"></i>
-                    <strong class="mr-auto">${title}</strong>
-                    <small>${moment(notification.timestamp).fromNow()}</small>
+                    <strong class="mr-auto">${notification.title}</strong>
+                    <small class="text-muted">just now</small>
                     <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="toast-body">
-                    ${notification.employee_name} has submitted a new request.
+                    ${notification.message}
                 </div>
-                <div class="toast-progress"></div>
             </div>
-        `;
+        `);
+        
+        $('.toast-container').append(toast);
+        toast.toast('show');
+    }
+
+    timeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval >= 1) return interval + ' year' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) return interval + ' month' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return interval + ' day' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return interval + ' hour' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return interval + ' minute' + (interval === 1 ? '' : 's') + ' ago';
+        
+        return 'just now';
     }
 }
 
-// Initialize when document is ready
-document.addEventListener('DOMContentLoaded', () => {
-    new NotificationHandler();
-});
+// Initialize notifications
+new NotificationHandler();
 
 // Request notification permission
 if (Notification.permission === 'default') {

@@ -27,28 +27,62 @@ class NotificationsController extends Controller
     {
         try {
             $this->generateNotifications();
+            $allNotifications = $this->flattenNotifications();
 
             $response = [
-                'count' => $this->countTotalNotifications(),
-                'notifications' => $this->generateDropdownHtml(),
-                'timestamp' => now()->timestamp,
-                'toast' => [
-                    'title' => 'New Notification',
-                    'message' => $this->getLatestNotificationMessage(),
-                    'icon' => $this->getLatestNotificationIcon()
-                ]
-            ];
+                'notifications' => array_map(function($notification) {
+                    $details = isset($notification['data']) ? $notification['data'] : [];
+                    $type = $details['type'] ?? '';
+                    
+                    $formattedDetails = [];
+                    if (strpos($type, 'leave') !== false) {
+                        $formattedDetails = [
+                            'type' => 'leave',
+                            'employee_name' => $details['employee_name'] ?? '',
+                            'start_date' => $details['start_date'] ?? '',
+                            'end_date' => $details['end_date'] ?? '',
+                            'reason' => $details['reason'] ?? '',
+                            'status' => ucfirst($details['status'] ?? 'pending'),
+                            'approved_by' => $details['approved_by'] ?? null,
+                            'approved_at' => $details['approved_at'] ?? null,
+                            'leave_type' => $details['leave_type'] ?? '',
+                            'duration' => $details['duration'] ?? '',
+                            'payment_status' => $details['payment_status'] ?? '',
+                            'department' => $details['department'] ?? ''
+                        ];
+                    } elseif (strpos($type, 'cash_advance') !== false) {
+                        $formattedDetails = [
+                            'type' => 'cash_advance',
+                            'employee_name' => $details['employee_name'] ?? '',
+                            'amount' => $details['amount'] ?? 0,
+                            'reason' => $details['reason'] ?? '',
+                            'status' => ucfirst($details['status'] ?? 'pending'),
+                            'approved_by' => $details['approved_by'] ?? null,
+                            'approved_at' => $details['approved_at'] ?? null
+                        ];
+                    }
 
-            // Broadcast to other users
-            broadcast(new NewNotification($response))->toOthers();
+                    return [
+                        'id' => $notification['id'],
+                        'title' => $this->getNotificationTitle($notification),
+                        'message' => $notification['text'],
+                        'created_at' => Carbon::createFromTimestamp($notification['timestamp'])->toIso8601String(),
+                        'read_at' => null,
+                        'icon' => $notification['icon'],
+                        'details' => $formattedDetails,
+                        'type' => $type
+                    ];
+                }, $allNotifications),
+                'unread_count' => $this->countTotalNotifications()
+            ];
 
             return response()->json($response);
         } catch (\Exception $e) {
             Log::error('Error in getNotificationsData: ' . $e->getMessage());
             return response()->json([
-                'count' => 0,
-                'notifications' => '',
-                'timestamp' => now()->timestamp
+                'notifications' => [],
+                'unread_count' => 0,
+                'error' => $e->getMessage()
             ]);
         }
     }
@@ -72,13 +106,16 @@ class NotificationsController extends Controller
             $leaves = Leave::with('employee')
                 ->where('status', 'pending')
                 ->where('is_read', false)
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             foreach ($leaves as $leave) {
                 $this->notifications['leave_requests'][] = [
+                    'id' => 'leave_' . $leave->id,
                     'icon' => 'fas fa-calendar-times',
                     'text' => "{$leave->employee->first_name} {$leave->employee->last_name} requested leave",
                     'time' => $leave->created_at->diffForHumans(),
+                    'timestamp' => $leave->created_at->timestamp,
                     'data' => [
                         'id' => $leave->id,
                         'type' => 'leave',
@@ -98,13 +135,16 @@ class NotificationsController extends Controller
                 })
                 ->where('status', 'pending')
                 ->where('is_read', false)
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             foreach ($leaves as $leave) {
                 $this->notifications['leave_requests'][] = [
+                    'id' => 'leave_' . $leave->id,
                     'icon' => 'fas fa-calendar-times',
                     'text' => "{$leave->employee->first_name} {$leave->employee->last_name} requested leave",
                     'time' => $leave->created_at->diffForHumans(),
+                    'timestamp' => $leave->created_at->timestamp,
                     'data' => [
                         'id' => $leave->id,
                         'type' => 'leave',
@@ -125,13 +165,16 @@ class NotificationsController extends Controller
             $advances = CashAdvance::with('employee')
                 ->where('status', 'pending')
                 ->where('is_read', false)
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             foreach ($advances as $advance) {
                 $this->notifications['cash_advances'][] = [
+                    'id' => 'cash_advance_' . $advance->id,
                     'icon' => 'fas fa-money-bill-wave',
                     'text' => "{$advance->employee->first_name} {$advance->employee->last_name} requested cash advance",
                     'time' => $advance->created_at->diffForHumans(),
+                    'timestamp' => $advance->created_at->timestamp,
                     'data' => [
                         'id' => $advance->id,
                         'type' => 'cash_advance',
@@ -144,7 +187,7 @@ class NotificationsController extends Controller
         }
     }
     
-
+    // Other notification generators with added timestamp and unique ID
     private function generateLeaveApprovedNotification()
     {
         $user = Auth::user();
@@ -152,13 +195,16 @@ class NotificationsController extends Controller
             $leaves = Leave::with(['employee', 'approvedByUser'])
                 ->where('status', 'approved')
                 ->where('validated_by_signature', null)
+                ->orderBy('updated_at', 'desc')
                 ->get();
 
             foreach ($leaves as $leave) {
                 $this->notifications['leave_approved'][] = [
+                    'id' => 'leave_approved_' . $leave->id,
                     'icon' => 'fas fa-check-circle',
                     'text' => "Leave request for {$leave->employee->first_name} {$leave->employee->last_name} has been approved",
                     'time' => $leave->updated_at->diffForHumans(),
+                    'timestamp' => $leave->updated_at->timestamp,
                     'data' => [
                         'id' => $leave->id,
                         'type' => 'leave_approved',
@@ -189,13 +235,16 @@ class NotificationsController extends Controller
                 ->whereHas('employee', function($query) use ($user) {
                     $query->where('email_address', $user->email);
                 })
+                ->orderBy('updated_at', 'desc')
                 ->get();
 
             foreach ($leaves as $leave) {
                 $this->notifications['leave_validated'][] = [
+                    'id' => 'leave_validated_' . $leave->id,
                     'icon' => 'fas fa-signature',
                     'text' => "Your leave request has been validated",
                     'time' => $leave->updated_at->diffForHumans(),
+                    'timestamp' => $leave->updated_at->timestamp,
                     'data' => [
                         'id' => $leave->id,
                         'type' => 'leave_validated',
@@ -225,13 +274,16 @@ class NotificationsController extends Controller
                 ->whereHas('employee', function($query) use ($user) {
                     $query->where('email_address', $user->email);
                 })
+                ->orderBy('updated_at', 'desc')
                 ->get();
 
             foreach ($leaves as $leave) {
                 $this->notifications['leave_rejected'][] = [
-                    'icon' => 'fas fa-signature',
+                    'id' => 'leave_rejected_' . $leave->id,
+                    'icon' => 'fas fa-times-circle',
                     'text' => "Your leave request has been rejected",
                     'time' => $leave->updated_at->diffForHumans(),
+                    'timestamp' => $leave->updated_at->timestamp,
                     'data' => [
                         'id' => $leave->id,
                         'type' => 'leave_rejected',
@@ -261,14 +313,17 @@ class NotificationsController extends Controller
                 ->whereHas('employee', function($query) use ($user) {
                     $query->where('email_address', $user->email);
                 })
+                ->orderBy('updated_at', 'desc')
                 ->get();
 
             foreach ($advances as $advance) {
                 if (isset($advance->approvedByUser)) {
-                    $this->notifications['cash_advance_approved'][] = [
+                    $this->notifications['cash_advance_active'][] = [
+                        'id' => 'cash_advance_active_' . $advance->id,
                         'icon' => 'fas fa-check-circle',
                         'text' => "Your cash advance request has been approved",
                         'time' => $advance->updated_at->diffForHumans(),
+                        'timestamp' => $advance->updated_at->timestamp,
                         'data' => [
                             'id' => $advance->id,
                             'type' => 'cash_advance_approved',
@@ -294,14 +349,17 @@ class NotificationsController extends Controller
                 ->whereHas('employee', function($query) use ($user) {
                     $query->where('email_address', $user->email);
                 })
+                ->orderBy('updated_at', 'desc')
                 ->get();
 
             foreach ($advances as $advance) {
                 if (isset($advance->rejectedByUser)) {
-                    $this->notifications['cash_advance_rejected'][] = [
+                    $this->notifications['cash_advance_declined'][] = [
+                        'id' => 'cash_advance_declined_' . $advance->id,
                         'icon' => 'fas fa-times-circle',
                         'text' => "Your cash advance request has been rejected",
                         'time' => $advance->updated_at->diffForHumans(),
+                        'timestamp' => $advance->updated_at->timestamp,
                         'data' => [
                             'id' => $advance->id,
                             'type' => 'cash_advance_rejected',
@@ -340,7 +398,7 @@ class NotificationsController extends Controller
             $timeAgo = $notification['time'];
             
             $html .= "
-            <a href='{$url}' class='notification-item {$statusClass}'>
+            <a href='{$url}' class='notification-item {$statusClass}' data-id='{$notification['id']}'>
                 <div class='notification-icon {$this->getIconClass($notification)}'>
                     <i class='{$notification['icon']}'></i>
                 </div>
@@ -391,6 +449,18 @@ class NotificationsController extends Controller
         if (strpos($notification['text'], 'requested cash advance') !== false) {
             return 'Cash Advance Request';
         }
+        if (strpos($notification['text'], 'leave request has been validated') !== false) {
+            return 'Leave Validated';
+        }
+        if (strpos($notification['text'], 'leave request has been rejected') !== false) {
+            return 'Leave Rejected';
+        }
+        if (strpos($notification['text'], 'cash advance request has been approved') !== false) {
+            return 'Cash Advance Approved';
+        }
+        if (strpos($notification['text'], 'cash advance request has been rejected') !== false) {
+            return 'Cash Advance Rejected';
+        }
         return 'Notification';
     }
 
@@ -407,8 +477,9 @@ class NotificationsController extends Controller
             $flattened = array_merge($flattened, $notifications);
         }
         
+        // Sort by timestamp instead of parsed time for more accurate sorting
         usort($flattened, function($a, $b) {
-            return strtotime($b['time']) - strtotime($a['time']);
+            return $b['timestamp'] - $a['timestamp'];
         });
         
         return array_slice($flattened, 0, 10);
@@ -424,6 +495,83 @@ class NotificationsController extends Controller
     {
         $allNotifications = $this->flattenNotifications();
         return !empty($allNotifications) ? $allNotifications[0]['icon'] : 'fas fa-bell';
+    }
+
+    // Method to mark notification as read
+    public function markAsRead(Request $request)
+    {
+        try {
+            $notificationId = $request->input('id');
+            $notificationType = $request->input('type');
+            
+            // Extract the actual ID
+            $parts = explode('_', $notificationId);
+            $id = end($parts);
+            
+            if (strpos($notificationType, 'leave') !== false) {
+                $leave = Leave::find($id);
+                if ($leave) {
+                    $leave->is_read = true;
+                    if (strpos($notificationType, 'validated') !== false || 
+                        strpos($notificationType, 'rejected') !== false) {
+                        $leave->is_view = true;
+                    }
+                    $leave->save();
+                }
+            } elseif (strpos($notificationType, 'cash_advance') !== false) {
+                $advance = CashAdvance::find($id);
+                if ($advance) {
+                    $advance->is_read = true;
+                    if (strpos($notificationType, 'approved') !== false || 
+                        strpos($notificationType, 'declined') !== false) {
+                        $advance->is_view = true;
+                    }
+                    $advance->save();
+                }
+            }
+            
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error marking notification as read: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    // New method for real-time updates check
+    public function checkForUpdates(Request $request)
+    {
+        try {
+            $lastTimestamp = $request->input('timestamp', 0);
+            
+            // Generate fresh notifications
+            $this->generateNotifications();
+            
+            // Get only notifications newer than the last timestamp
+            $newNotifications = $this->getNewNotificationsSince($lastTimestamp);
+            
+            return response()->json([
+                'hasUpdates' => count($newNotifications) > 0,
+                'count' => count($newNotifications),
+                'notifications' => $newNotifications,
+                'timestamp' => now()->timestamp
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error checking for updates: ' . $e->getMessage());
+            return response()->json([
+                'hasUpdates' => false,
+                'count' => 0,
+                'timestamp' => now()->timestamp,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    // Helper method to get only new notifications
+    private function getNewNotificationsSince($timestamp)
+    {
+        return array_filter($this->flattenNotifications(), function($notification) use ($timestamp) {
+            return $notification['timestamp'] > $timestamp;
+        });
     }
 
     public function showAllNotifications()
@@ -485,12 +633,14 @@ class NotificationsController extends Controller
                     $createdAt = $leave->created_at ? Carbon::parse($leave->created_at) : now();
 
                     return [
+                        'id' => 'leave_' . $leave->id,
                         'type' => 'leave',
                         'icon' => 'fas fa-calendar-times',
                         'title' => 'Leave Request',
                         'text' => "{$leave->employee->first_name} {$leave->employee->last_name} requested leave",
                         'time' => $createdAt,
                         'time_human' => $createdAt->diffForHumans(),
+                        'timestamp' => $createdAt->timestamp,
                         'status' => $leave->status ?? 'pending',
                         'is_read' => $leave->is_read ?? false,
                         'details' => [
@@ -520,12 +670,14 @@ class NotificationsController extends Controller
                     $remainingBalance = $advance->remainingBalance();
 
                     return [
+                        'id' => 'cash_advance_' . $advance->id,
                         'type' => 'cash_advance',
                         'icon' => 'fas fa-money-bill-wave',
                         'title' => 'Cash Advance Request',
                         'text' => "{$advance->employee->first_name} {$advance->employee->last_name} requested cash advance",
                         'time' => $createdAt,
                         'time_human' => $createdAt->diffForHumans(),
+                        'timestamp' => $createdAt->timestamp,
                         'status' => $advance->status ?? 'pending',
                         'is_read' => $advance->is_read ?? false,
                         'details' => [
@@ -551,7 +703,7 @@ class NotificationsController extends Controller
                 ->filter(function ($notification) {
                     return !is_null($notification['time']);
                 })
-                ->sortByDesc('time')
+                ->sortByDesc('timestamp') // Use timestamp for sorting
                 ->groupBy(function($notification) {
                     return $notification['time']->format('Y-m-d');
                 });
@@ -560,6 +712,20 @@ class NotificationsController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in showAllNotifications: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Unable to load notifications. Please try again later.');
+        }
+    }
+
+    // Method to mark all notifications as read
+    public function markAllAsRead(Request $request)
+    {
+        try {
+            Leave::where('is_read', false)->update(['is_read' => true]);
+            CashAdvance::where('is_read', false)->update(['is_read' => true]);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error marking all notifications as read: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()]);
         }
     }
 }

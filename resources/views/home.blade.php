@@ -5878,7 +5878,7 @@
         <div class="col-lg-6 mb-4">
             @auth
             <div class="welcome-message p-4 rounded shadow-sm">
-                <h2 class="welcome-heading mb-2">Welcome, <span class="animated-text">{{ auth()->user()->first_name }}</span></h2>
+                <h2 class="welcome-heading mb-2">GOOD SUCCESS!, <span class="animated-text">{{ auth()->user()->first_name }}</span></h2>
                 <h4 class="welcome-subheading">{{ auth()->user()->last_name }}</h4>
                 <div class="d-flex justify-content-between align-items-center position-relative" style="height: 60px;">
                     <span id="greeting" class="mt-3 mb-0 text-white-50" style="font-size: 1.2rem;"></span>
@@ -5892,13 +5892,13 @@
                         let emoji;
 
                         if (hours < 12) {
-                            greeting = "Good Morning and Good Success!";
+                            greeting = "Good Morning";
                             emoji = "☀️";
                         } else if (hours < 18) {
-                            greeting = "Good Afternoon and Good Success!";
+                            greeting = "Good Afternoon";
                             emoji = "🌤️";
                         } else {
-                            greeting = "Good Evening and Good Success!";
+                            greeting = "Good Evening";
                             emoji = "🌙";
                         }
 
