@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Models\User;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Support\Facades\File;
+use Spatie\Permission\Models\Role;
 
 class AttendanceController extends Controller
 {
@@ -33,9 +34,10 @@ class AttendanceController extends Controller
     // Display all attendance records
     public function index()
     {
-        if (auth()->user()->hasRole('Supervisor')) {
-            $attendances = Attendance::whereHas('employee', function($query) {
-                $query->where('department_id', auth()->user()->department_id);
+        $user = Auth::user();
+        if ($user instanceof User && $user->hasRole('Supervisor')) {
+            $attendances = Attendance::whereHas('employee', function($query) use ($user) {
+                $query->where('department_id', $user->department_id);
             })->get();
         } else {
             $attendances = Attendance::all();
@@ -77,7 +79,7 @@ class AttendanceController extends Controller
 
         if ($existingAttendance) {
             if ($existingAttendance->time_out && $existingAttendance->time_stamp2) {
-                if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
+                if ($user instanceof User && ($user->hasRole('Super Admin') || $user->hasRole('Admin'))) {
                     $successMessage = 'Attendance for this employee on this date already has time out and time stamp.';
                 } else {
                     $successMessage = 'Your attendance on this date already has time out and time stamp.';
@@ -111,8 +113,8 @@ class AttendanceController extends Controller
         }
 
         // Check user role and return appropriate view
-        if ($user->hasRole('Employee')) {
-            $employees = Employee::all(); // Fetch employees to pass to the view
+        if ($user instanceof User && $user->hasRole('Employee')) {
+            $employees = Employee::all();
             return view('attendances.create', compact('employees'))->with('successMessage', $successMessage);
         } else {
             return redirect()->route('attendances.index')->with('success', $successMessage);
@@ -198,11 +200,9 @@ class AttendanceController extends Controller
     // Generate timesheets or attendance records for all employees
     public function generateTimesheets()
     {
-        // Get authenticated user
         $user = Auth::user();
         
-        // Get employees based on user role
-        $employees = $user->hasRole('Super Admin') 
+        $employees = ($user instanceof User && $user->hasRole('Super Admin'))
             ? Employee::all()
             : Employee::where('employee_status', 'Active')->get();
             
@@ -250,8 +250,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
-        // Assuming roles are defined and you have a method to check user roles
-        if ($user->hasRole('admin') || $user->hasRole('super-admin')) {
+        if ($user instanceof User && ($user->hasRole('admin') || $user->hasRole('super-admin'))) {
             return redirect()->route('attendances.index');
         } else {
             return $this->myTimesheet();
@@ -370,7 +369,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->hasRole(['Employee', 'Supervisor'])) {
+        if (!$user instanceof User || !$user->hasRole(['Employee', 'Supervisor'])) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -385,7 +384,7 @@ class AttendanceController extends Controller
     public function executeStoreCommand()
     {
         try {
-            \Artisan::call('attendance:store');
+            Artisan::call('attendance:store');
             return response()->json(['message' => 'Attendance records stored successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -398,155 +397,24 @@ class AttendanceController extends Controller
         $employee = Employee::where('email_address', $user->email)->first();
         
         if (!$employee) {
-            \Log::warning('Employee not found for user email: ' . $user->email);
+            Log::warning('Employee not found for user email: ' . $user->email);
         }
         
         return view('attendances.capture-preview', compact('employee'));
     }
 
-    public function storeAttendanceCapture(Request $request)
-    {
-        try {
-            // Validate the request
-            $request->validate([
-                'type' => 'required|in:in,out',
-                'image' => 'required|string',
-                'location' => 'required|string',
-                'timestamp' => 'required|string',
-            ]);
-
-            // Get the authenticated user
-            $user = Auth::user();
-            
-            if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'User not authenticated.'
-                ], 401);
-            }
-            
-            // Find the employee by email
-            $employee = Employee::where('email_address', $user->email)->first();
-            
-            if (!$employee) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Employee record not found.'
-                ], 404);
-            }
-
-            // Parse the timestamp
-            $timestamp = Carbon::parse($request->timestamp);
-            $currentDate = $timestamp->format('Y-m-d');
-            $currentTime = $timestamp->format('H:i:s');
-
-            // Find existing attendance for today
-            $attendance = Attendance::where('employee_id', $employee->id)
-                                 ->where('date_attended', $currentDate)
-                                 ->first();
-
-            try {
-                // Store the image and get the path
-                $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
-                
-                if (!$imagePath) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Failed to store image.'
-                    ], 500);
-                }
-
-                // Handle Clock In
-                if ($request->type === 'in') {
-                    if ($attendance && $attendance->time_in) {
-                        Storage::disk('public')->delete($imagePath);
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Already clocked in for today.'
-                        ], 400);
-                    }
-                    
-                    if (!$attendance) {
-                        $attendance = new Attendance([
-                            'employee_id' => $employee->id,
-                            'date_attended' => $currentDate,
-                            'time_in' => $currentTime,
-                            'time_stamp1' => $imagePath,
-                            'time_in_address' => $request->location,
-                        ]);
-                        $attendance->save();
-                    } else {
-                        $attendance->update([
-                            'time_in' => $currentTime,
-                            'time_stamp1' => $imagePath,
-                            'time_in_address' => $request->location,
-                        ]);
-                    }
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Clock in recorded successfully.'
-                    ]);
-                } 
-                // Handle Clock Out
-                else {
-                    if (!$attendance || !$attendance->time_in) {
-                        Storage::disk('public')->delete($imagePath);
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Must clock in first before clocking out.'
-                        ], 400);
-                    }
-
-                    if ($attendance->time_out) {
-                        Storage::disk('public')->delete($imagePath);
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Already clocked out for today.'
-                        ], 400);
-                    }
-
-                    $attendance->update([
-                        'time_out' => $currentTime,
-                        'time_stamp2' => $imagePath,
-                        'time_out_address' => $request->location,
-                    ]);
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Clock out recorded successfully.'
-                    ]);
-                }
-
-            } catch (\Exception $e) {
-                if (isset($imagePath)) {
-                    Storage::disk('public')->delete($imagePath);
-                }
-                throw $e;
-            }
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            Log::error('Attendance capture error: ' . $e->getMessage());
-            
-            return response()->json([
-                'status' => 'error',
-                'message' => 'An error occurred while processing your request.',
-                'debug' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
-
+    /**
+     * Helper method to store timestamp images
+     * 
+     * @param string $imageData Base64 encoded image
+     * @param string $timestamp Timestamp for filename
+     * @return string|false Returns the stored image path or false on failure
+     */
     private function storeTimestampImage($imageData, $timestamp)
     {
         try {
             // Check if storage link exists
-            if (!File::exists(public_path('storage'))) {
+            if (!file_exists(public_path('storage'))) {
                 Artisan::call('storage:link');
             }
 
@@ -556,34 +424,160 @@ class AttendanceController extends Controller
                 Storage::disk('public')->makeDirectory($directory);
             }
 
-            // Clean and validate the base64 string
-            $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
-            if (!$imageData) {
-                Log::error('Invalid image data provided');
-                return false;
-            }
-
-            // Decode and validate the image data
-            $decodedImage = base64_decode($imageData);
-            if (!$decodedImage) {
-                Log::error('Failed to decode image data');
-                return false;
-            }
-
+            // Clean the base64 string
+            $cleanImageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
+            
             // Generate unique filename with timestamp
             $filename = uniqid() . '_' . Carbon::parse($timestamp)->format('Ymd_His') . '.jpg';
             $fullPath = $directory . '/' . $filename;
 
             // Store the image
-            if (Storage::disk('public')->put($fullPath, $decodedImage)) {
+            if (Storage::disk('public')->put($fullPath, $cleanImageData)) {
                 return $fullPath;
             }
 
-            Log::error('Failed to store image to disk');
             return false;
         } catch (\Exception $e) {
             Log::error('Error storing timestamp image: ' . $e->getMessage());
             return false;
+        }
+    }
+
+    public function storeAttendanceCapture(Request $request)
+    {
+        try {
+            // Validate the request
+            $request->validate([
+                'type' => 'required|in:in,out',
+                'image' => 'required|string', // Base64 encoded image
+                'location' => 'required|string',
+                'timestamp' => 'required|date_format:Y-m-d\TH:i:s.u\Z', // Validate ISO 8601 format
+            ]);
+
+            // Get the authenticated user
+            $user = Auth::user();
+            
+            // Find the employee by email
+            $employee = Employee::where('email_address', $user->email)->first();
+            
+            if (!$employee) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Employee record not found for the current user.'
+                ], 404);
+            }
+
+            // Parse the timestamp using Carbon for proper timezone handling
+            $timestamp = Carbon::parse($request->timestamp)->setTimezone('Asia/Manila');
+            $currentDate = $timestamp->format('Y-m-d');
+            $currentTime = $timestamp->format('H:i:s');
+
+            // Find existing attendance for today
+            $attendance = Attendance::where('employee_id', $employee->id)
+                                 ->where('date_attended', $currentDate)
+                                 ->first();
+
+            // Store the image and get the path
+            $imagePath = $this->storeTimestampImage($request->image, $timestamp->format('Y-m-d H:i:s'));
+            
+            if (!$imagePath) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to store timestamp image.'
+                ], 500);
+            }
+
+            // Handle Clock In
+            if ($request->type === 'in') {
+                // Check if already clocked in
+                if ($attendance && $attendance->time_in) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
+                    
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Already clocked in for today.'
+                    ], 400);
+                }
+                
+                if (!$attendance) {
+                    // Create new attendance record
+                    $attendance = Attendance::create([
+                        'employee_id' => $employee->id,
+                        'date_attended' => $currentDate,
+                        'time_in' => $currentTime,
+                        'time_stamp1' => $imagePath,
+                        'time_in_address' => $request->location,
+                    ]);
+                } else {
+                    // Update existing attendance with clock in
+                    $attendance->time_in = $currentTime;
+                    $attendance->time_stamp1 = $imagePath;
+                    $attendance->time_in_address = $request->location;
+                    $attendance->save();
+                }
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Clock in recorded successfully.'
+                ]);
+            } 
+            // Handle Clock Out
+            else {
+                // Check if attendance record exists and has time_in
+                if (!$attendance || !$attendance->time_in) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
+                    
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Must clock in first before clocking out.'
+                    ], 400);
+                }
+
+                // Check if already clocked out
+                if ($attendance->time_out) {
+                    // Delete the newly stored image since we won't use it
+                    Storage::disk('public')->delete($imagePath);
+                    
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Already clocked out for today.'
+                    ], 400);
+                }
+
+                // Update attendance with clock out
+                $attendance->time_out = $currentTime;
+                $attendance->time_stamp2 = $imagePath;
+                $attendance->time_out_address = $request->location;
+                $attendance->save();
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Clock out recorded successfully.'
+                ]);
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Attendance capture error: ' . $e->getMessage());
+            
+            // Delete any stored image if there was an error
+            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing your request.',
+                'debug' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
         }
     }
 
@@ -592,8 +586,7 @@ class AttendanceController extends Controller
         try {
             $user = Auth::user();
             
-            // Check if user has Employee or Supervisor role
-            if (!$user->hasRole(['Employee', 'Supervisor'])) {
+            if (!$user instanceof User || !$user->hasRole(['Employee', 'Supervisor'])) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unauthorized access'
@@ -654,7 +647,7 @@ class AttendanceController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error checking attendance status: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error checking attendance status: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while checking attendance status'
