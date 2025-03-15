@@ -548,9 +548,6 @@ class AttendanceController extends Controller
                     $attendance->save();
                 }
 
-                // Send Telegram notification for clock in
-                $this->sendTelegramNotification($employee, 'in', $currentTime, $request->location);
-
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Clock in recorded successfully.'
@@ -586,9 +583,6 @@ class AttendanceController extends Controller
                 $attendance->time_out_address = $request->location;
                 $attendance->save();
 
-                // Send Telegram notification for clock out
-                $this->sendTelegramNotification($employee, 'out', $currentTime, $request->location);
-
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Clock out recorded successfully.'
@@ -615,160 +609,6 @@ class AttendanceController extends Controller
                 'message' => 'An error occurred while processing your request.',
                 'debug' => config('app.debug') ? $e->getMessage() : null
             ], 500);
-        }
-    }
-
-    /**
-     * Send attendance notification to Telegram group
-     */
-    private function sendTelegramNotification($employee, $type, $time, $location)
-    {
-        try {
-            $botToken = config('services.telegram.bot_token');
-            $chatId = config('services.telegram.chat_id');
-
-            if (!$botToken || !$chatId) {
-                Log::warning('Telegram credentials not configured');
-                return;
-            }
-
-            // Get department name
-            $departmentName = $employee->department ? $employee->department->name : 'N/A';
-
-            // Determine company name based on department
-            $companyName = match(strtoupper($departmentName)) {
-                'MHRHCI' => 'Medical & Resources Health Care, Inc.',
-                'BGPDI' => 'Bay Gas and Petroleum Distribution, Inc.',
-                'VHI' => 'Verbena Hotel Inc.',
-                default => 'MHR Property Conglomerates, Inc.'
-            };
-
-            // Format time for display
-            $formattedTime = Carbon::parse($time)->format('h:i A');
-            $formattedDate = Carbon::parse($time)->format('F d, Y');
-
-            // Create message
-            $message = "🏢 *{$companyName}*\n\n";
-            $message .= "📍 *Attendance Update*\n";
-            $message .= "Type: " . ($type === 'in' ? '🟢 Clock In' : '🔴 Clock Out') . "\n";
-            $message .= "Date: {$formattedDate}\n";
-            $message .= "Time: {$formattedTime}\n";
-            $message .= "Employee: {$employee->first_name} {$employee->last_name}\n";
-            $message .= "Department: {$departmentName}\n";
-            $message .= "Position: " . ($employee->position ? $employee->position->name : 'N/A') . "\n";
-            $message .= "Location: {$location}";
-
-            $client = new Client();
-
-            // Get the latest attendance record for the employee
-            $attendance = Attendance::where('employee_id', $employee->id)
-                ->where('date_attended', Carbon::parse($time)->format('Y-m-d'))
-                ->first();
-
-            // Determine which timestamp to use
-            $timestampField = $type === 'in' ? 'time_stamp1' : 'time_stamp2';
-            
-            if ($attendance && $attendance->$timestampField) {
-                try {
-                    // First send the message
-                    $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
-                    $messageData = [
-                        'chat_id' => $chatId,
-                        'text' => $message,
-                        'parse_mode' => 'Markdown'
-                    ];
-
-                    $messageResponse = $client->post($messageUrl, [
-                        'json' => $messageData
-                    ]);
-
-                    if ($messageResponse->getStatusCode() !== 200) {
-                        throw new \Exception('Failed to send Telegram message');
-                    }
-
-                    // Then send the image
-                    $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
-                    
-                    // Get the full URL for the image
-                    $imagePath = Storage::disk('public')->url($attendance->$timestampField);
-                    $fullImageUrl = url($imagePath);
-
-                    // Prepare image data
-                    $imageCaption = "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
-                                   ($type === 'in' ? 'Clock In' : 'Clock Out') . 
-                                   " at {$formattedTime}";
-
-                    // Send image using URL
-                    $imageResponse = $client->post($imageUrl, [
-                        'form_params' => [
-                            'chat_id' => $chatId,
-                            'photo' => $fullImageUrl,
-                            'caption' => $imageCaption,
-                            'parse_mode' => 'Markdown'
-                        ]
-                    ]);
-
-                    if ($imageResponse->getStatusCode() !== 200) {
-                        throw new \Exception('Failed to send Telegram image');
-                    }
-
-                } catch (\Exception $e) {
-                    // If sending image fails, try sending as file
-                    try {
-                        $documentUrl = "https://api.telegram.org/bot{$botToken}/sendDocument";
-                        $filePath = Storage::disk('public')->path($attendance->$timestampField);
-                        
-                        if (file_exists($filePath)) {
-                            $imageResponse = $client->post($documentUrl, [
-                                'multipart' => [
-                                    [
-                                        'name' => 'chat_id',
-                                        'contents' => $chatId
-                                    ],
-                                    [
-                                        'name' => 'document',
-                                        'contents' => fopen($filePath, 'r'),
-                                        'filename' => basename($filePath)
-                                    ],
-                                    [
-                                        'name' => 'caption',
-                                        'contents' => "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
-                                                    ($type === 'in' ? 'Clock In' : 'Clock Out') . 
-                                                    " at {$formattedTime}"
-                                    ]
-                                ]
-                            ]);
-
-                            if ($imageResponse->getStatusCode() !== 200) {
-                                throw new \Exception('Failed to send Telegram document');
-                            }
-                        } else {
-                            Log::warning("Timestamp image file not found: {$filePath}");
-                        }
-                    } catch (\Exception $docError) {
-                        Log::error('Failed to send image as document: ' . $docError->getMessage());
-                    }
-                }
-            } else {
-                // If no image is available, just send the message
-                $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
-                $messageData = [
-                    'chat_id' => $chatId,
-                    'text' => $message,
-                    'parse_mode' => 'Markdown'
-                ];
-
-                $response = $client->post($messageUrl, [
-                    'json' => $messageData
-                ]);
-
-                if ($response->getStatusCode() !== 200) {
-                    throw new \Exception('Failed to send Telegram message');
-                }
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Failed to send Telegram notification: ' . $e->getMessage());
         }
     }
 
