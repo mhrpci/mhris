@@ -768,17 +768,46 @@
                 timestamp: serverTimestamp
             };
             
-            // Submit attendance data
-            const response = await fetch('/attendance/capture', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify(attendanceData)
-            });
+            // Submit attendance data with timeout and retry logic
+            let retries = 2;
+            let success = false;
+            let result;
             
-            const result = await response.json();
+            while (retries >= 0 && !success) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout
+                    
+                    const response = await fetch('/attendance/capture', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify(attendanceData),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+                    
+                    result = await response.json();
+                    success = true;
+                } catch (fetchError) {
+                    console.error(`Attempt failed (${retries} retries left):`, fetchError);
+                    retries--;
+                    
+                    if (retries < 0) {
+                        throw fetchError;
+                    }
+                    
+                    // Wait before retrying
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
             
             // Hide loading overlay
             document.getElementById('loading-overlay').style.display = 'none';
@@ -836,8 +865,18 @@
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#000000',
-                scale: 2, // Higher quality
-                logging: false
+                scale: 1, // Reduced scale for better performance
+                logging: false,
+                imageTimeout: 0, // No timeout for image loading
+                onclone: function(clonedDoc) {
+                    // Ensure all elements in the cloned document are visible
+                    const clonedPreview = clonedDoc.querySelector('.image-preview-container');
+                    if (clonedPreview) {
+                        clonedPreview.style.width = '100%';
+                        clonedPreview.style.height = '100%';
+                        clonedPreview.style.overflow = 'visible';
+                    }
+                }
             });
             
             // Restore the buttons and alert
@@ -854,12 +893,57 @@
                 type: attendanceType
             });
             
-            // Convert canvas to base64 image
-            const imageData = canvas.toDataURL('image/jpeg', 0.95);
+            // Resize the canvas to reduce file size if needed
+            const maxWidth = 1280;
+            if (canvas.width > maxWidth) {
+                const resizedCanvas = document.createElement('canvas');
+                const ratio = maxWidth / canvas.width;
+                resizedCanvas.width = maxWidth;
+                resizedCanvas.height = canvas.height * ratio;
+                const ctx = resizedCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
+                canvas.width = resizedCanvas.width;
+                canvas.height = resizedCanvas.height;
+                canvas.getContext('2d').drawImage(resizedCanvas, 0, 0);
+            }
             
-            return imageData;
+            // Convert canvas to base64 image with reduced quality for more reliable transmission
+            try {
+                const imageData = canvas.toDataURL('image/jpeg', 0.7);
+                
+                // Verify the image data is valid and not too large
+                if (!imageData.startsWith('data:image/jpeg;base64,')) {
+                    console.error('Invalid image data format');
+                    throw new Error('Invalid image data format');
+                }
+                
+                // Calculate size in MB
+                const imageSize = Math.round((imageData.length * 3/4) / 1048576 * 100) / 100;
+                console.log(`Image size: ${imageSize} MB`);
+                
+                // Check if the image is too large (over 5MB)
+                if (imageSize > 5) {
+                    // Try again with even lower quality
+                    return canvas.toDataURL('image/jpeg', 0.5);
+                }
+                
+                return imageData;
+            } catch (imgError) {
+                console.error('Error converting canvas to image:', imgError);
+                
+                // Fallback to PNG with lower quality
+                try {
+                    return canvas.toDataURL('image/png', 0.6);
+                } catch (pngError) {
+                    console.error('Fallback PNG conversion failed:', pngError);
+                    throw new Error('Failed to process image');
+                }
+            }
         } catch (error) {
             console.error('Error capturing preview with overlays:', error);
+            
+            // Show error in UI
+            showAlert('Failed to capture image: ' + (error.message || 'Unknown error'), 'error');
             return null;
         }
     }
