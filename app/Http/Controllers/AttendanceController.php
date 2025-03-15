@@ -447,7 +447,7 @@ class AttendanceController extends Controller
         try {
             // Check if storage link exists
             if (!file_exists(public_path('storage'))) {
-                \Artisan::call('storage:link');
+                Artisan::call('storage:link');
             }
 
             // Create time_stamps directory if it doesn't exist
@@ -470,7 +470,7 @@ class AttendanceController extends Controller
 
             return false;
         } catch (\Exception $e) {
-            \Log::error('Error storing timestamp image: ' . $e->getMessage());
+            Log::error('Error storing timestamp image: ' . $e->getMessage());
             return false;
         }
     }
@@ -519,81 +519,94 @@ class AttendanceController extends Controller
                 ], 500);
             }
 
-            // Handle Clock In
-            if ($request->type === 'in') {
-                // Check if already clocked in
-                if ($attendance && $attendance->time_in) {
-                    // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
+            try {
+                // Handle Clock In
+                if ($request->type === 'in') {
+                    // Check if already clocked in
+                    if ($attendance && $attendance->time_in) {
+                        // Delete the newly stored image since we won't use it
+                        Storage::disk('public')->delete($imagePath);
+                        
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Already clocked in for today.'
+                        ], 400);
+                    }
                     
+                    if (!$attendance) {
+                        // Create new attendance record
+                        $attendance = Attendance::create([
+                            'employee_id' => $employee->id,
+                            'date_attended' => $currentDate,
+                            'time_in' => $currentTime,
+                            'time_stamp1' => $imagePath,
+                            'time_in_address' => $request->location,
+                        ]);
+                    } else {
+                        // Update existing attendance with clock in
+                        $attendance->time_in = $currentTime;
+                        $attendance->time_stamp1 = $imagePath;
+                        $attendance->time_in_address = $request->location;
+                        $attendance->save();
+                    }
+
+                    // Send Telegram notification for clock in
+                    $this->sendTelegramNotification($employee, 'in', $currentTime, $request->location);
+
                     return response()->json([
-                        'status' => 'error',
-                        'message' => 'Already clocked in for today.'
-                    ], 400);
-                }
-                
-                if (!$attendance) {
-                    // Create new attendance record
-                    $attendance = Attendance::create([
-                        'employee_id' => $employee->id,
-                        'date_attended' => $currentDate,
-                        'time_in' => $currentTime,
-                        'time_stamp1' => $imagePath,
-                        'time_in_address' => $request->location,
+                        'status' => 'success',
+                        'message' => 'Clock in recorded successfully.'
                     ]);
-                } else {
-                    // Update existing attendance with clock in
-                    $attendance->time_in = $currentTime;
-                    $attendance->time_stamp1 = $imagePath;
-                    $attendance->time_in_address = $request->location;
+                } 
+                // Handle Clock Out
+                else {
+                    // Check if attendance record exists and has time_in
+                    if (!$attendance || !$attendance->time_in) {
+                        // Delete the newly stored image since we won't use it
+                        Storage::disk('public')->delete($imagePath);
+                        
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Must clock in first before clocking out.'
+                        ], 400);
+                    }
+
+                    // Check if already clocked out
+                    if ($attendance->time_out) {
+                        // Delete the newly stored image since we won't use it
+                        Storage::disk('public')->delete($imagePath);
+                        
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Already clocked out for today.'
+                        ], 400);
+                    }
+
+                    // Update attendance with clock out
+                    $attendance->time_out = $currentTime;
+                    $attendance->time_stamp2 = $imagePath;
+                    $attendance->time_out_address = $request->location;
+                    
+                    // Calculate hours worked
+                    $timeIn = Carbon::parse($attendance->time_in);
+                    $timeOut = Carbon::parse($currentTime);
+                    $hoursWorked = $timeOut->diffInHours($timeIn, true);
+                    $attendance->hours_worked = $hoursWorked;
+                    
                     $attendance->save();
-                }
 
-                // Send Telegram notification for clock in
-                $this->sendTelegramNotification($employee, 'in', $currentTime, $request->location);
+                    // Send Telegram notification for clock out
+                    $this->sendTelegramNotification($employee, 'out', $currentTime, $request->location);
 
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Clock in recorded successfully.'
-                ]);
-            } 
-            // Handle Clock Out
-            else {
-                // Check if attendance record exists and has time_in
-                if (!$attendance || !$attendance->time_in) {
-                    // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
-                    
                     return response()->json([
-                        'status' => 'error',
-                        'message' => 'Must clock in first before clocking out.'
-                    ], 400);
+                        'status' => 'success',
+                        'message' => 'Clock out recorded successfully.'
+                    ]);
                 }
-
-                // Check if already clocked out
-                if ($attendance->time_out) {
-                    // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
-                    
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Already clocked out for today.'
-                    ], 400);
-                }
-
-                // Update attendance with clock out
-                $attendance->time_out = $currentTime;
-                $attendance->time_stamp2 = $imagePath;
-                $attendance->time_out_address = $request->location;
-                $attendance->save();
-
-                // Send Telegram notification for clock out
-                $this->sendTelegramNotification($employee, 'out', $currentTime, $request->location);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Clock out recorded successfully.'
-                ]);
+            } catch (\Exception $e) {
+                // If there's an error, delete the stored image
+                Storage::disk('public')->delete($imagePath);
+                throw $e;
             }
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -604,12 +617,7 @@ class AttendanceController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Attendance capture error: ' . $e->getMessage());
-            
-            // Delete any stored image if there was an error
-            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
-            }
+            Log::error('Attendance capture error: ' . $e->getMessage());
             
             return response()->json([
                 'status' => 'error',
@@ -691,8 +699,7 @@ class AttendanceController extends Controller
                     $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
                     
                     // Get the full URL for the image
-                    $storagePath = 'storage/' . $attendance->$timestampField;
-                    $fullImageUrl = URL::to($storagePath);
+                    $fullImageUrl = URL::to(Storage::url($attendance->$timestampField));
 
                     // Prepare image data
                     $imageCaption = "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
@@ -714,12 +721,10 @@ class AttendanceController extends Controller
                     }
 
                 } catch (\Exception $e) {
-                    Log::warning('Failed to send image via URL, attempting to send as document: ' . $e->getMessage());
-                    
                     // If sending image fails, try sending as file
                     try {
                         $documentUrl = "https://api.telegram.org/bot{$botToken}/sendDocument";
-                        $filePath = storage_path('app/public/' . $attendance->$timestampField);
+                        $filePath = Storage::disk('public')->path($attendance->$timestampField);
                         
                         if (file_exists($filePath)) {
                             $imageResponse = $client->post($documentUrl, [
@@ -746,49 +751,32 @@ class AttendanceController extends Controller
                                 throw new \Exception('Failed to send Telegram document');
                             }
                         } else {
-                            Log::warning("Timestamp image file not found at path: {$filePath}");
-                            // Send message without image as fallback
-                            $this->sendTelegramMessageOnly($botToken, $chatId, $message);
+                            Log::warning("Timestamp image file not found: {$filePath}");
                         }
                     } catch (\Exception $docError) {
                         Log::error('Failed to send image as document: ' . $docError->getMessage());
-                        // Send message without image as fallback
-                        $this->sendTelegramMessageOnly($botToken, $chatId, $message);
                     }
                 }
             } else {
                 // If no image is available, just send the message
-                $this->sendTelegramMessageOnly($botToken, $chatId, $message);
+                $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
+                $messageData = [
+                    'chat_id' => $chatId,
+                    'text' => $message,
+                    'parse_mode' => 'Markdown'
+                ];
+
+                $response = $client->post($messageUrl, [
+                    'json' => $messageData
+                ]);
+
+                if ($response->getStatusCode() !== 200) {
+                    throw new \Exception('Failed to send Telegram message');
+                }
             }
 
         } catch (\Exception $e) {
             Log::error('Failed to send Telegram notification: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Helper function to send Telegram message without image
-     */
-    private function sendTelegramMessageOnly($botToken, $chatId, $message)
-    {
-        try {
-            $client = new Client();
-            $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
-            $messageData = [
-                'chat_id' => $chatId,
-                'text' => $message,
-                'parse_mode' => 'Markdown'
-            ];
-
-            $response = $client->post($messageUrl, [
-                'json' => $messageData
-            ]);
-
-            if ($response->getStatusCode() !== 200) {
-                throw new \Exception('Failed to send Telegram message');
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to send Telegram message only: ' . $e->getMessage());
         }
     }
 

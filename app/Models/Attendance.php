@@ -34,16 +34,23 @@ class Attendance extends Model
     protected $fillable = [
         'employee_id',
         'date_attended',
-        'time_stamp1',
-        'time_stamp2',
         'time_in',
         'time_out',
+        'time_stamp1',
+        'time_stamp2',
+        'time_in_address',
+        'time_out_address',
         'remarks',
         'hours_worked',
         'leave_payment_status',
         'overtime_hours',
-        'time_in_address',
-        'time_out_address',
+    ];
+
+    protected $casts = [
+        'date_attended' => 'date',
+        'time_in' => 'datetime',
+        'time_out' => 'datetime',
+        'hours_worked' => 'float',
     ];
 
     public function employee(): BelongsTo
