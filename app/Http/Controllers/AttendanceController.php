@@ -14,11 +14,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 use GuzzleHttp\Client;
-use Exception;
-use Illuminate\Support\Facades\URL;
 
 class AttendanceController extends Controller
 {
@@ -406,10 +403,9 @@ class AttendanceController extends Controller
     public function executeStoreCommand()
     {
         try {
-            Artisan::call('attendance:store');
+            \Artisan::call('attendance:store');
             return response()->json(['message' => 'Attendance records stored successfully']);
-        } catch (Exception $e) {
-            Log::error('Error executing attendance:store command: ' . $e->getMessage());
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -428,12 +424,12 @@ class AttendanceController extends Controller
             $employee = Employee::where('email_address', $user->email)->first();
             
             if (!$employee) {
-                Log::warning('Employee not found for user email: ' . $user->email);
+                \Log::warning('Employee not found for user email: ' . $user->email);
             }
             
             return view('attendances.capture-preview', compact('employee'));
-        } catch (Exception $e) {
-            Log::error('Error in capture preview: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in capture preview: ' . $e->getMessage());
             return redirect()->route('attendances.attendance')->with('error', 'An error occurred while loading the preview page.');
         }
     }
@@ -450,7 +446,7 @@ class AttendanceController extends Controller
         try {
             // Check if storage link exists
             if (!file_exists(public_path('storage'))) {
-                Artisan::call('storage:link');
+                \Artisan::call('storage:link');
             }
 
             // Create time_stamps directory if it doesn't exist
@@ -459,28 +455,8 @@ class AttendanceController extends Controller
                 Storage::disk('public')->makeDirectory($directory);
             }
 
-            // Clean the base64 string and handle different formats
-            if (strpos($imageData, 'data:image') !== false) {
-                $cleanImageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
-            } else {
-                // If it's already clean base64
-                try {
-                    $cleanImageData = base64_decode($imageData);
-                    if ($cleanImageData === false) {
-                        Log::error('Failed to decode base64 image data');
-                        return false;
-                    }
-                } catch (Exception $e) {
-                    Log::error('Base64 decode error: ' . $e->getMessage());
-                    return false;
-                }
-            }
-            
-            // Make sure we have valid image data
-            if (strlen($cleanImageData) < 100) {
-                Log::error('Image data is too small, likely invalid: ' . strlen($cleanImageData) . ' bytes');
-                return false;
-            }
+            // Clean the base64 string
+            $cleanImageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
             
             // Generate unique filename with timestamp
             $filename = uniqid() . '_' . Carbon::parse($timestamp)->format('Ymd_His') . '.jpg';
@@ -491,18 +467,15 @@ class AttendanceController extends Controller
                 return $fullPath;
             }
 
-            Log::error('Failed to store image to disk');
             return false;
-        } catch (Exception $e) {
-            Log::error('Error storing timestamp image: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error storing timestamp image: ' . $e->getMessage());
             return false;
         }
     }
 
     public function storeAttendanceCapture(Request $request)
     {
-        $imagePath = null;
-        
         try {
             // Validate the request
             $request->validate([
@@ -539,10 +512,9 @@ class AttendanceController extends Controller
             $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
             
             if (!$imagePath) {
-                Log::error('Failed to store timestamp image for employee: ' . $employee->id);
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Failed to store timestamp image. Please try again.'
+                    'message' => 'Failed to store timestamp image.'
                 ], 500);
             }
 
@@ -589,9 +561,7 @@ class AttendanceController extends Controller
                 // Check if attendance record exists and has time_in
                 if (!$attendance || !$attendance->time_in) {
                     // Delete the newly stored image since we won't use it
-                    if ($imagePath) {
-                        Storage::disk('public')->delete($imagePath);
-                    }
+                    Storage::disk('public')->delete($imagePath);
                     
                     return response()->json([
                         'status' => 'error',
@@ -602,9 +572,7 @@ class AttendanceController extends Controller
                 // Check if already clocked out
                 if ($attendance->time_out) {
                     // Delete the newly stored image since we won't use it
-                    if ($imagePath) {
-                        Storage::disk('public')->delete($imagePath);
-                    }
+                    Storage::disk('public')->delete($imagePath);
                     
                     return response()->json([
                         'status' => 'error',
@@ -629,29 +597,22 @@ class AttendanceController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Handle validation errors
-            Log::error('Validation failed in storeAttendanceCapture: ' . json_encode($e->errors()));
-            
-            // Clean up any stored image
-            if ($imagePath) {
-                Storage::disk('public')->delete($imagePath);
-            }
-            
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
-        } catch (Exception $e) {
-            Log::error('Attendance capture error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Attendance capture error: ' . $e->getMessage());
             
             // Delete any stored image if there was an error
-            if ($imagePath) {
+            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
             
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing your request. Please try again.',
+                'message' => 'An error occurred while processing your request.',
                 'debug' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
@@ -722,15 +683,15 @@ class AttendanceController extends Controller
                     ]);
 
                     if ($messageResponse->getStatusCode() !== 200) {
-                        throw new Exception('Failed to send Telegram message');
+                        throw new \Exception('Failed to send Telegram message');
                     }
 
                     // Then send the image
                     $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
                     
                     // Get the full URL for the image
-                    $storagePath = $attendance->$timestampField;
-                    $fullImageUrl = URL::to('/storage/' . $storagePath);
+                    $imagePath = Storage::disk('public')->url($attendance->$timestampField);
+                    $fullImageUrl = url($imagePath);
 
                     // Prepare image data
                     $imageCaption = "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
@@ -748,15 +709,14 @@ class AttendanceController extends Controller
                     ]);
 
                     if ($imageResponse->getStatusCode() !== 200) {
-                        throw new Exception('Failed to send Telegram image');
+                        throw new \Exception('Failed to send Telegram image');
                     }
 
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     // If sending image fails, try sending as file
                     try {
                         $documentUrl = "https://api.telegram.org/bot{$botToken}/sendDocument";
-                        $storagePath = $attendance->$timestampField;
-                        $filePath = storage_path('app/public/' . $storagePath);
+                        $filePath = Storage::disk('public')->path($attendance->$timestampField);
                         
                         if (file_exists($filePath)) {
                             $imageResponse = $client->post($documentUrl, [
@@ -780,12 +740,12 @@ class AttendanceController extends Controller
                             ]);
 
                             if ($imageResponse->getStatusCode() !== 200) {
-                                throw new Exception('Failed to send Telegram document');
+                                throw new \Exception('Failed to send Telegram document');
                             }
                         } else {
                             Log::warning("Timestamp image file not found: {$filePath}");
                         }
-                    } catch (Exception $docError) {
+                    } catch (\Exception $docError) {
                         Log::error('Failed to send image as document: ' . $docError->getMessage());
                     }
                 }
@@ -803,11 +763,11 @@ class AttendanceController extends Controller
                 ]);
 
                 if ($response->getStatusCode() !== 200) {
-                    throw new Exception('Failed to send Telegram message');
+                    throw new \Exception('Failed to send Telegram message');
                 }
             }
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Failed to send Telegram notification: ' . $e->getMessage());
         }
     }
