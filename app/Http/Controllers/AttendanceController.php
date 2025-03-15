@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Spatie\Permission\Traits\HasRoles;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\URL;
 
 class AttendanceController extends Controller
 {
@@ -690,8 +691,8 @@ class AttendanceController extends Controller
                     $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
                     
                     // Get the full URL for the image
-                    $imagePath = Storage::disk('public')->url($attendance->$timestampField);
-                    $fullImageUrl = url($imagePath);
+                    $storagePath = 'storage/' . $attendance->$timestampField;
+                    $fullImageUrl = URL::to($storagePath);
 
                     // Prepare image data
                     $imageCaption = "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
@@ -713,10 +714,12 @@ class AttendanceController extends Controller
                     }
 
                 } catch (\Exception $e) {
+                    Log::warning('Failed to send image via URL, attempting to send as document: ' . $e->getMessage());
+                    
                     // If sending image fails, try sending as file
                     try {
                         $documentUrl = "https://api.telegram.org/bot{$botToken}/sendDocument";
-                        $filePath = Storage::disk('public')->path($attendance->$timestampField);
+                        $filePath = storage_path('app/public/' . $attendance->$timestampField);
                         
                         if (file_exists($filePath)) {
                             $imageResponse = $client->post($documentUrl, [
@@ -743,32 +746,49 @@ class AttendanceController extends Controller
                                 throw new \Exception('Failed to send Telegram document');
                             }
                         } else {
-                            Log::warning("Timestamp image file not found: {$filePath}");
+                            Log::warning("Timestamp image file not found at path: {$filePath}");
+                            // Send message without image as fallback
+                            $this->sendTelegramMessageOnly($botToken, $chatId, $message);
                         }
                     } catch (\Exception $docError) {
                         Log::error('Failed to send image as document: ' . $docError->getMessage());
+                        // Send message without image as fallback
+                        $this->sendTelegramMessageOnly($botToken, $chatId, $message);
                     }
                 }
             } else {
                 // If no image is available, just send the message
-                $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
-                $messageData = [
-                    'chat_id' => $chatId,
-                    'text' => $message,
-                    'parse_mode' => 'Markdown'
-                ];
-
-                $response = $client->post($messageUrl, [
-                    'json' => $messageData
-                ]);
-
-                if ($response->getStatusCode() !== 200) {
-                    throw new \Exception('Failed to send Telegram message');
-                }
+                $this->sendTelegramMessageOnly($botToken, $chatId, $message);
             }
 
         } catch (\Exception $e) {
             Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Helper function to send Telegram message without image
+     */
+    private function sendTelegramMessageOnly($botToken, $chatId, $message)
+    {
+        try {
+            $client = new Client();
+            $messageUrl = "https://api.telegram.org/bot{$botToken}/sendMessage";
+            $messageData = [
+                'chat_id' => $chatId,
+                'text' => $message,
+                'parse_mode' => 'Markdown'
+            ];
+
+            $response = $client->post($messageUrl, [
+                'json' => $messageData
+            ]);
+
+            if ($response->getStatusCode() !== 200) {
+                throw new \Exception('Failed to send Telegram message');
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send Telegram message only: ' . $e->getMessage());
         }
     }
 
