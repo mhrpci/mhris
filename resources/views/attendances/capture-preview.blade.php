@@ -694,9 +694,18 @@
     async function getEmployeeInfo() {
         try {
             // Get authenticated user info
-            const response = await fetch('/api/employee-info');
+            const response = await fetch('/api/employee-info', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                }
+            });
+            
             if (!response.ok) {
-                throw new Error('Failed to fetch employee information');
+                const errorText = await response.text();
+                console.error('Employee info error:', response.status, errorText);
+                throw new Error(`Failed to fetch employee information: ${response.status}`);
             }
             
             const data = await response.json();
@@ -773,10 +782,17 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(attendanceData)
             });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response error:', response.status, errorText);
+                throw new Error(`Server returned ${response.status}: ${errorText.substring(0, 100)}`);
+            }
             
             const result = await response.json();
             
