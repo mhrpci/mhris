@@ -897,677 +897,219 @@
 @endsection
 
 @section('content')
-<div class="app-content">
-    <div class="attendance-container">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-12 col-md-8 col-lg-6">
-                    <div class="attendance-card">
-                        <div class="clock-display">
-                            <div class="time" id="current-time">00:00:00</div>
-                            <div class="date" id="current-date"></div>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Attendance Camera</h5>
+                </div>
+                <div class="card-body">
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
+                    @endif
 
-                        <div class="action-buttons" id="attendance-buttons">
-                            <!-- Buttons will be dynamically inserted here -->
+                    @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
+                    @endif
 
-                        <div class="location-info">
-                            <p class="location-text">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span id="current-location">Fetching location...</span>
-                            </p>
+                    <div class="attendance-status-container mb-4 text-center">
+                        <div id="attendanceStatusContainer" class="mb-3">
+                            <h4>Your Attendance Status</h4>
+                            <div id="statusIndicator" class="d-inline-block px-4 py-2 font-weight-bold rounded">
+                                <span id="currentStatus">Checking status...</span>
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="row justify-content-center">
+                        <div class="col-md-10">
+                            <div class="text-center mb-4">
+                                <div class="attendance-type-selector mb-3">
+                                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                        <label class="btn btn-outline-primary active">
+                                            <input type="radio" name="attendance_type" id="time_in" value="time_in" checked> Time In
+                                        </label>
+                                        <label class="btn btn-outline-primary">
+                                            <input type="radio" name="attendance_type" id="time_out" value="time_out"> Time Out
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="camera-container mb-4">
+                                <div class="video-container text-center">
+                                    <video id="camera" class="img-fluid border" style="max-height: 400px; background-color: #f8f9fa;" autoplay playsinline></video>
+                                    <canvas id="canvas" style="display: none;"></canvas>
+                                </div>
+
+                                <div class="text-center mt-3">
+                                    <p class="text-muted mb-1">Make sure your face is clearly visible</p>
+                                    <button id="captureBtn" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-camera"></i> Capture Photo
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="location-info text-center mb-3">
+                                <div id="locationStatus">
+                                    <i class="fas fa-map-marker-alt"></i> Getting your location...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="text-center text-muted">
+                        <small>Your attendance will be recorded with your photo, timestamp, and location</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Camera Modal -->
-<div class="camera-modal" id="cameraModal">
-    <div class="camera-controls">
-        <button class="camera-btn btn-switch-camera" onclick="switchCamera()">
-            <i class="fas fa-sync"></i>
-        </button>
-        <button class="camera-btn btn-close-camera" onclick="closeCamera()">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    
-    <div class="camera-logo-container">
-        <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="camera-logo">
-    </div>
-    
-    <div class="camera-container">
-        <video id="camera-feed" autoplay playsinline></video>
-        
-        <div class="camera-interface">
-            <div class="camera-frame">
-                <div class="camera-corners corner-top-left"></div>
-                <div class="camera-corners corner-top-right"></div>
-                <div class="camera-corners corner-bottom-left"></div>
-                <div class="camera-corners corner-bottom-right"></div>
-            </div>
-            <div class="camera-guide-text">
-                Position your face within the frame
-            </div>
-        </div>
-
-        <div class="camera-flash"></div>
-        
-        <div class="camera-overlay">
-            <div class="camera-overlay-content">
-                <div class="camera-status-badge in" id="overlay-status">
-                    <i class="fas fa-clock"></i>
-                    <span>Clock In</span>
-                </div>
-                <div class="overlay-info-group">
-                    <div class="overlay-time" id="overlay-time">00:00 AM</div>
-                    <div class="overlay-date" id="overlay-date"></div>
-                </div>
-                <div class="overlay-name" id="overlay-name"></div>
-                <div class="overlay-location">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span id="overlay-location">Fetching location...</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="camera-buttons">
-            <button class="btn-capture" onclick="captureImage()">
-                <i class="fas fa-camera"></i>
-                Capture
-            </button>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @section('scripts')
 <script>
-    let currentStream = null;
-    let currentFacingMode = 'user';
-    let locationWatchId = null;
-    let currentAttendanceType = 'in';
-
-    // Profile Preview Functions
-    function openProfilePreview(imageSrc) {
-        const modal = document.getElementById('profilePreviewModal');
-        const previewImage = document.getElementById('profilePreviewImage');
-        
-        previewImage.src = imageSrc;
-        modal.classList.add('active');
-        
-        // Close modal when clicking outside the image
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeProfilePreview();
-            }
-        });
-
-        // Add escape key listener
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeProfilePreview();
-            }
-        });
-    }
-
-    function closeProfilePreview() {
-        const modal = document.getElementById('profilePreviewModal');
-        modal.classList.remove('active');
-    }
-
-    // Update time and date with server time
-    async function updateDateTime() {
-        try {
-            // Fetch server time instead of using client time
-            const response = await fetch('/api/server-time');
-            if (!response.ok) {
-                throw new Error('Failed to fetch server time');
-            }
-            
-            const data = await response.json();
-            const serverTime = new Date(data.timestamp);
-            
-            // Update time display with server time
-            document.getElementById('current-time').textContent = new Intl.DateTimeFormat('en-US', { 
-                timeZone: 'Asia/Manila',
-                hour12: true,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            }).format(serverTime).toUpperCase();
-            
-            document.getElementById('current-date').textContent = new Intl.DateTimeFormat('en-US', { 
-                timeZone: 'Asia/Manila',
-                weekday: 'long',
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            }).format(serverTime);
-            
-            // Update overlay time if camera is active
-            if (document.getElementById('cameraModal').style.display === 'block') {
-                document.getElementById('overlay-time').textContent = new Intl.DateTimeFormat('en-US', { 
-                    timeZone: 'Asia/Manila',
-                    hour12: true,
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }).format(serverTime).toUpperCase();
-                
-                document.getElementById('overlay-date').textContent = new Intl.DateTimeFormat('en-US', { 
-                    timeZone: 'Asia/Manila',
-                    weekday: 'short',
-                    month: 'short',
-                    day: '2-digit',
-                    year: 'numeric'
-                }).format(serverTime);
-            }
-        } catch (error) {
-            console.error('Error updating time:', error);
-        }
-    }
-
-    // Update overlay information with server time
-    async function updateOverlayInfo(type) {
-        try {
-            // Fetch server time
-            const response = await fetch('/api/server-time');
-            if (!response.ok) {
-                throw new Error('Failed to fetch server time');
-            }
-            
-            const data = await response.json();
-            const serverTime = new Date(data.timestamp);
-            
-            const timeStr = new Intl.DateTimeFormat('en-US', { 
-                timeZone: 'Asia/Manila',
-                hour12: true,
-                hour: '2-digit',
-                minute: '2-digit'
-            }).format(serverTime).toUpperCase();
-            
-            const dateStr = new Intl.DateTimeFormat('en-US', { 
-                timeZone: 'Asia/Manila',
-                weekday: 'short',
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric'
-            }).format(serverTime);
-
-            // Update status badge
-            const statusElement = document.getElementById('overlay-status');
-            const statusText = type === 'in' ? 'Clock In' : 'Clock Out';
-            statusElement.innerHTML = `<i class="fas fa-clock"></i><span>${statusText}</span>`;
-            statusElement.className = `camera-status-badge ${type}`;
-
-            // Update other overlay elements with server time
-            document.getElementById('overlay-time').textContent = timeStr;
-            document.getElementById('overlay-date').textContent = dateStr;
-            document.getElementById('overlay-name').textContent = `{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}`;
-            
-            // Location will be updated by the location watcher
-            const locationElement = document.getElementById('overlay-location');
-            if (locationElement.textContent === '') {
-                locationElement.textContent = 'Fetching location...';
-            }
-        } catch (error) {
-            console.error('Error updating overlay info:', error);
-        }
-    }
-
-    // Initialize location tracking with high accuracy
-    function initializeLocation() {
-        if ("geolocation" in navigator) {
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-            };
-
-            locationWatchId = navigator.geolocation.watchPosition(
-                position => {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-                    
-                    // Use reverse geocoding to get address with more parameters
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`)
-                        .then(response => response.json())
-                        .then(data => {
-                            let locationText = '';
-                            if (data.address) {
-                                const addr = data.address;
-                                // Construct a more precise address
-                                const parts = [];
-                                if (addr.building) parts.push(addr.building);
-                                if (addr.road) parts.push(addr.road);
-                                if (addr.suburb) parts.push(addr.suburb);
-                                if (addr.city || addr.town) parts.push(addr.city || addr.town);
-                                locationText = parts.join(', ');
-                            } else {
-                                locationText = data.display_name;
-                            }
-                            
-                            // Add accuracy indicator if precision is low
-                            if (accuracy > 100) { // More than 100 meters
-                                locationText += ` (±${Math.round(accuracy)}m)`;
-                            }
-                            
-                            document.getElementById('current-location').textContent = locationText;
-                            document.getElementById('overlay-location').textContent = locationText;
-                        })
-                        .catch(() => {
-                            const locationText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`;
-                            document.getElementById('current-location').textContent = locationText;
-                            document.getElementById('overlay-location').textContent = locationText;
-                        });
-                },
-                error => {
-                    let errorText = 'Unable to retrieve location';
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorText = 'Location access denied. Please enable location services.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorText = 'Location information unavailable.';
-                            break;
-                        case error.TIMEOUT:
-                            errorText = 'Location request timed out.';
-                            break;
-                    }
-                    document.getElementById('current-location').textContent = errorText;
-                    document.getElementById('overlay-location').textContent = errorText;
-                },
-                options
-            );
-        }
-    }
-
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+    const locationStatus = document.getElementById('locationStatus');
+    let locationData = null;
+    
+    // Check attendance status when page loads
+    checkAttendanceStatus();
+    
     // Initialize camera
-    async function initializeCamera(facingMode = 'user') {
-        try {
-            // First check if the device has a camera
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('Camera API is not supported on this device or browser.');
-            }
-
-            // Stop any existing stream
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-            }
-
-            const constraints = {
-                video: {
-                    facingMode: facingMode,
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }
-            };
-
-            try {
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-            } catch (permissionError) {
-                if (permissionError.name === 'NotAllowedError') {
-                    throw new Error('Camera permission was denied. Please allow camera access and try again.');
-                } else if (permissionError.name === 'NotFoundError') {
-                    throw new Error('No camera found on this device.');
-                } else {
-                    throw permissionError;
-                }
-            }
-
-            const videoElement = document.getElementById('camera-feed');
-            videoElement.srcObject = currentStream;
-            
-            // Apply mirroring only for front camera
-            videoElement.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
-            
-            // Wait for video to be ready
-            await new Promise((resolve) => {
-                videoElement.onloadedmetadata = () => {
-                    videoElement.play().then(resolve).catch(resolve);
-                };
-            });
-            
-            currentFacingMode = facingMode;
-
-        } catch (error) {
-            console.error('Error accessing camera:', error);
-            
-            // Show user-friendly error message
-            const errorMessage = error.message || 'Unable to access camera. Please ensure camera permissions are granted.';
-            alert(errorMessage);
-            
-            // Close camera modal and return to main view
-            closeCamera();
-            return false;
-        }
-        return true;
-    }
-
-    // Close camera
-    function closeCamera() {
-        document.getElementById('cameraModal').style.display = 'none';
-        document.body.classList.remove('camera-active');
-        if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());
-        }
-    }
-
-    // Switch camera
-    function switchCamera() {
-        const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-        initializeCamera(newFacingMode);
-    }
-
-    // Start attendance process
-    function startAttendance(type) {
-        currentAttendanceType = type;
-        document.getElementById('cameraModal').style.display = 'block';
-        document.body.classList.add('camera-active');
-        initializeCamera('user');
-        updateOverlayInfo(type);
-        
-        // Handle orientation change
-        window.addEventListener('resize', () => {
-            if (currentStream) {
-                initializeCamera(currentFacingMode);
-            }
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: 'user',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            } 
+        })
+        .then(function(stream) {
+            video.srcObject = stream;
+        })
+        .catch(function(error) {
+            console.error('Camera error:', error);
+            alert('Unable to access camera. Please ensure camera permissions are granted and try again.');
         });
+    } else {
+        alert('Your browser does not support camera access. Please use a modern browser.');
     }
-
-    // Capture image with server timestamp
-    async function captureImage() {
-        try {
-            // Fetch server time before capturing
-            const timeResponse = await fetch('/api/server-time');
-            if (!timeResponse.ok) {
-                throw new Error('Failed to fetch server time');
+    
+    // Get user location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            // Success callback
+            function(position) {
+                locationData = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                };
+                
+                locationStatus.innerHTML = `<i class="fas fa-check-circle text-success"></i> Location acquired`;
+                
+                // Store location in session storage
+                sessionStorage.setItem('latitude', locationData.latitude);
+                sessionStorage.setItem('longitude', locationData.longitude);
+            },
+            // Error callback
+            function(error) {
+                console.error('Geolocation error:', error);
+                locationStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> Location unavailable. Please enable location access.`;
             }
-            
-            const timeData = await timeResponse.json();
-            const serverTimestamp = timeData.timestamp;
-
-            // Add flash effect
-            const flash = document.querySelector('.camera-flash');
-            flash.classList.add('flash-active');
-            
-            // Remove flash class after animation
-            setTimeout(() => {
-                flash.classList.remove('flash-active');
-            }, 300);
-
-            const video = document.getElementById('camera-feed');
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            const context = canvas.getContext('2d');
-            if (currentFacingMode === 'user') {
-                context.scale(-1, 1);
-                context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-            } else {
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        );
+    } else {
+        locationStatus.innerHTML = `<i class="fas fa-times-circle text-danger"></i> Geolocation not supported by your browser`;
+    }
+    
+    // Capture button click handler
+    captureBtn.addEventListener('click', function() {
+        if (!locationData) {
+            if (!confirm('Your location has not been acquired yet. Continue without location data?')) {
+                return;
             }
-
-            // Add timestamp to the image
-            context.font = '14px Arial';
-            context.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            context.fillText(`Timestamp: ${serverTimestamp}`, 10, canvas.height - 10);
-
-            const imageData = canvas.toDataURL('image/jpeg');
-            
-            // Store image data, location, and server timestamp in localStorage
-            localStorage.setItem('capturedImage', imageData);
-            localStorage.setItem('userLocation', document.getElementById('current-location').textContent);
-            localStorage.setItem('serverTimestamp', serverTimestamp);
-            
-            // Close camera
-            closeCamera();
-            
-            // Redirect to preview page with necessary parameters
-            const params = new URLSearchParams({
-                type: currentAttendanceType
-            });
-            
-            window.location.href = `/attendance/preview?${params.toString()}`;
-        } catch (error) {
-            console.error('Error capturing image:', error);
-            alert('Error capturing image. Please try again.');
         }
-    }
-
-    // Add new function to update attendance buttons
-    function updateAttendanceButtons() {
-        fetch('/attendance/status')
+        
+        // Draw current video frame to canvas
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Get image data
+        const imageData = canvas.toDataURL('image/jpeg');
+        
+        // Store data in session storage for the preview page
+        const timestamp = new Date().toISOString();
+        sessionStorage.setItem('capturedImageData', imageData);
+        sessionStorage.setItem('timestamp', timestamp);
+        
+        // Get selected attendance type
+        const attendanceType = document.querySelector('input[name="attendance_type"]:checked').value;
+        sessionStorage.setItem('attendanceType', attendanceType);
+        
+        // Navigate to preview page
+        window.location.href = "{{ route('attendance.preview') }}";
+    });
+    
+    // Function to check attendance status
+    function checkAttendanceStatus() {
+        const statusContainer = document.getElementById('statusIndicator');
+        const currentStatus = document.getElementById('currentStatus');
+        
+        fetch("{{ route('attendance.status') }}")
             .then(response => response.json())
             .then(data => {
-                const buttonsContainer = document.getElementById('attendance-buttons');
-                
                 if (data.status === 'success') {
-                    let buttonHtml = '';
-                    
-                    switch(data.action) {
-                        case 'clock_in':
-                            buttonHtml = `
-                                <button class="btn-clock-in" onclick="startAttendance('in')">
-                                    <i class="fas fa-sign-in-alt"></i>
-                                    <span>Clock In</span>
-                                    <div>Start your workday</div>
-                                </button>
-                            `;
-                            break;
-                            
-                        case 'clock_out':
-                            buttonHtml = `
-                                <button class="btn-clock-out" onclick="startAttendance('out')">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                    <span>Clock Out</span>
-                                    <div>End your workday</div>
-                                </button>
-                            `;
-                            break;
-                            
-                        case 'completed':
-                            buttonHtml = `
-                                <div class="alert alert-info text-center" role="alert">
-                                    <i class="fas fa-check-circle"></i>
-                                    ${data.message}
-                                </div>
-                            `;
-                            break;
+                    if (data.attendance_status === 'timed_in') {
+                        statusContainer.className = 'd-inline-block px-4 py-2 font-weight-bold rounded bg-success text-white';
+                        currentStatus.textContent = 'You are TIMED IN';
+                        // Auto-select time_out radio button
+                        document.getElementById('time_out').checked = true;
+                        document.getElementById('time_out').parentElement.classList.add('active');
+                        document.getElementById('time_in').parentElement.classList.remove('active');
+                    } else if (data.attendance_status === 'timed_out') {
+                        statusContainer.className = 'd-inline-block px-4 py-2 font-weight-bold rounded bg-danger text-white';
+                        currentStatus.textContent = 'You are TIMED OUT';
+                        // Auto-select time_in radio button
+                        document.getElementById('time_in').checked = true;
+                        document.getElementById('time_in').parentElement.classList.add('active');
+                        document.getElementById('time_out').parentElement.classList.remove('active');
+                    } else {
+                        statusContainer.className = 'd-inline-block px-4 py-2 font-weight-bold rounded bg-warning text-dark';
+                        currentStatus.textContent = 'No attendance record today';
+                        // Auto-select time_in radio button
+                        document.getElementById('time_in').checked = true;
+                        document.getElementById('time_in').parentElement.classList.add('active');
+                        document.getElementById('time_out').parentElement.classList.remove('active');
                     }
-                    
-                    buttonsContainer.innerHTML = buttonHtml;
                 } else {
-                    // Handle error state
-                    buttonsContainer.innerHTML = `
-                        <div class="alert alert-danger text-center" role="alert">
-                            <i class="fas fa-exclamation-circle"></i>
-                            ${data.message}
-                        </div>
-                    `;
+                    statusContainer.className = 'd-inline-block px-4 py-2 font-weight-bold rounded bg-secondary text-white';
+                    currentStatus.textContent = 'Unable to check status';
                 }
             })
             .catch(error => {
-                console.error('Error fetching attendance status:', error);
-                const buttonsContainer = document.getElementById('attendance-buttons');
-                buttonsContainer.innerHTML = `
-                    <div class="alert alert-danger text-center" role="alert">
-                        <i class="fas fa-exclamation-circle"></i>
-                        An error occurred while checking attendance status
-                    </div>
-                `;
+                console.error('Error checking attendance status:', error);
+                statusContainer.className = 'd-inline-block px-4 py-2 font-weight-bold rounded bg-secondary text-white';
+                currentStatus.textContent = 'Error checking status';
             });
     }
-
-    // Initialize with server time sync
-    document.addEventListener('DOMContentLoaded', () => {
-        // Check for success or error messages in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const successMsg = urlParams.get('success');
-        const errorMsg = urlParams.get('error');
-        
-        if (successMsg) {
-            showStatusMessage(decodeURIComponent(successMsg), 'success');
-            // Remove the message from URL to prevent showing it again on refresh
-            window.history.replaceState({}, document.title, window.location.pathname);
-        } else if (errorMsg) {
-            showStatusMessage(decodeURIComponent(errorMsg), 'error');
-            // Remove the message from URL to prevent showing it again on refresh
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-        
-        // Initial update
-        updateDateTime();
-        updateAttendanceButtons();
-        
-        // Set up periodic updates every second, but fetch from server every minute
-        let secondsCounter = 0;
-        setInterval(async () => {
-            secondsCounter++;
-            if (secondsCounter >= 60) {
-                // Fetch fresh server time every minute
-                secondsCounter = 0;
-                await updateDateTime();
-                updateAttendanceButtons();
-            } else {
-                // For intermediate seconds, just update the display
-                const timeDisplay = document.getElementById('current-time');
-                const currentParts = timeDisplay.textContent.split(':');
-                if (currentParts.length === 3) {
-                    const seconds = parseInt(currentParts[2]);
-                    currentParts[2] = ((seconds + 1) % 60).toString().padStart(2, '0');
-                    timeDisplay.textContent = currentParts.join(':');
-                }
-            }
-        }, 1000);
-
-        initializeLocation();
-    });
-
-    // Show status message
-    function showStatusMessage(message, type = 'success') {
-        // Create message element if it doesn't exist
-        let messageContainer = document.getElementById('status-message-container');
-        if (!messageContainer) {
-            messageContainer = document.createElement('div');
-            messageContainer.id = 'status-message-container';
-            messageContainer.style.position = 'fixed';
-            messageContainer.style.top = '20px';
-            messageContainer.style.left = '50%';
-            messageContainer.style.transform = 'translateX(-50%)';
-            messageContainer.style.zIndex = '9999';
-            messageContainer.style.maxWidth = '90%';
-            document.body.appendChild(messageContainer);
-        }
-        
-        // Create message element
-        const messageElement = document.createElement('div');
-        messageElement.className = `alert alert-${type === 'success' ? 'success' : 'danger'} d-flex align-items-center`;
-        messageElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-        messageElement.style.minWidth = '300px';
-        messageElement.style.animation = 'fadeInDown 0.5s ease-out';
-        
-        // Add icon based on type
-        const icon = document.createElement('i');
-        icon.className = type === 'success' ? 'fas fa-check-circle mr-2' : 'fas fa-exclamation-circle mr-2';
-        messageElement.appendChild(icon);
-        
-        // Add message text
-        const textSpan = document.createElement('span');
-        
-        // Format the message with current time if it's a success message
-        if (type === 'success') {
-            // Get current time
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            
-            // Check if it's a clock in or clock out message
-            if (message.toLowerCase().includes('clock in')) {
-                textSpan.innerHTML = `<strong>Clock In Successful!</strong><br>You clocked in at ${timeStr}. Have a productive day!`;
-            } else if (message.toLowerCase().includes('clock out')) {
-                textSpan.innerHTML = `<strong>Clock Out Successful!</strong><br>You clocked out at ${timeStr}. Have a great rest of your day!`;
-            } else {
-                textSpan.textContent = message;
-            }
-        } else {
-            textSpan.textContent = message;
-        }
-        
-        messageElement.appendChild(textSpan);
-        
-        // Add close button
-        const closeButton = document.createElement('button');
-        closeButton.type = 'button';
-        closeButton.className = 'close ml-auto';
-        closeButton.innerHTML = '&times;';
-        closeButton.addEventListener('click', () => {
-            messageElement.remove();
-        });
-        messageElement.appendChild(closeButton);
-        
-        // Add to container
-        messageContainer.appendChild(messageElement);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (messageElement.parentNode) {
-                messageElement.style.animation = 'fadeOutUp 0.5s ease-out';
-                setTimeout(() => {
-                    if (messageElement.parentNode) {
-                        messageElement.remove();
-                    }
-                }, 500);
-            }
-        }, 5000);
-    }
-
-    // Add CSS for animations
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes fadeOutUp {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Clean up
-    window.addEventListener('beforeunload', () => {
-        document.body.classList.remove('camera-active');
-        if (locationWatchId) {
-            navigator.geolocation.clearWatch(locationWatchId);
-        }
-        if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());
-        }
-    });
+});
 </script>
 @endsection
