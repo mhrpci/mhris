@@ -989,6 +989,7 @@ class ComposerStaticInitd6472e76c2bfceaf87459900260eb5d1
         'App\\Http\\Controllers\\CareerController' => __DIR__ . '/../..' . '/app/Http/Controllers/CareerController.php',
         'App\\Http\\Controllers\\CashAdvanceController' => __DIR__ . '/../..' . '/app/Http/Controllers/CashAdvanceController.php',
         'App\\Http\\Controllers\\CategoryController' => __DIR__ . '/../..' . '/app/Http/Controllers/CategoryController.php',
+        'App\\Http\\Controllers\\CelebrantsController' => __DIR__ . '/../..' . '/app/Http/Controllers/CelebrantsController.php',
         'App\\Http\\Controllers\\CityController' => __DIR__ . '/../..' . '/app/Http/Controllers/CityController.php',
         'App\\Http\\Controllers\\ContactController' => __DIR__ . '/../..' . '/app/Http/Controllers/ContactController.php',
         'App\\Http\\Controllers\\ContributionController' => __DIR__ . '/../..' . '/app/Http/Controllers/ContributionController.php',

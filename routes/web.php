@@ -162,6 +162,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('sss', SssController::class)->except(['edit', 'update']);
     Route::resource('pagibig', PagibigController::class)->except(['edit', 'update']);
     Route::resource('philhealth', PhilhealthController::class)->except(['edit', 'update']);
+    Route::resource('system-updates', SystemUpdateController::class);
 
 
     // Employees routes
@@ -367,9 +368,6 @@ Route::middleware('auth')->group(function () {
     // Login History route
     Route::get('/login-history', [LoginHistoryController::class, 'index'])->name('login.history');
 
-    // System Updates routes
-    Route::resource('system-updates', SystemUpdateController::class)
-        ->middleware(['auth', 'role:Super Admin']);
 
     // Medical Products routes
     Route::resource('medical-products', MedicalProductController::class)->parameters([

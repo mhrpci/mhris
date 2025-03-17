@@ -4,26 +4,38 @@ namespace App\Http\Controllers;
 
 use App\Models\SystemUpdate;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class SystemUpdateController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
     public function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('role:Super Admin');
+        $this->middleware(['auth', 'role:Super Admin']);
     }
+
     /**
-     * Display a listing of system updates.
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        $updates = SystemUpdate::latest('published_at')->all();
+        $updates = SystemUpdate::with('author')
+            ->orderBy('published_at', 'desc')
+            ->paginate(10);
+
         return view('system-updates.index', compact('updates'));
     }
 
     /**
-     * Show the form for creating a new system update.
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
      */
     public function create()
     {
@@ -31,29 +43,37 @@ class SystemUpdateController extends Controller
     }
 
     /**
-     * Store a newly created system update in storage.
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|max:255',
-            'description' => 'required',
-            'published_at' => 'required|date',
-            'is_active' => 'boolean',
-            'author_id' => 'required|exists:users,id'
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'published_at' => 'nullable|date',
+            'is_active' => 'boolean'
         ]);
 
-        $validated['published_at'] = Carbon::parse($validated['published_at']);
-        $validated['is_active'] = $request->has('is_active');
-
-        SystemUpdate::create($validated);
+        $update = SystemUpdate::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'published_at' => $request->published_at ?? now(),
+            'is_active' => $request->has('is_active'),
+            'author_id' => Auth::id()
+        ]);
 
         return redirect()->route('system-updates.index')
             ->with('success', 'System update created successfully.');
     }
 
     /**
-     * Display the specified system update.
+     * Display the specified resource.
+     *
+     * @param  \App\Models\SystemUpdate  $systemUpdate
+     * @return \Illuminate\Http\Response
      */
     public function show(SystemUpdate $systemUpdate)
     {
@@ -61,7 +81,10 @@ class SystemUpdateController extends Controller
     }
 
     /**
-     * Show the form for editing the specified system update.
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\SystemUpdate  $systemUpdate
+     * @return \Illuminate\Http\Response
      */
     public function edit(SystemUpdate $systemUpdate)
     {
@@ -69,29 +92,37 @@ class SystemUpdateController extends Controller
     }
 
     /**
-     * Update the specified system update in storage.
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\SystemUpdate  $systemUpdate
+     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, SystemUpdate $systemUpdate)
     {
-        $validated = $request->validate([
-            'title' => 'required|max:255',
-            'description' => 'required',
-            'published_at' => 'required|date',
-            'is_active' => 'boolean',
-            'author_id' => 'required|exists:users,id'
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'published_at' => 'nullable|date',
+            'is_active' => 'boolean'
         ]);
 
-        $validated['published_at'] = Carbon::parse($validated['published_at']);
-        $validated['is_active'] = $request->has('is_active');
-
-        $systemUpdate->update($validated);
+        $systemUpdate->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'published_at' => $request->published_at,
+            'is_active' => $request->has('is_active')
+        ]);
 
         return redirect()->route('system-updates.index')
             ->with('success', 'System update updated successfully.');
     }
 
     /**
-     * Remove the specified system update from storage.
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\SystemUpdate  $systemUpdate
+     * @return \Illuminate\Http\Response
      */
     public function destroy(SystemUpdate $systemUpdate)
     {
@@ -100,4 +131,4 @@ class SystemUpdateController extends Controller
         return redirect()->route('system-updates.index')
             ->with('success', 'System update deleted successfully.');
     }
-}
+} 

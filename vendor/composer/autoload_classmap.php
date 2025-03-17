@@ -56,6 +56,7 @@ return array(
     'App\\Http\\Controllers\\CareerController' => $baseDir . '/app/Http/Controllers/CareerController.php',
     'App\\Http\\Controllers\\CashAdvanceController' => $baseDir . '/app/Http/Controllers/CashAdvanceController.php',
     'App\\Http\\Controllers\\CategoryController' => $baseDir . '/app/Http/Controllers/CategoryController.php',
+    'App\\Http\\Controllers\\CelebrantsController' => $baseDir . '/app/Http/Controllers/CelebrantsController.php',
     'App\\Http\\Controllers\\CityController' => $baseDir . '/app/Http/Controllers/CityController.php',
     'App\\Http\\Controllers\\ContactController' => $baseDir . '/app/Http/Controllers/ContactController.php',
     'App\\Http\\Controllers\\ContributionController' => $baseDir . '/app/Http/Controllers/ContributionController.php',
