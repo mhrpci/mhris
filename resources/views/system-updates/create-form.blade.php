@@ -386,12 +386,19 @@
             </div>
         </div>
         <div class="card-body">
+            @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            @endif
+            
             <form action="{{ route('system-updates.store') }}" 
                   method="POST"
                   class="needs-validation"
                   novalidate>
                 @csrf
-                <input type="hidden" name="author_id" value="{{ auth()->id() }}">
+                <input type="hidden" name="author_id" value="{{ auth()->id() ?? '' }}">
 
                 <div class="field-group">
                     <div class="field-group-title">

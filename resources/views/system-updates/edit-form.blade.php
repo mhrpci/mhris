@@ -386,13 +386,20 @@
             </div>
         </div>
         <div class="card-body">
+            @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            @endif
+            
             <form action="{{ route('system-updates.update', $systemUpdate) }}" 
                   method="POST"
                   class="needs-validation"
                   novalidate>
                 @csrf
                 @method('PUT')
-                <input type="hidden" name="author_id" value="{{ auth()->id() }}">
+                <input type="hidden" name="author_id" value="{{ auth()->id() ?? '' }}">
 
                 <div class="field-group">
                     <div class="field-group-title">
@@ -405,7 +412,7 @@
                                class="form-control @error('title') is-invalid @enderror" 
                                id="title" 
                                name="title" 
-                               value="{{ old('title', $systemUpdate->title) }}" 
+                               value="{{ old('title', $systemUpdate->title ?? '') }}" 
                                placeholder="Enter update title"
                                required>
                         @error('title')
@@ -420,7 +427,7 @@
                                   name="description" 
                                   rows="4" 
                                   placeholder="Enter detailed description"
-                                  required>{{ old('description', $systemUpdate->description) }}</textarea>
+                                  required>{{ old('description', $systemUpdate->description ?? '') }}</textarea>
                         @error('description')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -445,7 +452,7 @@
                                        name="published_at" 
                                        placeholder="Select date"
                                        value="{{ old('published_at', 
-                                           $systemUpdate->published_at ? 
+                                           isset($systemUpdate) && $systemUpdate->published_at ? 
                                                (is_string($systemUpdate->published_at) ? 
                                                    \Carbon\Carbon::parse($systemUpdate->published_at)->format('Y-m-d') : 
                                                    $systemUpdate->published_at->format('Y-m-d')) 
@@ -466,12 +473,12 @@
                                            value="1" 
                                            id="is_active"
                                            class="@error('is_active') is-invalid @enderror"
-                                           {{ old('is_active', $systemUpdate->is_active) ? 'checked' : '' }}>
+                                           {{ old('is_active', isset($systemUpdate) && $systemUpdate->is_active ? true : false) ? 'checked' : '' }}>
                                     <span class="toggle-slider"></span>
                                 </label>
                                 <label class="toggle-label" for="is_active">
                                     <span class="status-text" id="statusText">
-                                        {{ old('is_active', $systemUpdate->is_active) ? 'Active' : 'Inactive' }}
+                                        {{ old('is_active', isset($systemUpdate) && $systemUpdate->is_active ? 'Active' : 'Inactive') }}
                                     </span>
                                 </label>
                             </div>
