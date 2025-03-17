@@ -134,7 +134,7 @@
                                         </div>
                                         
                                         <div class="alert alert-info shadow-sm">
-                                            <i class="fas fa-user-edit me-1"></i> Originally authored by <strong>{{ $systemUpdate->author->name ?? 'Unknown' }}</strong>
+                                            <i class="fas fa-user-edit me-1"></i> Originally authored by <strong>{{ $systemUpdate->author->first_name }} {{ $systemUpdate->author->last_name }}</strong>
                                             <hr>
                                             <small><i class="fas fa-clock me-1"></i> Created: {{ $systemUpdate->created_at->format('M d, Y h:i A') }}</small><br>
                                             <small><i class="fas fa-edit me-1"></i> Last Updated: {{ $systemUpdate->updated_at->format('M d, Y h:i A') }}</small>
