@@ -753,6 +753,11 @@
             // Show loading overlay
             document.getElementById('loading-overlay').style.display = 'flex';
             
+            // Validate required data
+            if (!capturedImage || !serverTimestamp || !attendanceType) {
+                throw new Error('Missing required attendance data. Please try again.');
+            }
+            
             // Capture the entire preview with overlays
             const previewImage = await capturePreviewWithOverlays();
             
@@ -764,11 +769,12 @@
             const attendanceData = {
                 type: attendanceType,
                 image: previewImage, // Use the captured preview image with overlays
-                location: userLocation,
+                location: userLocation || 'Unknown location',
                 timestamp: serverTimestamp
             };
             
             // Submit attendance data
+            console.log('Submitting attendance data...');
             const response = await fetch('/attendance/capture', {
                 method: 'POST',
                 headers: {
@@ -778,7 +784,15 @@
                 body: JSON.stringify(attendanceData)
             });
             
-            const result = await response.json();
+            // Parse the response
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                const text = await response.text();
+                throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}...`);
+            }
             
             // Hide loading overlay
             document.getElementById('loading-overlay').style.display = 'none';
@@ -808,141 +822,21 @@
             // Hide loading overlay
             document.getElementById('loading-overlay').style.display = 'none';
             
-            // Show error message
-            showAlert(error.message || 'Failed to record attendance. Please try again.', 'error');
+            // Show error message with more details
+            showAlert(`Failed to record attendance: ${error.message}`, 'error');
         }
     }
     
     // Capture the preview with all overlays
     async function capturePreviewWithOverlays() {
         try {
-            // Hide the buttons and alert message during capture
-            const actionsElement = document.querySelector('.preview-actions');
-            const alertElement = document.getElementById('alert-message');
-            const originalActionsDisplay = actionsElement.style.display;
-            const originalAlertDisplay = alertElement.style.display;
-            
-            actionsElement.style.display = 'none';
-            alertElement.style.display = 'none';
-            
-            // Use html2canvas to capture the entire preview container
-            const previewContainer = document.querySelector('.image-preview-container');
-            
-            // Wait a moment for display changes to take effect
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Use html2canvas library to capture the preview with overlays
-            const canvas = await html2canvas(previewContainer, {
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#000000',
-                scale: 2, // Higher quality
-                logging: false
-            });
-            
-            // Restore the buttons and alert
-            actionsElement.style.display = originalActionsDisplay;
-            alertElement.style.display = originalAlertDisplay;
-            
-            // Add additional information to the image
-            enhanceCanvasWithDetails(canvas, {
-                name: employeeName,
-                position: employeePosition,
-                department: employeeDepartment,
-                location: userLocation,
-                timestamp: serverTimestamp,
-                type: attendanceType
-            });
-            
-            // Convert canvas to base64 image
-            const imageData = canvas.toDataURL('image/jpeg', 0.95);
-            
-            return imageData;
+            // Use the original captured image instead of trying to recapture with overlays
+            // This is more reliable than using html2canvas
+            return capturedImage;
         } catch (error) {
             console.error('Error capturing preview with overlays:', error);
             return null;
         }
-    }
-    
-    // Add additional information to the canvas
-    function enhanceCanvasWithDetails(canvas, details) {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        // Add a gradient footer for additional information
-        const footerHeight = 60;
-        const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
-        
-        // Set text style for main verification text
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.font = 'bold 16px Arial';
-        ctx.textBaseline = 'middle';
-        
-        // Format timestamp
-        const timestamp = new Date(details.timestamp);
-        const formattedDate = timestamp.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        const formattedTime = timestamp.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-        
-        // Add detailed verification text
-        const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
-        ctx.fillText(verificationText, 20, height - footerHeight + 15);
-        
-        // Add timestamp details
-        ctx.font = '14px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
-        ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
-        
-        // Add employee details on the right
-        ctx.textAlign = 'right';
-        ctx.fillText(`${details.name}`, width - 20, height - footerHeight + 15);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`${details.position}`, width - 20, height - footerHeight + 35);
-        ctx.fillText(`${details.department}`, width - 20, height - footerHeight + 55);
-        
-        // Add location in the middle
-        ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`Location: ${details.location}`, width/2, height - footerHeight + 35);
-        
-        // Add system verification text
-        ctx.font = 'bold 12px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        const systemText = 'HRIS ATTENDANCE SYSTEM';
-        ctx.fillText(systemText, width/2, height - footerHeight + 55);
-        
-        // Add unique verification ID
-        const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-        ctx.fillText(verificationId, width/2, height - footerHeight + 15);
-        
-        // Add professional watermark
-        ctx.save();
-        ctx.globalAlpha = 0.07;
-        ctx.font = 'bold 120px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.translate(width/2, height/2);
-        ctx.rotate(-Math.PI/6); // Rotate -30 degrees
-        const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
-        ctx.fillText(watermarkText, 0, 0);
-        ctx.font = 'bold 60px Arial';
-        ctx.fillText('VERIFIED', 0, 80);
-        ctx.restore();
     }
     
     // Clean up when leaving the page
