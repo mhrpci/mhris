@@ -82,21 +82,22 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-light">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-history me-2"></i>
                         Today's Activity
                     </h5>
+                    <span class="badge bg-primary" id="activity-date"></span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Action</th>
-                                    <th>Location</th>
-                                    <th>Status</th>
+                                <tr class="text-center">
+                                    <th style="width: 25%">Clock In Time</th>
+                                    <th style="width: 25%">Clock Out Time</th>
+                                    <th style="width: 35%">Location</th>
+                                    <th style="width: 15%">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="activity-log">
@@ -149,6 +150,19 @@
             padding-right: 1rem;
         }
     }
+    .table td {
+        vertical-align: middle;
+    }
+    .activity-time {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+    }
+    .location-text {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 </style>
 @endpush
 
@@ -159,16 +173,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDateTime() {
         const now = new Date();
         document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', {
-            hour12: false,
             hour: '2-digit',
             minute: '2-digit',
-            second: '2-digit'
+            second: '2-digit',
+            hour12: true
         });
         document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
+        });
+        document.getElementById('activity-date').textContent = now.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
         });
     }
     setInterval(updateDateTime, 1000);
@@ -201,22 +220,42 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Activity Log Update
+    let currentActivityRow = null;
+    
     function updateActivityLog(action) {
         const tbody = document.getElementById('activity-log');
         const now = new Date();
-        const row = document.createElement('tr');
+        const timeString = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+        const location = document.getElementById('current-location').textContent;
         
-        if (tbody.firstElementChild.getElementsByTagName('td')[0].colSpan) {
-            tbody.innerHTML = '';
+        if (action === 'Clock In') {
+            // Create new row for new clock in
+            if (tbody.firstElementChild.getElementsByTagName('td')[0].colSpan) {
+                tbody.innerHTML = '';
+            }
+            
+            const row = document.createElement('tr');
+            row.className = 'text-center';
+            row.innerHTML = `
+                <td class="activity-time text-success">${timeString}</td>
+                <td class="activity-time text-muted">--:--:-- --</td>
+                <td class="location-text" title="${location}">${location}</td>
+                <td><span class="badge bg-warning">In Progress</span></td>
+            `;
+            tbody.insertBefore(row, tbody.firstChild);
+            currentActivityRow = row;
+        } else if (action === 'Clock Out' && currentActivityRow) {
+            // Update existing row with clock out time
+            currentActivityRow.children[1].textContent = timeString;
+            currentActivityRow.children[1].className = 'activity-time text-danger';
+            currentActivityRow.children[3].innerHTML = '<span class="badge bg-success">Completed</span>';
+            currentActivityRow = null;
         }
-
-        row.innerHTML = `
-            <td>${now.toLocaleTimeString()}</td>
-            <td><span class="badge bg-${action === 'Clock In' ? 'success' : 'danger'}">${action}</span></td>
-            <td id="log-location">Fetching location...</td>
-            <td><span class="badge bg-success">Successful</span></td>
-        `;
-        tbody.insertBefore(row, tbody.firstChild);
     }
 
     // Location tracking
