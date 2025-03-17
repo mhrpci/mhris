@@ -128,7 +128,7 @@
                                         </div>
                                         
                                         <div class="alert alert-info shadow-sm">
-                                            <i class="fas fa-info-circle me-1"></i> This update will be authored by <strong>{{ Auth::user()->name }}</strong>
+                                            <i class="fas fa-info-circle me-1"></i> This update will be authored by <strong>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</strong>
                                         </div>
                                     </div>
                                 </div>
