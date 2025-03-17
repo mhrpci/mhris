@@ -33,7 +33,7 @@ class AttendanceController extends Controller
     // Display all attendance records
     public function index()
     {
-        if (auth()->user()->hasRole('Supervisor')) {
+        if (auth()->user()->hasPermissionTo('attendance-supervisor')) {
             $attendances = Attendance::whereHas('employee', function($query) {
                 $query->where('department_id', auth()->user()->department_id);
             })->get();
@@ -77,7 +77,7 @@ class AttendanceController extends Controller
 
         if ($existingAttendance) {
             if ($existingAttendance->time_out && $existingAttendance->time_stamp2) {
-                if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
+                if ($user->hasPermissionTo('attendance-admin')) {
                     $successMessage = 'Attendance for this employee on this date already has time out and time stamp.';
                 } else {
                     $successMessage = 'Your attendance on this date already has time out and time stamp.';
@@ -111,7 +111,7 @@ class AttendanceController extends Controller
         }
 
         // Check user role and return appropriate view
-        if ($user->hasRole('Employee')) {
+        if ($user->hasPermissionTo('attendance-employee')) {
             $employees = Employee::all(); // Fetch employees to pass to the view
             return view('attendances.create', compact('employees'))->with('successMessage', $successMessage);
         } else {
@@ -202,7 +202,7 @@ class AttendanceController extends Controller
         $user = Auth::user();
         
         // Get employees based on user role
-        $employees = $user->hasRole('Super Admin') 
+        $employees = $user->hasPermissionTo('attendance-admin') 
             ? Employee::all()
             : Employee::where('employee_status', 'Active')->get();
             
@@ -251,7 +251,7 @@ class AttendanceController extends Controller
         $user = Auth::user();
 
         // Assuming roles are defined and you have a method to check user roles
-        if ($user->hasRole('admin') || $user->hasRole('super-admin')) {
+        if ($user->hasPermissionTo('attendance-admin')) {
             return redirect()->route('attendances.index');
         } else {
             return $this->myTimesheet();
@@ -388,7 +388,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->hasRole(['Employee', 'Supervisor'])) {
+        if (!($user->hasPermissionTo('attendance-employee') || $user->hasPermissionTo('attendance-supervisor'))) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -416,7 +416,7 @@ class AttendanceController extends Controller
             $user = Auth::user();
             
             // Check if user has Employee or Supervisor role
-            if (!$user->hasRole(['Employee', 'Supervisor'])) {
+            if (!($user->hasPermissionTo('attendance-employee') || $user->hasPermissionTo('attendance-supervisor'))) {
                 return redirect()->route('home')->with('error', 'Unauthorized access.');
             }
             
@@ -446,7 +446,7 @@ class AttendanceController extends Controller
         try {
             // Check if storage link exists
             if (!file_exists(public_path('storage'))) {
-                \Artisan::call('storage:link');
+                Artisan::call('storage:link');
             }
 
             // Create time_stamps directory if it doesn't exist
@@ -455,8 +455,17 @@ class AttendanceController extends Controller
                 Storage::disk('public')->makeDirectory($directory);
             }
 
-            // Clean the base64 string
-            $cleanImageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
+            // Clean the base64 string - handle different formats
+            if (preg_match('#^data:image/\w+;base64,#i', $imageData)) {
+                $cleanImageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
+            } else {
+                // If not in expected format, try direct decode
+                $cleanImageData = base64_decode($imageData);
+            }
+            
+            if (!$cleanImageData) {
+                throw new \Exception('Invalid image data format');
+            }
             
             // Generate unique filename with timestamp
             $filename = uniqid() . '_' . Carbon::parse($timestamp)->format('Ymd_His') . '.jpg';
@@ -469,7 +478,7 @@ class AttendanceController extends Controller
 
             return false;
         } catch (\Exception $e) {
-            \Log::error('Error storing timestamp image: ' . $e->getMessage());
+            Log::error('Error storing timestamp image: ' . $e->getMessage());
             return false;
         }
     }
@@ -509,12 +518,18 @@ class AttendanceController extends Controller
                                  ->first();
 
             // Store the image and get the path
-            $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
-            
-            if (!$imagePath) {
+            $imagePath = null;
+            try {
+                $imagePath = $this->storeTimestampImage($request->image, $request->timestamp);
+                
+                if (!$imagePath) {
+                    throw new \Exception('Failed to store image');
+                }
+            } catch (\Exception $e) {
+                Log::error('Image storage error: ' . $e->getMessage());
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Failed to store timestamp image.'
+                    'message' => 'Failed to store timestamp image. Please try again.'
                 ], 500);
             }
 
@@ -523,7 +538,9 @@ class AttendanceController extends Controller
                 // Check if already clocked in
                 if ($attendance && $attendance->time_in) {
                     // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
+                    if ($imagePath) {
+                        Storage::disk('public')->delete($imagePath);
+                    }
                     
                     return response()->json([
                         'status' => 'error',
@@ -549,7 +566,12 @@ class AttendanceController extends Controller
                 }
 
                 // Send Telegram notification for clock in
-                $this->sendTelegramNotification($employee, 'in', $currentTime, $request->location);
+                try {
+                    $this->sendTelegramNotification($employee, 'in', $currentTime, $request->location);
+                } catch (\Exception $e) {
+                    Log::warning('Telegram notification failed: ' . $e->getMessage());
+                    // Continue execution even if notification fails
+                }
 
                 return response()->json([
                     'status' => 'success',
@@ -561,7 +583,9 @@ class AttendanceController extends Controller
                 // Check if attendance record exists and has time_in
                 if (!$attendance || !$attendance->time_in) {
                     // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
+                    if ($imagePath) {
+                        Storage::disk('public')->delete($imagePath);
+                    }
                     
                     return response()->json([
                         'status' => 'error',
@@ -572,7 +596,9 @@ class AttendanceController extends Controller
                 // Check if already clocked out
                 if ($attendance->time_out) {
                     // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
+                    if ($imagePath) {
+                        Storage::disk('public')->delete($imagePath);
+                    }
                     
                     return response()->json([
                         'status' => 'error',
@@ -587,7 +613,12 @@ class AttendanceController extends Controller
                 $attendance->save();
 
                 // Send Telegram notification for clock out
-                $this->sendTelegramNotification($employee, 'out', $currentTime, $request->location);
+                try {
+                    $this->sendTelegramNotification($employee, 'out', $currentTime, $request->location);
+                } catch (\Exception $e) {
+                    Log::warning('Telegram notification failed: ' . $e->getMessage());
+                    // Continue execution even if notification fails
+                }
 
                 return response()->json([
                     'status' => 'success',
@@ -597,22 +628,27 @@ class AttendanceController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Handle validation errors
+            Log::error('Validation error: ' . json_encode($e->errors()));
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Attendance capture error: ' . $e->getMessage());
+            Log::error('Attendance capture error: ' . $e->getMessage());
             
             // Delete any stored image if there was an error
-            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
+            if (isset($imagePath) && $imagePath) {
+                try {
+                    Storage::disk('public')->delete($imagePath);
+                } catch (\Exception $ex) {
+                    Log::error('Failed to delete image: ' . $ex->getMessage());
+                }
             }
             
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing your request.',
+                'message' => 'An error occurred while processing your request. Please try again.',
                 'debug' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
@@ -778,7 +814,7 @@ class AttendanceController extends Controller
             $user = Auth::user();
             
             // Check if user has Employee or Supervisor role
-            if (!$user->hasRole(['Employee', 'Supervisor'])) {
+            if (!($user->hasPermissionTo('attendance-employee') || $user->hasPermissionTo('attendance-supervisor'))) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unauthorized access'
