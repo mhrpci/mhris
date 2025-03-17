@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\SystemUpdate;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Database\QueryException;
-use Exception;
 
 class SystemUpdateController extends Controller
 {
@@ -22,13 +19,8 @@ class SystemUpdateController extends Controller
      */
     public function index()
     {
-        try {
-            $updates = SystemUpdate::latest('published_at')->paginate(10);
-            return view('system-updates.index', compact('updates'));
-        } catch (Exception $e) {
-            Log::error('Error in system updates index: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'An error occurred while loading system updates. Please try again.');
-        }
+        $updates = SystemUpdate::latest('published_at')->paginate(10);
+        return view('system-updates.index', compact('updates'));
     }
 
     /**
@@ -36,12 +28,7 @@ class SystemUpdateController extends Controller
      */
     public function create()
     {
-        try {
-            return view('system-updates.create');
-        } catch (Exception $e) {
-            Log::error('Error in system updates create: ' . $e->getMessage());
-            return redirect()->route('system-updates.index')->with('error', 'An error occurred while loading the create form. Please try again.');
-        }
+        return view('system-updates.create');
     }
 
     /**
@@ -49,29 +36,21 @@ class SystemUpdateController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|max:255',
-                'description' => 'required',
-                'published_at' => 'required|date',
-                'is_active' => 'boolean',
-                'author_id' => 'required|exists:users,id'
-            ]);
+        $validated = $request->validate([
+            'title' => 'required|max:255',
+            'description' => 'required',
+            'published_at' => 'required|date',
+            'is_active' => 'boolean',
+            'author_id' => 'required|exists:users,id'
+        ]);
 
-            $validated['published_at'] = Carbon::parse($validated['published_at']);
-            $validated['is_active'] = $request->has('is_active');
+        $validated['published_at'] = Carbon::parse($validated['published_at']);
+        $validated['is_active'] = $request->has('is_active');
 
-            SystemUpdate::create($validated);
+        SystemUpdate::create($validated);
 
-            return redirect()->route('system-updates.index')
-                ->with('success', 'System update created successfully.');
-        } catch (QueryException $e) {
-            Log::error('Database error in system updates store: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'Database error occurred. Please check your data and try again.');
-        } catch (Exception $e) {
-            Log::error('Error in system updates store: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'An error occurred while saving the system update. Please try again.');
-        }
+        return redirect()->route('system-updates.index')
+            ->with('success', 'System update created successfully.');
     }
 
     /**
@@ -79,12 +58,7 @@ class SystemUpdateController extends Controller
      */
     public function show(SystemUpdate $systemUpdate)
     {
-        try {
-            return view('system-updates.show', compact('systemUpdate'));
-        } catch (Exception $e) {
-            Log::error('Error in system updates show: ' . $e->getMessage());
-            return redirect()->route('system-updates.index')->with('error', 'An error occurred while loading the system update details. Please try again.');
-        }
+        return view('system-updates.show', compact('systemUpdate'));
     }
 
     /**
@@ -92,12 +66,7 @@ class SystemUpdateController extends Controller
      */
     public function edit(SystemUpdate $systemUpdate)
     {
-        try {
-            return view('system-updates.edit', compact('systemUpdate'));
-        } catch (Exception $e) {
-            Log::error('Error in system updates edit: ' . $e->getMessage());
-            return redirect()->route('system-updates.index')->with('error', 'An error occurred while loading the edit form. Please try again.');
-        }
+        return view('system-updates.edit', compact('systemUpdate'));
     }
 
     /**
@@ -105,29 +74,21 @@ class SystemUpdateController extends Controller
      */
     public function update(Request $request, SystemUpdate $systemUpdate)
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|max:255',
-                'description' => 'required',
-                'published_at' => 'required|date',
-                'is_active' => 'boolean',
-                'author_id' => 'required|exists:users,id'
-            ]);
+        $validated = $request->validate([
+            'title' => 'required|max:255',
+            'description' => 'required',
+            'published_at' => 'required|date',
+            'is_active' => 'boolean',
+            'author_id' => 'required|exists:users,id'
+        ]);
 
-            $validated['published_at'] = Carbon::parse($validated['published_at']);
-            $validated['is_active'] = $request->has('is_active');
+        $validated['published_at'] = Carbon::parse($validated['published_at']);
+        $validated['is_active'] = $request->has('is_active');
 
-            $systemUpdate->update($validated);
+        $systemUpdate->update($validated);
 
-            return redirect()->route('system-updates.index')
-                ->with('success', 'System update updated successfully.');
-        } catch (QueryException $e) {
-            Log::error('Database error in system updates update: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'Database error occurred. Please check your data and try again.');
-        } catch (Exception $e) {
-            Log::error('Error in system updates update: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'An error occurred while updating the system update. Please try again.');
-        }
+        return redirect()->route('system-updates.index')
+            ->with('success', 'System update updated successfully.');
     }
 
     /**
@@ -135,14 +96,9 @@ class SystemUpdateController extends Controller
      */
     public function destroy(SystemUpdate $systemUpdate)
     {
-        try {
-            $systemUpdate->delete();
+        $systemUpdate->delete();
 
-            return redirect()->route('system-updates.index')
-                ->with('success', 'System update deleted successfully.');
-        } catch (Exception $e) {
-            Log::error('Error in system updates destroy: ' . $e->getMessage());
-            return redirect()->route('system-updates.index')->with('error', 'An error occurred while deleting the system update. Please try again.');
-        }
+        return redirect()->route('system-updates.index')
+            ->with('success', 'System update deleted successfully.');
     }
 }
