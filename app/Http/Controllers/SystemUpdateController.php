@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\SystemUpdate;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
 class SystemUpdateController extends Controller
 {
@@ -37,38 +36,21 @@ class SystemUpdateController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|max:255',
-                'description' => 'required',
-                'published_at' => 'required|date',
-                'is_active' => 'boolean',
-                'author_id' => 'required|exists:users,id'
-            ]);
+        $validated = $request->validate([
+            'title' => 'required|max:255',
+            'description' => 'required',
+            'published_at' => 'required|date',
+            'is_active' => 'boolean',
+            'author_id' => 'required|exists:users,id'
+        ]);
 
-            // Ensure published_at is properly formatted
-            try {
-                $validated['published_at'] = Carbon::parse($validated['published_at']);
-            } catch (\Exception $e) {
-                Log::error('Date parsing error: ' . $e->getMessage());
-                return back()
-                    ->withInput()
-                    ->withErrors(['published_at' => 'Invalid date format']);
-            }
+        $validated['published_at'] = Carbon::parse($validated['published_at']);
+        $validated['is_active'] = $request->has('is_active');
 
-            // Ensure is_active is a boolean
-            $validated['is_active'] = $request->has('is_active') ? true : false;
+        SystemUpdate::create($validated);
 
-            SystemUpdate::create($validated);
-
-            return redirect()->route('system-updates.index')
-                ->with('success', 'System update created successfully.');
-        } catch (\Exception $e) {
-            Log::error('System update creation error: ' . $e->getMessage());
-            return back()
-                ->withInput()
-                ->withErrors(['error' => 'An error occurred while creating the system update. Please try again.']);
-        }
+        return redirect()->route('system-updates.index')
+            ->with('success', 'System update created successfully.');
     }
 
     /**
@@ -92,38 +74,21 @@ class SystemUpdateController extends Controller
      */
     public function update(Request $request, SystemUpdate $systemUpdate)
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|max:255',
-                'description' => 'required',
-                'published_at' => 'required|date',
-                'is_active' => 'boolean',
-                'author_id' => 'required|exists:users,id'
-            ]);
+        $validated = $request->validate([
+            'title' => 'required|max:255',
+            'description' => 'required',
+            'published_at' => 'required|date',
+            'is_active' => 'boolean',
+            'author_id' => 'required|exists:users,id'
+        ]);
 
-            // Ensure published_at is properly formatted
-            try {
-                $validated['published_at'] = Carbon::parse($validated['published_at']);
-            } catch (\Exception $e) {
-                Log::error('Date parsing error: ' . $e->getMessage());
-                return back()
-                    ->withInput()
-                    ->withErrors(['published_at' => 'Invalid date format']);
-            }
+        $validated['published_at'] = Carbon::parse($validated['published_at']);
+        $validated['is_active'] = $request->has('is_active');
 
-            // Ensure is_active is a boolean
-            $validated['is_active'] = $request->has('is_active') ? true : false;
+        $systemUpdate->update($validated);
 
-            $systemUpdate->update($validated);
-
-            return redirect()->route('system-updates.index')
-                ->with('success', 'System update updated successfully.');
-        } catch (\Exception $e) {
-            Log::error('System update update error: ' . $e->getMessage());
-            return back()
-                ->withInput()
-                ->withErrors(['error' => 'An error occurred while updating the system update. Please try again.']);
-        }
+        return redirect()->route('system-updates.index')
+            ->with('success', 'System update updated successfully.');
     }
 
     /**
@@ -131,14 +96,9 @@ class SystemUpdateController extends Controller
      */
     public function destroy(SystemUpdate $systemUpdate)
     {
-        try {
-            $systemUpdate->delete();
-            return redirect()->route('system-updates.index')
-                ->with('success', 'System update deleted successfully.');
-        } catch (\Exception $e) {
-            Log::error('System update deletion error: ' . $e->getMessage());
-            return redirect()->route('system-updates.index')
-                ->with('error', 'An error occurred while deleting the system update.');
-        }
+        $systemUpdate->delete();
+
+        return redirect()->route('system-updates.index')
+            ->with('success', 'System update deleted successfully.');
     }
 }
