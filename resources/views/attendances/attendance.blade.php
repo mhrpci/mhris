@@ -538,7 +538,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let isClockIn = true;
     let clientTimeOffset = 0;
     let stream = null;
-    let currentCamera = 'environment'; // 'environment' for rear, 'user' for front
+    let currentCamera = 'environment';
+    let permissionsGranted = false;
     const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
     
     // Function to update button state
@@ -665,41 +666,160 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
     
-    // Enhanced location handling
-    async function getUserLocation() {
-        if ("geolocation" in navigator) {
-            try {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0
-                    });
-                });
+    // Function to check and request permissions
+    async function checkAndRequestPermissions() {
+        try {
+            // Check location permission
+            const locationPermission = await checkLocationPermission();
+            
+            // Check camera permission
+            const cameraPermission = await checkCameraPermission();
+            
+            permissionsGranted = locationPermission && cameraPermission;
+            
+            if (!permissionsGranted) {
+                const missingPermissions = [];
+                if (!locationPermission) missingPermissions.push('Location');
+                if (!cameraPermission) missingPermissions.push('Camera');
                 
-                userLocation = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    accuracy: position.coords.accuracy
-                };
-                
-                // Get address using reverse geocoding
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.latitude}&lon=${userLocation.longitude}`);
-                const data = await response.json();
-                
-                const addressElement = document.getElementById('address');
-                addressElement.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i></span>${data.display_name}`;
-            } catch (error) {
-                document.getElementById('address').innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Location access denied</span>`;
-                console.error('Error getting location:', error);
-                disableAttendanceButton();
+                showError(`Please enable ${missingPermissions.join(' and ')} access in your browser settings to use this feature.`);
+                return false;
             }
-        } else {
-            document.getElementById('address').innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Geolocation not supported</span>`;
-            disableAttendanceButton();
+            
+            return true;
+        } catch (error) {
+            console.error('Error checking permissions:', error);
+            showError('Unable to verify permissions. Please check your browser settings.');
+            return false;
         }
     }
-    
+
+    // Function to check location permission
+    async function checkLocationPermission() {
+        try {
+            if (!navigator.geolocation) {
+                showError('Geolocation is not supported by your browser');
+                return false;
+            }
+
+            const permission = await navigator.permissions.query({ name: 'geolocation' });
+            
+            if (permission.state === 'denied') {
+                showError('Location access is blocked. Please enable it in your browser settings.');
+                return false;
+            }
+
+            // Test location access
+            await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Location permission error:', error);
+            showError('Unable to access location. Please check your browser settings.');
+            return false;
+        }
+    }
+
+    // Function to check camera permission
+    async function checkCameraPermission() {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter(device => device.kind === 'videoinput');
+            
+            if (cameras.length === 0) {
+                showError('No camera detected on your device');
+                return false;
+            }
+
+            // Test camera access
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream.getTracks().forEach(track => track.stop());
+            
+            return true;
+        } catch (error) {
+            console.error('Camera permission error:', error);
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                showError('Camera access is blocked. Please enable it in your browser settings.');
+            } else if (error.name === 'NotFoundError') {
+                showError('No camera found on your device.');
+            } else {
+                showError('Unable to access camera. Please check your browser settings.');
+            }
+            return false;
+        }
+    }
+
+    // Enhanced getUserLocation function
+    async function getUserLocation() {
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+            });
+            
+            userLocation = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            };
+            
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.latitude}&lon=${userLocation.longitude}`);
+                if (!response.ok) throw new Error('Geocoding failed');
+                
+                const data = await response.json();
+                const addressElement = document.getElementById('address');
+                addressElement.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i></span>${data.display_name}`;
+                
+                // Update location in camera overlay
+                const overlayLocation = document.querySelector('#employeeLocation span');
+                if (overlayLocation) {
+                    overlayLocation.textContent = data.display_name;
+                }
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                // Still show coordinates if geocoding fails
+                const addressElement = document.getElementById('address');
+                addressElement.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i></span>Location Found (${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)})`;
+            }
+        } catch (error) {
+            console.error('Location error:', error);
+            handleLocationError(error);
+        }
+    }
+
+    // Function to handle location errors
+    function handleLocationError(error) {
+        let errorMessage = 'Unable to access location.';
+        
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                errorMessage = 'Location access was denied. Please enable it in your browser settings.';
+                break;
+            case error.POSITION_UNAVAILABLE:
+                errorMessage = 'Location information is unavailable. Please check your device settings.';
+                break;
+            case error.TIMEOUT:
+                errorMessage = 'Location request timed out. Please try again.';
+                break;
+            case error.UNKNOWN_ERROR:
+                errorMessage = 'An unknown error occurred while accessing location.';
+                break;
+        }
+        
+        document.getElementById('address').innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-1"></i>${errorMessage}</span>`;
+        disableAttendanceButton();
+    }
+
     // Function to update overlay datetime
     function updateOverlayDateTime() {
         const now = new Date(Date.now() + clientTimeOffset);
@@ -756,6 +876,11 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             stopCamera(); // Clean up any existing stream
 
+            // Check permissions before starting camera
+            if (!await checkAndRequestPermissions()) {
+                return;
+            }
+
             const constraints = {
                 video: {
                     facingMode: currentCamera,
@@ -773,7 +898,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Wait for video to be loaded
             await new Promise((resolve) => {
                 video.onloadedmetadata = () => {
-                    video.play().then(resolve).catch(resolve);
+                    video.play().then(resolve).catch(error => {
+                        console.error('Error playing video:', error);
+                        resolve();
+                    });
                 };
             });
 
@@ -783,9 +911,8 @@ document.addEventListener('DOMContentLoaded', function() {
             setInterval(updateOverlayDateTime, 1000);
 
         } catch (error) {
-            console.error('Error accessing camera:', error);
-            showError('Unable to access camera. Please check permissions.');
-            cameraModal.hide();
+            console.error('Camera error:', error);
+            handleCameraError(error);
         }
     }
 
@@ -871,33 +998,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Modified handleAttendance with proper error handling
+    // Modified handleAttendance with permission checks
     async function handleAttendance() {
-        if (!userLocation || !serverTimestamp || !serverHash) {
-            showError('Please ensure location and time sync are available');
-            return;
-        }
-
         try {
+            // Check permissions first
+            if (!await checkAndRequestPermissions()) {
+                return;
+            }
+
+            if (!userLocation || !serverTimestamp || !serverHash) {
+                showError('Please ensure location and time sync are available');
+                return;
+            }
+
             updateClockStatus();
             await startCamera();
             cameraModal.show();
         } catch (error) {
-            console.error('Error starting camera:', error);
-            showError('Unable to start camera. Please check permissions.');
+            console.error('Attendance error:', error);
+            showError('Unable to start attendance process. Please try again.');
         }
     }
 
     // Event listener for the clock button
     document.getElementById('clockButton').addEventListener('click', handleAttendance);
     
-    // Initialize
-    getServerTime();
-    getUserLocation();
-    updateButtonState();
-    
-    // Periodic server sync (every 5 minutes)
-    setInterval(getServerTime, 300000);
+    // Initialize with permission checks
+    checkAndRequestPermissions().then(granted => {
+        if (granted) {
+            getServerTime();
+            getUserLocation();
+        }
+    });
 });
 </script>
 @endpush
