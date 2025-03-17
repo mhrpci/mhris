@@ -403,7 +403,7 @@ class AttendanceController extends Controller
     public function executeStoreCommand()
     {
         try {
-            \Artisan::call('attendance:store');
+            Artisan::call('attendance:store');
             return response()->json(['message' => 'Attendance records stored successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -424,12 +424,12 @@ class AttendanceController extends Controller
             $employee = Employee::where('email_address', $user->email)->first();
             
             if (!$employee) {
-                \Log::warning('Employee not found for user email: ' . $user->email);
+                Log::warning('Employee not found for user email: ' . $user->email);
             }
             
             return view('attendances.capture-preview', compact('employee'));
         } catch (\Exception $e) {
-            \Log::error('Error in capture preview: ' . $e->getMessage());
+            Log::error('Error in capture preview: ' . $e->getMessage());
             return redirect()->route('attendances.attendance')->with('error', 'An error occurred while loading the preview page.');
         }
     }
@@ -446,7 +446,7 @@ class AttendanceController extends Controller
         try {
             // Check if storage link exists
             if (!file_exists(public_path('storage'))) {
-                \Artisan::call('storage:link');
+                Artisan::call('storage:link');
             }
 
             // Create time_stamps directory if it doesn't exist
@@ -469,7 +469,7 @@ class AttendanceController extends Controller
 
             return false;
         } catch (\Exception $e) {
-            \Log::error('Error storing timestamp image: ' . $e->getMessage());
+            Log::error('Error storing timestamp image: ' . $e->getMessage());
             return false;
         }
     }
@@ -603,10 +603,10 @@ class AttendanceController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Attendance capture error: ' . $e->getMessage());
+            Log::error('Attendance capture error: ' . $e->getMessage());
             
             // Delete any stored image if there was an error
-            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
+            if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
             
@@ -690,8 +690,8 @@ class AttendanceController extends Controller
                     $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
                     
                     // Get the full URL for the image
-                    $imagePath = Storage::disk('public')->url($attendance->$timestampField);
-                    $fullImageUrl = url($imagePath);
+                    $imagePath = Storage::disk('public')->get($attendance->$timestampField);
+                    $fullImageUrl = asset('storage/' . $attendance->$timestampField);
 
                     // Prepare image data
                     $imageCaption = "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
@@ -716,7 +716,7 @@ class AttendanceController extends Controller
                     // If sending image fails, try sending as file
                     try {
                         $documentUrl = "https://api.telegram.org/bot{$botToken}/sendDocument";
-                        $filePath = Storage::disk('public')->path($attendance->$timestampField);
+                        $filePath = storage_path('app/public/' . $attendance->$timestampField);
                         
                         if (file_exists($filePath)) {
                             $imageResponse = $client->post($documentUrl, [

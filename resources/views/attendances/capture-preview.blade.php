@@ -249,7 +249,7 @@
     .preview-info-row {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
+        gap: 12px;
     }
     
     .preview-info-item {
@@ -259,161 +259,71 @@
     }
     
     .preview-info-label {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 500;
         color: rgba(255,255,255,0.6);
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
     
     .preview-info-value {
-        font-size: 0.95rem;
-        color: rgba(255,255,255,0.9);
-        font-weight: 500;
+        font-size: 1rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.95);
     }
     
     .preview-location {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 8px;
-        margin-top: 5px;
-    }
-    
-    .preview-location i {
-        margin-top: 3px;
-        color: #4285f4;
-        font-size: 1rem;
-    }
-    
-    .preview-location-text {
-        font-size: 0.95rem;
         color: rgba(255,255,255,0.9);
-        line-height: 1.4;
-        font-weight: 500;
-    }
-
-    @media (max-width: 768px) {
-        .preview-info-overlay {
-            padding: 20px;
-        }
-        
-        .preview-time {
-            font-size: 1.8rem;
-        }
-        
-        .preview-date {
-            font-size: 1rem;
-        }
-        
-        .preview-name {
-            font-size: 1.1rem;
-        }
-        
-        .preview-info-value {
-            font-size: 0.9rem;
-        }
-        
-        .preview-company-name {
-            font-size: 0.9rem;
-            padding: 6px 10px;
-        }
+        font-size: 0.95rem;
+        background: rgba(255,255,255,0.1);
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-top: 10px;
+        border: 1px solid rgba(255,255,255,0.15);
     }
     
-    @media (max-width: 480px) {
-        .preview-info-overlay {
-            padding: 15px;
-        }
-        
-        .preview-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        
-        .preview-time {
-            font-size: 1.6rem;
-        }
-        
-        .preview-date {
-            font-size: 0.9rem;
-        }
-        
-        .preview-name {
-            font-size: 1rem;
-        }
-        
-        .preview-info-row {
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-        
-        .preview-info-value {
-            font-size: 0.85rem;
-        }
-        
-        .preview-status-badge {
-            font-size: 0.9rem;
-            padding: 6px 12px;
-        }
-        
-        .preview-company-name {
-            font-size: 0.8rem;
-            padding: 5px 8px;
-        }
+    /* Controls */
+    .preview-controls {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 9993;
     }
     
-    /* Action buttons */
-    .preview-actions {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        padding: 1.5rem;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-        height: 100px;
-        z-index: 9992;
-        gap: 1.5rem;
-    }
-    
-    .btn-confirm {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
-        font-weight: 600;
+    .btn-capture, .btn-cancel {
+        padding: 10px 20px;
         font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-    }
-    
-    .btn-retake {
-        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-        color: white;
+        border-radius: 8px;
         border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
         font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.2);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
     }
     
-    .btn-confirm:hover, .btn-retake:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    .btn-capture {
+        background-color: #0d6efd;
+        color: white;
     }
     
-    .btn-confirm:active, .btn-retake:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    .btn-capture:hover {
+        background-color: #0b5ed7;
+    }
+    
+    .btn-cancel {
+        background-color: rgba(255,255,255,0.15);
+        color: white;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .btn-cancel:hover {
+        background-color: rgba(255,255,255,0.25);
     }
     
     /* Loading overlay */
@@ -424,74 +334,155 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.7);
+        background-color: rgba(0,0,0,0.8);
         z-index: 9999;
         justify-content: center;
         align-items: center;
         flex-direction: column;
+        gap: 20px;
+        color: white;
     }
     
     .loading-spinner {
-        border: 5px solid rgba(255, 255, 255, 0.3);
+        width: 70px;
+        height: 70px;
+        border: 6px solid rgba(255,255,255,0.3);
         border-radius: 50%;
-        border-top: 5px solid #4285f4;
-        width: 50px;
-        height: 50px;
+        border-top-color: #ffffff;
         animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
     }
     
     .loading-text {
-        color: white;
         font-size: 1.2rem;
+        font-weight: 600;
     }
     
     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
     
-    /* Alert messages */
-    .alert-message {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 15px 25px;
-        border-radius: 10px;
-        color: white;
-        font-weight: 500;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        opacity: 0;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        max-width: 90%;
+    /* Media queries */
+    @media (max-width: 768px) {
+        .preview-status-large {
+            font-size: 6rem;
+        }
+        
+        .preview-time {
+            font-size: 1.7rem;
+        }
+        
+        .preview-date {
+            font-size: 1rem;
+        }
     }
     
-    .alert-message.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-    
-    .alert-message.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-    
-    .alert-message.error {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    }
-    
-    .alert-message i {
-        font-size: 1.2rem;
+    @media (max-width: 576px) {
+        .preview-status-large {
+            font-size: 4rem;
+        }
+        
+        .preview-company-name {
+            font-size: 0.9rem;
+        }
+        
+        .preview-info-overlay {
+            padding: 20px;
+        }
+        
+        .preview-time {
+            font-size: 1.5rem;
+        }
+        
+        .preview-date {
+            font-size: 0.9rem;
+        }
+        
+        .preview-name {
+            font-size: 1.1rem;
+        }
+        
+        .preview-info-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        
+        .preview-logo {
+            width: 80px;
+            top: 15px;
+            right: 15px;
+        }
     }
 </style>
 
-<div class="preview-container">
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">
+            <h4>Attendance - Capture Preview</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        Please allow access to your camera and location to record your attendance.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Camera preview and controls -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="camera-container">
+                        <video id="camera-preview" width="100%" height="auto" autoplay playsinline style="border-radius: 10px;"></video>
+                        
+                        <div class="mt-3 d-flex justify-content-between">
+                            <button id="captureButton" class="btn btn-primary">
+                                <i class="fas fa-camera mr-2"></i> Capture Attendance
+                            </button>
+                            <button id="switchCameraButton" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt mr-2"></i> Switch Camera
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Attendance Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="attendanceStatus" class="alert alert-info">
+                                Checking attendance status...
+                            </div>
+                            
+                            <div id="employeeInfo" class="mb-3">
+                                <p><strong>Name:</strong> <span id="employeeName">Loading...</span></p>
+                                <p><strong>Position:</strong> <span id="employeePosition">Loading...</span></p>
+                                <p><strong>Department:</strong> <span id="employeeDepartment">Loading...</span></p>
+                            </div>
+                            
+                            <div id="locationInfo" class="mb-3">
+                                <p><strong>Location:</strong> <span id="currentLocation">Detecting...</span></p>
+                            </div>
+                            
+                            <div id="dateTimeInfo">
+                                <p><strong>Date:</strong> <span id="currentDate"></span></p>
+                                <p><strong>Time:</strong> <span id="currentTime"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Container for Captured Image -->
+<div class="preview-container" style="display: none;">
     <div class="image-preview-container">
-        <img id="preview-image" class="preview-image" src="" alt="Attendance Capture">
+        <img src="" alt="Captured image" class="preview-image" id="captured-image">
         
         <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="preview-logo">
         
@@ -534,14 +525,12 @@
             </div>
         </div>
         
-        <div class="preview-actions">
-            <button class="btn-retake" onclick="goBack()">
-                <i class="fas fa-redo"></i>
-                Retake
+        <div class="preview-controls">
+            <button class="btn-capture" id="submit-attendance">
+                <i class="fas fa-check"></i> Submit
             </button>
-            <button class="btn-confirm" onclick="confirmAttendance()">
-                <i class="fas fa-check"></i>
-                Confirm
+            <button class="btn-cancel" id="back-to-camera">
+                <i class="fas fa-arrow-left"></i> Back
             </button>
         </div>
     </div>
@@ -550,400 +539,363 @@
 <!-- Loading Overlay -->
 <div class="loading-overlay" id="loading-overlay">
     <div class="loading-spinner"></div>
-    <div class="loading-text">Processing your attendance...</div>
+    <div class="loading-text">Processing attendance...</div>
 </div>
 
-<!-- Alert Message -->
-<div class="alert-message" id="alert-message">
-    <i class="fas fa-check-circle"></i>
-    <span id="alert-text">Message goes here</span>
-</div>
+@endsection
 
-<!-- Include html2canvas library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+@section('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script>
-    // Variables to store attendance data
-    let capturedImage = '';
-    let attendanceType = '';
-    let userLocation = '';
-    let serverTimestamp = '';
-    let employeeName = '';
-    let employeePosition = '';
-    let employeeDepartment = '';
-    
-    // Initialize the preview page
-    document.addEventListener('DOMContentLoaded', async function() {
-        try {
-            // Add class to body for full screen mode
-            document.body.classList.add('preview-active');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const cameraPreview = document.getElementById('camera-preview');
+        const captureButton = document.getElementById('captureButton');
+        const switchCameraButton = document.getElementById('switchCameraButton');
+        const previewContainer = document.querySelector('.preview-container');
+        const capturedImage = document.getElementById('captured-image');
+        const submitAttendanceButton = document.getElementById('submit-attendance');
+        const backToCameraButton = document.getElementById('back-to-camera');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        
+        // Status elements
+        const attendanceStatus = document.getElementById('attendanceStatus');
+        const employeeName = document.getElementById('employeeName');
+        const employeePosition = document.getElementById('employeePosition');
+        const employeeDepartment = document.getElementById('employeeDepartment');
+        const currentLocation = document.getElementById('currentLocation');
+        const currentDate = document.getElementById('currentDate');
+        const currentTime = document.getElementById('currentTime');
+        
+        // Preview elements
+        const previewCompanyName = document.getElementById('preview-company-name');
+        const previewStatusBadge = document.getElementById('preview-status-badge');
+        const statusText = document.getElementById('status-text');
+        const previewStatusLarge = document.getElementById('preview-status-large');
+        const previewTime = document.getElementById('preview-time');
+        const previewDate = document.getElementById('preview-date');
+        const previewName = document.getElementById('preview-name');
+        const previewPosition = document.getElementById('preview-position');
+        const previewDepartment = document.getElementById('preview-department');
+        const previewLocation = document.getElementById('preview-location');
+        
+        // Variables
+        let stream = null;
+        let facingMode = 'user'; // Default to front camera
+        let capturedImageData = null;
+        let currentAttendanceAction = 'clock_in'; // Default action
+        let locationString = 'Unknown location';
+        let position = null;
+        let employeeData = null;
+        
+        // Initialize date/time display
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        // Initialize
+        initCamera();
+        getEmployeeInfo();
+        getAttendanceStatus();
+        getLocation();
+        
+        // Update date and time
+        function updateDateTime() {
+            const now = moment();
+            currentDate.textContent = now.format('MMMM D, YYYY');
+            currentTime.textContent = now.format('h:mm:ss A');
             
-            // Get data from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            attendanceType = urlParams.get('type') || 'in';
-            
-            // Get data from localStorage
-            capturedImage = localStorage.getItem('capturedImage');
-            userLocation = localStorage.getItem('userLocation');
-            serverTimestamp = localStorage.getItem('serverTimestamp');
-            
-            if (!capturedImage || !serverTimestamp) {
-                showAlert('Missing capture data. Please try again.', 'error');
-                setTimeout(() => {
-                    window.location.href = '/attendance';
-                }, 2000);
+            // Also update preview date/time
+            previewTime.textContent = now.format('h:mm A');
+            previewDate.textContent = now.format('MMMM D, YYYY');
+        }
+        
+        // Initialize camera
+        function initCamera() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: facingMode }
+                }).then(function(mediaStream) {
+                    stream = mediaStream;
+                    cameraPreview.srcObject = stream;
+                    cameraPreview.play();
+                }).catch(function(error) {
+                    console.error('Camera access error:', error);
+                    attendanceStatus.className = 'alert alert-danger';
+                    attendanceStatus.textContent = 'Camera access denied. Please allow camera access to record attendance.';
+                });
+            } else {
+                console.error('getUserMedia not supported');
+                attendanceStatus.className = 'alert alert-danger';
+                attendanceStatus.textContent = 'Your browser does not support camera access.';
+            }
+        }
+        
+        // Switch camera
+        switchCameraButton.addEventListener('click', function() {
+            if (stream) {
+                // Stop all tracks
+                stream.getTracks().forEach(track => track.stop());
+                
+                // Toggle facing mode
+                facingMode = facingMode === 'user' ? 'environment' : 'user';
+                
+                // Reinitialize camera with new facing mode
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: facingMode }
+                }).then(function(mediaStream) {
+                    stream = mediaStream;
+                    cameraPreview.srcObject = stream;
+                    cameraPreview.play();
+                }).catch(function(error) {
+                    console.error('Camera switch error:', error);
+                    // If switching fails, try to revert to previous mode
+                    facingMode = facingMode === 'user' ? 'environment' : 'user';
+                    initCamera();
+                });
+            }
+        });
+        
+        // Get employee info
+        function getEmployeeInfo() {
+            fetch('/attendance/get-employee-info')
+                .then(response => response.json())
+                .then(data => {
+                    employeeData = data;
+                    employeeName.textContent = data.name;
+                    employeePosition.textContent = data.position || 'Not assigned';
+                    employeeDepartment.textContent = data.department || 'Not assigned';
+                    
+                    // Set company name based on department
+                    let companyName = 'MHR Property Conglomerates, Inc.';
+                    if (data.department) {
+                        const deptUpper = data.department.toUpperCase();
+                        if (deptUpper === 'MHRHCI') {
+                            companyName = 'Medical & Resources Health Care, Inc.';
+                        } else if (deptUpper === 'BGPDI') {
+                            companyName = 'Bay Gas and Petroleum Distribution, Inc.';
+                        } else if (deptUpper === 'VHI') {
+                            companyName = 'Verbena Hotel Inc.';
+                        }
+                    }
+                    previewCompanyName.textContent = companyName;
+                    
+                    // Also update preview info
+                    previewName.textContent = data.name;
+                    previewPosition.textContent = data.position || 'Not assigned';
+                    previewDepartment.textContent = data.department || 'Not assigned';
+                })
+                .catch(error => {
+                    console.error('Error fetching employee info:', error);
+                    employeeName.textContent = 'Error loading data';
+                    employeePosition.textContent = 'Error loading data';
+                    employeeDepartment.textContent = 'Error loading data';
+                });
+        }
+        
+        // Get attendance status
+        function getAttendanceStatus() {
+            fetch('/attendance/get-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        currentAttendanceAction = data.action;
+                        
+                        if (data.action === 'clock_in') {
+                            attendanceStatus.className = 'alert alert-primary';
+                            attendanceStatus.innerHTML = '<i class="fas fa-clock mr-2"></i> ' + data.message;
+                            captureButton.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Clock In';
+                            // Update preview elements
+                            statusText.textContent = 'Clock In';
+                            previewStatusLarge.textContent = 'IN';
+                            previewStatusLarge.className = 'preview-status-large in';
+                            previewStatusBadge.className = 'preview-status-badge in';
+                        } else if (data.action === 'clock_out') {
+                            attendanceStatus.className = 'alert alert-success';
+                            attendanceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i> ' + data.message;
+                            captureButton.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i> Clock Out';
+                            // Update preview elements
+                            statusText.textContent = 'Clock Out';
+                            previewStatusLarge.textContent = 'OUT';
+                            previewStatusLarge.className = 'preview-status-large out';
+                            previewStatusBadge.className = 'preview-status-badge out';
+                        } else if (data.action === 'completed') {
+                            attendanceStatus.className = 'alert alert-warning';
+                            attendanceStatus.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i> ' + data.message;
+                            captureButton.disabled = true;
+                            captureButton.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Completed';
+                        }
+                    } else {
+                        attendanceStatus.className = 'alert alert-danger';
+                        attendanceStatus.textContent = data.message || 'Error checking attendance status';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching attendance status:', error);
+                    attendanceStatus.className = 'alert alert-danger';
+                    attendanceStatus.textContent = 'Failed to check attendance status';
+                });
+        }
+        
+        // Get location
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        position = pos;
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        
+                        // Try to get address from coordinates
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data && data.display_name) {
+                                    locationString = data.display_name;
+                                } else {
+                                    locationString = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+                                }
+                                currentLocation.textContent = locationString;
+                                previewLocation.textContent = locationString;
+                            })
+                            .catch(error => {
+                                console.error('Error fetching location name:', error);
+                                locationString = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+                                currentLocation.textContent = locationString;
+                                previewLocation.textContent = locationString;
+                            });
+                    },
+                    function(error) {
+                        console.error('Geolocation error:', error);
+                        currentLocation.textContent = 'Location access denied';
+                        previewLocation.textContent = 'Location unavailable';
+                    }
+                );
+            } else {
+                currentLocation.textContent = 'Geolocation not supported';
+                previewLocation.textContent = 'Location unavailable';
+            }
+        }
+        
+        // Capture photo
+        captureButton.addEventListener('click', function() {
+            if (stream) {
+                const canvas = document.createElement('canvas');
+                const video = cameraPreview;
+                const width = video.videoWidth;
+                const height = video.videoHeight;
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                
+                // If using front camera, flip the image horizontally
+                if (facingMode === 'user') {
+                    ctx.translate(width, 0);
+                    ctx.scale(-1, 1);
+                }
+                
+                ctx.drawImage(video, 0, 0, width, height);
+                
+                // Get image data as base64 string
+                capturedImageData = canvas.toDataURL('image/jpeg');
+                
+                // Display the captured image
+                capturedImage.src = capturedImageData;
+                
+                // Show the preview container
+                previewContainer.style.display = 'block';
+                document.body.classList.add('preview-active');
+            }
+        });
+        
+        // Go back to camera
+        backToCameraButton.addEventListener('click', function() {
+            previewContainer.style.display = 'none';
+            document.body.classList.remove('preview-active');
+            capturedImageData = null;
+        });
+        
+        // Submit attendance
+        submitAttendanceButton.addEventListener('click', function() {
+            if (!capturedImageData || !employeeData) {
+                alert('Missing data. Please try again.');
                 return;
             }
             
-            // Set the captured image
-            document.getElementById('preview-image').src = capturedImage;
-            
-            // Set the status badge and large status text
-            const statusBadge = document.getElementById('preview-status-badge');
-            const statusText = document.getElementById('status-text');
-            const statusLarge = document.getElementById('preview-status-large');
-            
-            statusBadge.className = `preview-status-badge ${attendanceType}`;
-            statusText.textContent = attendanceType === 'in' ? 'Clock In' : 'Clock Out';
-            
-            statusLarge.textContent = attendanceType === 'in' ? 'IN' : 'OUT';
-            statusLarge.className = `preview-status-large ${attendanceType}`;
-            
-            // Get server time for display
-            await updateTimeDisplay();
-            
-            // Get employee information
-            await getEmployeeInfo();
-            
-            // Set location
-            document.getElementById('preview-location').textContent = userLocation || 'Location not available';
-            
-            // Check for success or error messages in URL
-            const successMsg = urlParams.get('success');
-            const errorMsg = urlParams.get('error');
-            
-            if (successMsg) {
-                showAlert(decodeURIComponent(successMsg), 'success');
-            } else if (errorMsg) {
-                showAlert(decodeURIComponent(errorMsg), 'error');
-            }
-            
-        } catch (error) {
-            console.error('Error initializing preview:', error);
-            showAlert('An error occurred while loading the preview. Please try again.', 'error');
-            setTimeout(() => {
-                window.location.href = '/attendance';
-            }, 2000);
-        }
-    });
-    
-    // Show alert message
-    function showAlert(message, type = 'success') {
-        const alertElement = document.getElementById('alert-message');
-        const alertText = document.getElementById('alert-text');
-        
-        alertText.textContent = message;
-        alertElement.className = `alert-message ${type}`;
-        
-        // Show the alert
-        setTimeout(() => {
-            alertElement.classList.add('show');
-        }, 100);
-        
-        // Hide after 5 seconds
-        setTimeout(() => {
-            alertElement.classList.remove('show');
-        }, 5000);
-    }
-    
-    // Update time display with server time
-    async function updateTimeDisplay() {
-        try {
-            // Parse the timestamp from localStorage
-            const timestamp = new Date(serverTimestamp);
-            
-            // Format time and date
-            const timeStr = new Intl.DateTimeFormat('en-US', { 
-                hour12: true,
-                hour: '2-digit',
-                minute: '2-digit'
-            }).format(timestamp).toUpperCase();
-            
-            const dateStr = new Intl.DateTimeFormat('en-US', { 
-                weekday: 'short',
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric'
-            }).format(timestamp);
-            
-            // Update the display
-            document.getElementById('preview-time').textContent = timeStr;
-            document.getElementById('preview-date').textContent = dateStr;
-            
-        } catch (error) {
-            console.error('Error updating time display:', error);
-            document.getElementById('preview-time').textContent = 'Time unavailable';
-            document.getElementById('preview-date').textContent = 'Date unavailable';
-        }
-    }
-    
-    // Get employee information
-    async function getEmployeeInfo() {
-        try {
-            // Get authenticated user info
-            const response = await fetch('/api/employee-info');
-            if (!response.ok) {
-                throw new Error('Failed to fetch employee information');
-            }
-            
-            const data = await response.json();
-            
-            // Update employee information
-            document.getElementById('preview-name').textContent = data.name || '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            document.getElementById('preview-position').textContent = data.position || 'Position not available';
-            document.getElementById('preview-department').textContent = data.department || 'Department not available';
-            
-            // Store for later use
-            employeeName = data.name || '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            employeePosition = data.position || '';
-            employeeDepartment = data.department || '';
-            
-            // Update company name based on department
-            const department = data.department || '{{ Auth::user()->department }}';
-            let companyName = '';
-            
-            switch(department.toUpperCase()) {
-                case 'MHRHCI':
-                    companyName = 'Medical & Resources Health Care, Inc.';
-                    break;
-                case 'BGPDI':
-                    companyName = 'Bay Gas and Petroleum Distribution, Inc.';
-                    break;
-                case 'VHI':
-                    companyName = 'Verbena Hotel Inc.';
-                    break;
-                default:
-                    companyName = 'MHR Property Conglomerates, Inc.';
-            }
-            
-            document.getElementById('preview-company-name').textContent = companyName;
-            
-        } catch (error) {
-            console.error('Error fetching employee info:', error);
-            // Fallback to Auth user data
-            document.getElementById('preview-name').textContent = '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            document.getElementById('preview-position').textContent = 'Position not available';
-            document.getElementById('preview-department').textContent = 'Department not available';
-            document.getElementById('preview-company-name').textContent = 'MHR Property Conglomerates, Inc.';
-        }
-    }
-    
-    // Go back to attendance page
-    function goBack() {
-        document.body.classList.remove('preview-active');
-        window.location.href = '/attendance';
-    }
-    
-    // Confirm attendance
-    async function confirmAttendance() {
-        try {
-            // Show loading overlay
-            document.getElementById('loading-overlay').style.display = 'flex';
-            
-            // Capture the entire preview with overlays
-            const previewImage = await capturePreviewWithOverlays();
-            
-            if (!previewImage) {
-                throw new Error('Failed to capture preview image');
-            }
+            loadingOverlay.style.display = 'flex';
             
             // Prepare data for submission
-            const attendanceData = {
+            const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+            const attendanceType = currentAttendanceAction === 'clock_in' ? 'in' : 'out';
+            
+            const postData = {
                 type: attendanceType,
-                image: previewImage, // Use the captured preview image with overlays
-                location: userLocation,
-                timestamp: serverTimestamp
+                image: capturedImageData,
+                location: locationString,
+                timestamp: timestamp
             };
             
-            // Submit attendance data
-            const response = await fetch('/attendance/capture', {
+            // Send the request
+            fetch('/attendance/store-capture', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify(attendanceData)
-            });
-            
-            const result = await response.json();
-            
-            // Hide loading overlay
-            document.getElementById('loading-overlay').style.display = 'none';
-            
-            if (result.status === 'success') {
-                // Show success message
-                showAlert(result.message, 'success');
+                body: JSON.stringify(postData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingOverlay.style.display = 'none';
                 
-                // Clear localStorage
-                localStorage.removeItem('capturedImage');
-                localStorage.removeItem('userLocation');
-                localStorage.removeItem('serverTimestamp');
+                if (data.status === 'success') {
+                    // Show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Redirect or refresh the page
+                        window.location.href = '/attendance';
+                    });
+                } else {
+                    // Show error message
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'An error occurred while recording attendance',
+                        confirmButtonText: 'Try Again'
+                    }).then(() => {
+                        // Hide preview container and go back to camera
+                        previewContainer.style.display = 'none';
+                        document.body.classList.remove('preview-active');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting attendance:', error);
+                loadingOverlay.style.display = 'none';
                 
-                // Redirect to attendance page with success message after a delay
-                setTimeout(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Network error. Please try again.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // Hide preview container and go back to camera
+                    previewContainer.style.display = 'none';
                     document.body.classList.remove('preview-active');
-                    window.location.href = '/attendance?success=' + encodeURIComponent(result.message);
-                }, 2000);
-            } else {
-                // Show error message
-                showAlert(result.message || 'Failed to record attendance', 'error');
+                });
+            });
+        });
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
             }
-            
-        } catch (error) {
-            console.error('Error confirming attendance:', error);
-            
-            // Hide loading overlay
-            document.getElementById('loading-overlay').style.display = 'none';
-            
-            // Show error message
-            showAlert(error.message || 'Failed to record attendance. Please try again.', 'error');
-        }
-    }
-    
-    // Capture the preview with all overlays
-    async function capturePreviewWithOverlays() {
-        try {
-            // Hide the buttons and alert message during capture
-            const actionsElement = document.querySelector('.preview-actions');
-            const alertElement = document.getElementById('alert-message');
-            const originalActionsDisplay = actionsElement.style.display;
-            const originalAlertDisplay = alertElement.style.display;
-            
-            actionsElement.style.display = 'none';
-            alertElement.style.display = 'none';
-            
-            // Use html2canvas to capture the entire preview container
-            const previewContainer = document.querySelector('.image-preview-container');
-            
-            // Wait a moment for display changes to take effect
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Use html2canvas library to capture the preview with overlays
-            const canvas = await html2canvas(previewContainer, {
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#000000',
-                scale: 2, // Higher quality
-                logging: false
-            });
-            
-            // Restore the buttons and alert
-            actionsElement.style.display = originalActionsDisplay;
-            alertElement.style.display = originalAlertDisplay;
-            
-            // Add additional information to the image
-            enhanceCanvasWithDetails(canvas, {
-                name: employeeName,
-                position: employeePosition,
-                department: employeeDepartment,
-                location: userLocation,
-                timestamp: serverTimestamp,
-                type: attendanceType
-            });
-            
-            // Convert canvas to base64 image
-            const imageData = canvas.toDataURL('image/jpeg', 0.95);
-            
-            return imageData;
-        } catch (error) {
-            console.error('Error capturing preview with overlays:', error);
-            return null;
-        }
-    }
-    
-    // Add additional information to the canvas
-    function enhanceCanvasWithDetails(canvas, details) {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        // Add a gradient footer for additional information
-        const footerHeight = 60;
-        const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
-        
-        // Set text style for main verification text
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.font = 'bold 16px Arial';
-        ctx.textBaseline = 'middle';
-        
-        // Format timestamp
-        const timestamp = new Date(details.timestamp);
-        const formattedDate = timestamp.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
         });
-        const formattedTime = timestamp.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-        
-        // Add detailed verification text
-        const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
-        ctx.fillText(verificationText, 20, height - footerHeight + 15);
-        
-        // Add timestamp details
-        ctx.font = '14px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
-        ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
-        
-        // Add employee details on the right
-        ctx.textAlign = 'right';
-        ctx.fillText(`${details.name}`, width - 20, height - footerHeight + 15);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`${details.position}`, width - 20, height - footerHeight + 35);
-        ctx.fillText(`${details.department}`, width - 20, height - footerHeight + 55);
-        
-        // Add location in the middle
-        ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`Location: ${details.location}`, width/2, height - footerHeight + 35);
-        
-        // Add system verification text
-        ctx.font = 'bold 12px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        const systemText = 'HRIS ATTENDANCE SYSTEM';
-        ctx.fillText(systemText, width/2, height - footerHeight + 55);
-        
-        // Add unique verification ID
-        const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-        ctx.fillText(verificationId, width/2, height - footerHeight + 15);
-        
-        // Add professional watermark
-        ctx.save();
-        ctx.globalAlpha = 0.07;
-        ctx.font = 'bold 120px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.translate(width/2, height/2);
-        ctx.rotate(-Math.PI/6); // Rotate -30 degrees
-        const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
-        ctx.fillText(watermarkText, 0, 0);
-        ctx.font = 'bold 60px Arial';
-        ctx.fillText('VERIFIED', 0, 80);
-        ctx.restore();
-    }
-    
-    // Clean up when leaving the page
-    window.addEventListener('beforeunload', () => {
-        document.body.classList.remove('preview-active');
     });
 </script>
 @endsection
