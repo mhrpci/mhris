@@ -9,7 +9,6 @@
                     <div class="header-background"></div>
                     <div class="position-relative">
                         <h2 class="mb-0 text-center text-white">
-                            <i class="fas fa-building me-2"></i>
                             MHR Employee Attendance
                         </h2>
                     </div>
@@ -52,13 +51,13 @@
 </div>
 
 <!-- Full Screen Camera Interface -->
-<div id="cameraModal" class="modal fade camera-modal-fullscreen" tabindex="-1">
+<div id="cameraModal" class="modal fade camera-modal-fullscreen" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-fullscreen m-0 p-0">
         <div class="modal-content camera-modal">
             <!-- Camera Status Bar -->
             <div class="camera-status-bar">
                 <div class="status-left">
-                    <button class="btn-close-camera" data-bs-dismiss="modal">
+                    <button type="button" class="btn-close-camera" id="closeCamera">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -84,7 +83,6 @@
 
                 <!-- Info Overlay -->
                 <div class="camera-overlay">
-                    <!-- Employee Info -->
                     <div class="employee-info">
                         <div class="datetime-info">
                             <div id="overlayTime" class="overlay-time"></div>
@@ -292,13 +290,16 @@
     .camera-modal-fullscreen {
         margin: 0;
         padding: 0 !important;
+        background: #000;
     }
 
     .camera-modal-fullscreen .modal-dialog {
         margin: 0;
         padding: 0;
-        max-width: 100%;
+        width: 100vw;
+        max-width: 100vw;
         height: 100vh;
+        max-height: 100vh;
     }
 
     .camera-modal {
@@ -308,6 +309,7 @@
         flex-direction: column;
         border: none;
         border-radius: 0;
+        overflow: hidden;
     }
 
     /* Status Bar */
@@ -315,37 +317,49 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
+        padding: env(safe-area-inset-top) 1rem 1rem;
         color: white;
-        background: transparent;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         z-index: 1000;
+        height: 60px;
     }
 
     .clock-status {
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 500;
         color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
 
     .btn-close-camera,
     .btn-switch-camera {
-        background: none;
+        background: rgba(0, 0, 0, 0.5);
         border: none;
         color: white;
         font-size: 1.2rem;
-        padding: 0.5rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        opacity: 0.8;
-        transition: opacity 0.2s;
+        transition: all 0.2s ease;
     }
 
     .btn-close-camera:hover,
     .btn-switch-camera:hover {
-        opacity: 1;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-close-camera:active,
+    .btn-switch-camera:active {
+        transform: scale(0.95);
     }
 
     /* Camera View */
@@ -354,12 +368,19 @@
         position: relative;
         background: #000;
         overflow: hidden;
+        width: 100vw;
+        height: calc(100vh - 60px);
+        margin-top: 60px;
     }
 
     #cameraFeed {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 
     /* Camera Guide */
@@ -376,8 +397,8 @@
     }
 
     .face-guide {
-        width: 280px;
-        height: 280px;
+        width: min(280px, 70vw);
+        height: min(280px, 70vw);
         border: 2px solid rgba(255, 255, 255, 0.5);
         border-radius: 50%;
         box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
@@ -391,6 +412,7 @@
         color: white;
         text-align: right;
         z-index: 10;
+        max-width: 90vw;
     }
 
     .employee-info {
@@ -398,7 +420,7 @@
         padding: 12px;
         border-radius: 10px;
         backdrop-filter: blur(10px);
-        font-size: 0.9rem;
+        font-size: clamp(0.8rem, 2.5vw, 0.9rem);
     }
 
     .datetime-info {
@@ -406,14 +428,14 @@
     }
 
     .overlay-time {
-        font-size: 1.2rem;
+        font-size: clamp(1rem, 3vw, 1.2rem);
         font-weight: 600;
     }
 
     /* Camera Controls */
     .camera-controls-bottom {
         position: fixed;
-        bottom: 0;
+        bottom: max(env(safe-area-inset-bottom), 20px);
         left: 0;
         right: 0;
         padding: 2rem;
@@ -424,8 +446,8 @@
     }
 
     .capture-button {
-        width: 70px;
-        height: 70px;
+        width: min(70px, 15vw);
+        height: min(70px, 15vw);
         border-radius: 50%;
         background: transparent;
         border: 4px solid white;
@@ -450,10 +472,16 @@
         transform: scaleX(-1);
     }
 
+    /* Responsive Design */
     @media (max-width: 768px) {
-        .face-guide {
-            width: 250px;
-            height: 250px;
+        .camera-status-bar {
+            height: 50px;
+            padding: env(safe-area-inset-top) 10px 10px;
+        }
+
+        .camera-view {
+            height: calc(100vh - 50px);
+            margin-top: 50px;
         }
 
         .camera-overlay {
@@ -464,6 +492,37 @@
 
         .employee-info {
             text-align: center;
+        }
+    }
+
+    /* Landscape Mode */
+    @media (orientation: landscape) {
+        .camera-view {
+            height: 100vh;
+        }
+
+        .camera-status-bar {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .camera-overlay {
+            bottom: 20px;
+            right: 20px;
+            max-width: 300px;
+        }
+
+        .camera-controls-bottom {
+            right: 20px;
+            left: auto;
+            bottom: 50%;
+            transform: translateY(50%);
+        }
+    }
+
+    /* Notch Support */
+    @supports (padding-top: env(safe-area-inset-top)) {
+        .camera-status-bar {
+            padding-top: max(env(safe-area-inset-top), 10px);
         }
     }
 </style>
@@ -669,12 +728,33 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('clockStatus').textContent = statusText;
     }
 
+    // Function to properly stop camera and clean up
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => {
+                track.stop();
+            });
+            stream = null;
+        }
+        const video = document.getElementById('cameraFeed');
+        video.srcObject = null;
+    }
+
+    // Enhanced close button functionality
+    document.getElementById('closeCamera').addEventListener('click', function() {
+        stopCamera();
+        cameraModal.hide();
+    });
+
+    // Ensure camera is stopped when modal is closed by any means
+    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function() {
+        stopCamera();
+    });
+
     // Enhanced camera start function
     async function startCamera() {
         try {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
+            stopCamera(); // Clean up any existing stream
 
             const constraints = {
                 video: {
@@ -690,7 +770,14 @@ document.addEventListener('DOMContentLoaded', function() {
             video.srcObject = stream;
             video.classList.toggle('mirror', currentCamera === 'user');
 
-            // Update employee info and start datetime updates
+            // Wait for video to be loaded
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play().then(resolve).catch(resolve);
+                };
+            });
+
+            // Update overlays
             updateEmployeeInfo();
             updateOverlayDateTime();
             setInterval(updateOverlayDateTime, 1000);
@@ -698,6 +785,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error accessing camera:', error);
             showError('Unable to access camera. Please check permissions.');
+            cameraModal.hide();
         }
     }
 
@@ -709,10 +797,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('employeeLocation').querySelector('span').textContent = document.getElementById('address').textContent;
     }
 
-    // Switch camera function
+    // Switch camera function with error handling
     document.getElementById('switchCamera').addEventListener('click', async () => {
-        currentCamera = currentCamera === 'user' ? 'environment' : 'user';
-        await startCamera();
+        try {
+            currentCamera = currentCamera === 'user' ? 'environment' : 'user';
+            await startCamera();
+        } catch (error) {
+            console.error('Error switching camera:', error);
+            showError('Unable to switch camera. Please try again.');
+        }
     });
 
     // Function to capture photo
@@ -778,34 +871,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Function to stop camera
-    function stopCamera() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            stream = null;
-        }
-    }
-
-    // Modified handleAttendance to update status
+    // Modified handleAttendance with proper error handling
     async function handleAttendance() {
         if (!userLocation || !serverTimestamp || !serverHash) {
             showError('Please ensure location and time sync are available');
             return;
         }
 
-        updateClockStatus();
-        await startCamera();
-        cameraModal.show();
+        try {
+            updateClockStatus();
+            await startCamera();
+            cameraModal.show();
+        } catch (error) {
+            console.error('Error starting camera:', error);
+            showError('Unable to start camera. Please check permissions.');
+        }
     }
 
-    // Clean up on modal close
-    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            stream = null;
-        }
-    });
-    
     // Event listener for the clock button
     document.getElementById('clockButton').addEventListener('click', handleAttendance);
     
