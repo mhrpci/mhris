@@ -54,19 +54,15 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div id="location-status" class="alert alert-info">
-                        <div class="d-flex align-items-center">
-                            <div class="spinner-border spinner-border-sm me-2" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            Requesting location access...
-                        </div>
+                    <div id="location-status" class="alert alert-info d-none">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <span class="status-message">Waiting for location access...</span>
                     </div>
                     
                     <div class="location-info">
                         <div class="mb-3">
                             <label class="text-muted small">Current Address</label>
-                            <p id="current-location" class="mb-0 fw-bold">Fetching location...</p>
+                            <p id="current-location" class="mb-0 fw-bold">Waiting for location...</p>
                         </div>
                         <div id="coordinates-info" class="d-none">
                             <label class="text-muted small">Coordinates</label>
@@ -276,9 +272,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(
             function(position) {
-                locationStatus.className = 'alert alert-success';
-                locationStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>Location access granted';
-
                 // Get address from coordinates using reverse geocoding
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
                     .then(response => response.json())
@@ -286,14 +279,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         currentLocation.textContent = data.display_name;
                         coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
                         coordinatesInfo.classList.remove('d-none');
+                        locationStatus.classList.add('d-none');
                     })
                     .catch(error => {
                         currentLocation.textContent = 'Unable to fetch address';
                         coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
                         coordinatesInfo.classList.remove('d-none');
+                        locationStatus.classList.remove('d-none');
+                        locationStatus.className = 'alert alert-warning';
+                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details';
                     });
             },
             function(error) {
+                locationStatus.classList.remove('d-none');
                 locationStatus.className = 'alert alert-danger';
                 switch(error.code) {
                     case error.PERMISSION_DENIED:
@@ -306,6 +304,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out.';
                         break;
                 }
+                currentLocation.textContent = 'Location access required';
+                coordinatesInfo.classList.add('d-none');
             },
             {
                 enableHighAccuracy: true,
@@ -314,8 +314,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         );
     } else {
+        locationStatus.classList.remove('d-none');
         locationStatus.className = 'alert alert-danger';
         locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Geolocation is not supported by your browser.';
+        currentLocation.textContent = 'Location services not supported';
+        coordinatesInfo.classList.add('d-none');
     }
 });
 </script>
