@@ -1,32 +1,49 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-lg">
-                <div class="card-header bg-primary text-white text-center">
-                    <h2 class="mb-0">MHR Employee Attendance</h2>
+            <div class="card shadow-lg border-0 attendance-card">
+                <div class="card-header position-relative py-4">
+                    <div class="header-background"></div>
+                    <div class="position-relative">
+                        <h2 class="mb-0 text-center text-white">
+                            <i class="fas fa-building me-2"></i>
+                            MHR Employee Attendance
+                        </h2>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <div id="clock" class="display-4 mb-2">--:--:-- --</div>
-                        <div id="date" class="h5 text-muted mb-3">Loading...</div>
-                        <div id="location" class="text-muted small mb-4">
-                            <i class="fas fa-map-marker-alt"></i> 
-                            <span id="address">Fetching location...</span>
+                <div class="card-body p-4">
+                    <div class="text-center attendance-content">
+                        <div class="time-display mb-4">
+                            <div id="clock" class="clock-text mb-2">--:--:-- --</div>
+                            <div id="date" class="date-text mb-3">Loading...</div>
                         </div>
                         
-                        <div class="d-grid gap-3 col-md-8 mx-auto">
-                            <button id="clockButton" class="btn btn-lg">
-                                <i class="fas"></i> <span>Loading...</span>
+                        <div class="location-info mb-4">
+                            <div class="location-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div id="address" class="location-text">Fetching location...</div>
+                        </div>
+                        
+                        <div class="d-grid col-lg-7 col-md-9 mx-auto">
+                            <button id="clockButton" class="btn btn-lg attendance-btn">
+                                <div class="btn-content">
+                                    <i class="fas"></i>
+                                    <span class="ms-2">Loading...</span>
+                                </div>
+                                <div class="btn-ripple"></div>
                             </button>
                         </div>
                     </div>
                     
-                    <div class="alert alert-info text-center small" role="alert">
-                        <i class="fas fa-info-circle"></i> 
-                        Your attendance is being recorded with secure timestamp verification
+                    <div class="status-container mt-4">
+                        <div class="alert alert-info text-center status-message" role="alert">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <span>Attendance is being recorded with secure verification</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -36,83 +53,190 @@
 
 @push('styles')
 <style>
-    .card {
+    /* Card Styles */
+    .attendance-card {
+        border-radius: 20px;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background: transparent;
         border: none;
-        border-radius: 15px;
         overflow: hidden;
     }
-    
-    .card-header {
+
+    .header-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-        padding: 1.5rem;
+        z-index: 0;
     }
-    
-    #clock {
-        font-weight: 600;
+
+    /* Clock Display */
+    .time-display {
+        padding: 2rem;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .clock-text {
+        font-size: 3.5rem;
+        font-weight: 700;
         color: #2c3e50;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    
-    .btn {
-        padding: 12px 24px;
-        border-radius: 8px;
+
+    .date-text {
+        font-size: 1.25rem;
+        color: #6c757d;
         font-weight: 500;
-        text-transform: uppercase;
+    }
+
+    /* Location Info */
+    .location-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+
+    .location-icon {
+        color: #4e73df;
+        font-size: 1.2rem;
+    }
+
+    .location-text {
+        color: #495057;
+        font-size: 0.95rem;
+    }
+
+    /* Button Styles */
+    .attendance-btn {
+        position: relative;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.1rem;
         letter-spacing: 0.5px;
-        transition: all 0.3s ease;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+
+    .btn-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    
+
     .btn-clock-in {
         background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-        border: none;
         color: white;
+        border: none;
     }
-    
+
     .btn-clock-out {
         background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-        border: none;
         color: white;
+        border: none;
     }
-    
+
+    .attendance-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .attendance-btn:active {
+        transform: translateY(1px);
+    }
+
+    .btn-ripple {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+        transform: scale(0);
+        transition: transform 0.6s;
+    }
+
+    .attendance-btn:hover .btn-ripple {
+        transform: scale(2);
+    }
+
+    /* Status Message */
+    .status-message {
+        border: none;
+        background: #e8f4fd;
+        color: #0d6efd;
+        border-radius: 10px;
+        padding: 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .status-message.error {
+        background: #fee7e7;
+        color: #dc3545;
+    }
+
+    /* Responsive Design */
     @media (max-width: 768px) {
-        .display-4 {
+        .clock-text {
             font-size: 2.5rem;
         }
         
-        .h5 {
+        .date-text {
             font-size: 1.1rem;
+        }
+        
+        .attendance-btn {
+            padding: 0.875rem 1.5rem;
+            font-size: 1rem;
         }
     }
 
+    /* Loading Animation */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .loading {
+        animation: pulse 1.5s infinite;
+    }
+
+    /* Disabled State */
     .disabled {
         opacity: 0.65;
         pointer-events: none;
-    }
-
-    /* Button state transition animation */
-    #clockButton {
-        transition: all 0.3s ease-in-out;
-    }
-
-    #clockButton i {
-        margin-right: 8px;
+        filter: grayscale(30%);
     }
 </style>
 @endpush
 
 @push('scripts')
-<script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let serverTimestamp = '';
     let serverHash = '';
     let userLocation = null;
     let lastVerifiedTime = null;
-    let isClockIn = true; // Track button state
+    let isClockIn = true;
+    let clientTimeOffset = 0;
     
     // Function to update button state
     function updateButtonState() {
@@ -121,17 +245,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const text = button.querySelector('span');
         
         if (isClockIn) {
-            button.className = 'btn btn-lg btn-clock-in';
+            button.className = 'btn btn-lg attendance-btn btn-clock-in';
             icon.className = 'fas fa-sign-in-alt';
             text.textContent = 'Clock In';
         } else {
-            button.className = 'btn btn-lg btn-clock-out';
+            button.className = 'btn btn-lg attendance-btn btn-clock-out';
             icon.className = 'fas fa-sign-out-alt';
             text.textContent = 'Clock Out';
         }
     }
     
-    // Function to get server time
+    // Function to get server time and calculate offset
     async function getServerTime() {
         try {
             const response = await fetch('/api/server-time');
@@ -141,7 +265,12 @@ document.addEventListener('DOMContentLoaded', function() {
             serverTimestamp = data.timestamp;
             serverHash = data.hash;
             
-            // Verify timestamp before updating display
+            // Calculate client-server time offset
+            const serverTime = new Date(data.timestamp).getTime();
+            const clientTime = new Date().getTime();
+            clientTimeOffset = serverTime - clientTime;
+            
+            // Verify timestamp
             const verifyResponse = await fetch(`/api/verify-timestamp/${encodeURIComponent(serverTimestamp)}/${encodeURIComponent(serverHash)}`);
             if (!verifyResponse.ok) throw new Error('Timestamp verification failed');
             
@@ -154,7 +283,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             lastVerifiedTime = data.formatted;
-            updateTimeDisplay(data.formatted);
+            updateTimeDisplay();
+            startLocalTimeUpdate();
         } catch (error) {
             console.error('Error with server time:', error);
             showError('Unable to sync with server time. Please refresh the page.');
@@ -162,11 +292,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Function to start local time updates
+    function startLocalTimeUpdate() {
+        // Update every second
+        setInterval(() => {
+            const now = new Date(Date.now() + clientTimeOffset);
+            updateTimeDisplay(now);
+        }, 1000);
+    }
+    
     // Function to update time display
-    function updateTimeDisplay(formatted) {
-        if (!formatted || !formatted.full) return;
-        
-        const date = new Date(formatted.full);
+    function updateTimeDisplay(date = new Date()) {
         const timeString = date.toLocaleTimeString('en-US', { 
             hour: '2-digit', 
             minute: '2-digit', 
@@ -174,7 +310,6 @@ document.addEventListener('DOMContentLoaded', function() {
             hour12: true,
             timeZone: 'Asia/Manila'
         });
-        document.getElementById('clock').textContent = timeString;
         
         const dateString = date.toLocaleDateString('en-US', {
             weekday: 'long',
@@ -183,23 +318,51 @@ document.addEventListener('DOMContentLoaded', function() {
             day: 'numeric',
             timeZone: 'Asia/Manila'
         });
-        document.getElementById('date').textContent = dateString;
+        
+        const clockElement = document.getElementById('clock');
+        const dateElement = document.getElementById('date');
+        
+        // Smooth update animation
+        clockElement.style.opacity = '0';
+        setTimeout(() => {
+            clockElement.textContent = timeString;
+            clockElement.style.opacity = '1';
+        }, 100);
+        
+        dateElement.textContent = dateString;
     }
     
     // Function to disable attendance button
     function disableAttendanceButton() {
-        document.getElementById('clockButton').classList.add('disabled');
+        const button = document.getElementById('clockButton');
+        button.classList.add('disabled');
+        showError('System unavailable. Please try again later.');
     }
     
     // Function to show error message
     function showError(message) {
-        const alertDiv = document.querySelector('.alert');
-        alertDiv.classList.remove('alert-info');
-        alertDiv.classList.add('alert-danger');
-        alertDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+        const statusMessage = document.querySelector('.status-message');
+        statusMessage.classList.remove('alert-info');
+        statusMessage.classList.add('alert-danger', 'error');
+        statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
     }
     
-    // Function to get user's location
+    // Function to show success message
+    function showSuccess(message) {
+        const statusMessage = document.querySelector('.status-message');
+        statusMessage.classList.remove('alert-info', 'alert-danger', 'error');
+        statusMessage.classList.add('alert-success');
+        statusMessage.innerHTML = `<i class="fas fa-check-circle me-2"></i>${message}`;
+        
+        // Reset to info message after 5 seconds
+        setTimeout(() => {
+            statusMessage.classList.remove('alert-success');
+            statusMessage.classList.add('alert-info');
+            statusMessage.innerHTML = `<i class="fas fa-shield-alt me-2"></i>Attendance is being recorded with secure verification`;
+        }, 5000);
+    }
+    
+    // Enhanced location handling
     async function getUserLocation() {
         if ("geolocation" in navigator) {
             try {
@@ -220,29 +383,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Get address using reverse geocoding
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.latitude}&lon=${userLocation.longitude}`);
                 const data = await response.json();
-                document.getElementById('address').textContent = data.display_name;
+                
+                const addressElement = document.getElementById('address');
+                addressElement.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i></span>${data.display_name}`;
             } catch (error) {
-                document.getElementById('address').textContent = 'Location access denied';
+                document.getElementById('address').innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Location access denied</span>`;
                 console.error('Error getting location:', error);
                 disableAttendanceButton();
             }
         } else {
-            document.getElementById('address').textContent = 'Geolocation not supported';
+            document.getElementById('address').innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Geolocation not supported</span>`;
             disableAttendanceButton();
         }
     }
     
-    // Clock In/Out functionality
+    // Enhanced attendance handling
     async function handleAttendance() {
         if (!userLocation) {
-            alert('Please enable location access to clock in/out');
+            showError('Please enable location access to clock in/out');
             return;
         }
         
         if (!serverTimestamp || !serverHash) {
-            alert('Server time synchronization required. Please wait.');
+            showError('Server time synchronization required. Please wait.');
             return;
         }
+        
+        const button = document.getElementById('clockButton');
+        button.classList.add('disabled');
         
         try {
             // Verify timestamp again before submitting
@@ -283,10 +451,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show success message
             const action = type.charAt(0).toUpperCase() + type.slice(1);
-            alert(`Clock ${action} successful!`);
+            showSuccess(`Clock ${action} recorded successfully!`);
         } catch (error) {
             console.error('Error recording attendance:', error);
             showError('Failed to record attendance. Please try again.');
+        } finally {
+            button.classList.remove('disabled');
         }
     }
     
@@ -296,10 +466,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize
     getServerTime();
     getUserLocation();
-    updateButtonState(); // Set initial button state
+    updateButtonState();
     
-    // Update server time more frequently (every 30 seconds) for better accuracy
-    setInterval(getServerTime, 30000);
+    // Periodic server sync (every 5 minutes)
+    setInterval(getServerTime, 300000);
 });
 </script>
 @endpush
