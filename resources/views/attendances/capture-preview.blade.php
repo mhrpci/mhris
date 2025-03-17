@@ -574,6 +574,7 @@
     let employeeName = '';
     let employeePosition = '';
     let employeeDepartment = '';
+    let isSubmitting = false; // Prevent multiple submissions
     
     // Initialize the preview page
     document.addEventListener('DOMContentLoaded', async function() {
@@ -599,7 +600,15 @@
             }
             
             // Set the captured image
-            document.getElementById('preview-image').src = capturedImage;
+            const previewImage = document.getElementById('preview-image');
+            previewImage.onload = function() {
+                console.log("Image loaded successfully");
+            };
+            previewImage.onerror = function() {
+                console.error("Error loading preview image");
+                showAlert('Error loading captured image. Please try again.', 'error');
+            };
+            previewImage.src = capturedImage;
             
             // Set the status badge and large status text
             const statusBadge = document.getElementById('preview-status-badge');
@@ -665,6 +674,10 @@
             // Parse the timestamp from localStorage
             const timestamp = new Date(serverTimestamp);
             
+            if (isNaN(timestamp.getTime())) {
+                throw new Error('Invalid timestamp');
+            }
+            
             // Format time and date
             const timeStr = new Intl.DateTimeFormat('en-US', { 
                 hour12: true,
@@ -696,7 +709,7 @@
             // Get authenticated user info
             const response = await fetch('/api/employee-info');
             if (!response.ok) {
-                throw new Error('Failed to fetch employee information');
+                throw new Error(`Failed to fetch employee information: ${response.status}`);
             }
             
             const data = await response.json();
@@ -749,25 +762,109 @@
     
     // Confirm attendance
     async function confirmAttendance() {
+        // Prevent multiple submissions
+        if (isSubmitting) {
+            console.log('Submission already in progress');
+            return;
+        }
+        
+        isSubmitting = true;
+        
         try {
             // Show loading overlay
             document.getElementById('loading-overlay').style.display = 'flex';
             
             // Capture the entire preview with overlays
-            const previewImage = await capturePreviewWithOverlays();
+            console.log('Starting image capture');
+            let previewImage = await capturePreviewWithOverlays();
             
             if (!previewImage) {
                 throw new Error('Failed to capture preview image');
+            }
+            console.log('Image captured successfully');
+            
+            // Check image size
+            let approximateSize = Math.round(previewImage.length * 0.75); // base64 size approximation
+            console.log(`Approximate image size: ${Math.round(approximateSize / 1024)} KB`);
+            
+            // Ensure image doesn't exceed 10MB limit
+            const MAX_SIZE = 10 * 1024 * 1024; // 10MB limit
+            
+            // If image is too large, reduce quality until it's under the limit
+            if (approximateSize > MAX_SIZE) {
+                console.warn('Image size too large, reducing quality');
+                
+                // Start with current quality and reduce as needed
+                let quality = 0.8;
+                const minQuality = 0.3; // Don't go below this quality
+                const tempCanvas = document.createElement('canvas');
+                const ctx = tempCanvas.getContext('2d');
+                
+                // Create image element from the current data
+                const img = new Image();
+                img.src = previewImage;
+                
+                // Wait for image to load
+                await new Promise(resolve => {
+                    img.onload = resolve;
+                    img.onerror = () => {
+                        console.error('Error loading image for resizing');
+                        resolve(); // Continue even if there's an error
+                    };
+                });
+                
+                // Set canvas dimensions
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                
+                // Draw image to canvas
+                ctx.drawImage(img, 0, 0);
+                
+                // Reduce quality until size is acceptable or we hit minimum quality
+                while (approximateSize > MAX_SIZE && quality > minQuality) {
+                    quality -= 0.1;
+                    previewImage = tempCanvas.toDataURL('image/jpeg', quality);
+                    approximateSize = Math.round(previewImage.length * 0.75);
+                    console.log(`Reduced quality to ${quality.toFixed(1)}, new size: ${Math.round(approximateSize / 1024)} KB`);
+                }
+                
+                // If still too large, try scaling down the image
+                if (approximateSize > MAX_SIZE) {
+                    console.warn('Still too large, reducing dimensions');
+                    
+                    // Gradually reduce dimensions until size is acceptable
+                    let scale = 0.9;
+                    const minScale = 0.5; // Don't go below 50% of original size
+                    
+                    while (approximateSize > MAX_SIZE && scale > minScale) {
+                        // Reduce dimensions
+                        tempCanvas.width = img.width * scale;
+                        tempCanvas.height = img.height * scale;
+                        
+                        // Clear canvas and redraw scaled image
+                        ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+                        
+                        // Convert to data URL with current quality
+                        previewImage = tempCanvas.toDataURL('image/jpeg', quality);
+                        approximateSize = Math.round(previewImage.length * 0.75);
+                        
+                        console.log(`Reduced scale to ${scale.toFixed(1)}, new size: ${Math.round(approximateSize / 1024)} KB`);
+                        scale -= 0.1;
+                    }
+                }
+                
+                console.log(`Final image size: ${Math.round(approximateSize / 1024)} KB`);
             }
             
             // Prepare data for submission
             const attendanceData = {
                 type: attendanceType,
-                image: previewImage, // Use the captured preview image with overlays
+                image: previewImage,
                 location: userLocation,
                 timestamp: serverTimestamp
             };
             
+            console.log('Submitting attendance data');
             // Submit attendance data
             const response = await fetch('/attendance/capture', {
                 method: 'POST',
@@ -778,7 +875,13 @@
                 body: JSON.stringify(attendanceData)
             });
             
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Server error: ${response.status}. ${errorText}`);
+            }
+            
             const result = await response.json();
+            console.log('Server response:', result);
             
             // Hide loading overlay
             document.getElementById('loading-overlay').style.display = 'none';
@@ -800,6 +903,7 @@
             } else {
                 // Show error message
                 showAlert(result.message || 'Failed to record attendance', 'error');
+                isSubmitting = false;
             }
             
         } catch (error) {
@@ -810,6 +914,7 @@
             
             // Show error message
             showAlert(error.message || 'Failed to record attendance. Please try again.', 'error');
+            isSubmitting = false;
         }
     }
     
@@ -828,126 +933,198 @@
             // Use html2canvas to capture the entire preview container
             const previewContainer = document.querySelector('.image-preview-container');
             
-            // Wait a moment for display changes to take effect
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Wait longer for display changes to take effect
+            await new Promise(resolve => setTimeout(resolve, 300));
             
+            console.log('Starting html2canvas rendering');
             // Use html2canvas library to capture the preview with overlays
             const canvas = await html2canvas(previewContainer, {
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#000000',
-                scale: 2, // Higher quality
-                logging: false
+                scale: 1.5, // Medium quality to reduce size
+                logging: false,
+                onclone: function(clonedDoc) {
+                    // Ensure all images are loaded in the cloned document
+                    const images = clonedDoc.getElementsByTagName('img');
+                    console.log(`Processing ${images.length} images in cloned document`);
+                    for (let img of images) {
+                        if (!img.complete) {
+                            console.warn(`Image not loaded: ${img.src}`);
+                        }
+                    }
+                }
             });
+            
+            console.log('Canvas rendered successfully');
             
             // Restore the buttons and alert
             actionsElement.style.display = originalActionsDisplay;
             alertElement.style.display = originalAlertDisplay;
             
-            // Add additional information to the image
-            enhanceCanvasWithDetails(canvas, {
-                name: employeeName,
-                position: employeePosition,
-                department: employeeDepartment,
-                location: userLocation,
-                timestamp: serverTimestamp,
-                type: attendanceType
-            });
+            try {
+                // Add additional information to the image
+                enhanceCanvasWithDetails(canvas, {
+                    name: employeeName || 'User',
+                    position: employeePosition || 'Not available',
+                    department: employeeDepartment || 'Not available',
+                    location: userLocation || 'Not available',
+                    timestamp: serverTimestamp || new Date().toISOString(),
+                    type: attendanceType || 'in'
+                });
+                console.log('Canvas enhanced with details');
+            } catch (enhanceError) {
+                console.error('Error enhancing canvas:', enhanceError);
+                // Continue without enhancement
+            }
             
-            // Convert canvas to base64 image
-            const imageData = canvas.toDataURL('image/jpeg', 0.95);
+            // Convert canvas to base64 image with reduced quality to manage size
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            console.log('Canvas converted to image data');
             
             return imageData;
         } catch (error) {
             console.error('Error capturing preview with overlays:', error);
-            return null;
+            // Try a simpler method as fallback
+            try {
+                console.log('Attempting fallback capture method');
+                const previewContainer = document.querySelector('.image-preview-container');
+                
+                // Use a more basic configuration
+                const canvas = await html2canvas(previewContainer, {
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#000000',
+                    scale: 1, // Lowest quality
+                    imageTimeout: 0, // No timeout
+                    logging: true, // Enable logging
+                    ignoreElements: (element) => {
+                        // Ignore problematic elements
+                        return element.classList.contains('preview-logo');
+                    }
+                });
+                
+                return canvas.toDataURL('image/jpeg', 0.7);
+            } catch (fallbackError) {
+                console.error('Fallback capture also failed:', fallbackError);
+                return null;
+            }
         }
     }
     
     // Add additional information to the canvas
     function enhanceCanvasWithDetails(canvas, details) {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        // Add a gradient footer for additional information
-        const footerHeight = 60;
-        const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
-        
-        // Set text style for main verification text
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.font = 'bold 16px Arial';
-        ctx.textBaseline = 'middle';
-        
-        // Format timestamp
-        const timestamp = new Date(details.timestamp);
-        const formattedDate = timestamp.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        const formattedTime = timestamp.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-        
-        // Add detailed verification text
-        const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
-        ctx.fillText(verificationText, 20, height - footerHeight + 15);
-        
-        // Add timestamp details
-        ctx.font = '14px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
-        ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
-        
-        // Add employee details on the right
-        ctx.textAlign = 'right';
-        ctx.fillText(`${details.name}`, width - 20, height - footerHeight + 15);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`${details.position}`, width - 20, height - footerHeight + 35);
-        ctx.fillText(`${details.department}`, width - 20, height - footerHeight + 55);
-        
-        // Add location in the middle
-        ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`Location: ${details.location}`, width/2, height - footerHeight + 35);
-        
-        // Add system verification text
-        ctx.font = 'bold 12px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        const systemText = 'HRIS ATTENDANCE SYSTEM';
-        ctx.fillText(systemText, width/2, height - footerHeight + 55);
-        
-        // Add unique verification ID
-        const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-        ctx.fillText(verificationId, width/2, height - footerHeight + 15);
-        
-        // Add professional watermark
-        ctx.save();
-        ctx.globalAlpha = 0.07;
-        ctx.font = 'bold 120px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.translate(width/2, height/2);
-        ctx.rotate(-Math.PI/6); // Rotate -30 degrees
-        const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
-        ctx.fillText(watermarkText, 0, 0);
-        ctx.font = 'bold 60px Arial';
-        ctx.fillText('VERIFIED', 0, 80);
-        ctx.restore();
+        try {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Add a gradient footer for additional information
+            const footerHeight = 60;
+            const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
+            
+            // Set text style for main verification text
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.font = 'bold 16px Arial';
+            ctx.textBaseline = 'middle';
+            
+            // Format timestamp
+            let timestamp;
+            try {
+                timestamp = new Date(details.timestamp);
+                if (isNaN(timestamp.getTime())) {
+                    throw new Error('Invalid date');
+                }
+            } catch (e) {
+                console.warn('Invalid timestamp, using current date:', e);
+                timestamp = new Date();
+            }
+            
+            const formattedDate = timestamp.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const formattedTime = timestamp.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+            
+            // Add detailed verification text
+            const verificationText = `${(details.type || 'in').toUpperCase()} VERIFICATION`;
+            ctx.fillText(verificationText, 20, height - footerHeight + 15);
+            
+            // Add timestamp details
+            ctx.font = '14px Arial';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
+            ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
+            
+            // Add employee details on the right
+            ctx.textAlign = 'right';
+            ctx.fillText(`${details.name || 'User'}`, width - 20, height - footerHeight + 15);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(`${details.position || 'Position not available'}`, width - 20, height - footerHeight + 35);
+            ctx.fillText(`${details.department || 'Department not available'}`, width - 20, height - footerHeight + 55);
+            
+            // Add location in the middle
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(`Location: ${details.location || 'Not available'}`, width/2, height - footerHeight + 35);
+            
+            // Add system verification text
+            ctx.font = 'bold 12px Arial';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            const systemText = 'HRIS ATTENDANCE SYSTEM';
+            ctx.fillText(systemText, width/2, height - footerHeight + 55);
+            
+            // Add unique verification ID (shortened to reduce canvas processing)
+            const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+            ctx.fillText(verificationId, width/2, height - footerHeight + 15);
+            
+            // Add simplified watermark (reduced size to improve performance)
+            ctx.save();
+            ctx.globalAlpha = 0.05; // Reduced opacity
+            ctx.font = 'bold 100px Arial'; // Smaller font
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.translate(width/2, height/2);
+            ctx.rotate(-Math.PI/6); // Rotate -30 degrees
+            const watermarkText = `${details.type === 'in' ? 'IN' : 'OUT'}`;
+            ctx.fillText(watermarkText, 0, 0);
+            ctx.font = 'bold 50px Arial'; // Smaller font
+            ctx.fillText('VERIFIED', 0, 70);
+            ctx.restore();
+        } catch (error) {
+            console.error('Error enhancing canvas with details:', error);
+            // Continue without enhancement
+        }
     }
     
     // Clean up when leaving the page
     window.addEventListener('beforeunload', () => {
         document.body.classList.remove('preview-active');
     });
+    
+    // Add event listener to retry if image loading fails
+    window.addEventListener('error', function(e) {
+        if (e.target.tagName.toLowerCase() === 'img') {
+            console.warn('Image loading error:', e);
+            // Try to reload the image once
+            if (!e.target.dataset.reloaded) {
+                e.target.dataset.reloaded = 'true';
+                setTimeout(() => {
+                    e.target.src = e.target.src;
+                }, 500);
+            }
+        }
+    }, true);
 </script>
 @endsection
