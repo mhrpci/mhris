@@ -68,7 +68,7 @@
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <i class="fas fa-user-circle me-1 text-primary"></i>
-                                            <span>{{ $update->author->name ?? 'Unknown' }}</span>
+                                            <span>{{ $update->author->first_name ?? 'Unknown' }} {{ $update->author->last_name ?? 'Unknown' }}</span>
                                         </div>
                                     </td>
                                     <td>
