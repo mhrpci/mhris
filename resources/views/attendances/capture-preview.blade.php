@@ -564,7 +564,7 @@
 
 @section('scripts')
 <!-- Include html2canvas library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
     // Variables to store attendance data
     let capturedImage = '';
@@ -816,11 +816,6 @@
     // Capture the preview with all overlays
     async function capturePreviewWithOverlays() {
         try {
-            // Ensure html2canvas is loaded
-            if (typeof html2canvas === 'undefined') {
-                throw new Error('html2canvas library not loaded');
-            }
-            
             // Hide the buttons and alert message during capture
             const actionsElement = document.querySelector('.preview-actions');
             const alertElement = document.getElementById('alert-message');
@@ -834,75 +829,37 @@
             const previewContainer = document.querySelector('.image-preview-container');
             
             // Wait a moment for display changes to take effect
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise(resolve => setTimeout(resolve, 100));
             
             // Use html2canvas library to capture the preview with overlays
-            try {
-                const canvas = await html2canvas(previewContainer, {
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#000000',
-                    scale: 1.5, // Balance quality vs performance
-                    logging: false,
-                    imageTimeout: 0, // No timeout
-                    removeContainer: false,
-                    foreignObjectRendering: false // More compatible
-                });
-                
-                // Restore the buttons and alert
-                actionsElement.style.display = originalActionsDisplay;
-                alertElement.style.display = originalAlertDisplay;
-                
-                if (!canvas) {
-                    throw new Error('Failed to create canvas');
-                }
-                
-                // Add additional information to the image
-                enhanceCanvasWithDetails(canvas, {
-                    name: employeeName,
-                    position: employeePosition,
-                    department: employeeDepartment,
-                    location: userLocation,
-                    timestamp: serverTimestamp,
-                    type: attendanceType
-                });
-                
-                // Convert canvas to base64 image with high quality
-                const imageData = canvas.toDataURL('image/jpeg', 0.95);
-                
-                if (!imageData || imageData === 'data:,') {
-                    throw new Error('Generated image is empty');
-                }
-                
-                return imageData;
-            } catch (canvasError) {
-                console.error('html2canvas error:', canvasError);
-                
-                // Fallback to simpler image capture if html2canvas fails
-                const img = document.getElementById('preview-image');
-                const fallbackCanvas = document.createElement('canvas');
-                fallbackCanvas.width = img.naturalWidth;
-                fallbackCanvas.height = img.naturalHeight;
-                const ctx = fallbackCanvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                
-                // Convert to base64 with fallback quality
-                const fallbackImage = fallbackCanvas.toDataURL('image/jpeg', 0.9);
-                
-                // Restore display state
-                actionsElement.style.display = originalActionsDisplay;
-                alertElement.style.display = originalAlertDisplay;
-                
-                return fallbackImage;
-            }
+            const canvas = await html2canvas(previewContainer, {
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#000000',
+                scale: 2, // Higher quality
+                logging: false
+            });
+            
+            // Restore the buttons and alert
+            actionsElement.style.display = originalActionsDisplay;
+            alertElement.style.display = originalAlertDisplay;
+            
+            // Add additional information to the image
+            enhanceCanvasWithDetails(canvas, {
+                name: employeeName,
+                position: employeePosition,
+                department: employeeDepartment,
+                location: userLocation,
+                timestamp: serverTimestamp,
+                type: attendanceType
+            });
+            
+            // Convert canvas to base64 image
+            const imageData = canvas.toDataURL('image/jpeg', 0.95);
+            
+            return imageData;
         } catch (error) {
             console.error('Error capturing preview with overlays:', error);
-            
-            // If all else fails, use the original image from localStorage
-            const originalImage = localStorage.getItem('capturedImage');
-            if (originalImage) {
-                return originalImage;
-            }
             return null;
         }
     }
