@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('styles')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <style>
     /* Base styles */
     body.preview-active {
@@ -750,21 +751,45 @@
     // Confirm attendance
     async function confirmAttendance() {
         try {
+            // Disable buttons to prevent multiple submissions
+            const confirmBtn = document.querySelector('.btn-confirm');
+            const retakeBtn = document.querySelector('.btn-retake');
+            
+            if (confirmBtn) confirmBtn.disabled = true;
+            if (retakeBtn) retakeBtn.disabled = true;
+            
             // Show loading overlay
             document.getElementById('loading-overlay').style.display = 'flex';
             
-            // Capture the entire preview with overlays
-            const previewImage = await capturePreviewWithOverlays();
+            // Ensure we have the image data
+            if (!capturedImage) {
+                throw new Error('No image captured. Please try again.');
+            }
             
-            if (!previewImage) {
-                throw new Error('Failed to capture preview image');
+            // Capture the preview with overlays
+            let previewImage;
+            try {
+                previewImage = await capturePreviewWithOverlays();
+                
+                if (!previewImage) {
+                    throw new Error('Failed to process image. Please try again.');
+                }
+            } catch (captureError) {
+                console.error('Error capturing preview:', captureError);
+                throw new Error('Failed to process image. Please try again.');
+            }
+            
+            // Setup CSRF token for the request
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            if (!csrfToken) {
+                throw new Error('CSRF token not found. Please refresh the page and try again.');
             }
             
             // Prepare data for submission
             const attendanceData = {
                 type: attendanceType,
-                image: previewImage, // Use the captured preview image with overlays
-                location: userLocation,
+                image: previewImage,
+                location: userLocation || 'Unknown location',
                 timestamp: serverTimestamp
             };
             
@@ -773,19 +798,32 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json' // Ensure we get JSON response
                 },
                 body: JSON.stringify(attendanceData)
             });
             
-            const result = await response.json();
+            // Parse response as JSON
+            let result;
+            try {
+                result = await response.json();
+            } catch (parseError) {
+                console.error('Error parsing response:', parseError);
+                throw new Error('Invalid response received from server.');
+            }
             
             // Hide loading overlay
             document.getElementById('loading-overlay').style.display = 'none';
             
-            if (result.status === 'success') {
+            // Re-enable buttons
+            if (confirmBtn) confirmBtn.disabled = false;
+            if (retakeBtn) retakeBtn.disabled = false;
+            
+            // Handle response based on status
+            if (response.ok && result.status === 'success') {
                 // Show success message
-                showAlert(result.message, 'success');
+                showAlert(result.message || 'Attendance recorded successfully.', 'success');
                 
                 // Clear localStorage
                 localStorage.removeItem('capturedImage');
@@ -795,11 +833,13 @@
                 // Redirect to attendance page with success message after a delay
                 setTimeout(() => {
                     document.body.classList.remove('preview-active');
-                    window.location.href = '/attendance?success=' + encodeURIComponent(result.message);
+                    window.location.href = '/attendance?success=' + encodeURIComponent(result.message || 'Attendance recorded successfully.');
                 }, 2000);
             } else {
-                // Show error message
-                showAlert(result.message || 'Failed to record attendance', 'error');
+                // Show error message from the server if available
+                const errorMsg = result.message || 'Failed to record attendance. Please try again.';
+                showAlert(errorMsg, 'error');
+                console.error('Server response:', result);
             }
             
         } catch (error) {
@@ -807,6 +847,13 @@
             
             // Hide loading overlay
             document.getElementById('loading-overlay').style.display = 'none';
+            
+            // Re-enable buttons
+            const confirmBtn = document.querySelector('.btn-confirm');
+            const retakeBtn = document.querySelector('.btn-retake');
+            
+            if (confirmBtn) confirmBtn.disabled = false;
+            if (retakeBtn) retakeBtn.disabled = false;
             
             // Show error message
             showAlert(error.message || 'Failed to record attendance. Please try again.', 'error');
@@ -819,17 +866,28 @@
             // Hide the buttons and alert message during capture
             const actionsElement = document.querySelector('.preview-actions');
             const alertElement = document.getElementById('alert-message');
+            
+            if (!actionsElement) {
+                console.error('Preview actions element not found');
+                return null;
+            }
+            
             const originalActionsDisplay = actionsElement.style.display;
-            const originalAlertDisplay = alertElement.style.display;
+            const originalAlertDisplay = alertElement ? alertElement.style.display : 'none';
             
             actionsElement.style.display = 'none';
-            alertElement.style.display = 'none';
+            if (alertElement) alertElement.style.display = 'none';
             
             // Use html2canvas to capture the entire preview container
             const previewContainer = document.querySelector('.image-preview-container');
             
+            if (!previewContainer) {
+                console.error('Preview container element not found');
+                return null;
+            }
+            
             // Wait a moment for display changes to take effect
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 200));
             
             // Use html2canvas library to capture the preview with overlays
             const canvas = await html2canvas(previewContainer, {
@@ -837,12 +895,30 @@
                 allowTaint: true,
                 backgroundColor: '#000000',
                 scale: 2, // Higher quality
-                logging: false
+                logging: false,
+                onclone: function(documentClone) {
+                    // Further adjustments to the cloned document if needed
+                    const clonedPreviewActions = documentClone.querySelector('.preview-actions');
+                    if (clonedPreviewActions) {
+                        clonedPreviewActions.style.display = 'none';
+                    }
+                    
+                    const clonedAlertMessage = documentClone.querySelector('#alert-message');
+                    if (clonedAlertMessage) {
+                        clonedAlertMessage.style.display = 'none';
+                    }
+                }
             });
             
             // Restore the buttons and alert
             actionsElement.style.display = originalActionsDisplay;
-            alertElement.style.display = originalAlertDisplay;
+            if (alertElement) alertElement.style.display = originalAlertDisplay;
+            
+            // Handle canvas creation error
+            if (!canvas) {
+                console.error('Failed to create canvas');
+                return null;
+            }
             
             // Add additional information to the image
             enhanceCanvasWithDetails(canvas, {
@@ -855,9 +931,13 @@
             });
             
             // Convert canvas to base64 image
-            const imageData = canvas.toDataURL('image/jpeg', 0.95);
-            
-            return imageData;
+            try {
+                const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                return imageData;
+            } catch (dataUrlError) {
+                console.error('Error converting canvas to data URL:', dataUrlError);
+                return null;
+            }
         } catch (error) {
             console.error('Error capturing preview with overlays:', error);
             return null;
@@ -866,83 +946,99 @@
     
     // Add additional information to the canvas
     function enhanceCanvasWithDetails(canvas, details) {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        // Add a gradient footer for additional information
-        const footerHeight = 60;
-        const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
-        
-        // Set text style for main verification text
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.font = 'bold 16px Arial';
-        ctx.textBaseline = 'middle';
-        
-        // Format timestamp
-        const timestamp = new Date(details.timestamp);
-        const formattedDate = timestamp.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        const formattedTime = timestamp.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-        
-        // Add detailed verification text
-        const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
-        ctx.fillText(verificationText, 20, height - footerHeight + 15);
-        
-        // Add timestamp details
-        ctx.font = '14px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
-        ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
-        
-        // Add employee details on the right
-        ctx.textAlign = 'right';
-        ctx.fillText(`${details.name}`, width - 20, height - footerHeight + 15);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`${details.position}`, width - 20, height - footerHeight + 35);
-        ctx.fillText(`${details.department}`, width - 20, height - footerHeight + 55);
-        
-        // Add location in the middle
-        ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`Location: ${details.location}`, width/2, height - footerHeight + 35);
-        
-        // Add system verification text
-        ctx.font = 'bold 12px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        const systemText = 'HRIS ATTENDANCE SYSTEM';
-        ctx.fillText(systemText, width/2, height - footerHeight + 55);
-        
-        // Add unique verification ID
-        const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-        ctx.fillText(verificationId, width/2, height - footerHeight + 15);
-        
-        // Add professional watermark
-        ctx.save();
-        ctx.globalAlpha = 0.07;
-        ctx.font = 'bold 120px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.translate(width/2, height/2);
-        ctx.rotate(-Math.PI/6); // Rotate -30 degrees
-        const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
-        ctx.fillText(watermarkText, 0, 0);
-        ctx.font = 'bold 60px Arial';
-        ctx.fillText('VERIFIED', 0, 80);
-        ctx.restore();
+        try {
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error('Failed to get canvas context');
+                return;
+            }
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Add a gradient footer for additional information
+            const footerHeight = 60;
+            const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
+            
+            // Set text style for main verification text
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.font = 'bold 16px Arial';
+            ctx.textBaseline = 'middle';
+            
+            // Format timestamp
+            let timestamp;
+            try {
+                timestamp = new Date(details.timestamp);
+            } catch (e) {
+                timestamp = new Date();
+                console.error('Error parsing timestamp:', e);
+            }
+            
+            const formattedDate = timestamp.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const formattedTime = timestamp.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+            
+            // Add detailed verification text
+            const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
+            ctx.fillText(verificationText, 20, height - footerHeight + 15);
+            
+            // Add timestamp details
+            ctx.font = '14px Arial';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
+            ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
+            
+            // Add employee details on the right
+            ctx.textAlign = 'right';
+            ctx.fillText(`${details.name || 'Employee'}`, width - 20, height - footerHeight + 15);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(`${details.position || 'Position N/A'}`, width - 20, height - footerHeight + 35);
+            ctx.fillText(`${details.department || 'Department N/A'}`, width - 20, height - footerHeight + 55);
+            
+            // Add location in the middle
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(`Location: ${details.location || 'Not available'}`, width/2, height - footerHeight + 35);
+            
+            // Add system verification text
+            ctx.font = 'bold 12px Arial';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            const systemText = 'HRIS ATTENDANCE SYSTEM';
+            ctx.fillText(systemText, width/2, height - footerHeight + 55);
+            
+            // Add unique verification ID
+            const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+            ctx.fillText(verificationId, width/2, height - footerHeight + 15);
+            
+            // Add professional watermark
+            ctx.save();
+            ctx.globalAlpha = 0.07;
+            ctx.font = 'bold 120px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.translate(width/2, height/2);
+            ctx.rotate(-Math.PI/6); // Rotate -30 degrees
+            const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
+            ctx.fillText(watermarkText, 0, 0);
+            ctx.font = 'bold 60px Arial';
+            ctx.fillText('VERIFIED', 0, 80);
+            ctx.restore();
+        } catch (error) {
+            console.error('Error enhancing canvas with details:', error);
+        }
     }
     
     // Clean up when leaving the page
