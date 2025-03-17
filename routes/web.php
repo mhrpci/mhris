@@ -390,8 +390,6 @@ Route::middleware('auth')->group(function () {
     // Holiday import and export routes
     Route::post('holidays/import', [App\Http\Controllers\HolidayController::class, 'import'])->name('holidays.import');
     Route::post('holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
-
-    Route::post('/attendance/capture', [AttendanceController::class, 'storeAttendanceCapture'])->name('attendance.capture');
 });
 
 // Route Management routes
