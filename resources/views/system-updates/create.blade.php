@@ -160,42 +160,17 @@
                 height: 400,
                 removePlugins: 'elementspath',
                 resize_enabled: false,
-                allowedContent: true, // Allow all HTML tags and attributes
-                extraAllowedContent: '*(*)[*]{*}', // Allow all classes, attributes, and styles
-                removeDialogTabs: 'image:advanced;link:advanced',
                 toolbar: [
-                    { name: 'document', items: [ 'Source', '-', 'Save', 'NewPage', 'Preview', 'Print', '-', 'Templates' ] },
+                    { name: 'document', items: [ 'Source' ] },
                     { name: 'clipboard', items: [ 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo' ] },
-                    { name: 'editing', items: [ 'Find', 'Replace', '-', 'SelectAll', '-', 'Scayt' ] },
-                    { name: 'forms', items: [ 'Form', 'Checkbox', 'Radio', 'TextField', 'Textarea', 'Select', 'Button', 'ImageButton', 'HiddenField' ] },
-                    '/',
-                    { name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'CopyFormatting', 'RemoveFormat' ] },
-                    { name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock', '-', 'BidiLtr', 'BidiRtl', 'Language' ] },
-                    { name: 'links', items: [ 'Link', 'Unlink', 'Anchor' ] },
-                    { name: 'insert', items: [ 'Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe' ] },
-                    '/',
+                    { name: 'editing', items: [ 'Find', 'Replace', '-', 'SelectAll' ] },
+                    { name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat' ] },
+                    { name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock' ] },
+                    { name: 'links', items: [ 'Link', 'Unlink' ] },
+                    { name: 'insert', items: [ 'Image', 'Table', 'HorizontalRule', 'SpecialChar' ] },
                     { name: 'styles', items: [ 'Styles', 'Format', 'Font', 'FontSize' ] },
                     { name: 'colors', items: [ 'TextColor', 'BGColor' ] },
-                    { name: 'tools', items: [ 'Maximize', 'ShowBlocks' ] },
-                    { name: 'about', items: [ 'About' ] }
-                ],
-                filebrowserUploadUrl: '{{ route("upload.image") }}',
-                filebrowserUploadMethod: 'form',
-                extraPlugins: 'colorbutton,font,justify,uploadimage',
-                removeButtons: 'Save,NewPage,Preview,Print,Templates,Form,Checkbox,Radio,TextField,Textarea,Select,Button,ImageButton,HiddenField,Scayt,Language,Flash,Smiley,SpecialChar,PageBreak,Iframe,About',
-                contentsCss: [
-                    'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.5; }',
-                    'h1, h2, h3, h4, h5, h6 { margin-top: 1em; margin-bottom: 0.5em; }',
-                    'p { margin-bottom: 1em; }',
-                    'ul, ol { margin-bottom: 1em; padding-left: 2em; }',
-                    'table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }',
-                    'table, th, td { border: 1px solid #ddd; }',
-                    'th, td { padding: 8px; text-align: left; }',
-                    'th { background-color: #f8f9fa; }',
-                    'img { max-width: 100%; height: auto; }',
-                    'pre { background-color: #f8f9fa; padding: 1em; border-radius: 4px; overflow-x: auto; }',
-                    'code { background-color: #f8f9fa; padding: 0.2em 0.4em; border-radius: 3px; }',
-                    'blockquote { border-left: 4px solid #ddd; margin: 1em 0; padding-left: 1em; color: #666; }'
+                    { name: 'tools', items: [ 'Maximize' ] }
                 ]
             });
         }

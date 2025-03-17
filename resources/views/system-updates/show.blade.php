@@ -51,7 +51,7 @@
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-body bg-light rounded">
                             <div class="content fs-6">
-                                {!! $systemUpdate->description !!}
+                                {!! nl2br(e($systemUpdate->description)) !!}
                             </div>
                         </div>
                     </div>
