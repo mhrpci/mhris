@@ -71,7 +71,7 @@
         .card-front {
             background: linear-gradient(135deg, 
                 {{ match($employee->department->name) {
-                    'MHRHCI' => '#6495ED 0%, #6495ED 50%, #4169E1 50%, #4169E1 65%, #ffffff 65%, #ffffff 67%, #4169E1 67%, #4169E1 100%',
+                    'Marketing Department' => '#6495ED 0%, #6495ED 50%, #4169E1 50%, #4169E1 65%, #ffffff 65%, #ffffff 67%, #4169E1 67%, #4169E1 100%',
                     'VHI' => '#228B22 0%, #228B22 50%, #32CD32 50%, #32CD32 65%, #ffffff 65%, #ffffff 67%, #32CD32 67%, #32CD32 100%',
                     'BGPDI' => '#4169E1 0%, #4169E1 50%, #FFD700 50%, #FFD700 65%, #ffffff 65%, #ffffff 67%, #FFD700 67%, #FFD700 100%',
                     default => '#9370DB 0%, #9370DB 50%, #4A6FA5 50%, #4A6FA5 65%, #ffffff 65%, #ffffff 67%, #4A6FA5 67%, #4A6FA5 100%'
@@ -432,7 +432,7 @@
                 <div class="flip-card-front">
                     <div class="card-side card-front">
                         <div class="card-header">
-                            @if($employee->department->name == 'MHRHCI')
+                            @if($employee->department->name == 'Marketing Department')
                                 <img src="{{ asset('vendor/adminlte/dist/img/mhrhci.png') }}" alt="MHRHCI Logo" class="company-logo">
                             @elseif($employee->department->name == 'VHI')
                                 <img src="{{ asset('vendor/adminlte/dist/img/vhi.png') }}" alt="VHI Logo" class="company-logo">
