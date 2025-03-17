@@ -753,63 +753,30 @@
             // Show loading overlay
             document.getElementById('loading-overlay').style.display = 'flex';
             
-            // Validate that we have all required data before proceeding
-            if (!capturedImage || !serverTimestamp || !attendanceType) {
-                throw new Error('Missing required attendance data. Please try again.');
-            }
-
-            // Set a timeout to prevent infinite loading if something goes wrong
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Request timed out. Please try again.')), 30000);
-            });
-            
-            // Capture the entire preview with overlays with retry mechanism
-            let previewImage = null;
-            let attempts = 0;
-            
-            while (!previewImage && attempts < 3) {
-                try {
-                    previewImage = await capturePreviewWithOverlays();
-                    attempts++;
-                } catch (captureError) {
-                    console.error(`Attempt ${attempts} failed:`, captureError);
-                    // Small delay between attempts
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-            }
+            // Capture the entire preview with overlays
+            const previewImage = await capturePreviewWithOverlays();
             
             if (!previewImage) {
-                throw new Error('Failed to capture preview image after multiple attempts');
+                throw new Error('Failed to capture preview image');
             }
-            
-            // Compress the image if it's too large (above 1MB)
-            const compressedImage = await compressImageIfNeeded(previewImage);
             
             // Prepare data for submission
             const attendanceData = {
                 type: attendanceType,
-                image: compressedImage, // Use the compressed image
-                location: userLocation || 'Location unavailable',
+                image: previewImage, // Use the captured preview image with overlays
+                location: userLocation,
                 timestamp: serverTimestamp
             };
             
-            // Submit attendance data with timeout
-            const response = await Promise.race([
-                fetch('/attendance/capture', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(attendanceData)
-                }),
-                timeoutPromise
-            ]);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Server responded with status ${response.status}: ${errorText}`);
-            }
+            // Submit attendance data
+            const response = await fetch('/attendance/capture', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(attendanceData)
+            });
             
             const result = await response.json();
             
@@ -846,56 +813,6 @@
         }
     }
     
-    // Compress image if needed to reduce file size
-    async function compressImageIfNeeded(imageDataUrl) {
-        // Check if the image is too large
-        const estimatedSize = (imageDataUrl.length * 3) / 4; // Rough estimate of base64 size
-        
-        if (estimatedSize < 1000000) { // Less than ~1MB
-            return imageDataUrl; // Return original if small enough
-        }
-        
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = function() {
-                // Create canvas for compression
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                
-                // Maintain aspect ratio but reduce size
-                const maxDimension = 1200; // Max width/height
-                if (width > height && width > maxDimension) {
-                    height = Math.round(height * (maxDimension / width));
-                    width = maxDimension;
-                } else if (height > maxDimension) {
-                    width = Math.round(width * (maxDimension / height));
-                    height = maxDimension;
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                
-                // Draw and compress
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, width, height);
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Get compressed image (adjust quality as needed)
-                const compressedImage = canvas.toDataURL('image/jpeg', 0.8);
-                resolve(compressedImage);
-            };
-            
-            img.onerror = function() {
-                console.error('Failed to load image for compression');
-                resolve(imageDataUrl); // Fall back to original
-            };
-            
-            img.src = imageDataUrl;
-        });
-    }
-    
     // Capture the preview with all overlays
     async function capturePreviewWithOverlays() {
         try {
@@ -914,25 +831,14 @@
             // Wait a moment for display changes to take effect
             await new Promise(resolve => setTimeout(resolve, 100));
             
-            // Configure html2canvas with more reliable settings
-            const canvasOptions = {
+            // Use html2canvas library to capture the preview with overlays
+            const canvas = await html2canvas(previewContainer, {
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#000000',
-                scale: 1.5, // Balance between quality and size
-                logging: false,
-                removeContainer: false,
-                ignoreElements: element => {
-                    // Ignore elements that shouldn't be in the capture
-                    return element.classList && 
-                           (element.classList.contains('preview-actions') || 
-                            element.classList.contains('alert-message') ||
-                            element.classList.contains('loading-overlay'));
-                }
-            };
-            
-            // Use html2canvas library to capture the preview with overlays
-            const canvas = await html2canvas(previewContainer, canvasOptions);
+                scale: 2, // Higher quality
+                logging: false
+            });
             
             // Restore the buttons and alert
             actionsElement.style.display = originalActionsDisplay;
@@ -949,12 +855,12 @@
             });
             
             // Convert canvas to base64 image
-            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            const imageData = canvas.toDataURL('image/jpeg', 0.95);
             
             return imageData;
         } catch (error) {
             console.error('Error capturing preview with overlays:', error);
-            throw error; // Rethrow to allow for retry mechanism
+            return null;
         }
     }
     
