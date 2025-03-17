@@ -525,6 +525,51 @@
             padding-top: max(env(safe-area-inset-top), 10px);
         }
     }
+
+    /* Additional styles for processing indicator */
+    .processing-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 15px;
+    }
+    
+    .processing-text {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Improve button feedback on mobile */
+    .attendance-btn:active {
+        transform: scale(0.97);
+    }
+    
+    /* Improve modal transition */
+    .modal.fade .modal-dialog {
+        transition: transform 0.2s ease-out;
+    }
 </style>
 @endpush
 
@@ -589,11 +634,6 @@ document.addEventListener('DOMContentLoaded', function() {
             lastVerifiedTime = data.formatted;
             updateTimeDisplay();
             startLocalTimeUpdate();
-
-            // Sync with server every minute
-            setInterval(async () => {
-                await getServerTime();
-            }, 60000);
         } catch (error) {
             console.error('Error with server time:', error);
             showError('Unable to sync with server time. Please refresh the page.');
@@ -760,14 +800,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Enhanced getUserLocation function with detailed address
+    // Enhanced getUserLocation function
     async function getUserLocation() {
         try {
-            // Request location with high accuracy
             const position = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
-                    timeout: 10000,
+                    timeout: 5000,
                     maximumAge: 0
                 });
             });
@@ -775,78 +814,27 @@ document.addEventListener('DOMContentLoaded', function() {
             userLocation = {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy,
-                timestamp: position.timestamp
+                accuracy: position.coords.accuracy
             };
             
             try {
-                // Use OpenStreetMap Nominatim for detailed address
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?` +
-                    `format=json&lat=${userLocation.latitude}&lon=${userLocation.longitude}` +
-                    `&zoom=18&addressdetails=1`
-                );
-                
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.latitude}&lon=${userLocation.longitude}`);
                 if (!response.ok) throw new Error('Geocoding failed');
                 
                 const data = await response.json();
-                
-                // Format detailed address
-                const address = {
-                    building: data.address.building || '',
-                    road: data.address.road || '',
-                    suburb: data.address.suburb || '',
-                    city: data.address.city || data.address.town || data.address.municipality || '',
-                    state: data.address.state || '',
-                    postcode: data.address.postcode || '',
-                    country: data.address.country || ''
-                };
-
-                // Create formatted address string
-                const formattedAddress = [
-                    address.building,
-                    address.road,
-                    address.suburb,
-                    address.city,
-                    address.state,
-                    address.postcode,
-                    address.country
-                ].filter(Boolean).join(', ');
-
                 const addressElement = document.getElementById('address');
-                addressElement.innerHTML = `
-                    <span class="text-success">
-                        <i class="fas fa-check-circle me-1"></i>
-                    </span>
-                    <span class="fw-bold">${formattedAddress}</span>
-                    <div class="small text-muted mt-1">
-                        Accuracy: ${userLocation.accuracy.toFixed(1)}m
-                    </div>
-                `;
+                addressElement.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i></span>${data.display_name}`;
                 
                 // Update location in camera overlay
                 const overlayLocation = document.querySelector('#employeeLocation span');
                 if (overlayLocation) {
-                    overlayLocation.textContent = formattedAddress;
+                    overlayLocation.textContent = data.display_name;
                 }
-
-                // Continuously update location
-                watchLocation();
             } catch (error) {
                 console.error('Geocoding error:', error);
-                // Fallback to coordinates with accuracy
+                // Still show coordinates if geocoding fails
                 const addressElement = document.getElementById('address');
-                addressElement.innerHTML = `
-                    <span class="text-success">
-                        <i class="fas fa-check-circle me-1"></i>
-                    </span>
-                    <span class="fw-bold">
-                        Location Found (${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)})
-                    </span>
-                    <div class="small text-muted mt-1">
-                        Accuracy: ${userLocation.accuracy.toFixed(1)}m
-                    </div>
-                `;
+                addressElement.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i></span>Location Found (${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)})`;
             }
         } catch (error) {
             console.error('Location error:', error);
@@ -992,68 +980,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Function to capture photo
-    document.getElementById('capturePhoto').addEventListener('click', async () => {
-        const video = document.getElementById('cameraFeed');
-        const canvas = document.getElementById('photoCanvas');
-        const context = canvas.getContext('2d');
-
-        // Set canvas size to match video
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        // Draw the video frame to the canvas
-        if (currentCamera === 'user') {
-            // Mirror the image for front camera
-            context.scale(-1, 1);
-            context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-            context.scale(-1, 1); // Reset transform
-        } else {
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Function to handle camera errors
+    function handleCameraError(error) {
+        stopCamera();
+        cameraModal.hide();
+        
+        let errorMessage = 'Camera error occurred. Please try again.';
+        
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            errorMessage = 'Camera access was denied. Please enable it in your browser settings.';
+        } else if (error.name === 'NotFoundError') {
+            errorMessage = 'No camera found on your device.';
+        } else if (error.name === 'NotReadableError' || error.name === 'AbortError') {
+            errorMessage = 'Camera is already in use by another application.';
+        } else if (error.name === 'OverconstrainedError') {
+            errorMessage = 'Camera does not meet the required constraints.';
+        } else if (error.name === 'SecurityError') {
+            errorMessage = 'Camera access is blocked due to security restrictions.';
+        } else if (error.name === 'TypeError') {
+            errorMessage = 'Camera not supported on this device.';
         }
-
-        // Convert to base64
-        const photoData = canvas.toDataURL('image/jpeg');
-
-        // Here you would send the photo data to your server
-        // along with the attendance data
-        try {
-            const attendanceData = {
-                type: isClockIn ? 'in' : 'out',
-                timestamp: serverTimestamp,
-                hash: serverHash,
-                location: userLocation,
-                photo: photoData,
-                timezone: 'Asia/Manila'
-            };
-
-            const response = await fetch('/api/attendance', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(attendanceData)
-            });
-
-            if (!response.ok) throw new Error('Attendance submission failed');
-
-            // Close camera and modal
-            stopCamera();
-            cameraModal.hide();
-
-            // Toggle button state
-            isClockIn = !isClockIn;
-            updateButtonState();
-
-            // Show success message
-            const action = isClockIn ? 'Out' : 'In';
-            showSuccess(`Clock ${action} recorded successfully!`);
-        } catch (error) {
-            console.error('Error submitting attendance:', error);
-            showError('Failed to record attendance. Please try again.');
-        }
-    });
+        
+        showError(errorMessage);
+    }
 
     // Modified handleAttendance with permission checks
     async function handleAttendance() {
@@ -1077,6 +1026,141 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Initialize button state based on server data or localStorage if available
+    function initializeButtonState() {
+        // First try to get from localStorage (fallback for offline scenarios)
+        const lastClockAction = localStorage.getItem('lastClockAction');
+        const lastClockTimestamp = localStorage.getItem('lastClockTimestamp');
+        
+        if (lastClockAction) {
+            isClockIn = lastClockAction === 'out';
+            
+            // If the last action was more than 16 hours ago, reset to clock in
+            if (lastClockTimestamp) {
+                const lastTime = new Date(lastClockTimestamp).getTime();
+                const currentTime = new Date().getTime();
+                const hoursDiff = (currentTime - lastTime) / (1000 * 60 * 60);
+                
+                if (hoursDiff > 16) {
+                    isClockIn = true;
+                }
+            }
+        }
+        
+        // Initialize button UI
+        updateButtonState();
+        
+        // Try to get last status from server (will override local if available)
+        fetch('/api/attendance/last-status')
+            .then(response => {
+                if (response.ok) return response.json();
+                throw new Error('Failed to fetch last status');
+            })
+            .then(data => {
+                if (data && data.lastAction) {
+                    isClockIn = data.lastAction === 'out';
+                    updateButtonState();
+                    
+                    // Update localStorage
+                    localStorage.setItem('lastClockAction', data.lastAction);
+                    localStorage.setItem('lastClockTimestamp', data.timestamp);
+                }
+            })
+            .catch(error => {
+                console.warn('Unable to fetch last status, using local data', error);
+            });
+    }
+
+    // Enhance capture photo with loading indicator
+    document.getElementById('capturePhoto').addEventListener('click', async () => {
+        const captureBtn = document.getElementById('capturePhoto');
+        captureBtn.disabled = true;
+        captureBtn.style.opacity = '0.6';
+        
+        // Show processing indicator
+        const processingIndicator = document.createElement('div');
+        processingIndicator.className = 'processing-indicator';
+        processingIndicator.innerHTML = '<div class="spinner"></div><div class="processing-text">Processing...</div>';
+        document.querySelector('.camera-view').appendChild(processingIndicator);
+        
+        try {
+            const video = document.getElementById('cameraFeed');
+            const canvas = document.getElementById('photoCanvas');
+            const context = canvas.getContext('2d');
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw the video frame to the canvas
+            if (currentCamera === 'user') {
+                // Mirror the image for front camera
+                context.scale(-1, 1);
+                context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+                context.scale(-1, 1); // Reset transform
+            } else {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
+
+            // Convert to base64
+            const photoData = canvas.toDataURL('image/jpeg');
+
+            // Here you would send the photo data to your server
+            // along with the attendance data
+            const attendanceData = {
+                type: isClockIn ? 'in' : 'out',
+                timestamp: serverTimestamp,
+                hash: serverHash,
+                location: userLocation,
+                photo: photoData,
+                timezone: 'Asia/Manila'
+            };
+
+            const response = await fetch('/api/attendance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(attendanceData)
+            });
+
+            if (!response.ok) {
+                const responseData = await response.json();
+                throw new Error(responseData.message || 'Attendance submission failed');
+            }
+
+            // Store last action in localStorage
+            localStorage.setItem('lastClockAction', isClockIn ? 'in' : 'out');
+            localStorage.setItem('lastClockTimestamp', new Date().toISOString());
+
+            // Toggle button state
+            isClockIn = !isClockIn;
+            updateButtonState();
+
+            // Show success message
+            const action = isClockIn ? 'Out' : 'In';
+            showSuccess(`Clock ${action} recorded successfully!`);
+            
+            // Close camera and modal
+            stopCamera();
+            cameraModal.hide();
+        } catch (error) {
+            console.error('Error submitting attendance:', error);
+            showError(error.message || 'Failed to record attendance. Please try again.');
+            
+            // Re-enable capture button
+            captureBtn.disabled = false;
+            captureBtn.style.opacity = '1';
+        } finally {
+            // Remove processing indicator
+            const indicator = document.querySelector('.processing-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+    });
+
     // Event listener for the clock button
     document.getElementById('clockButton').addEventListener('click', handleAttendance);
     
@@ -1085,102 +1169,31 @@ document.addEventListener('DOMContentLoaded', function() {
         if (granted) {
             getServerTime();
             getUserLocation();
+            initializeButtonState();
+        } else {
+            // Still initialize button state even if permissions aren't granted yet
+            initializeButtonState();
         }
     });
 
-    // Start permission monitoring
-    monitorPermissions();
-
-    // Recheck permissions when page becomes visible
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            checkAndRequestPermissions().then(granted => {
-                if (granted) {
-                    getUserLocation();
-                }
-            });
+    // Add listener for online/offline status
+    window.addEventListener('online', () => {
+        const statusMessage = document.querySelector('.status-message');
+        if (statusMessage.classList.contains('error')) {
+            statusMessage.classList.remove('alert-danger', 'error');
+            statusMessage.classList.add('alert-info');
+            statusMessage.innerHTML = `<i class="fas fa-shield-alt me-2"></i>Attendance is being recorded with secure verification`;
+            
+            // Retry getting server time and location
+            getServerTime();
+            getUserLocation();
         }
+    });
+    
+    window.addEventListener('offline', () => {
+        showError('You are offline. Please connect to the internet to use the attendance system.');
     });
 });
-
-// Function to continuously watch location changes
-function watchLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(
-            async (position) => {
-                // Only update if accuracy is better or location has changed significantly
-                const newLocation = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    accuracy: position.coords.accuracy
-                };
-
-                const significantChange = !userLocation || 
-                    calculateDistance(
-                        userLocation.latitude, 
-                        userLocation.longitude,
-                        newLocation.latitude,
-                        newLocation.longitude
-                    ) > 10 || // More than 10 meters
-                    newLocation.accuracy < userLocation.accuracy - 5; // Better accuracy by 5 meters
-
-                if (significantChange) {
-                    userLocation = newLocation;
-                    await getUserLocation(); // Update address
-                }
-            },
-            (error) => handleLocationError(error),
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            }
-        );
-    }
-}
-
-// Function to calculate distance between coordinates in meters
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = lat1 * Math.PI/180;
-    const φ2 = lat2 * Math.PI/180;
-    const Δφ = (lat2-lat1) * Math.PI/180;
-    const Δλ = (lon2-lon1) * Math.PI/180;
-
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-    return R * c;
-}
-
-// Enhanced permission monitoring
-function monitorPermissions() {
-    // Monitor location permission changes
-    if (navigator.permissions) {
-        navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
-            permissionStatus.onchange = () => {
-                if (permissionStatus.state === 'granted') {
-                    getUserLocation();
-                } else {
-                    handleLocationError({ code: 1 }); // Permission denied
-                }
-            };
-        });
-
-        // Monitor camera permission changes
-        navigator.permissions.query({ name: 'camera' }).then(permissionStatus => {
-            permissionStatus.onchange = () => {
-                if (permissionStatus.state === 'granted') {
-                    checkCameraPermission();
-                } else {
-                    showError('Camera access was revoked. Please enable it in your browser settings.');
-                }
-            };
-        });
-    }
-}
 </script>
 @endpush
 
