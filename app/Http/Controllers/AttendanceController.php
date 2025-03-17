@@ -403,7 +403,7 @@ class AttendanceController extends Controller
     public function executeStoreCommand()
     {
         try {
-            \Artisan::call('attendance:store');
+            \Illuminate\Support\Facades\Artisan::call('attendance:store');
             return response()->json(['message' => 'Attendance records stored successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -424,12 +424,12 @@ class AttendanceController extends Controller
             $employee = Employee::where('email_address', $user->email)->first();
             
             if (!$employee) {
-                \Log::warning('Employee not found for user email: ' . $user->email);
+                \Illuminate\Support\Facades\Log::warning('Employee not found for user email: ' . $user->email);
             }
             
             return view('attendances.capture-preview', compact('employee'));
         } catch (\Exception $e) {
-            \Log::error('Error in capture preview: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in capture preview: ' . $e->getMessage());
             return redirect()->route('attendances.attendance')->with('error', 'An error occurred while loading the preview page.');
         }
     }
@@ -446,7 +446,7 @@ class AttendanceController extends Controller
         try {
             // Check if storage link exists
             if (!file_exists(public_path('storage'))) {
-                \Artisan::call('storage:link');
+                \Illuminate\Support\Facades\Artisan::call('storage:link');
             }
 
             // Create time_stamps directory if it doesn't exist
@@ -469,7 +469,7 @@ class AttendanceController extends Controller
 
             return false;
         } catch (\Exception $e) {
-            \Log::error('Error storing timestamp image: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error storing timestamp image: ' . $e->getMessage());
             return false;
         }
     }
@@ -603,10 +603,11 @@ class AttendanceController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Attendance capture error: ' . $e->getMessage());
+            // Properly call Log facade with Illuminate namespace
+            \Illuminate\Support\Facades\Log::error('Attendance capture error: ' . $e->getMessage());
             
             // Delete any stored image if there was an error
-            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
+            if (isset($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
             
@@ -628,7 +629,7 @@ class AttendanceController extends Controller
             $chatId = config('services.telegram.chat_id');
 
             if (!$botToken || !$chatId) {
-                Log::warning('Telegram credentials not configured');
+                \Illuminate\Support\Facades\Log::warning('Telegram credentials not configured');
                 return;
             }
 
@@ -689,9 +690,9 @@ class AttendanceController extends Controller
                     // Then send the image
                     $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
                     
-                    // Get the full URL for the image
-                    $imagePath = Storage::disk('public')->url($attendance->$timestampField);
-                    $fullImageUrl = url($imagePath);
+                    // Get the full URL for the image - fix url() method issue
+                    $imagePath = asset('storage/' . $attendance->$timestampField);
+                    $fullImageUrl = $imagePath;
 
                     // Prepare image data
                     $imageCaption = "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
@@ -716,7 +717,8 @@ class AttendanceController extends Controller
                     // If sending image fails, try sending as file
                     try {
                         $documentUrl = "https://api.telegram.org/bot{$botToken}/sendDocument";
-                        $filePath = Storage::disk('public')->path($attendance->$timestampField);
+                        // Fix path() method issue
+                        $filePath = storage_path('app/public/' . $attendance->$timestampField);
                         
                         if (file_exists($filePath)) {
                             $imageResponse = $client->post($documentUrl, [
@@ -743,10 +745,10 @@ class AttendanceController extends Controller
                                 throw new \Exception('Failed to send Telegram document');
                             }
                         } else {
-                            Log::warning("Timestamp image file not found: {$filePath}");
+                            \Illuminate\Support\Facades\Log::warning("Timestamp image file not found: {$filePath}");
                         }
                     } catch (\Exception $docError) {
-                        Log::error('Failed to send image as document: ' . $docError->getMessage());
+                        \Illuminate\Support\Facades\Log::error('Failed to send image as document: ' . $docError->getMessage());
                     }
                 }
             } else {
@@ -768,7 +770,7 @@ class AttendanceController extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Failed to send Telegram notification: ' . $e->getMessage());
         }
     }
 
@@ -839,7 +841,7 @@ class AttendanceController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error checking attendance status: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error checking attendance status: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while checking attendance status'

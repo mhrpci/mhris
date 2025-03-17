@@ -1,949 +1,322 @@
 @extends('layouts.app')
 
+@section('title', 'Capture Attendance')
+
 @section('content')
-<style>
-    /* Base styles */
-    body.preview-active {
-        overflow: hidden;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-    }
-    
-    .preview-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
-        background: #000;
-        z-index: 9990;
-    }
-    
-    /* Image preview section */
-    .image-preview-container {
-        position: relative;
-        width: 100%;
-        height: 100vh;
-        overflow: hidden;
-        background-color: #000;
-    }
-    
-    .preview-image {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    /* Camera interface elements */
-    .camera-interface {
-        display: none;
-    }
-
-    .camera-frame {
-        display: none;
-    }
-
-    .camera-corners {
-        position: absolute;
-        width: 30px;
-        height: 30px;
-        border: 3px solid #4285f4;
-    }
-
-    .corner-top-left {
-        top: -3px;
-        left: -3px;
-        border-right: none;
-        border-bottom: none;
-        border-top-left-radius: 8px;
-    }
-
-    .corner-top-right {
-        top: -3px;
-        right: -3px;
-        border-left: none;
-        border-bottom: none;
-        border-top-right-radius: 8px;
-    }
-
-    .corner-bottom-left {
-        bottom: -3px;
-        left: -3px;
-        border-right: none;
-        border-top: none;
-        border-bottom-left-radius: 8px;
-    }
-
-    .corner-bottom-right {
-        bottom: -3px;
-        right: -3px;
-        border-left: none;
-        border-top: none;
-        border-bottom-right-radius: 8px;
-    }
-    
-    /* Logo overlay */
-    .preview-logo {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 100px;
-        height: auto;
-        z-index: 9992;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 8px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-    
-    /* Status badge */
-    .preview-status-badge {
-        position: absolute;
-        bottom: 160px; /* Position above the datetime */
-        left: 20px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(8px);
-        padding: 12px 24px;
-        border-radius: 30px;
-        color: white;
-        font-weight: bold;
-        z-index: 9992;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 1.2rem;
-    }
-    
-    .preview-status-badge.in {
-        background: rgba(16, 185, 129, 0.2);
-        border-color: rgba(16, 185, 129, 0.4);
-    }
-    
-    .preview-status-badge.out {
-        background: rgba(239, 68, 68, 0.2);
-        border-color: rgba(239, 68, 68, 0.4);
-    }
-    
-    /* Large status indicator */
-    .preview-status-large {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 8rem;
-        font-weight: 900;
-        color: rgba(255, 255, 255, 0.15);
-        text-transform: uppercase;
-        pointer-events: none;
-        z-index: 9991;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        letter-spacing: 4px;
-    }
-
-    .preview-status-large.in {
-        color: rgba(40, 167, 69, 0.15);
-    }
-
-    .preview-status-large.out {
-        color: rgba(220, 53, 69, 0.15);
-    }
-    
-    /* Info overlay */
-    .preview-info-overlay {
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        color: white;
-        z-index: 9992;
-        padding: 25px;
-        background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.4) 85%, transparent 100%);
-    }
-    
-    .preview-overlay-content {
-        max-width: 100%;
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    
-    .preview-company-name {
-        font-size: 1rem;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 5px;
-        letter-spacing: 0.3px;
-        text-transform: uppercase;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 8px 12px;
-        border-radius: 6px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(4px);
-    }
-    
-    .preview-header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 15px;
-    }
-
-    .preview-status-badge {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(8px);
-        padding: 8px 16px;
-        border-radius: 30px;
-        color: white;
-        font-weight: bold;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 1rem;
-    }
-    
-    .preview-datetime {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-    
-    .preview-time {
-        font-size: 2rem;
-        font-weight: 700;
-        line-height: 1;
-        margin: 0;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        letter-spacing: 0.5px;
-    }
-    
-    .preview-date {
-        font-size: 1.1rem;
-        font-weight: 500;
-        color: rgba(255,255,255,0.9);
-        margin: 0;
-    }
-    
-    .preview-details {
-        display: grid;
-        gap: 12px;
-        margin-top: 5px;
-    }
-    
-    .preview-name {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: rgba(255,255,255,0.95);
-        margin: 0;
-        letter-spacing: 0.3px;
-    }
-    
-    .preview-info-row {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-    
-    .preview-info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-    
-    .preview-info-label {
-        font-size: 0.8rem;
-        color: rgba(255,255,255,0.6);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .preview-info-value {
-        font-size: 0.95rem;
-        color: rgba(255,255,255,0.9);
-        font-weight: 500;
-    }
-    
-    .preview-location {
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        margin-top: 5px;
-    }
-    
-    .preview-location i {
-        margin-top: 3px;
-        color: #4285f4;
-        font-size: 1rem;
-    }
-    
-    .preview-location-text {
-        font-size: 0.95rem;
-        color: rgba(255,255,255,0.9);
-        line-height: 1.4;
-        font-weight: 500;
-    }
-
-    @media (max-width: 768px) {
-        .preview-info-overlay {
-            padding: 20px;
-        }
-        
-        .preview-time {
-            font-size: 1.8rem;
-        }
-        
-        .preview-date {
-            font-size: 1rem;
-        }
-        
-        .preview-name {
-            font-size: 1.1rem;
-        }
-        
-        .preview-info-value {
-            font-size: 0.9rem;
-        }
-        
-        .preview-company-name {
-            font-size: 0.9rem;
-            padding: 6px 10px;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .preview-info-overlay {
-            padding: 15px;
-        }
-        
-        .preview-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        
-        .preview-time {
-            font-size: 1.6rem;
-        }
-        
-        .preview-date {
-            font-size: 0.9rem;
-        }
-        
-        .preview-name {
-            font-size: 1rem;
-        }
-        
-        .preview-info-row {
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-        
-        .preview-info-value {
-            font-size: 0.85rem;
-        }
-        
-        .preview-status-badge {
-            font-size: 0.9rem;
-            padding: 6px 12px;
-        }
-        
-        .preview-company-name {
-            font-size: 0.8rem;
-            padding: 5px 8px;
-        }
-    }
-    
-    /* Action buttons */
-    .preview-actions {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        padding: 1.5rem;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-        height: 100px;
-        z-index: 9992;
-        gap: 1.5rem;
-    }
-    
-    .btn-confirm {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-    }
-    
-    .btn-retake {
-        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.2);
-    }
-    
-    .btn-confirm:hover, .btn-retake:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-    }
-    
-    .btn-confirm:active, .btn-retake:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Loading overlay */
-    .loading-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        z-index: 9999;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-    }
-    
-    .loading-spinner {
-        border: 5px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top: 5px solid #4285f4;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
-    }
-    
-    .loading-text {
-        color: white;
-        font-size: 1.2rem;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    /* Alert messages */
-    .alert-message {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 15px 25px;
-        border-radius: 10px;
-        color: white;
-        font-weight: 500;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        opacity: 0;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        max-width: 90%;
-    }
-    
-    .alert-message.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-    
-    .alert-message.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-    
-    .alert-message.error {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    }
-    
-    .alert-message i {
-        font-size: 1.2rem;
-    }
-</style>
-
-<div class="preview-container">
-    <div class="image-preview-container">
-        <img id="preview-image" class="preview-image" src="" alt="Attendance Capture">
-        
-        <img src="{{ asset('/vendor/adminlte/dist/img/LOGO4.png') }}" alt="Logo" class="preview-logo">
-        
-        <div class="preview-status-large" id="preview-status-large">IN</div>
-        
-        <div class="preview-info-overlay">
-            <div class="preview-overlay-content">
-                <div class="preview-company-name" id="preview-company-name"></div>
-                <div class="preview-header">
-                    <div id="preview-status-badge" class="preview-status-badge">
-                        <i class="fas fa-clock"></i>
-                        <span id="status-text">Clock In</span>
-                    </div>
-                    
-                    <div class="preview-datetime">
-                        <div class="preview-time" id="preview-time"></div>
-                        <div class="preview-date" id="preview-date"></div>
-                    </div>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-camera me-2"></i> Attendance Capture
+                    </h5>
+                    <div id="current-time" class="text-primary fw-bold"></div>
                 </div>
-                
-                <div class="preview-details">
-                    <div class="preview-name" id="preview-name"></div>
-                    
-                    <div class="preview-info-row">
-                        <div class="preview-info-item">
-                            <span class="preview-info-label">Position</span>
-                            <span class="preview-info-value" id="preview-position"></span>
+
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            @if(isset($employee))
+                            <div class="employee-info">
+                                <h6>Employee Information:</h6>
+                                <p><strong>Name:</strong> {{ $employee->first_name }} {{ $employee->last_name }}</p>
+                                <p><strong>Position:</strong> {{ $employee->position ? $employee->position->name : 'N/A' }}</p>
+                                <p><strong>Department:</strong> {{ $employee->department ? $employee->department->name : 'N/A' }}</p>
+                            </div>
+                            @else
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle me-2"></i> Employee record not found
+                            </div>
+                            @endif
                         </div>
-                        <div class="preview-info-item">
-                            <span class="preview-info-label">Department</span>
-                            <span class="preview-info-value" id="preview-department"></span>
+                        <div class="col-md-6">
+                            <div id="attendance-status" class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin me-2"></i> Checking attendance status...
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="preview-location">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span class="preview-location-text" id="preview-location"></span>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="camera-container mb-3">
+                                <div class="camera-wrapper border rounded overflow-hidden">
+                                    <video id="camera-feed" width="100%" height="auto" autoplay playsinline></video>
+                                </div>
+                                <div class="d-grid mt-2">
+                                    <button id="capture-btn" class="btn btn-primary">
+                                        <i class="fas fa-camera me-2"></i> Capture Image
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="preview-container mb-3">
+                                <div class="preview-wrapper border rounded overflow-hidden">
+                                    <canvas id="preview-canvas" width="100%" height="auto" class="d-none"></canvas>
+                                    <div id="no-preview" class="text-center p-5 bg-light">
+                                        <i class="fas fa-image fa-3x mb-3 text-muted"></i>
+                                        <p class="text-muted">Preview will appear here after capture</p>
+                                    </div>
+                                </div>
+                                <div class="d-grid mt-2">
+                                    <button id="submit-btn" class="btn btn-success d-none">
+                                        <i class="fas fa-clock me-2"></i> <span id="submit-btn-text">Submit</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div id="location-info" class="alert alert-secondary">
+                            <i class="fas fa-map-marker-alt me-2"></i> Detecting your location...
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ route('attendances.attendance') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Attendance
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="preview-actions">
-            <button class="btn-retake" onclick="goBack()">
-                <i class="fas fa-redo"></i>
-                Retake
-            </button>
-            <button class="btn-confirm" onclick="confirmAttendance()">
-                <i class="fas fa-check"></i>
-                Confirm
-            </button>
-        </div>
     </div>
 </div>
+@endsection
 
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loading-overlay">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Processing your attendance...</div>
-</div>
-
-<!-- Alert Message -->
-<div class="alert-message" id="alert-message">
-    <i class="fas fa-check-circle"></i>
-    <span id="alert-text">Message goes here</span>
-</div>
-
-<!-- Include html2canvas library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+@section('scripts')
 <script>
-    // Variables to store attendance data
-    let capturedImage = '';
-    let attendanceType = '';
-    let userLocation = '';
-    let serverTimestamp = '';
-    let employeeName = '';
-    let employeePosition = '';
-    let employeeDepartment = '';
-    
-    // Initialize the preview page
-    document.addEventListener('DOMContentLoaded', async function() {
-        try {
-            // Add class to body for full screen mode
-            document.body.classList.add('preview-active');
-            
-            // Get data from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            attendanceType = urlParams.get('type') || 'in';
-            
-            // Get data from localStorage
-            capturedImage = localStorage.getItem('capturedImage');
-            userLocation = localStorage.getItem('userLocation');
-            serverTimestamp = localStorage.getItem('serverTimestamp');
-            
-            if (!capturedImage || !serverTimestamp) {
-                showAlert('Missing capture data. Please try again.', 'error');
-                setTimeout(() => {
-                    window.location.href = '/attendance';
-                }, 2000);
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const cameraFeed = document.getElementById('camera-feed');
+        const captureBtn = document.getElementById('capture-btn');
+        const previewCanvas = document.getElementById('preview-canvas');
+        const noPreview = document.getElementById('no-preview');
+        const submitBtn = document.getElementById('submit-btn');
+        const submitBtnText = document.getElementById('submit-btn-text');
+        const attendanceStatus = document.getElementById('attendance-status');
+        const locationInfo = document.getElementById('location-info');
+        const currentTimeEl = document.getElementById('current-time');
+        
+        // Variables
+        let stream = null;
+        let capturedImage = null;
+        let attendanceAction = null;
+        let userLocation = null;
+        
+        // Initialize current time display and update every second
+        function updateCurrentTime() {
+            const now = new Date();
+            currentTimeEl.textContent = now.toLocaleString();
+        }
+        
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 1000);
+        
+        // Initialize camera
+        async function initCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    },
+                    audio: false
+                });
+                
+                cameraFeed.srcObject = stream;
+                captureBtn.disabled = false;
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Failed to access camera. Please ensure camera permissions are granted and try again.');
+            }
+        }
+        
+        // Get user location
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        userLocation = `${latitude},${longitude}`;
+                        
+                        // Attempt to get human-readable address via reverse geocoding
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const address = data.display_name || userLocation;
+                                locationInfo.innerHTML = `<i class="fas fa-map-marker-alt me-2"></i> Location: ${address}`;
+                            })
+                            .catch(() => {
+                                locationInfo.innerHTML = `<i class="fas fa-map-marker-alt me-2"></i> Location: ${userLocation}`;
+                            });
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                        locationInfo.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> Could not determine location. Please enable location services.`;
+                        locationInfo.classList.remove('alert-secondary');
+                        locationInfo.classList.add('alert-warning');
+                    }
+                );
+            } else {
+                locationInfo.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> Geolocation is not supported by this browser.`;
+                locationInfo.classList.remove('alert-secondary');
+                locationInfo.classList.add('alert-warning');
+            }
+        }
+        
+        // Check attendance status
+        function checkAttendanceStatus() {
+            fetch('{{ route("attendances.getStatus") }}', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    attendanceAction = data.action;
+                    
+                    if (data.action === 'clock_in') {
+                        attendanceStatus.innerHTML = `<i class="fas fa-sign-in-alt me-2"></i> ${data.message}`;
+                        attendanceStatus.classList.remove('alert-info');
+                        attendanceStatus.classList.add('alert-primary');
+                        submitBtnText.textContent = 'Clock In';
+                    } else if (data.action === 'clock_out') {
+                        attendanceStatus.innerHTML = `<i class="fas fa-sign-out-alt me-2"></i> ${data.message}`;
+                        attendanceStatus.classList.remove('alert-info');
+                        attendanceStatus.classList.add('alert-warning');
+                        submitBtnText.textContent = 'Clock Out';
+                    } else if (data.action === 'completed') {
+                        attendanceStatus.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${data.message}`;
+                        attendanceStatus.classList.remove('alert-info');
+                        attendanceStatus.classList.add('alert-success');
+                        captureBtn.disabled = true;
+                    }
+                } else {
+                    attendanceStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> ${data.message}`;
+                    attendanceStatus.classList.remove('alert-info');
+                    attendanceStatus.classList.add('alert-danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error checking attendance status:', error);
+                attendanceStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> Error checking attendance status`;
+                attendanceStatus.classList.remove('alert-info');
+                attendanceStatus.classList.add('alert-danger');
+            });
+        }
+        
+        // Capture image from camera feed
+        captureBtn.addEventListener('click', function() {
+            if (!cameraFeed.srcObject) {
+                alert('Camera not initialized. Please refresh and try again.');
                 return;
             }
             
-            // Set the captured image
-            document.getElementById('preview-image').src = capturedImage;
+            // Draw camera feed to canvas
+            const context = previewCanvas.getContext('2d');
+            previewCanvas.width = cameraFeed.videoWidth;
+            previewCanvas.height = cameraFeed.videoHeight;
+            context.drawImage(cameraFeed, 0, 0, previewCanvas.width, previewCanvas.height);
             
-            // Set the status badge and large status text
-            const statusBadge = document.getElementById('preview-status-badge');
-            const statusText = document.getElementById('status-text');
-            const statusLarge = document.getElementById('preview-status-large');
+            // Show preview and capture button
+            previewCanvas.classList.remove('d-none');
+            noPreview.classList.add('d-none');
+            submitBtn.classList.remove('d-none');
             
-            statusBadge.className = `preview-status-badge ${attendanceType}`;
-            statusText.textContent = attendanceType === 'in' ? 'Clock In' : 'Clock Out';
-            
-            statusLarge.textContent = attendanceType === 'in' ? 'IN' : 'OUT';
-            statusLarge.className = `preview-status-large ${attendanceType}`;
-            
-            // Get server time for display
-            await updateTimeDisplay();
-            
-            // Get employee information
-            await getEmployeeInfo();
-            
-            // Set location
-            document.getElementById('preview-location').textContent = userLocation || 'Location not available';
-            
-            // Check for success or error messages in URL
-            const successMsg = urlParams.get('success');
-            const errorMsg = urlParams.get('error');
-            
-            if (successMsg) {
-                showAlert(decodeURIComponent(successMsg), 'success');
-            } else if (errorMsg) {
-                showAlert(decodeURIComponent(errorMsg), 'error');
-            }
-            
-        } catch (error) {
-            console.error('Error initializing preview:', error);
-            showAlert('An error occurred while loading the preview. Please try again.', 'error');
-            setTimeout(() => {
-                window.location.href = '/attendance';
-            }, 2000);
-        }
-    });
-    
-    // Show alert message
-    function showAlert(message, type = 'success') {
-        const alertElement = document.getElementById('alert-message');
-        const alertText = document.getElementById('alert-text');
+            // Store captured image as base64 data URL
+            capturedImage = previewCanvas.toDataURL('image/jpeg');
+        });
         
-        alertText.textContent = message;
-        alertElement.className = `alert-message ${type}`;
-        
-        // Show the alert
-        setTimeout(() => {
-            alertElement.classList.add('show');
-        }, 100);
-        
-        // Hide after 5 seconds
-        setTimeout(() => {
-            alertElement.classList.remove('show');
-        }, 5000);
-    }
-    
-    // Update time display with server time
-    async function updateTimeDisplay() {
-        try {
-            // Parse the timestamp from localStorage
-            const timestamp = new Date(serverTimestamp);
-            
-            // Format time and date
-            const timeStr = new Intl.DateTimeFormat('en-US', { 
-                hour12: true,
-                hour: '2-digit',
-                minute: '2-digit'
-            }).format(timestamp).toUpperCase();
-            
-            const dateStr = new Intl.DateTimeFormat('en-US', { 
-                weekday: 'short',
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric'
-            }).format(timestamp);
-            
-            // Update the display
-            document.getElementById('preview-time').textContent = timeStr;
-            document.getElementById('preview-date').textContent = dateStr;
-            
-        } catch (error) {
-            console.error('Error updating time display:', error);
-            document.getElementById('preview-time').textContent = 'Time unavailable';
-            document.getElementById('preview-date').textContent = 'Date unavailable';
-        }
-    }
-    
-    // Get employee information
-    async function getEmployeeInfo() {
-        try {
-            // Get authenticated user info
-            const response = await fetch('/api/employee-info');
-            if (!response.ok) {
-                throw new Error('Failed to fetch employee information');
+        // Submit attendance
+        submitBtn.addEventListener('click', function() {
+            if (!capturedImage) {
+                alert('Please capture an image first.');
+                return;
             }
             
-            const data = await response.json();
-            
-            // Update employee information
-            document.getElementById('preview-name').textContent = data.name || '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            document.getElementById('preview-position').textContent = data.position || 'Position not available';
-            document.getElementById('preview-department').textContent = data.department || 'Department not available';
-            
-            // Store for later use
-            employeeName = data.name || '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            employeePosition = data.position || '';
-            employeeDepartment = data.department || '';
-            
-            // Update company name based on department
-            const department = data.department || '{{ Auth::user()->department }}';
-            let companyName = '';
-            
-            switch(department.toUpperCase()) {
-                case 'MHRHCI':
-                    companyName = 'Medical & Resources Health Care, Inc.';
-                    break;
-                case 'BGPDI':
-                    companyName = 'Bay Gas and Petroleum Distribution, Inc.';
-                    break;
-                case 'VHI':
-                    companyName = 'Verbena Hotel Inc.';
-                    break;
-                default:
-                    companyName = 'MHR Property Conglomerates, Inc.';
+            if (!userLocation) {
+                alert('Location information is not available. Please ensure location services are enabled.');
+                return;
             }
             
-            document.getElementById('preview-company-name').textContent = companyName;
-            
-        } catch (error) {
-            console.error('Error fetching employee info:', error);
-            // Fallback to Auth user data
-            document.getElementById('preview-name').textContent = '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
-            document.getElementById('preview-position').textContent = 'Position not available';
-            document.getElementById('preview-department').textContent = 'Department not available';
-            document.getElementById('preview-company-name').textContent = 'MHR Property Conglomerates, Inc.';
-        }
-    }
-    
-    // Go back to attendance page
-    function goBack() {
-        document.body.classList.remove('preview-active');
-        window.location.href = '/attendance';
-    }
-    
-    // Confirm attendance
-    async function confirmAttendance() {
-        try {
-            // Show loading overlay
-            document.getElementById('loading-overlay').style.display = 'flex';
-            
-            // Capture the entire preview with overlays
-            const previewImage = await capturePreviewWithOverlays();
-            
-            if (!previewImage) {
-                throw new Error('Failed to capture preview image');
+            if (!attendanceAction || attendanceAction === 'completed') {
+                alert('Cannot determine appropriate action. Please refresh and try again.');
+                return;
             }
+            
+            // Disable button to prevent multiple submissions
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processing...';
             
             // Prepare data for submission
-            const attendanceData = {
-                type: attendanceType,
-                image: previewImage, // Use the captured preview image with overlays
+            const now = new Date();
+            const data = {
+                type: attendanceAction === 'clock_in' ? 'in' : 'out',
+                image: capturedImage,
                 location: userLocation,
-                timestamp: serverTimestamp
+                timestamp: now.toISOString()
             };
             
             // Submit attendance data
-            const response = await fetch('/attendance/capture', {
+            fetch('{{ route("attendances.storeCapture") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify(attendanceData)
-            });
-            
-            const result = await response.json();
-            
-            // Hide loading overlay
-            document.getElementById('loading-overlay').style.display = 'none';
-            
-            if (result.status === 'success') {
-                // Show success message
-                showAlert(result.message, 'success');
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Show success message
+                    attendanceStatus.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${data.message}`;
+                    attendanceStatus.classList.remove('alert-primary', 'alert-warning', 'alert-info');
+                    attendanceStatus.classList.add('alert-success');
+                    
+                    // Disable capture functionality after successful submission
+                    captureBtn.disabled = true;
+                    submitBtn.disabled = true;
+                    
+                    // Redirect back to main attendance page after delay
+                    setTimeout(() => {
+                        window.location.href = '{{ route("attendances.attendance") }}';
+                    }, 3000);
+                } else {
+                    // Show error message
+                    attendanceStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> ${data.message}`;
+                    attendanceStatus.classList.remove('alert-primary', 'alert-warning', 'alert-info');
+                    attendanceStatus.classList.add('alert-danger');
+                    
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `<i class="fas fa-clock me-2"></i> ${submitBtnText.textContent}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting attendance:', error);
+                attendanceStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> Error submitting attendance`;
+                attendanceStatus.classList.remove('alert-primary', 'alert-warning', 'alert-info');
+                attendanceStatus.classList.add('alert-danger');
                 
-                // Clear localStorage
-                localStorage.removeItem('capturedImage');
-                localStorage.removeItem('userLocation');
-                localStorage.removeItem('serverTimestamp');
-                
-                // Redirect to attendance page with success message after a delay
-                setTimeout(() => {
-                    document.body.classList.remove('preview-active');
-                    window.location.href = '/attendance?success=' + encodeURIComponent(result.message);
-                }, 2000);
-            } else {
-                // Show error message
-                showAlert(result.message || 'Failed to record attendance', 'error');
-            }
-            
-        } catch (error) {
-            console.error('Error confirming attendance:', error);
-            
-            // Hide loading overlay
-            document.getElementById('loading-overlay').style.display = 'none';
-            
-            // Show error message
-            showAlert(error.message || 'Failed to record attendance. Please try again.', 'error');
-        }
-    }
-    
-    // Capture the preview with all overlays
-    async function capturePreviewWithOverlays() {
-        try {
-            // Hide the buttons and alert message during capture
-            const actionsElement = document.querySelector('.preview-actions');
-            const alertElement = document.getElementById('alert-message');
-            const originalActionsDisplay = actionsElement.style.display;
-            const originalAlertDisplay = alertElement.style.display;
-            
-            actionsElement.style.display = 'none';
-            alertElement.style.display = 'none';
-            
-            // Use html2canvas to capture the entire preview container
-            const previewContainer = document.querySelector('.image-preview-container');
-            
-            // Wait a moment for display changes to take effect
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Use html2canvas library to capture the preview with overlays
-            const canvas = await html2canvas(previewContainer, {
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#000000',
-                scale: 2, // Higher quality
-                logging: false
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fas fa-clock me-2"></i> ${submitBtnText.textContent}`;
             });
-            
-            // Restore the buttons and alert
-            actionsElement.style.display = originalActionsDisplay;
-            alertElement.style.display = originalAlertDisplay;
-            
-            // Add additional information to the image
-            enhanceCanvasWithDetails(canvas, {
-                name: employeeName,
-                position: employeePosition,
-                department: employeeDepartment,
-                location: userLocation,
-                timestamp: serverTimestamp,
-                type: attendanceType
-            });
-            
-            // Convert canvas to base64 image
-            const imageData = canvas.toDataURL('image/jpeg', 0.95);
-            
-            return imageData;
-        } catch (error) {
-            console.error('Error capturing preview with overlays:', error);
-            return null;
-        }
-    }
-    
-    // Add additional information to the canvas
-    function enhanceCanvasWithDetails(canvas, details) {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        // Add a gradient footer for additional information
-        const footerHeight = 60;
-        const gradient = ctx.createLinearGradient(0, height - footerHeight - 20, 0, height);
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, height - footerHeight - 20, width, footerHeight + 20);
-        
-        // Set text style for main verification text
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.font = 'bold 16px Arial';
-        ctx.textBaseline = 'middle';
-        
-        // Format timestamp
-        const timestamp = new Date(details.timestamp);
-        const formattedDate = timestamp.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        const formattedTime = timestamp.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
         });
         
-        // Add detailed verification text
-        const verificationText = `${details.type.toUpperCase()} VERIFICATION`;
-        ctx.fillText(verificationText, 20, height - footerHeight + 15);
-        
-        // Add timestamp details
-        ctx.font = '14px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fillText(`Date: ${formattedDate}`, 20, height - footerHeight + 35);
-        ctx.fillText(`Time: ${formattedTime}`, 20, height - footerHeight + 55);
-        
-        // Add employee details on the right
-        ctx.textAlign = 'right';
-        ctx.fillText(`${details.name}`, width - 20, height - footerHeight + 15);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`${details.position}`, width - 20, height - footerHeight + 35);
-        ctx.fillText(`${details.department}`, width - 20, height - footerHeight + 55);
-        
-        // Add location in the middle
-        ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillText(`Location: ${details.location}`, width/2, height - footerHeight + 35);
-        
-        // Add system verification text
-        ctx.font = 'bold 12px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        const systemText = 'HRIS ATTENDANCE SYSTEM';
-        ctx.fillText(systemText, width/2, height - footerHeight + 55);
-        
-        // Add unique verification ID
-        const verificationId = `ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-        ctx.fillText(verificationId, width/2, height - footerHeight + 15);
-        
-        // Add professional watermark
-        ctx.save();
-        ctx.globalAlpha = 0.07;
-        ctx.font = 'bold 120px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.translate(width/2, height/2);
-        ctx.rotate(-Math.PI/6); // Rotate -30 degrees
-        const watermarkText = `${details.type === 'in' ? 'CLOCK IN' : 'CLOCK OUT'}`;
-        ctx.fillText(watermarkText, 0, 0);
-        ctx.font = 'bold 60px Arial';
-        ctx.fillText('VERIFIED', 0, 80);
-        ctx.restore();
-    }
-    
-    // Clean up when leaving the page
-    window.addEventListener('beforeunload', () => {
-        document.body.classList.remove('preview-active');
+        // Initialize
+        initCamera();
+        getLocation();
+        checkAttendanceStatus();
     });
 </script>
 @endsection
