@@ -51,67 +51,62 @@
     </div>
 </div>
 
-<!-- Full Screen Camera Modal -->
+<!-- Full Screen Camera Interface -->
 <div id="cameraModal" class="modal fade camera-modal-fullscreen" tabindex="-1">
-    <div class="modal-dialog modal-fullscreen m-0">
+    <div class="modal-dialog modal-fullscreen m-0 p-0">
         <div class="modal-content camera-modal">
-            <div class="modal-header border-0 bg-dark text-white py-3">
-                <h5 class="modal-title">
-                    <i class="fas fa-camera me-2"></i>
-                    <span id="cameraTitle">Clock In Camera</span>
-                </h5>
-                <div class="camera-controls">
-                    <button id="switchCamera" class="btn btn-outline-light btn-sm me-2">
-                        <i class="fas fa-sync-alt"></i>
-                        <span class="ms-1 d-none d-sm-inline">Switch Camera</span>
-                    </button>
-                    <button class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">
+            <!-- Camera Status Bar -->
+            <div class="camera-status-bar">
+                <div class="status-left">
+                    <button class="btn-close-camera" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i>
-                        <span class="ms-1 d-none d-sm-inline">Close</span>
+                    </button>
+                </div>
+                <div class="status-center">
+                    <div class="clock-status" id="clockStatus">Clock In Camera</div>
+                </div>
+                <div class="status-right">
+                    <button id="switchCamera" class="btn-switch-camera">
+                        <i class="fas fa-camera-rotate"></i>
                     </button>
                 </div>
             </div>
-            <div class="modal-body p-0 d-flex align-items-center justify-content-center bg-dark">
-                <div class="camera-container">
-                    <video id="cameraFeed" autoplay playsinline></video>
-                    <canvas id="photoCanvas" style="display: none;"></canvas>
-                    
-                    <!-- Camera Guide Overlay -->
-                    <div class="camera-guide-overlay">
-                        <div class="face-guide"></div>
-                        <div class="guide-text">Position your face within the circle</div>
-                    </div>
-                    
-                    <!-- Info Overlay -->
-                    <div class="camera-overlay">
-                        <!-- Company Logo -->
-                        <div class="company-logo">
-                            <img src="/images/company-logo.png" alt="Company Logo">
+
+            <!-- Camera View -->
+            <div class="camera-view">
+                <video id="cameraFeed" autoplay playsinline></video>
+                <canvas id="photoCanvas" style="display: none;"></canvas>
+
+                <!-- Camera Guide -->
+                <div class="camera-guide-overlay">
+                    <div class="face-guide"></div>
+                </div>
+
+                <!-- Info Overlay -->
+                <div class="camera-overlay">
+                    <!-- Employee Info -->
+                    <div class="employee-info">
+                        <div class="datetime-info">
+                            <div id="overlayTime" class="overlay-time"></div>
+                            <div id="overlayDate" class="overlay-date"></div>
                         </div>
-                        
-                        <!-- Employee Info Overlay -->
-                        <div class="employee-info">
-                            <div class="datetime-info">
-                                <div id="overlayTime" class="overlay-time"></div>
-                                <div id="overlayDate" class="overlay-date"></div>
-                            </div>
-                            <div class="personal-info">
-                                <div id="employeeName"></div>
-                                <div id="employeePosition"></div>
-                                <div id="employeeDepartment"></div>
-                                <div id="employeeLocation" class="location-text">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span></span>
-                                </div>
+                        <div class="personal-info">
+                            <div id="employeeName"></div>
+                            <div id="employeePosition"></div>
+                            <div id="employeeDepartment"></div>
+                            <div id="employeeLocation">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 bg-dark py-3">
-                <button id="capturePhoto" class="btn btn-lg btn-primary capture-btn">
-                    <i class="fas fa-camera me-2"></i>
-                    Capture Photo
+
+            <!-- Camera Controls -->
+            <div class="camera-controls-bottom">
+                <button id="capturePhoto" class="capture-button">
+                    <div class="capture-button-inner"></div>
                 </button>
             </div>
         </div>
@@ -293,30 +288,72 @@
         filter: grayscale(30%);
     }
 
-    /* Full Screen Camera Modal Styles */
+    /* Full Screen Camera Styles */
     .camera-modal-fullscreen {
+        margin: 0;
         padding: 0 !important;
     }
 
     .camera-modal-fullscreen .modal-dialog {
-        max-width: none;
         margin: 0;
+        padding: 0;
+        max-width: 100%;
+        height: 100vh;
     }
 
     .camera-modal {
         background: #000;
-        min-height: 100vh;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        border: none;
+        border-radius: 0;
     }
 
-    .camera-container {
+    /* Status Bar */
+    .camera-status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        color: white;
+        background: transparent;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+
+    .clock-status {
+        font-size: 1rem;
+        font-weight: 500;
+        color: white;
+    }
+
+    .btn-close-camera,
+    .btn-switch-camera {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        padding: 0.5rem;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .btn-close-camera:hover,
+    .btn-switch-camera:hover {
+        opacity: 1;
+    }
+
+    /* Camera View */
+    .camera-view {
+        flex: 1;
         position: relative;
-        width: 100%;
-        height: calc(100vh - 130px); /* Account for header and footer */
         background: #000;
         overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
 
     #cameraFeed {
@@ -325,7 +362,7 @@
         object-fit: cover;
     }
 
-    /* Camera Guide Overlay */
+    /* Camera Guide */
     .camera-guide-overlay {
         position: absolute;
         top: 0;
@@ -333,122 +370,100 @@
         right: 0;
         bottom: 0;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
         pointer-events: none;
     }
 
     .face-guide {
-        width: 300px;
-        height: 300px;
+        width: 280px;
+        height: 280px;
         border: 2px solid rgba(255, 255, 255, 0.5);
         border-radius: 50%;
-        margin-bottom: 20px;
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
     }
 
-    .guide-text {
-        color: white;
-        font-size: 1.1rem;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-        background: rgba(0, 0, 0, 0.5);
-        padding: 8px 16px;
-        border-radius: 20px;
-    }
-
-    /* Enhanced Camera Overlay */
+    /* Info Overlay */
     .camera-overlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        padding: 20px;
-        pointer-events: none;
-    }
-
-    .company-logo {
-        position: absolute;
-        top: 20px;
+        bottom: 100px;
         right: 20px;
-        max-width: 120px;
-        opacity: 0.9;
+        color: white;
+        text-align: right;
         z-index: 10;
     }
 
     .employee-info {
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        text-align: right;
-        color: white;
         background: rgba(0, 0, 0, 0.6);
-        padding: 15px;
+        padding: 12px;
         border-radius: 10px;
         backdrop-filter: blur(10px);
-        z-index: 10;
+        font-size: 0.9rem;
     }
 
-    .modal-footer {
-        position: relative;
-        z-index: 20;
+    .datetime-info {
+        margin-bottom: 8px;
     }
 
-    .capture-btn {
+    .overlay-time {
         font-size: 1.2rem;
-        padding: 15px 40px;
-        border-radius: 30px;
-        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-        border: none;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
+        font-weight: 600;
     }
 
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .camera-container {
-            height: calc(100vh - 120px);
-        }
+    /* Camera Controls */
+    .camera-controls-bottom {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+    }
 
+    .capture-button {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: transparent;
+        border: 4px solid white;
+        padding: 2px;
+        cursor: pointer;
+    }
+
+    .capture-button-inner {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: white;
+        transition: transform 0.2s;
+    }
+
+    .capture-button:active .capture-button-inner {
+        transform: scale(0.9);
+    }
+
+    /* Mirror effect for front camera */
+    .mirror {
+        transform: scaleX(-1);
+    }
+
+    @media (max-width: 768px) {
         .face-guide {
             width: 250px;
             height: 250px;
         }
 
-        .guide-text {
-            font-size: 1rem;
-            padding: 6px 12px;
-        }
-
-        .capture-btn {
-            width: 100%;
-            padding: 12px 20px;
+        .camera-overlay {
+            bottom: 120px;
+            right: 10px;
+            left: 10px;
         }
 
         .employee-info {
-            left: 20px;
-            right: 20px;
             text-align: center;
-        }
-    }
-
-    @media (orientation: landscape) and (max-height: 600px) {
-        .camera-container {
-            height: calc(100vh - 100px);
-        }
-
-        .face-guide {
-            width: 200px;
-            height: 200px;
-        }
-
-        .modal-header {
-            padding: 0.5rem 1rem;
-        }
-
-        .modal-footer {
-            padding: 0.5rem;
         }
     }
 </style>
@@ -648,6 +663,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('overlayDate').textContent = dateString;
     }
 
+    // Update clock status based on current state
+    function updateClockStatus() {
+        const statusText = isClockIn ? 'Clock In Camera' : 'Clock Out Camera';
+        document.getElementById('clockStatus').textContent = statusText;
+    }
+
     // Enhanced camera start function
     async function startCamera() {
         try {
@@ -655,17 +676,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 stream.getTracks().forEach(track => track.stop());
             }
 
-            // Get the device's screen dimensions
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-
-            // Set ideal camera resolution based on screen size
             const constraints = {
                 video: {
                     facingMode: currentCamera,
-                    width: { ideal: Math.max(screenWidth, 1920) },
-                    height: { ideal: Math.max(screenHeight, 1080) },
-                    aspectRatio: { ideal: 16/9 }
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 },
                 audio: false
             };
@@ -675,17 +690,8 @@ document.addEventListener('DOMContentLoaded', function() {
             video.srcObject = stream;
             video.classList.toggle('mirror', currentCamera === 'user');
 
-            // Wait for video to be ready
-            await new Promise((resolve) => {
-                video.onloadedmetadata = () => {
-                    video.play();
-                    resolve();
-                };
-            });
-
-            // Update employee info overlay
+            // Update employee info and start datetime updates
             updateEmployeeInfo();
-            // Start updating overlay datetime
             updateOverlayDateTime();
             setInterval(updateOverlayDateTime, 1000);
 
@@ -703,7 +709,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('employeeLocation').querySelector('span').textContent = document.getElementById('address').textContent;
     }
 
-    // Function to switch camera
+    // Switch camera function
     document.getElementById('switchCamera').addEventListener('click', async () => {
         currentCamera = currentCamera === 'user' ? 'environment' : 'user';
         await startCamera();
@@ -780,28 +786,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Modify handleAttendance to open camera
+    // Modified handleAttendance to update status
     async function handleAttendance() {
-        if (!userLocation) {
-            showError('Please enable location access to clock in/out');
+        if (!userLocation || !serverTimestamp || !serverHash) {
+            showError('Please ensure location and time sync are available');
             return;
         }
 
-        if (!serverTimestamp || !serverHash) {
-            showError('Server time synchronization required. Please wait.');
-            return;
-        }
-
-        // Update modal title
-        document.getElementById('cameraTitle').textContent = `Clock ${isClockIn ? 'In' : 'Out'} Camera`;
-
-        // Start camera and show modal
+        updateClockStatus();
         await startCamera();
         cameraModal.show();
     }
 
-    // Clean up camera when modal is closed
-    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', stopCamera);
+    // Clean up on modal close
+    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    });
     
     // Event listener for the clock button
     document.getElementById('clockButton').addEventListener('click', handleAttendance);
