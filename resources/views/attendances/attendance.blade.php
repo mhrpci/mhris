@@ -51,6 +51,64 @@
     </div>
 </div>
 
+<!-- Camera Modal -->
+<div id="cameraModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content camera-modal">
+            <div class="modal-header border-0 bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>
+                    <span id="cameraTitle">Clock In Camera</span>
+                </h5>
+                <div class="camera-controls">
+                    <button id="switchCamera" class="btn btn-outline-light btn-sm me-2">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body p-0">
+                <div class="camera-container">
+                    <video id="cameraFeed" autoplay playsinline></video>
+                    <canvas id="photoCanvas" style="display: none;"></canvas>
+                    
+                    <div class="camera-overlay">
+                        <!-- Company Logo -->
+                        <div class="company-logo">
+                            <img src="/images/company-logo.png" alt="Company Logo">
+                        </div>
+                        
+                        <!-- Employee Info Overlay -->
+                        <div class="employee-info">
+                            <div class="datetime-info">
+                                <div id="overlayTime" class="overlay-time"></div>
+                                <div id="overlayDate" class="overlay-date"></div>
+                            </div>
+                            <div class="personal-info">
+                                <div id="employeeName"></div>
+                                <div id="employeePosition"></div>
+                                <div id="employeeDepartment"></div>
+                                <div id="employeeLocation" class="location-text">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-dark">
+                <button id="capturePhoto" class="btn btn-primary capture-btn">
+                    <i class="fas fa-camera me-2"></i>
+                    Capture
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('styles')
 <style>
     /* Card Styles */
@@ -225,6 +283,122 @@
         pointer-events: none;
         filter: grayscale(30%);
     }
+
+    /* Camera Modal Styles */
+    .camera-modal {
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .modal-header .camera-controls {
+        display: flex;
+        gap: 10px;
+    }
+
+    .camera-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 75%; /* 4:3 Aspect Ratio */
+        background: #000;
+        overflow: hidden;
+    }
+
+    #cameraFeed {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .camera-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 20px;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        background: linear-gradient(to bottom, 
+            rgba(0,0,0,0.3) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(0,0,0,0.5) 100%
+        );
+    }
+
+    .company-logo {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        max-width: 100px;
+        opacity: 0.8;
+    }
+
+    .company-logo img {
+        width: 100%;
+        height: auto;
+    }
+
+    .employee-info {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        text-align: right;
+        max-width: 60%;
+    }
+
+    .datetime-info {
+        margin-bottom: 10px;
+    }
+
+    .overlay-time {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .overlay-date {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .personal-info {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    #employeeName {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .location-text {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+    .capture-btn {
+        padding: 0.8rem 2rem;
+        font-weight: 600;
+        border-radius: 30px;
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .capture-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    /* Mirror effect for front camera */
+    .mirror {
+        transform: scaleX(-1);
+    }
 </style>
 @endpush
 
@@ -237,6 +411,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastVerifiedTime = null;
     let isClockIn = true;
     let clientTimeOffset = 0;
+    let stream = null;
+    let currentCamera = 'environment'; // 'environment' for rear, 'user' for front
+    const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
     
     // Function to update button state
     function updateButtonState() {
@@ -397,41 +574,105 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Enhanced attendance handling
-    async function handleAttendance() {
-        if (!userLocation) {
-            showError('Please enable location access to clock in/out');
-            return;
-        }
+    // Function to update overlay datetime
+    function updateOverlayDateTime() {
+        const now = new Date(Date.now() + clientTimeOffset);
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: true,
+            timeZone: 'Asia/Manila'
+        });
+        const dateString = now.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            timeZone: 'Asia/Manila'
+        });
         
-        if (!serverTimestamp || !serverHash) {
-            showError('Server time synchronization required. Please wait.');
-            return;
-        }
-        
-        const button = document.getElementById('clockButton');
-        button.classList.add('disabled');
-        
+        document.getElementById('overlayTime').textContent = timeString;
+        document.getElementById('overlayDate').textContent = dateString;
+    }
+
+    // Function to start camera
+    async function startCamera() {
         try {
-            // Verify timestamp again before submitting
-            const verifyResponse = await fetch(`/api/verify-timestamp/${encodeURIComponent(serverTimestamp)}/${encodeURIComponent(serverHash)}`);
-            const verifyData = await verifyResponse.json();
-            
-            if (!verifyData.valid) {
-                showError('Time verification failed. Please try again.');
-                return;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
             }
-            
-            const type = isClockIn ? 'in' : 'out';
+
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { 
+                    facingMode: currentCamera,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            });
+
+            const video = document.getElementById('cameraFeed');
+            video.srcObject = stream;
+            video.classList.toggle('mirror', currentCamera === 'user');
+
+            // Update employee info overlay
+            document.getElementById('employeeName').textContent = '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}';
+            document.getElementById('employeePosition').textContent = '{{ Auth::user()->position }}';
+            document.getElementById('employeeDepartment').textContent = '{{ Auth::user()->department }}';
+            document.getElementById('employeeLocation').querySelector('span').textContent = document.getElementById('address').textContent;
+
+            // Start updating overlay datetime
+            updateOverlayDateTime();
+            setInterval(updateOverlayDateTime, 1000);
+
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            showError('Unable to access camera. Please check permissions.');
+        }
+    }
+
+    // Function to switch camera
+    document.getElementById('switchCamera').addEventListener('click', async () => {
+        currentCamera = currentCamera === 'user' ? 'environment' : 'user';
+        await startCamera();
+    });
+
+    // Function to capture photo
+    document.getElementById('capturePhoto').addEventListener('click', async () => {
+        const video = document.getElementById('cameraFeed');
+        const canvas = document.getElementById('photoCanvas');
+        const context = canvas.getContext('2d');
+
+        // Set canvas size to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // Draw the video frame to the canvas
+        if (currentCamera === 'user') {
+            // Mirror the image for front camera
+            context.scale(-1, 1);
+            context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+            context.scale(-1, 1); // Reset transform
+        } else {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+
+        // Convert to base64
+        const photoData = canvas.toDataURL('image/jpeg');
+
+        // Here you would send the photo data to your server
+        // along with the attendance data
+        try {
             const attendanceData = {
-                type: type,
+                type: isClockIn ? 'in' : 'out',
                 timestamp: serverTimestamp,
                 hash: serverHash,
                 location: userLocation,
+                photo: photoData,
                 timezone: 'Asia/Manila'
             };
-            
-            // Send attendance data to server
+
             const response = await fetch('/api/attendance', {
                 method: 'POST',
                 headers: {
@@ -440,25 +681,56 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(attendanceData)
             });
-            
+
             if (!response.ok) throw new Error('Attendance submission failed');
-            
-            const result = await response.json();
-            
-            // Toggle button state on successful submission
+
+            // Close camera and modal
+            stopCamera();
+            cameraModal.hide();
+
+            // Toggle button state
             isClockIn = !isClockIn;
             updateButtonState();
-            
+
             // Show success message
-            const action = type.charAt(0).toUpperCase() + type.slice(1);
+            const action = isClockIn ? 'Out' : 'In';
             showSuccess(`Clock ${action} recorded successfully!`);
         } catch (error) {
-            console.error('Error recording attendance:', error);
+            console.error('Error submitting attendance:', error);
             showError('Failed to record attendance. Please try again.');
-        } finally {
-            button.classList.remove('disabled');
+        }
+    });
+
+    // Function to stop camera
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
         }
     }
+
+    // Modify handleAttendance to open camera
+    async function handleAttendance() {
+        if (!userLocation) {
+            showError('Please enable location access to clock in/out');
+            return;
+        }
+
+        if (!serverTimestamp || !serverHash) {
+            showError('Server time synchronization required. Please wait.');
+            return;
+        }
+
+        // Update modal title
+        document.getElementById('cameraTitle').textContent = `Clock ${isClockIn ? 'In' : 'Out'} Camera`;
+
+        // Start camera and show modal
+        await startCamera();
+        cameraModal.show();
+    }
+
+    // Clean up camera when modal is closed
+    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', stopCamera);
     
     // Event listener for the clock button
     document.getElementById('clockButton').addEventListener('click', handleAttendance);
