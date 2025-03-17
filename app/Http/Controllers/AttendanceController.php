@@ -13,6 +13,7 @@ use App\Imports\AttendanceImport;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Spatie\Permission\Traits\HasRoles;
 use GuzzleHttp\Client;
@@ -30,10 +31,29 @@ class AttendanceController extends Controller
         $this->middleware(['permission:attendance-delete'], ['only' => ['destroy']]);
     }
 
+    // Helper method to check if user has a role
+    private function userHasRole($user, $roleName)
+    {
+        // Using database query instead of hasRole() method
+        if (is_array($roleName)) {
+            return DB::table('model_has_roles')
+                ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->where('model_has_roles.model_id', $user->id)
+                ->whereIn('roles.name', $roleName)
+                ->exists();
+        } else {
+            return DB::table('model_has_roles')
+                ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->where('model_has_roles.model_id', $user->id)
+                ->where('roles.name', $roleName)
+                ->exists();
+        }
+    }
+
     // Display all attendance records
     public function index()
     {
-        if (auth()->user()->hasRole('Supervisor')) {
+        if ($this->userHasRole(auth()->user(), 'Supervisor')) {
             $attendances = Attendance::whereHas('employee', function($query) {
                 $query->where('department_id', auth()->user()->department_id);
             })->get();
@@ -77,7 +97,7 @@ class AttendanceController extends Controller
 
         if ($existingAttendance) {
             if ($existingAttendance->time_out && $existingAttendance->time_stamp2) {
-                if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
+                if ($this->userHasRole($user, 'Super Admin') || $this->userHasRole($user, 'Admin')) {
                     $successMessage = 'Attendance for this employee on this date already has time out and time stamp.';
                 } else {
                     $successMessage = 'Your attendance on this date already has time out and time stamp.';
@@ -111,7 +131,7 @@ class AttendanceController extends Controller
         }
 
         // Check user role and return appropriate view
-        if ($user->hasRole('Employee')) {
+        if ($this->userHasRole($user, 'Employee')) {
             $employees = Employee::all(); // Fetch employees to pass to the view
             return view('attendances.create', compact('employees'))->with('successMessage', $successMessage);
         } else {
@@ -202,7 +222,7 @@ class AttendanceController extends Controller
         $user = Auth::user();
         
         // Get employees based on user role
-        $employees = $user->hasRole('Super Admin') 
+        $employees = $this->userHasRole($user, 'Super Admin') 
             ? Employee::all()
             : Employee::where('employee_status', 'Active')->get();
             
@@ -251,7 +271,7 @@ class AttendanceController extends Controller
         $user = Auth::user();
 
         // Assuming roles are defined and you have a method to check user roles
-        if ($user->hasRole('admin') || $user->hasRole('super-admin')) {
+        if ($this->userHasRole($user, 'admin') || $this->userHasRole($user, 'super-admin')) {
             return redirect()->route('attendances.index');
         } else {
             return $this->myTimesheet();
@@ -388,7 +408,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->hasRole(['Employee', 'Supervisor'])) {
+        if (!$this->userHasRole($user, ['Employee', 'Supervisor'])) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -403,7 +423,7 @@ class AttendanceController extends Controller
     public function executeStoreCommand()
     {
         try {
-            \Artisan::call('attendance:store');
+            Artisan::call('attendance:store');
             return response()->json(['message' => 'Attendance records stored successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -416,7 +436,7 @@ class AttendanceController extends Controller
             $user = Auth::user();
             
             // Check if user has Employee or Supervisor role
-            if (!$user->hasRole(['Employee', 'Supervisor'])) {
+            if (!$this->userHasRole($user, ['Employee', 'Supervisor'])) {
                 return redirect()->route('home')->with('error', 'Unauthorized access.');
             }
             
@@ -424,53 +444,13 @@ class AttendanceController extends Controller
             $employee = Employee::where('email_address', $user->email)->first();
             
             if (!$employee) {
-                \Log::warning('Employee not found for user email: ' . $user->email);
+                Log::warning('Employee not found for user email: ' . $user->email);
             }
             
             return view('attendances.capture-preview', compact('employee'));
         } catch (\Exception $e) {
-            \Log::error('Error in capture preview: ' . $e->getMessage());
+            Log::error('Error in capture preview: ' . $e->getMessage());
             return redirect()->route('attendances.attendance')->with('error', 'An error occurred while loading the preview page.');
-        }
-    }
-
-    /**
-     * Helper method to store timestamp images
-     * 
-     * @param string $imageData Base64 encoded image
-     * @param string $timestamp Timestamp for filename
-     * @return string|false Returns the stored image path or false on failure
-     */
-    private function storeTimestampImage($imageData, $timestamp)
-    {
-        try {
-            // Check if storage link exists
-            if (!file_exists(public_path('storage'))) {
-                \Artisan::call('storage:link');
-            }
-
-            // Create time_stamps directory if it doesn't exist
-            $directory = 'time_stamps';
-            if (!Storage::disk('public')->exists($directory)) {
-                Storage::disk('public')->makeDirectory($directory);
-            }
-
-            // Clean the base64 string
-            $cleanImageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
-            
-            // Generate unique filename with timestamp
-            $filename = uniqid() . '_' . Carbon::parse($timestamp)->format('Ymd_His') . '.jpg';
-            $fullPath = $directory . '/' . $filename;
-
-            // Store the image
-            if (Storage::disk('public')->put($fullPath, $cleanImageData)) {
-                return $fullPath;
-            }
-
-            return false;
-        } catch (\Exception $e) {
-            \Log::error('Error storing timestamp image: ' . $e->getMessage());
-            return false;
         }
     }
 
@@ -487,6 +467,16 @@ class AttendanceController extends Controller
 
             // Get the authenticated user
             $user = Auth::user();
+            
+            // Check authorization using our helper method instead of hasRole()
+            $isAuthorized = $this->userHasRole($user, ['Employee', 'Supervisor']);
+            
+            if (!$isAuthorized) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized. You do not have permission to record attendance.'
+                ], 403);
+            }
             
             // Find the employee by email
             $employee = Employee::where('email_address', $user->email)->first();
@@ -523,7 +513,9 @@ class AttendanceController extends Controller
                 // Check if already clocked in
                 if ($attendance && $attendance->time_in) {
                     // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
+                    if (Storage::disk('public')->exists($imagePath)) {
+                        Storage::disk('public')->delete($imagePath);
+                    }
                     
                     return response()->json([
                         'status' => 'error',
@@ -548,8 +540,13 @@ class AttendanceController extends Controller
                     $attendance->save();
                 }
 
-                // Send Telegram notification for clock in
-                $this->sendTelegramNotification($employee, 'in', $currentTime, $request->location);
+                // Try to send Telegram notification but don't fail if it doesn't work
+                try {
+                    $this->sendTelegramNotification($employee, 'in', $currentTime, $request->location);
+                } catch (\Exception $e) {
+                    // Log error but don't fail the request
+                    error_log('Failed to send Telegram notification: ' . $e->getMessage());
+                }
 
                 return response()->json([
                     'status' => 'success',
@@ -561,7 +558,9 @@ class AttendanceController extends Controller
                 // Check if attendance record exists and has time_in
                 if (!$attendance || !$attendance->time_in) {
                     // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
+                    if (Storage::disk('public')->exists($imagePath)) {
+                        Storage::disk('public')->delete($imagePath);
+                    }
                     
                     return response()->json([
                         'status' => 'error',
@@ -572,7 +571,9 @@ class AttendanceController extends Controller
                 // Check if already clocked out
                 if ($attendance->time_out) {
                     // Delete the newly stored image since we won't use it
-                    Storage::disk('public')->delete($imagePath);
+                    if (Storage::disk('public')->exists($imagePath)) {
+                        Storage::disk('public')->delete($imagePath);
+                    }
                     
                     return response()->json([
                         'status' => 'error',
@@ -584,10 +585,24 @@ class AttendanceController extends Controller
                 $attendance->time_out = $currentTime;
                 $attendance->time_stamp2 = $imagePath;
                 $attendance->time_out_address = $request->location;
+                
+                // Calculate hours worked if possible
+                if ($attendance->time_in) {
+                    $timeIn = Carbon::createFromFormat('H:i:s', $attendance->time_in);
+                    $timeOut = Carbon::createFromFormat('H:i:s', $currentTime);
+                    $hoursWorked = $timeOut->floatDiffInHours($timeIn);
+                    $attendance->hours_worked = $hoursWorked;
+                }
+                
                 $attendance->save();
 
-                // Send Telegram notification for clock out
-                $this->sendTelegramNotification($employee, 'out', $currentTime, $request->location);
+                // Try to send Telegram notification but don't fail if it doesn't work
+                try {
+                    $this->sendTelegramNotification($employee, 'out', $currentTime, $request->location);
+                } catch (\Exception $e) {
+                    // Log error but don't fail the request
+                    error_log('Failed to send Telegram notification: ' . $e->getMessage());
+                }
 
                 return response()->json([
                     'status' => 'success',
@@ -603,10 +618,11 @@ class AttendanceController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Attendance capture error: ' . $e->getMessage());
+            // Log error
+            error_log('Attendance capture error: ' . $e->getMessage());
             
             // Delete any stored image if there was an error
-            if (isset($imagePath) && Storage::disk('public')->delete($imagePath)) {
+            if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
             
@@ -615,6 +631,55 @@ class AttendanceController extends Controller
                 'message' => 'An error occurred while processing your request.',
                 'debug' => config('app.debug') ? $e->getMessage() : null
             ], 500);
+        }
+    }
+
+    /**
+     * Helper method to store timestamp images
+     * 
+     * @param string $imageData Base64 encoded image
+     * @param string $timestamp Timestamp for filename
+     * @return string|false Returns the stored image path or false on failure
+     */
+    private function storeTimestampImage($imageData, $timestamp)
+    {
+        try {
+            // Check if storage link exists
+            if (!file_exists(public_path('storage'))) {
+                Artisan::call('storage:link');
+            }
+
+            // Create time_stamps directory if it doesn't exist
+            $directory = 'time_stamps';
+            if (!Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory);
+            }
+
+            // Clean the base64 string
+            if (strpos($imageData, ';base64,') !== false) {
+                $imageData = explode(';base64,', $imageData)[1];
+            }
+            
+            $cleanImageData = base64_decode($imageData);
+            
+            if (!$cleanImageData) {
+                error_log('Failed to decode base64 image data');
+                return false;
+            }
+            
+            // Generate unique filename with timestamp
+            $filename = uniqid() . '_' . Carbon::parse($timestamp)->format('Ymd_His') . '.jpg';
+            $fullPath = $directory . '/' . $filename;
+
+            // Store the image
+            if (Storage::disk('public')->put($fullPath, $cleanImageData)) {
+                return $fullPath;
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            error_log('Error storing timestamp image: ' . $e->getMessage());
+            return false;
         }
     }
 
@@ -628,7 +693,7 @@ class AttendanceController extends Controller
             $chatId = config('services.telegram.chat_id');
 
             if (!$botToken || !$chatId) {
-                Log::warning('Telegram credentials not configured');
+                error_log('Telegram credentials not configured');
                 return;
             }
 
@@ -636,12 +701,19 @@ class AttendanceController extends Controller
             $departmentName = $employee->department ? $employee->department->name : 'N/A';
 
             // Determine company name based on department
-            $companyName = match(strtoupper($departmentName)) {
-                'MHRHCI' => 'Medical & Resources Health Care, Inc.',
-                'BGPDI' => 'Bay Gas and Petroleum Distribution, Inc.',
-                'VHI' => 'Verbena Hotel Inc.',
-                default => 'MHR Property Conglomerates, Inc.'
-            };
+            switch(strtoupper($departmentName)) {
+                case 'MHRHCI':
+                    $companyName = 'Medical & Resources Health Care, Inc.';
+                    break;
+                case 'BGPDI':
+                    $companyName = 'Bay Gas and Petroleum Distribution, Inc.';
+                    break;
+                case 'VHI':
+                    $companyName = 'Verbena Hotel Inc.';
+                    break;
+                default:
+                    $companyName = 'MHR Property Conglomerates, Inc.';
+            }
 
             // Format time for display
             $formattedTime = Carbon::parse($time)->format('h:i A');
@@ -690,8 +762,8 @@ class AttendanceController extends Controller
                     $imageUrl = "https://api.telegram.org/bot{$botToken}/sendPhoto";
                     
                     // Get the full URL for the image
-                    $imagePath = Storage::disk('public')->url($attendance->$timestampField);
-                    $fullImageUrl = url($imagePath);
+                    $publicPath = 'storage/' . $attendance->$timestampField;
+                    $fullImageUrl = url($publicPath);
 
                     // Prepare image data
                     $imageCaption = "Timestamp image for {$employee->first_name} {$employee->last_name}'s " . 
@@ -716,7 +788,7 @@ class AttendanceController extends Controller
                     // If sending image fails, try sending as file
                     try {
                         $documentUrl = "https://api.telegram.org/bot{$botToken}/sendDocument";
-                        $filePath = Storage::disk('public')->path($attendance->$timestampField);
+                        $filePath = public_path('storage/' . $attendance->$timestampField);
                         
                         if (file_exists($filePath)) {
                             $imageResponse = $client->post($documentUrl, [
@@ -743,10 +815,10 @@ class AttendanceController extends Controller
                                 throw new \Exception('Failed to send Telegram document');
                             }
                         } else {
-                            Log::warning("Timestamp image file not found: {$filePath}");
+                            error_log("Timestamp image file not found: {$filePath}");
                         }
                     } catch (\Exception $docError) {
-                        Log::error('Failed to send image as document: ' . $docError->getMessage());
+                        error_log('Failed to send image as document: ' . $docError->getMessage());
                     }
                 }
             } else {
@@ -768,7 +840,8 @@ class AttendanceController extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+            error_log('Failed to send Telegram notification: ' . $e->getMessage());
+            throw $e; // Rethrow to allow caller to handle
         }
     }
 
@@ -778,7 +851,7 @@ class AttendanceController extends Controller
             $user = Auth::user();
             
             // Check if user has Employee or Supervisor role
-            if (!$user->hasRole(['Employee', 'Supervisor'])) {
+            if (!$this->userHasRole($user, ['Employee', 'Supervisor'])) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unauthorized access'
