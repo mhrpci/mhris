@@ -94,15 +94,16 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr class="text-center">
-                                    <th style="width: 25%">Clock In Time</th>
-                                    <th style="width: 25%">Clock Out Time</th>
-                                    <th style="width: 35%">Location</th>
-                                    <th style="width: 15%">Status</th>
+                                    <th style="width: 15%">Clock In Time</th>
+                                    <th style="width: 25%">Clock In Location</th>
+                                    <th style="width: 15%">Clock Out Time</th>
+                                    <th style="width: 25%">Clock Out Location</th>
+                                    <th style="width: 20%">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="activity-log">
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">No activity recorded today</td>
+                                    <td colspan="5" class="text-center text-muted py-4">No activity recorded today</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -158,10 +159,14 @@
         font-weight: 600;
     }
     .location-text {
-        max-width: 300px;
+        max-width: 200px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        font-size: 0.9rem;
+    }
+    .status-badge {
+        min-width: 90px;
     }
 </style>
 @endpush
@@ -243,17 +248,21 @@ document.addEventListener('DOMContentLoaded', function() {
             row.className = 'text-center';
             row.innerHTML = `
                 <td class="activity-time text-success">${timeString}</td>
-                <td class="activity-time text-muted">--:--:-- --</td>
                 <td class="location-text" title="${location}">${location}</td>
-                <td><span class="badge bg-warning">In Progress</span></td>
+                <td class="activity-time text-muted">--:--:-- --</td>
+                <td class="location-text text-muted">--</td>
+                <td><span class="badge bg-warning status-badge">In Progress</span></td>
             `;
             tbody.insertBefore(row, tbody.firstChild);
             currentActivityRow = row;
         } else if (action === 'Clock Out' && currentActivityRow) {
             // Update existing row with clock out time
-            currentActivityRow.children[1].textContent = timeString;
-            currentActivityRow.children[1].className = 'activity-time text-danger';
-            currentActivityRow.children[3].innerHTML = '<span class="badge bg-success">Completed</span>';
+            currentActivityRow.children[2].textContent = timeString;
+            currentActivityRow.children[2].className = 'activity-time text-danger';
+            currentActivityRow.children[3].textContent = location;
+            currentActivityRow.children[3].className = 'location-text';
+            currentActivityRow.children[3].title = location;
+            currentActivityRow.children[4].innerHTML = '<span class="badge bg-success status-badge">Completed</span>';
             currentActivityRow = null;
         }
     }
