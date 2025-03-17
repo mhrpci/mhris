@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('styles')
+@section('content')
 <style>
     /* Base styles */
     body.preview-active {
@@ -488,9 +488,7 @@
         font-size: 1.2rem;
     }
 </style>
-@endsection
 
-@section('content')
 <div class="preview-container">
     <div class="image-preview-container">
         <img id="preview-image" class="preview-image" src="" alt="Attendance Capture">
@@ -560,9 +558,7 @@
     <i class="fas fa-check-circle"></i>
     <span id="alert-text">Message goes here</span>
 </div>
-@endsection
 
-@section('scripts')
 <!-- Include html2canvas library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
