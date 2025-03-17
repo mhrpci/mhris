@@ -589,6 +589,11 @@ document.addEventListener('DOMContentLoaded', function() {
             lastVerifiedTime = data.formatted;
             updateTimeDisplay();
             startLocalTimeUpdate();
+
+            // Sync with server every minute
+            setInterval(async () => {
+                await getServerTime();
+            }, 60000);
         } catch (error) {
             console.error('Error with server time:', error);
             showError('Unable to sync with server time. Please refresh the page.');
@@ -755,13 +760,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Enhanced getUserLocation function
+    // Enhanced getUserLocation function with detailed address
     async function getUserLocation() {
         try {
+            // Request location with high accuracy
             const position = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
-                    timeout: 5000,
+                    timeout: 10000,
                     maximumAge: 0
                 });
             });
@@ -769,27 +775,78 @@ document.addEventListener('DOMContentLoaded', function() {
             userLocation = {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy
+                accuracy: position.coords.accuracy,
+                timestamp: position.timestamp
             };
             
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.latitude}&lon=${userLocation.longitude}`);
+                // Use OpenStreetMap Nominatim for detailed address
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?` +
+                    `format=json&lat=${userLocation.latitude}&lon=${userLocation.longitude}` +
+                    `&zoom=18&addressdetails=1`
+                );
+                
                 if (!response.ok) throw new Error('Geocoding failed');
                 
                 const data = await response.json();
+                
+                // Format detailed address
+                const address = {
+                    building: data.address.building || '',
+                    road: data.address.road || '',
+                    suburb: data.address.suburb || '',
+                    city: data.address.city || data.address.town || data.address.municipality || '',
+                    state: data.address.state || '',
+                    postcode: data.address.postcode || '',
+                    country: data.address.country || ''
+                };
+
+                // Create formatted address string
+                const formattedAddress = [
+                    address.building,
+                    address.road,
+                    address.suburb,
+                    address.city,
+                    address.state,
+                    address.postcode,
+                    address.country
+                ].filter(Boolean).join(', ');
+
                 const addressElement = document.getElementById('address');
-                addressElement.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i></span>${data.display_name}`;
+                addressElement.innerHTML = `
+                    <span class="text-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                    </span>
+                    <span class="fw-bold">${formattedAddress}</span>
+                    <div class="small text-muted mt-1">
+                        Accuracy: ${userLocation.accuracy.toFixed(1)}m
+                    </div>
+                `;
                 
                 // Update location in camera overlay
                 const overlayLocation = document.querySelector('#employeeLocation span');
                 if (overlayLocation) {
-                    overlayLocation.textContent = data.display_name;
+                    overlayLocation.textContent = formattedAddress;
                 }
+
+                // Continuously update location
+                watchLocation();
             } catch (error) {
                 console.error('Geocoding error:', error);
-                // Still show coordinates if geocoding fails
+                // Fallback to coordinates with accuracy
                 const addressElement = document.getElementById('address');
-                addressElement.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i></span>Location Found (${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)})`;
+                addressElement.innerHTML = `
+                    <span class="text-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                    </span>
+                    <span class="fw-bold">
+                        Location Found (${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)})
+                    </span>
+                    <div class="small text-muted mt-1">
+                        Accuracy: ${userLocation.accuracy.toFixed(1)}m
+                    </div>
+                `;
             }
         } catch (error) {
             console.error('Location error:', error);
@@ -1030,7 +1087,100 @@ document.addEventListener('DOMContentLoaded', function() {
             getUserLocation();
         }
     });
+
+    // Start permission monitoring
+    monitorPermissions();
+
+    // Recheck permissions when page becomes visible
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            checkAndRequestPermissions().then(granted => {
+                if (granted) {
+                    getUserLocation();
+                }
+            });
+        }
+    });
 });
+
+// Function to continuously watch location changes
+function watchLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+            async (position) => {
+                // Only update if accuracy is better or location has changed significantly
+                const newLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy
+                };
+
+                const significantChange = !userLocation || 
+                    calculateDistance(
+                        userLocation.latitude, 
+                        userLocation.longitude,
+                        newLocation.latitude,
+                        newLocation.longitude
+                    ) > 10 || // More than 10 meters
+                    newLocation.accuracy < userLocation.accuracy - 5; // Better accuracy by 5 meters
+
+                if (significantChange) {
+                    userLocation = newLocation;
+                    await getUserLocation(); // Update address
+                }
+            },
+            (error) => handleLocationError(error),
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+}
+
+// Function to calculate distance between coordinates in meters
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
+
+// Enhanced permission monitoring
+function monitorPermissions() {
+    // Monitor location permission changes
+    if (navigator.permissions) {
+        navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
+            permissionStatus.onchange = () => {
+                if (permissionStatus.state === 'granted') {
+                    getUserLocation();
+                } else {
+                    handleLocationError({ code: 1 }); // Permission denied
+                }
+            };
+        });
+
+        // Monitor camera permission changes
+        navigator.permissions.query({ name: 'camera' }).then(permissionStatus => {
+            permissionStatus.onchange = () => {
+                if (permissionStatus.state === 'granted') {
+                    checkCameraPermission();
+                } else {
+                    showError('Camera access was revoked. Please enable it in your browser settings.');
+                }
+            };
+        });
+    }
+}
 </script>
 @endpush
 
