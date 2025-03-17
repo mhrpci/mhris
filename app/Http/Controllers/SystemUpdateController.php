@@ -13,13 +13,12 @@ class SystemUpdateController extends Controller
         $this->middleware('auth');
         $this->middleware('role:Super Admin');
     }
-
     /**
      * Display a listing of system updates.
      */
     public function index()
     {
-        $updates = SystemUpdate::latest('published_at')->paginate(10);
+        $updates = SystemUpdate::latest('published_at')->all();
         return view('system-updates.index', compact('updates'));
     }
 
