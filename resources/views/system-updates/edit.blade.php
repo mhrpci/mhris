@@ -46,6 +46,14 @@
 @endsection
 
 @section('content')
+@if(!auth()->check() || !auth()->user()->hasRole('Super Admin'))
+<div class="container-fluid py-4">
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <strong>Access Denied!</strong> You don't have permission to access this page.
+    </div>
+</div>
+@else
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-md-6">
@@ -215,6 +223,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('scripts')

@@ -368,13 +368,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/login-history', [LoginHistoryController::class, 'index'])->name('login.history');
 
     // System Updates routes
-    Route::get('/system-updates', [SystemUpdateController::class, 'index'])->name('system-updates.index');
-    Route::get('/system-updates/create', [SystemUpdateController::class, 'create'])->name('system-updates.create');
-    Route::post('/system-updates', [SystemUpdateController::class, 'store'])->name('system-updates.store');
-    Route::get('/system-updates/{systemUpdate}', [SystemUpdateController::class, 'show'])->name('system-updates.show');
-    Route::get('/system-updates/{systemUpdate}/edit', [SystemUpdateController::class, 'edit'])->name('system-updates.edit');
-    Route::put('/system-updates/{systemUpdate}', [SystemUpdateController::class, 'update'])->name('system-updates.update');
-    Route::delete('/system-updates/{systemUpdate}', [SystemUpdateController::class, 'destroy'])->name('system-updates.destroy');
+    Route::resource('system-updates', SystemUpdateController::class)
+        ->middleware(['auth', 'role:Super Admin']);
 
     // Medical Products routes
     Route::resource('medical-products', MedicalProductController::class)->parameters([

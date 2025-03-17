@@ -60,6 +60,14 @@
 @endsection
 
 @section('content')
+@if(!auth()->check() || !auth()->user()->hasRole('Super Admin'))
+<div class="container-fluid py-4">
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <strong>Access Denied!</strong> You don't have permission to access this page.
+    </div>
+</div>
+@else
 <div class="system-update-header">
     <div class="container-fluid">
         <div class="row align-items-center">
@@ -177,4 +185,5 @@
         </div>
     </div>
 </div>
+@endif
 @endsection 
