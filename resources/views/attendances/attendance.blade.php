@@ -40,68 +40,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Camera Capture Modal -->
-                    <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-fullscreen p-0">
-                            <div class="modal-content bg-black border-0">
-                                <!-- Camera Header Controls -->
-                                <div class="camera-controls-top d-flex justify-content-between align-items-center px-3 py-2">
-                                    <button type="button" class="btn btn-camera-control" id="flash-btn">
-                                        <i class="fas fa-bolt"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-camera-control" id="hdr-btn">
-                                        HDR
-                                    </button>
-                                    <button type="button" class="btn btn-camera-control" id="timer-btn">
-                                        <i class="fas fa-stopwatch"></i>
-                                    </button>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                
-                                <!-- Camera Viewport -->
-                                <div class="camera-viewport position-relative d-flex align-items-center justify-content-center">
-                                    <video id="camera-stream" autoplay playsinline class="camera-video"></video>
-                                    <canvas id="camera-canvas" class="d-none"></canvas>
-                                    
-                                    <!-- Frame Guide -->
-                                    <div class="frame-guide"></div>
-                                    
-                                    <!-- Zoom Indicator -->
-                                    <div class="zoom-indicator">
-                                        <span class="zoom-text">1×</span>
-                                    </div>
-                                    
-                                    <!-- Camera Status -->
-                                    <div id="camera-status" class="camera-status-overlay">
-                                        <span>Please look at the camera</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Camera Bottom Controls -->
-                                <div class="camera-controls-bottom">
-                                    <!-- Camera Modes -->
-                                    <div class="camera-modes d-flex justify-content-around mb-3">
-                                        <div class="camera-mode">SLO-MO</div>
-                                        <div class="camera-mode">VIDEO</div>
-                                        <div class="camera-mode active">PHOTO</div>
-                                        <div class="camera-mode">PORTRAIT</div>
-                                    </div>
-                                    
-                                    <!-- Capture Controls -->
-                                    <div class="capture-controls d-flex justify-content-around align-items-center mb-4">
-                                        <button type="button" class="btn btn-gallery">
-                                            <div class="gallery-preview"></div>
-                                        </button>
-                                        <button type="button" class="btn-capture" id="capture-btn"></button>
-                                        <button type="button" class="btn btn-flip-camera">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -226,175 +164,6 @@
     .status-badge {
         min-width: 90px;
     }
-    
-    /* iPhone-style Camera UI */
-    .camera-viewport {
-        position: relative;
-        width: 100%;
-        height: calc(100vh - 160px);
-        background-color: #000;
-        overflow: hidden;
-    }
-    
-    .camera-video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .camera-controls-top {
-        background-color: #000;
-        color: #fff;
-        padding: 15px;
-        z-index: 10;
-    }
-    
-    .btn-camera-control {
-        color: #ffffff;
-        font-size: 1rem;
-        font-weight: 500;
-        background: transparent;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 50px;
-    }
-    
-    .camera-controls-bottom {
-        background-color: #000;
-        color: #fff;
-        padding: 10px 0;
-        position: relative;
-        z-index: 10;
-    }
-    
-    .camera-modes {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        color: #ffffff;
-        font-weight: 500;
-    }
-    
-    .camera-mode {
-        padding: 5px 10px;
-        opacity: 0.7;
-    }
-    
-    .camera-mode.active {
-        color: #f9ca24;
-        opacity: 1;
-        font-weight: 600;
-    }
-    
-    .btn-capture {
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        background-color: #fff;
-        border: 4px solid #ffffff;
-        box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
-        transition: all 0.2s ease;
-    }
-    
-    .btn-capture:active {
-        transform: scale(0.95);
-    }
-    
-    .btn-gallery, .btn-flip-camera {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: rgba(0,0,0,0.5);
-        border: 1px solid rgba(255,255,255,0.3);
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .gallery-preview {
-        width: 30px;
-        height: 30px;
-        border-radius: 6px;
-        background-color: #555;
-    }
-    
-    .frame-guide {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 150px;
-        height: 150px;
-        border: 2px solid #f9ca24;
-        border-radius: 0;
-        box-sizing: border-box;
-        pointer-events: none;
-    }
-    
-    .frame-guide::before, .frame-guide::after {
-        content: '';
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        border-color: #f9ca24;
-        border-style: solid;
-    }
-    
-    .frame-guide::before {
-        top: -6px;
-        left: -6px;
-        border-width: 2px 0 0 2px;
-    }
-    
-    .frame-guide::after {
-        bottom: -6px;
-        right: -6px;
-        border-width: 0 2px 2px 0;
-    }
-    
-    .zoom-indicator {
-        position: absolute;
-        bottom: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(0,0,0,0.5);
-        color: #fff;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-weight: 500;
-    }
-    
-    .camera-status-overlay {
-        position: absolute;
-        bottom: 140px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        color: #fff;
-        background-color: rgba(0,0,0,0.5);
-        padding: 10px;
-        margin: 0 auto;
-        width: 80%;
-        max-width: 300px;
-        border-radius: 8px;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .camera-status-overlay.visible {
-        opacity: 1;
-    }
-    
-    /* Adjust previous fullscreen styles */
-    .camera-fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 2000;
-        background-color: #000;
-    }
 </style>
 @endpush
 
@@ -425,148 +194,30 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateDateTime, 1000);
     updateDateTime();
 
-    // Camera access variables
-    let stream = null;
-    let actionType = '';
-    const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
-    const captureBtn = document.getElementById('capture-btn');
-    const cameraStream = document.getElementById('camera-stream');
-    const cameraCanvas = document.getElementById('camera-canvas');
-    const cameraStatus = document.getElementById('camera-status');
-
-    // Start camera function
-    async function startCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: 'user',
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
-                }, 
-                audio: false 
-            });
-            cameraStream.srcObject = stream;
-            
-            // Show camera status message temporarily
-            cameraStatus.textContent = 'Please look at the camera for identification';
-            cameraStatus.classList.add('visible');
-            
-            setTimeout(() => {
-                cameraStatus.classList.remove('visible');
-            }, 3000);
-            
-        } catch (err) {
-            console.error('Error accessing camera:', err);
-            cameraStatus.textContent = 'Could not access camera. Please check permissions.';
-            cameraStatus.classList.add('visible');
-        }
-    }
-
-    // Stop camera function
-    function stopCamera() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            stream = null;
-        }
-    }
-
-    // Capture image function
-    function captureImage() {
-        const context = cameraCanvas.getContext('2d');
-        cameraCanvas.width = cameraStream.videoWidth;
-        cameraCanvas.height = cameraStream.videoHeight;
-        context.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
-        
-        // Get image data as base64 (here you can send to server for verification)
-        const imageData = cameraCanvas.toDataURL('image/jpeg');
-        
-        // Show processing notification
-        cameraStatus.textContent = 'Identity verified successfully!';
-        cameraStatus.classList.add('visible');
-        
-        // Add subtle "flash" effect on capture
-        const flashEffect = document.createElement('div');
-        flashEffect.style.position = 'absolute';
-        flashEffect.style.top = '0';
-        flashEffect.style.left = '0';
-        flashEffect.style.right = '0';
-        flashEffect.style.bottom = '0';
-        flashEffect.style.backgroundColor = 'white';
-        flashEffect.style.opacity = '0.8';
-        flashEffect.style.transition = 'opacity 0.5s';
-        flashEffect.style.zIndex = '9';
-        
-        document.querySelector('.camera-viewport').appendChild(flashEffect);
-        
-        setTimeout(() => {
-            flashEffect.style.opacity = '0';
-            setTimeout(() => {
-                flashEffect.remove();
-                
-                // Close modal and perform clock in/out after short delay
-                setTimeout(() => {
-                    cameraModal.hide();
-                    stopCamera();
-                    performAttendanceAction();
-                }, 500);
-                
-            }, 500);
-        }, 100);
-    }
-
     // Attendance button functionality
     const attendanceBtn = document.getElementById('attendance-btn');
     const lastAction = document.getElementById('last-action');
     let isClockIn = true;
 
-    // Process actions after camera verification
-    function performAttendanceAction() {
+    attendanceBtn.addEventListener('click', function() {
         const now = new Date();
         const timeString = now.toLocaleTimeString();
         
-        if (actionType === 'Clock In') {
+        if (isClockIn) {
             attendanceBtn.innerHTML = '<i class="fas fa-sign-out-alt me-2"></i>Clock Out';
             attendanceBtn.classList.remove('btn-primary');
             attendanceBtn.classList.add('btn-danger');
             lastAction.textContent = `Last action: Clocked in at ${timeString}`;
-            isClockIn = false;
-        } else if (actionType === 'Clock Out') {
+        } else {
             attendanceBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Clock In';
             attendanceBtn.classList.remove('btn-danger');
             attendanceBtn.classList.add('btn-primary');
             lastAction.textContent = `Last action: Clocked out at ${timeString}`;
-            isClockIn = true;
         }
+        isClockIn = !isClockIn;
         
         // Here you can add AJAX call to your backend to record the attendance
-        updateActivityLog(actionType);
-    }
-
-    attendanceBtn.addEventListener('click', function() {
-        actionType = isClockIn ? 'Clock In' : 'Clock Out';
-        cameraModal.show();
-        startCamera();
-    });
-
-    // Capture button event
-    captureBtn.addEventListener('click', captureImage);
-    
-    // Add dummy button functionality
-    document.getElementById('flash-btn').addEventListener('click', function() {
-        this.classList.toggle('active');
-    });
-    
-    document.getElementById('hdr-btn').addEventListener('click', function() {
-        this.classList.toggle('active');
-    });
-    
-    document.getElementById('timer-btn').addEventListener('click', function() {
-        this.classList.toggle('active');
-    });
-    
-    // Clean up when modal is closed
-    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function() {
-        stopCamera();
+        updateActivityLog(isClockIn ? 'Clock Out' : 'Clock In');
     });
 
     // Activity Log Update
@@ -673,4 +324,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 @endsection
-
