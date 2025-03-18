@@ -164,6 +164,141 @@
     .status-badge {
         min-width: 90px;
     }
+    
+    /* Camera modal styles */
+    #camera-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+    }
+    
+    .camera-container {
+        position: relative;
+        width: 100%;
+        max-width: 640px;
+        margin: 30px auto;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    .camera-header {
+        padding: 15px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .camera-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    
+    .camera-body {
+        position: relative;
+        width: 100%;
+    }
+    
+    #camera-view {
+        width: 100%;
+        height: auto;
+        display: block;
+        background-color: #000;
+    }
+    
+    .camera-controls {
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8f9fa;
+        border-top: 1px solid #eee;
+    }
+    
+    .camera-btn {
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .switch-camera-btn {
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        color: #555;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+    
+    .switch-camera-btn:hover {
+        background: rgba(0,0,0,0.1);
+        color: #333;
+    }
+    
+    .capture-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #dc3545;
+        border: 3px solid white;
+        color: white;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: all 0.2s;
+    }
+    
+    .capture-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 3px 15px rgba(0,0,0,0.3);
+    }
+    
+    .cancel-btn {
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 10px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .cancel-btn:hover {
+        color: #343a40;
+    }
+    
+    @media (max-width: 768px) {
+        .camera-container {
+            width: 95%;
+            margin: 15px auto;
+        }
+        
+        .camera-controls {
+            padding: 10px;
+        }
+        
+        .capture-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+    }
 </style>
 @endpush
 
@@ -199,7 +334,132 @@ document.addEventListener('DOMContentLoaded', function() {
     const lastAction = document.getElementById('last-action');
     let isClockIn = true;
 
-    attendanceBtn.addEventListener('click', function() {
+    // Camera variables
+    let stream = null;
+    let cameraFacingMode = 'environment'; // Start with rear camera
+    let actionType = '';
+    
+    // Create camera modal element
+    const cameraModal = document.createElement('div');
+    cameraModal.id = 'camera-modal';
+    cameraModal.innerHTML = `
+        <div class="camera-container">
+            <div class="camera-header">
+                <button class="cancel-btn" id="close-camera">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h5 class="camera-title" id="camera-action-title">Camera Identification</h5>
+                <button class="switch-camera-btn" id="switch-camera">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div class="camera-body">
+                <video id="camera-view" autoplay playsinline></video>
+            </div>
+            <div class="camera-controls">
+                <div></div> <!-- Empty div for flex spacing -->
+                <div class="capture-btn" id="capture-photo">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div></div> <!-- Empty div for flex spacing -->
+            </div>
+        </div>
+    `;
+    document.body.appendChild(cameraModal);
+    
+    // Get elements
+    const closeCamera = document.getElementById('close-camera');
+    const switchCamera = document.getElementById('switch-camera');
+    const capturePhoto = document.getElementById('capture-photo');
+    const cameraView = document.getElementById('camera-view');
+    const cameraActionTitle = document.getElementById('camera-action-title');
+    
+    // Function to open camera
+    async function openCamera(facing) {
+        try {
+            if (stream) {
+                stopCamera();
+            }
+            
+            const constraints = {
+                video: {
+                    facingMode: facing,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
+            
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            cameraView.srcObject = stream;
+            
+            // Apply mirroring if using front camera
+            if (facing === 'user') {
+                cameraView.style.transform = 'scaleX(-1)';
+            } else {
+                cameraView.style.transform = 'scaleX(1)';
+            }
+            
+            cameraModal.style.display = 'block';
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            alert('Unable to access camera. Please ensure you have granted camera permissions.');
+            
+            // Proceed with attendance without camera if error
+            processAttendance();
+        }
+    }
+    
+    // Function to stop camera
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        cameraModal.style.display = 'none';
+    }
+    
+    // Add click event to attendance button
+    attendanceBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Set action type
+        actionType = isClockIn ? 'Clock In' : 'Clock Out';
+        cameraActionTitle.textContent = `${actionType} Identification`;
+        
+        // Open camera
+        openCamera(cameraFacingMode);
+    });
+    
+    // Switch camera
+    switchCamera.addEventListener('click', function() {
+        cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+        openCamera(cameraFacingMode);
+    });
+    
+    // Close camera
+    closeCamera.addEventListener('click', function() {
+        stopCamera();
+    });
+    
+    // Capture photo
+    capturePhoto.addEventListener('click', function() {
+        // Here you would typically:
+        // 1. Capture the image from video
+        // 2. Create a canvas to store the image
+        // 3. Send the image to server for processing/storage
+        
+        // For this implementation, we'll just simulate capture and proceed with attendance
+        
+        // Stop camera after capture
+        stopCamera();
+        
+        // Process the attendance
+        processAttendance();
+    });
+    
+    // Process attendance after camera identification
+    function processAttendance() {
         const now = new Date();
         const timeString = now.toLocaleTimeString();
         
@@ -217,8 +477,8 @@ document.addEventListener('DOMContentLoaded', function() {
         isClockIn = !isClockIn;
         
         // Here you can add AJAX call to your backend to record the attendance
-        updateActivityLog(isClockIn ? 'Clock Out' : 'Clock In');
-    });
+        updateActivityLog(actionType);
+    }
 
     // Activity Log Update
     let currentActivityRow = null;
