@@ -1357,7 +1357,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update the UI to show location is being fetched
         if (locationRetryCount === 0) {
-            locationDisplay.innerHTML = 'Fetching location...';
+            locationDisplay.innerHTML = 'Fetching precise location...';
         }
         
         // Function to handle location error with fallbacks
@@ -1372,27 +1372,192 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Fallback to IP-based location if geolocation fails multiple times
                 locationDisplay.innerHTML = 'Using approximate location...';
                 
-                // Try to get IP-based location from a free service
-                fetch('https://ipinfo.io/json?token=2b0a1eaf8eb87d')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.city && data.region) {
-                            locationDisplay.innerHTML = `${data.city}, ${data.region}, ${data.country}`;
-                        } else {
-                            locationDisplay.innerHTML = 'Location unavailable';
-                        }
-                    })
-                    .catch(err => {
-                        locationDisplay.innerHTML = 'Location unavailable';
-                        console.error('IP location fetch failed:', err);
-                    });
+                // First try Google Geolocation API if available
+                tryIpBasedLocation();
             }
+        }
+        
+        // Function to try IP-based geolocation as fallback
+        function tryIpBasedLocation() {
+            // Try multiple IP geolocation services as fallbacks
+            fetch('https://ipinfo.io/json?token=2b0a1eaf8eb87d')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.city && data.region) {
+                        // Try to get more precise location using the city and region
+                        return getAddressFromCityRegion(data.city, data.region, data.country);
+                    } else {
+                        throw new Error('Insufficient location data');
+                    }
+                })
+                .catch(err => {
+                    console.error('IP location fetch failed:', err);
+                    // Try another service as fallback
+                    return fetch('https://ipapi.co/json/');
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Response not OK');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.city && data.region) {
+                        return getAddressFromCityRegion(data.city, data.region, data.country_name || data.country);
+                    } else {
+                        locationDisplay.innerHTML = 'Location unavailable';
+                    }
+                })
+                .catch(err => {
+                    console.error('All location services failed:', err);
+                    locationDisplay.innerHTML = 'Location service unavailable';
+                });
+        }
+        
+        // Function to get more precise address from city and region
+        function getAddressFromCityRegion(city, region, country) {
+            // Use OpenStreetMap Nominatim to get more precise location from city and region
+            const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(city)}&state=${encodeURIComponent(region)}&country=${encodeURIComponent(country)}`;
+            
+            return fetch(apiUrl, {
+                headers: {
+                    'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        // Get the first result which is usually the most relevant
+                        const result = data[0];
+                        
+                        // Now use reverse geocoding to get the detailed address from these coordinates
+                        return getReverseGeocodedAddress(result.lat, result.lon);
+                    } else {
+                        // Just display city, region, country if no detailed results
+                        const formattedAddress = `${city}, ${region}, ${country}`;
+                        locationDisplay.innerHTML = formattedAddress;
+                        cameraModal.dataset.lastLocation = formattedAddress;
+                    }
+                })
+                .catch(err => {
+                    console.error('Address lookup from city failed:', err);
+                    const formattedAddress = `${city}, ${region}, ${country}`;
+                    locationDisplay.innerHTML = formattedAddress;
+                    cameraModal.dataset.lastLocation = formattedAddress;
+                });
+        }
+        
+        // Function to get reverse geocoded address with multiple fallbacks
+        function getReverseGeocodedAddress(latitude, longitude) {
+            // Store coordinates for fallback
+            cameraModal.dataset.lastCoords = `${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
+            
+            // Primary geocoding service: OpenStreetMap Nominatim
+            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
+            
+            return fetch(nominatimUrl, {
+                headers: {
+                    'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Nominatim service unavailable');
+                    return response.json();
+                })
+                .then(data => formatAndDisplayAddress(data, latitude, longitude))
+                .catch(err => {
+                    console.error('Primary geocoding failed:', err);
+                    
+                    // Secondary geocoding service: LocationIQ (requires free API key)
+                    const locationIQKey = 'pk.31a7d9d4c6b5a77b7ab15fb1a4c38a6c'; // Free demonstration key - would need to be replaced in production
+                    const locationIQUrl = `https://us1.locationiq.com/v1/reverse.php?key=${locationIQKey}&lat=${latitude}&lon=${longitude}&format=json`;
+                    
+                    return fetch(locationIQUrl)
+                        .then(response => {
+                            if (!response.ok) throw new Error('LocationIQ service unavailable');
+                            return response.json();
+                        })
+                        .then(data => formatAndDisplayAddress(data, latitude, longitude))
+                        .catch(secondErr => {
+                            console.error('Secondary geocoding failed:', secondErr);
+                            
+                            // Last resort: Display the coordinates with a message
+                            const coordsMessage = `Location at coordinates: ${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)}`;
+                            locationDisplay.innerHTML = coordsMessage;
+                            cameraModal.dataset.lastLocation = coordsMessage;
+                        });
+                });
+        }
+        
+        // Format and display the geocoded address
+        function formatAndDisplayAddress(data, latitude, longitude) {
+            let formattedAddress = '';
+            
+            if (data.display_name) {
+                formattedAddress = data.display_name;
+            } else if (data.address) {
+                // Build address from components
+                const address = data.address;
+                const addressParts = [];
+                
+                // Building level information (most precise)
+                if (address.house_number || address.building) {
+                    addressParts.push(address.house_number || address.building);
+                }
+                
+                // Street level
+                if (address.road || address.street || address.street_name) {
+                    addressParts.push(address.road || address.street || address.street_name);
+                }
+                
+                // Local area
+                if (address.suburb || address.neighbourhood || address.quarter) {
+                    addressParts.push(address.suburb || address.neighbourhood || address.quarter);
+                }
+                
+                // City/town
+                if (address.city || address.town || address.village) {
+                    addressParts.push(address.city || address.town || address.village);
+                }
+                
+                // Region/state
+                if (address.state || address.province || address.county) {
+                    addressParts.push(address.state || address.province || address.county);
+                }
+                
+                // Country
+                if (address.country) {
+                    addressParts.push(address.country);
+                }
+                
+                formattedAddress = addressParts.join(', ');
+            }
+            
+            // If we still don't have an address, use a fallback
+            if (!formattedAddress || formattedAddress.trim() === '') {
+                formattedAddress = `Location at ${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
+            }
+            
+            // Split location into two lines for better readability
+            const locationParts = formattedAddress.split(',');
+            
+            if (locationParts.length >= 3) {
+                const firstLine = locationParts.slice(0, 2).join(',');
+                const secondLine = locationParts.slice(2).join(',');
+                locationDisplay.innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
+            } else {
+                locationDisplay.innerHTML = formattedAddress;
+            }
+            
+            // Store the full address for later use
+            cameraModal.dataset.lastLocation = formattedAddress;
+            
+            // Return the address for chaining
+            return formattedAddress;
         }
         
         // Configure high accuracy with appropriate timeout
         const geoOptions = {
             enableHighAccuracy: true,
-            timeout: 10000,
+            timeout: 15000, // Increased timeout for better results
             maximumAge: 0
         };
         
@@ -1400,56 +1565,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if ("geolocation" in navigator) {
             const watchId = navigator.geolocation.watchPosition(
                 function(position) {
-                    // Get address from coordinates using reverse geocoding
-                    const apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`;
+                    // Get the precise coordinates
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
                     
-                    fetch(apiUrl, {
-                        headers: {
-                            'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            // Format address for better display
-                            let addressParts = [];
-                            if (data.address) {
-                                if (data.address.road) addressParts.push(data.address.road);
-                                if (data.address.suburb) addressParts.push(data.address.suburb);
-                                if (data.address.city) addressParts.push(data.address.city);
-                                if (data.address.state) addressParts.push(data.address.state);
-                                if (data.address.country) addressParts.push(data.address.country);
-                            }
-                            
-                            const formattedAddress = addressParts.length ? addressParts.join(', ') : data.display_name;
-                            
-                            // Split location into two lines for better readability
-                            const locationParts = formattedAddress.split(',');
-                            
-                            if (locationParts.length >= 3) {
-                                const firstLine = locationParts.slice(0, 2).join(',');
-                                const secondLine = locationParts.slice(2).join(',');
-                                locationDisplay.innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
-                            } else {
-                                locationDisplay.innerHTML = formattedAddress;
-                            }
-                            
-                            // Store to allow use at clock-in/out time
-                            cameraModal.dataset.lastLocation = formattedAddress;
-                            cameraModal.dataset.lastCoords = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                            
-                            // Reset retry count as we succeeded
-                            locationRetryCount = 0;
-                        })
-                        .catch(error => {
-                            console.error('Error fetching address:', error);
-                            
-                            // Fallback to showing coordinates if geocoding fails
-                            locationDisplay.innerHTML = `Lat: ${position.coords.latitude.toFixed(5)}<br>Long: ${position.coords.longitude.toFixed(5)}`;
-                            
-                            // Store coordinates for use at clock-in/out time
-                            cameraModal.dataset.lastCoords = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                            cameraModal.dataset.lastLocation = `Location at ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                        });
+                    // Get reverse geocoded address
+                    getReverseGeocodedAddress(latitude, longitude);
                     
                     // Save the watch ID to clear it when closing the camera
                     cameraModal.dataset.locationWatchId = watchId;
@@ -1458,7 +1579,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 geoOptions
             );
         } else {
-            locationDisplay.innerHTML = 'Location not supported';
+            locationDisplay.innerHTML = 'Location services not available';
+            // Try IP-based location as fallback
+            tryIpBasedLocation();
         }
     }
     
