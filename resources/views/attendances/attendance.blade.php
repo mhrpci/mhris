@@ -66,9 +66,20 @@
                         <div class="mb-3">
                             <label class="text-muted small">Current Address</label>
                             <p id="current-location" class="mb-0 fw-bold">Waiting for location...</p>
+                            <div class="d-flex align-items-center mt-1">
+                                <div class="spinner-border spinner-border-sm text-primary me-2 d-none" id="location-loading" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <small id="location-updated" class="text-muted"></small>
+                            </div>
                         </div>
                         <div id="coordinates-info" class="d-none">
-                            <label class="text-muted small">Coordinates</label>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <label class="text-muted small">Coordinates</label>
+                                <span class="badge bg-light text-dark" id="accuracy-badge">
+                                    <i class="fas fa-crosshairs me-1"></i><span id="accuracy-meter">0</span>m
+                                </span>
+                            </div>
                             <p id="coordinates" class="mb-0 font-monospace"></p>
                         </div>
                     </div>
@@ -1531,198 +1542,326 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Location tracking with enhanced error handling and device compatibility
+    // Location tracking with enhanced real-time updates and professional display
     const locationStatus = document.getElementById('location-status');
     const currentLocation = document.getElementById('current-location');
     const coordinatesInfo = document.getElementById('coordinates-info');
     const coordinates = document.getElementById('coordinates');
-
-    if (hasFeature.geolocation) {
+    const locationLoading = document.getElementById('location-loading');
+    const locationUpdated = document.getElementById('location-updated');
+    const accuracyMeter = document.getElementById('accuracy-meter');
+    const accuracyBadge = document.getElementById('accuracy-badge');
+    
+    // Location cache for rate limiting and comparison
+    let locationCache = {
+        lastUpdate: 0,
+        lastCoords: null,
+        lastAddress: '',
+        updating: false,
+        watchId: null,
+        highAccuracyFailed: false
+    };
+    
+    // Format location update time
+    function formatUpdateTime() {
+        const now = new Date();
+        return `Updated at ${now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        })}`;
+    }
+    
+    // Format address for better readability
+    function formatAddress(address) {
+        // Split the address by commas
+        const parts = address.split(',').map(part => part.trim());
+        
+        // Remove any empty parts
+        const filteredParts = parts.filter(part => part.length > 0);
+        
+        // For long addresses, try to structure them better
+        if (filteredParts.length > 3) {
+            const mainLocation = filteredParts.slice(0, 2).join(', ');
+            const secondaryLocation = filteredParts.slice(2, 4).join(', ');
+            const region = filteredParts.slice(4).join(', ');
+            
+            return `${mainLocation}<br>${secondaryLocation}<br>${region}`;
+        } else if (filteredParts.length > 2) {
+            const mainLocation = filteredParts[0];
+            const secondaryLocation = filteredParts.slice(1, -1).join(', ');
+            const region = filteredParts[filteredParts.length - 1];
+            
+            return `${mainLocation}<br>${secondaryLocation}, ${region}`;
+        }
+        
+        return address;
+    }
+    
+    // Determine accuracy level class
+    function getAccuracyClass(accuracy) {
+        if (accuracy <= 10) return 'bg-success text-white'; // High accuracy
+        if (accuracy <= 50) return 'bg-info text-white';    // Good accuracy
+        if (accuracy <= 100) return 'bg-warning text-dark'; // Moderate accuracy
+        return 'bg-danger text-white';                      // Low accuracy
+    }
+    
+    // Significant location change detection
+    function isSignificantLocationChange(oldCoords, newCoords) {
+        if (!oldCoords) return true;
+        
+        // Calculate distance between points using Haversine formula
+        const toRadian = value => value * Math.PI / 180;
+        const R = 6371e3; // Earth's radius in meters
+        const φ1 = toRadian(oldCoords.latitude);
+        const φ2 = toRadian(newCoords.latitude);
+        const Δφ = toRadian(newCoords.latitude - oldCoords.latitude);
+        const Δλ = toRadian(newCoords.longitude - oldCoords.longitude);
+        
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        
+        // Return true if distance is greater than 10 meters
+        return distance > 10;
+    }
+    
+    // Update location display
+    function updateLocationDisplay(position, address = null) {
+        // Update coordinates
+        coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+        coordinatesInfo.classList.remove('d-none');
+        
+        // Update accuracy
+        const accuracy = Math.round(position.coords.accuracy);
+        accuracyMeter.textContent = accuracy;
+        accuracyBadge.className = `badge ${getAccuracyClass(accuracy)}`;
+        
+        // Update address if provided
+        if (address) {
+            currentLocation.innerHTML = formatAddress(address);
+            locationLoading.classList.add('d-none');
+            locationUpdated.textContent = formatUpdateTime();
+        }
+        
+        // Update location timestamp
+        locationCache.lastUpdate = Date.now();
+        locationCache.lastCoords = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+        };
+    }
+    
+    // Get address from coordinates
+    function getAddressFromCoords(position) {
+        // Don't make redundant API calls
+        if (locationCache.updating) return;
+        
+        // Check if coordinates changed significantly since last update
+        if (!isSignificantLocationChange(locationCache.lastCoords, position.coords) && 
+            locationCache.lastAddress && 
+            Date.now() - locationCache.lastUpdate < 60000) {
+            return;
+        }
+        
+        locationCache.updating = true;
+        locationLoading.classList.remove('d-none');
+        
+        // Use OpenStreetMap's Nominatim service with proper parameters
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1&accept-language=en`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                locationCache.lastAddress = data.display_name;
+                updateLocationDisplay(position, data.display_name);
+                locationStatus.classList.add('d-none');
+            })
+            .catch(error => {
+                console.error('Geocoding error:', error);
+                currentLocation.textContent = 'Unable to fetch address';
+                locationLoading.classList.add('d-none');
+                
+                // Still update coordinates even if address lookup fails
+                updateLocationDisplay(position);
+                
+                locationStatus.classList.remove('d-none');
+                locationStatus.className = 'alert alert-warning';
+                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details';
+            })
+            .finally(() => {
+                locationCache.updating = false;
+            });
+    }
+    
+    // Initialize location tracking
+    function initLocationTracking() {
+        if (!hasFeature.geolocation) {
+            locationStatus.classList.remove('d-none');
+            locationStatus.className = 'alert alert-danger';
+            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Geolocation is not supported by your browser or device.';
+            currentLocation.textContent = 'Location services not supported';
+            return;
+        }
+        
+        // Show initial loading state
+        locationStatus.classList.remove('d-none');
+        locationStatus.className = 'alert alert-info';
+        locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Detecting your location...';
+        
         try {
-            // First try to get a quick location from cache
+            // First try to get a quick location from cache with low accuracy
             navigator.geolocation.getCurrentPosition(
                 position => {
-                    // Display coordinates immediately
-                    coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                    coordinatesInfo.classList.remove('d-none');
-                    
-                    // Set a temporary location while we get the address
+                    // Initial display of coordinates
+                    updateLocationDisplay(position);
                     currentLocation.textContent = 'Getting location address...';
+                    locationLoading.classList.remove('d-none');
+                    
+                    // Begin address lookup
+                    getAddressFromCoords(position);
+                    
+                    // Start watching with high accuracy after initial fix
+                    startHighAccuracyWatch();
                 },
                 error => {
-                    // Just log the error, watchPosition will handle the UI updates
-                    console.warn('Initial position check failed:', error);
-                },
-                { maximumAge: 60000, timeout: 2000, enableHighAccuracy: false }
-            );
-            
-            // Start watching position with high accuracy
-            navigator.geolocation.watchPosition(
-                function(position) {
-                    // Get address from coordinates using reverse geocoding
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            currentLocation.textContent = data.display_name;
-                            coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                            coordinatesInfo.classList.remove('d-none');
-                            locationStatus.classList.add('d-none');
-                        })
-                        .catch(error => {
-                            console.error('Geocoding error:', error);
-                            currentLocation.textContent = 'Unable to fetch address';
-                            coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                            coordinatesInfo.classList.remove('d-none');
-                            locationStatus.classList.remove('d-none');
-                            locationStatus.className = 'alert alert-warning';
-                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details';
-                        });
-                },
-                function(error) {
-                    locationStatus.classList.remove('d-none');
-                    locationStatus.className = 'alert alert-danger';
-                    
-                    // More user-friendly error messages
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location permissions in your browser settings.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Check your device GPS settings.';
-                            break;
-                        case error.TIMEOUT:
-                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please try again.';
-                            break;
-                        default:
-                            locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Location error: ${error.message || 'Unknown error'}`;
+                    // If high accuracy failed in the past, go straight to low accuracy
+                    if (locationCache.highAccuracyFailed) {
+                        startLowAccuracyWatch();
+                        return;
                     }
                     
-                    currentLocation.textContent = 'Location access required';
-                    coordinatesInfo.classList.add('d-none');
+                    // Log error but don't show it yet - the watchPosition will handle UI updates
+                    console.warn('Initial position check failed:', error);
+                    startHighAccuracyWatch();
                 },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000, // Increased timeout for slower connections
-                    maximumAge: 0
+                { maximumAge: 30000, timeout: 5000, enableHighAccuracy: false }
+            );
+        } catch (e) {
+            handleLocationError(e);
+        }
+    }
+    
+    // Start watching position with high accuracy
+    function startHighAccuracyWatch() {
+        try {
+            // Clear any existing watch
+            if (locationCache.watchId !== null) {
+                navigator.geolocation.clearWatch(locationCache.watchId);
+            }
+            
+            // Start watching with high accuracy
+            locationCache.watchId = navigator.geolocation.watchPosition(
+                handlePositionUpdate,
+                error => {
+                    locationCache.highAccuracyFailed = true;
+                    console.warn('High accuracy location failed:', error);
+                    startLowAccuracyWatch();
+                },
+                { 
+                    enableHighAccuracy: true, 
+                    timeout: 15000,
+                    maximumAge: 0 
                 }
             );
         } catch (e) {
-            console.error('Geolocation error:', e);
-            locationStatus.classList.remove('d-none');
-            locationStatus.className = 'alert alert-danger';
-            locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Geolocation error: ${e.message || 'Unknown error'}`;
-            currentLocation.textContent = 'Location access failed';
-            coordinatesInfo.classList.add('d-none');
+            handleLocationError(e);
         }
-    } else {
+    }
+    
+    // Fall back to low accuracy if high accuracy failed
+    function startLowAccuracyWatch() {
+        try {
+            // Clear any existing watch
+            if (locationCache.watchId !== null) {
+                navigator.geolocation.clearWatch(locationCache.watchId);
+            }
+            
+            // Start watching with lower accuracy (which has better compatibility)
+            locationCache.watchId = navigator.geolocation.watchPosition(
+                handlePositionUpdate,
+                handlePositionError,
+                { 
+                    enableHighAccuracy: false, 
+                    timeout: 30000,
+                    maximumAge: 30000 
+                }
+            );
+        } catch (e) {
+            handleLocationError(e);
+        }
+    }
+    
+    // Handle position updates
+    function handlePositionUpdate(position) {
+        // Hide any error messages
+        locationStatus.classList.add('d-none');
+        
+        // Update the display
+        updateLocationDisplay(position);
+        
+        // Get address if needed
+        getAddressFromCoords(position);
+    }
+    
+    // Handle position errors
+    function handlePositionError(error) {
         locationStatus.classList.remove('d-none');
         locationStatus.className = 'alert alert-danger';
-        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Geolocation is not supported by your browser or device.';
-        currentLocation.textContent = 'Location services not supported';
+        
+        // More user-friendly error messages
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location permissions in your browser settings.';
+                break;
+            case error.POSITION_UNAVAILABLE:
+                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Check your device GPS settings.';
+                break;
+            case error.TIMEOUT:
+                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please ensure you have a stable connection.';
+                break;
+            default:
+                locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Location error: ${error.message || 'Unknown error'}`;
+        }
+        
+        currentLocation.textContent = 'Location access required';
+        locationLoading.classList.add('d-none');
         coordinatesInfo.classList.add('d-none');
     }
     
-    // Handle fullscreen properly for different browsers
-    function requestFullscreen(element) {
-        if (element.requestFullscreen) {
-            element.requestFullscreen();
-        } else if (element.webkitRequestFullscreen) { /* Safari */
-            element.webkitRequestFullscreen();
-        } else if (element.msRequestFullscreen) { /* IE11 */
-            element.msRequestFullscreen();
-        } else if (element.mozRequestFullScreen) { /* Firefox */
-            element.mozRequestFullScreen();
-        }
+    // Handle location API errors
+    function handleLocationError(error) {
+        console.error('Geolocation error:', error);
+        locationStatus.classList.remove('d-none');
+        locationStatus.className = 'alert alert-danger';
+        locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Geolocation error: ${error.message || 'Unknown error'}`;
+        currentLocation.textContent = 'Location access failed';
+        locationLoading.classList.add('d-none');
+        coordinatesInfo.classList.add('d-none');
     }
     
-    function exitFullscreen() {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) { /* Safari */
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) { /* IE11 */
-            document.msExitFullscreen();
-        } else if (document.mozCancelFullScreen) { /* Firefox */
-            document.mozCancelFullScreen();
-        }
-    }
+    // Start location tracking
+    initLocationTracking();
     
-    // Improved function for stopping camera
-    function stopCamera(hideModal = true) {
-        if (stream) {
-            stream.getTracks().forEach(track => {
-                try {
-                    track.stop();
-                } catch (e) {
-                    console.warn('Error stopping track:', e);
-                }
-            });
-            stream = null;
-            imageCapture = null;
-        }
-        
-        if (hideModal) {
-            cameraModal.style.display = 'none';
-            
-            // Restore scrollbars and prevent scrolling issues on mobile
-            document.body.style.overflow = '';
-            if (hasFeature.touchEvents) {
-                document.body.style.position = '';
-                document.body.style.width = '';
-            }
-            
-            // Exit fullscreen if we're in it
-            if (document.fullscreenElement || 
-                document.webkitFullscreenElement || 
-                document.mozFullScreenElement || 
-                document.msFullscreenElement) {
-                try {
-                    exitFullscreen();
-                } catch (e) {
-                    console.warn('Error exiting fullscreen:', e);
-                }
-            }
-        }
-        
-        // Clear any timer
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timerCountdown.style.display = 'none';
-        }
-    }
-    
-    // Improved error handling for window events
-    window.addEventListener('error', function(e) {
-        console.error('Global error caught:', e.message, e);
-        // Prevent errors from breaking the UI
-        return true;
-    });
-    
-    // Handle window resize to adjust UI for different device sizes
-    window.addEventListener('resize', function() {
-        // Adjust camera frame size for different screen sizes
-        const cameraFrame = document.querySelector('.camera-frame');
-        if (cameraFrame) {
-            if (window.innerWidth < 576) {
-                cameraFrame.style.width = '160px';
-                cameraFrame.style.height = '160px';
-            } else if (window.innerWidth < 768) {
-                cameraFrame.style.width = '180px';
-                cameraFrame.style.height = '180px';
-            } else {
-                cameraFrame.style.width = '220px';
-                cameraFrame.style.height = '220px';
-            }
+    // Set up periodic location refresh when tab becomes visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible' && Date.now() - locationCache.lastUpdate > 60000) {
+            // If it's been more than a minute since the last update, refresh location
+            navigator.geolocation.getCurrentPosition(
+                handlePositionUpdate,
+                error => console.warn('Visibility refresh location error:', error),
+                { maximumAge: 0, timeout: 10000, enableHighAccuracy: true }
+            );
         }
     });
     
-    // Rest of the existing code
+    // Rest of existing code
     // ... existing code ...
 });
 </script>
