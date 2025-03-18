@@ -1450,8 +1450,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Store coordinates for fallback
             cameraModal.dataset.lastCoords = `${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
             
-            // Primary geocoding service: OpenStreetMap Nominatim
-            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
+            // Primary geocoding service: OpenStreetMap Nominatim with higher zoom level for street detail
+            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&namedetails=1`;
             
             return fetch(nominatimUrl, {
                 headers: {
@@ -1466,9 +1466,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(err => {
                     console.error('Primary geocoding failed:', err);
                     
-                    // Secondary geocoding service: LocationIQ (requires free API key)
+                    // Secondary geocoding service: LocationIQ with higher detail level
                     const locationIQKey = 'pk.31a7d9d4c6b5a77b7ab15fb1a4c38a6c'; // Free demonstration key - would need to be replaced in production
-                    const locationIQUrl = `https://us1.locationiq.com/v1/reverse.php?key=${locationIQKey}&lat=${latitude}&lon=${longitude}&format=json`;
+                    const locationIQUrl = `https://us1.locationiq.com/v1/reverse.php?key=${locationIQKey}&lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1&normalizeaddress=1`;
                     
                     return fetch(locationIQUrl)
                         .then(response => {
@@ -1479,10 +1479,33 @@ document.addEventListener('DOMContentLoaded', function() {
                         .catch(secondErr => {
                             console.error('Secondary geocoding failed:', secondErr);
                             
-                            // Last resort: Display the coordinates with a message
-                            const coordsMessage = `Location at coordinates: ${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)}`;
-                            locationDisplay.innerHTML = coordsMessage;
-                            cameraModal.dataset.lastLocation = coordsMessage;
+                            // Third geocoding service: MapBox if available
+                            const mapboxToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA'; // Public token for testing only
+                            const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}&types=address&limit=1`;
+                            
+                            return fetch(mapboxUrl)
+                                .then(response => {
+                                    if (!response.ok) throw new Error('Mapbox service unavailable');
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    if (data.features && data.features.length > 0) {
+                                        const formattedAddress = data.features[0].place_name;
+                                        locationDisplay.innerHTML = formattedAddress.replace(/, /g, ',<br>');
+                                        cameraModal.dataset.lastLocation = formattedAddress;
+                                        return formattedAddress;
+                                    } else {
+                                        throw new Error('No address found in Mapbox response');
+                                    }
+                                })
+                                .catch(thirdErr => {
+                                    console.error('Tertiary geocoding failed:', thirdErr);
+                                    
+                                    // Last resort: Display the coordinates with a message
+                                    const coordsMessage = `Location at coordinates: ${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)}`;
+                                    locationDisplay.innerHTML = coordsMessage;
+                                    cameraModal.dataset.lastLocation = coordsMessage;
+                                });
                         });
                 });
         }
@@ -1494,38 +1517,89 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.display_name) {
                 formattedAddress = data.display_name;
             } else if (data.address) {
-                // Build address from components
+                // Build address from components with priority on street information
                 const address = data.address;
                 const addressParts = [];
                 
-                // Building level information (most precise)
-                if (address.house_number || address.building) {
-                    addressParts.push(address.house_number || address.building);
+                // First collect all address components
+                const streetComponents = [];
+                const areaComponents = [];
+                const cityComponents = [];
+                const regionComponents = [];
+                const countryComponents = [];
+                
+                // Street level components (highest priority - most specific)
+                if (address.house_number) streetComponents.push(address.house_number);
+                if (address.building) streetComponents.push(address.building);
+                if (address.street_number) streetComponents.push(address.street_number);
+                
+                // Street name with variations
+                const streetName = address.road || address.street || address.street_name || address.pedestrian || 
+                                   address.footway || address.path || address.cycleway || address.highway;
+                if (streetName) {
+                    // Add street name with any prefix/suffix/directional info
+                    let fullStreetName = streetName;
+                    if (address.street_prefix) fullStreetName = `${address.street_prefix} ${fullStreetName}`;
+                    if (address.street_suffix) fullStreetName = `${fullStreetName} ${address.street_suffix}`;
+                    streetComponents.push(fullStreetName);
                 }
                 
-                // Street level
-                if (address.road || address.street || address.street_name) {
-                    addressParts.push(address.road || address.street || address.street_name);
+                // Local area components (neighborhood level)
+                if (address.suburb) areaComponents.push(address.suburb);
+                if (address.neighbourhood) areaComponents.push(address.neighbourhood);
+                if (address.quarter) areaComponents.push(address.quarter);
+                if (address.hamlet) areaComponents.push(address.hamlet);
+                if (address.residential) areaComponents.push(address.residential);
+                
+                // City level components
+                if (address.city) cityComponents.push(address.city);
+                if (address.town) cityComponents.push(address.town);
+                if (address.village) cityComponents.push(address.village);
+                if (address.municipality) cityComponents.push(address.municipality);
+                if (address.city_district) cityComponents.push(address.city_district);
+                if (address.district) cityComponents.push(address.district);
+                if (address.borough) cityComponents.push(address.borough);
+                
+                // Region/state level components
+                if (address.state) regionComponents.push(address.state);
+                if (address.province) regionComponents.push(address.province);
+                if (address.region) regionComponents.push(address.region);
+                if (address.county) regionComponents.push(address.county);
+                
+                // Country level components
+                if (address.country) countryComponents.push(address.country);
+                if (address.postcode) countryComponents.push(address.postcode);
+                
+                // Prioritize street information and eliminate duplicates
+                // First, add street level info if available
+                if (streetComponents.length > 0) {
+                    addressParts.push(streetComponents.join(' '));
                 }
                 
-                // Local area
-                if (address.suburb || address.neighbourhood || address.quarter) {
-                    addressParts.push(address.suburb || address.neighbourhood || address.quarter);
+                // Then add one area component if available
+                if (areaComponents.length > 0) {
+                    addressParts.push(areaComponents[0]); // Just use the first area to avoid redundancy
                 }
                 
-                // City/town
-                if (address.city || address.town || address.village) {
-                    addressParts.push(address.city || address.town || address.village);
+                // Then add one city component
+                if (cityComponents.length > 0) {
+                    addressParts.push(cityComponents[0]); // Just use the first city to avoid redundancy
                 }
                 
-                // Region/state
-                if (address.state || address.province || address.county) {
-                    addressParts.push(address.state || address.province || address.county);
+                // Then add one region component
+                if (regionComponents.length > 0) {
+                    addressParts.push(regionComponents[0]); // Just use the first region to avoid redundancy
                 }
                 
-                // Country
-                if (address.country) {
-                    addressParts.push(address.country);
+                // Finally add country
+                if (countryComponents.length > 0) {
+                    // Filter out postal code if both country and postal code exist
+                    const countryOnly = countryComponents.filter(comp => !comp.match(/^\d+$/));
+                    if (countryOnly.length > 0) {
+                        addressParts.push(countryOnly[0]);
+                    } else {
+                        addressParts.push(countryComponents[0]);
+                    }
                 }
                 
                 formattedAddress = addressParts.join(', ');
@@ -1536,22 +1610,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 formattedAddress = `Location at ${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
             }
             
-            // Split location into two lines for better readability
-            const locationParts = formattedAddress.split(',');
+            // Process the address to ensure proper formatting and readability
+            // Example goal: "Jose L. Briones St., Cebu City, Philippines"
+            const processedAddress = formattedAddress
+                .replace(/\s+/g, ' ')                // Replace multiple spaces with single space
+                .replace(/,\s*,/g, ',')              // Remove empty elements between commas
+                .replace(/^,\s*/g, '')               // Remove leading comma
+                .replace(/\s*,\s*$/g, '')            // Remove trailing comma
+                .trim();
             
-            if (locationParts.length >= 3) {
-                const firstLine = locationParts.slice(0, 2).join(',');
-                const secondLine = locationParts.slice(2).join(',');
-                locationDisplay.innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
-            } else {
-                locationDisplay.innerHTML = formattedAddress;
-            }
+            // Split into logical display parts for UI
+            const addressLines = splitAddressForDisplay(processedAddress);
+            locationDisplay.innerHTML = addressLines;
             
             // Store the full address for later use
-            cameraModal.dataset.lastLocation = formattedAddress;
+            cameraModal.dataset.lastLocation = processedAddress;
             
             // Return the address for chaining
-            return formattedAddress;
+            return processedAddress;
+        }
+        
+        // Helper function to split address into display lines
+        function splitAddressForDisplay(address) {
+            const parts = address.split(',').map(part => part.trim()).filter(part => part.length > 0);
+            
+            if (parts.length <= 1) {
+                return address; // Nothing to split
+            } else if (parts.length === 2) {
+                return parts.join(',<br>'); // Simple two-line split
+            } else {
+                // For 3+ components, create a logical split that prioritizes street name on first line
+                const firstLine = parts[0]; // Street info on first line
+                const secondLine = parts.slice(1).join(', '); // Rest on second
+                return `${firstLine},<br>${secondLine}`;
+            }
         }
         
         // Configure high accuracy with appropriate timeout
