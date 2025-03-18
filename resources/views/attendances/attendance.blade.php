@@ -868,15 +868,65 @@
     .accent-line.clock-out {
         background-color: #dc3545;
     }
+
+    /* Logo in top right */
+    .company-logo {
+        position: absolute;
+        top: 70px;
+        right: 15px;
+        z-index: 10;
+        max-width: 120px;
+        max-height: 40px;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 5px 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    /* Server Time Sync */
+    .server-time-sync {
+        display: none;
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Server time offset calculation
+    let serverTimeOffset = 0;
+    
+    // Get server time on page load
+    const serverTimeElement = document.createElement('div');
+    serverTimeElement.className = 'server-time-sync';
+    serverTimeElement.setAttribute('data-server-time', '{{ now()->format("Y-m-d H:i:s") }}');
+    document.body.appendChild(serverTimeElement);
+    
+    // Calculate offset between server and client time
+    function calculateServerTimeOffset() {
+        const serverTimeStr = serverTimeElement.getAttribute('data-server-time');
+        const serverTime = new Date(serverTimeStr).getTime();
+        const clientTime = new Date().getTime();
+        serverTimeOffset = serverTime - clientTime;
+        console.log('Server time offset:', serverTimeOffset, 'ms');
+    }
+    
+    calculateServerTimeOffset();
+    
+    // Get current time with server offset
+    function getCurrentServerTime() {
+        return new Date(new Date().getTime() + serverTimeOffset);
+    }
+
     // Update time every second
     function updateDateTime() {
-        const now = new Date();
+        const now = getCurrentServerTime();
         document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
@@ -894,9 +944,38 @@ document.addEventListener('DOMContentLoaded', function() {
             day: 'numeric',
             year: 'numeric'
         });
+        
+        // Update clock time in camera if it's visible
+        if (document.getElementById('camera-modal').style.display === 'block') {
+            updateCameraDateTime();
+        }
     }
     setInterval(updateDateTime, 1000);
     updateDateTime();
+    
+    // Function to update camera datetime
+    function updateCameraDateTime() {
+        const now = getCurrentServerTime();
+        
+        // Update clock time
+        if (document.getElementById('clock-time')) {
+            document.getElementById('clock-time').textContent = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+        
+        // Update date display
+        if (document.getElementById('date-display')) {
+            document.getElementById('date-display').textContent = now.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+    }
 
     // Attendance button functionality
     const attendanceBtn = document.getElementById('attendance-btn');
@@ -937,8 +1016,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                 </div>
             </div>
-            <div class="action-banner">
-                <div class="action-text" id="action-text">CLOCK IN</div>
+            <div class="company-logo">
+                <img src="{{ asset('images/logo.png') }}" alt="Company Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/120x40/FFFFFF/000000?text=COMPANY+LOGO'">
             </div>
             <div class="timer-options" id="timer-options">
                 <button class="timer-option" data-timer="0">Off</button>
@@ -1054,7 +1133,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterOptions = document.querySelectorAll('.filter-option');
     const galleryInput = document.getElementById('gallery-input');
     const captureLabel = document.getElementById('capture-label');
-    const actionText = document.getElementById('action-text');
     
     // Get references to the new elements
     const clockStatus = document.getElementById('clock-status');
@@ -1173,6 +1251,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     option.classList.add('active');
                 }
             });
+            
+            // Update camera datetime
+            updateCameraDateTime();
             
         } catch (error) {
             console.error('Error accessing camera:', error);
@@ -1349,17 +1430,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set action type
         actionType = isClockIn ? 'Clock In' : 'Clock Out';
         
-        // Update text and styles for the action banner
-        actionText.textContent = actionType.toUpperCase();
-        actionText.className = 'action-text';
-        if (isClockIn) {
-            actionText.classList.add('clock-in-text');
-        } else {
-            actionText.classList.add('clock-out-text');
-        }
-        
-        // Get current date and time
-        const now = new Date();
+        // Get current server time
+        const now = getCurrentServerTime();
         
         // Format time as shown in the image
         clockTime.textContent = now.toLocaleTimeString('en-US', {
@@ -1410,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Open camera
         openCamera(cameraFacingMode);
     });
-    
+
     // Switch camera
     switchCamera.addEventListener('click', function() {
         cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
