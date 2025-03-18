@@ -9,19 +9,19 @@
     </ol>
 </nav>
 
-<div class="container-fluid px-3 px-md-4">
-    <div class="row g-3">
+<div class="container-fluid px-4">
+    <div class="row">
         <!-- Time and Attendance Card -->
-        <div class="col-12 col-md-7 col-lg-8">
-            <div class="card shadow-sm h-100 border-0 rounded-3">
+        <div class="col-lg-8 col-md-7 mb-4">
+            <div class="card shadow-sm h-100">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-clock me-2"></i>
                         Attendance System
                     </h5>
-                    <span class="badge bg-light text-primary rounded-pill px-3" id="current-date"></span>
+                    <span class="badge bg-light text-primary" id="current-date"></span>
                 </div>
-                <div class="card-body d-flex flex-column">
+                <div class="card-body">
                     <!-- Real-time Clock -->
                     <div class="text-center mb-4">
                         <div class="display-1 fw-bold text-primary mb-2" id="current-time">00:00:00</div>
@@ -29,8 +29,8 @@
                     </div>
 
                     <!-- Clock In/Out Button -->
-                    <div class="text-center mt-auto">
-                        <div class="d-grid gap-2 col-12 col-sm-8 col-md-10 col-lg-6 mx-auto">
+                    <div class="text-center mb-4">
+                        <div class="d-grid gap-2 col-lg-6 col-md-8 mx-auto">
                             <button id="attendance-btn" class="btn btn-lg btn-primary px-5 py-3 shadow-sm">
                                 <i class="fas fa-sign-in-alt me-2"></i>
                                 Clock In
@@ -45,8 +45,8 @@
         </div>
 
         <!-- Location Card -->
-        <div class="col-12 col-md-5 col-lg-4">
-            <div class="card shadow-sm h-100 border-0 rounded-3">
+        <div class="col-lg-4 col-md-5 mb-4">
+            <div class="card shadow-sm h-100">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-map-marker-alt me-2"></i>
@@ -54,19 +54,19 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div id="location-status" class="alert alert-info d-none mb-3 py-2">
+                    <div id="location-status" class="alert alert-info d-none">
                         <i class="fas fa-exclamation-circle me-2"></i>
                         <span class="status-message">Waiting for location access...</span>
                     </div>
                     
                     <div class="location-info">
                         <div class="mb-3">
-                            <label class="text-muted small mb-1">Current Address</label>
+                            <label class="text-muted small">Current Address</label>
                             <p id="current-location" class="mb-0 fw-bold">Waiting for location...</p>
                         </div>
                         <div id="coordinates-info" class="d-none">
-                            <label class="text-muted small mb-1">Coordinates</label>
-                            <p id="coordinates" class="mb-0 font-monospace small"></p>
+                            <label class="text-muted small">Coordinates</label>
+                            <p id="coordinates" class="mb-0 font-monospace"></p>
                         </div>
                     </div>
                 </div>
@@ -75,15 +75,15 @@
     </div>
 
     <!-- Attendance History Card -->
-    <div class="row mt-4">
+    <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-history me-2"></i>
                         Today's Activity
                     </h5>
-                    <span class="badge bg-primary rounded-pill px-3 mt-2 mt-sm-0" id="activity-date"></span>
+                    <span class="badge bg-primary" id="activity-date"></span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -113,82 +113,47 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <style>
-    /* General Styles */
-    body {
-        background-color: #f8f9fa;
-    }
-    
     .breadcrumb {
         background: transparent;
     }
-    
-    .container-fluid {
-        max-width: 1400px;
-        margin: 0 auto;
+    .location-info {
+        border-radius: 0.375rem;
     }
-    
-    /* Card Styles */
-    .card {
-        border: none;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        overflow: hidden;
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
-    }
-    
-    .card-header {
-        border-bottom: none;
-        padding: 1rem 1.25rem;
-    }
-    
-    .badge {
-        font-weight: 500;
-    }
-    
-    /* Clock Styles */
-    #current-time {
-        font-feature-settings: "tnum";
-        font-variant-numeric: tabular-nums;
-        letter-spacing: -1px;
-    }
-    
-    /* Button Styles */
     #attendance-btn {
         transition: all 0.3s ease;
         border-radius: 50px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        font-weight: 600;
     }
-    
     #attendance-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
     }
-    
-    #attendance-btn:active {
-        transform: translateY(1px);
+    #current-time {
+        font-feature-settings: "tnum";
+        font-variant-numeric: tabular-nums;
     }
-    
-    /* Table Styles */
-    .table th {
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.8rem;
-        letter-spacing: 0.5px;
+    .card {
+        border: none;
+        transition: transform 0.2s ease;
     }
-    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    @media (max-width: 768px) {
+        .display-1 {
+            font-size: 3.5rem;
+        }
+        .container-fluid {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
     .table td {
         vertical-align: middle;
     }
-    
     .activity-time {
         font-family: 'Courier New', monospace;
         font-weight: 600;
     }
-    
     .location-text {
         max-width: 200px;
         overflow: hidden;
@@ -196,85 +161,8 @@
         white-space: nowrap;
         font-size: 0.9rem;
     }
-    
     .status-badge {
         min-width: 90px;
-        padding: 0.5em 0.8em;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
-        border-radius: 30px;
-    }
-    
-    /* Alert Styles */
-    .alert {
-        border: none;
-        border-radius: 10px;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 1199.98px) {
-        #current-time {
-            font-size: 3.5rem;
-        }
-    }
-    
-    @media (max-width: 991.98px) {
-        .display-1 {
-            font-size: 3.5rem;
-        }
-        
-        .table th {
-            font-size: 0.75rem;
-        }
-        
-        .location-text {
-            max-width: 150px;
-        }
-    }
-    
-    @media (max-width: 767.98px) {
-        .display-1 {
-            font-size: 3rem;
-        }
-        
-        .card-header h5 {
-            font-size: 1.1rem;
-        }
-        
-        .table {
-            font-size: 0.85rem;
-        }
-        
-        .location-text {
-            max-width: 120px;
-        }
-        
-        .table th {
-            white-space: nowrap;
-        }
-    }
-    
-    @media (max-width: 575.98px) {
-        .display-1 {
-            font-size: 2.5rem;
-        }
-        
-        .table-responsive {
-            border-radius: 0;
-        }
-        
-        .card-header {
-            padding: 0.875rem 1rem;
-        }
-        
-        .card-body {
-            padding: 1rem;
-        }
-        
-        #attendance-btn {
-            font-size: 1rem;
-            padding: 0.75rem 1.5rem !important;
-        }
     }
     
     /* Camera modal styles */
@@ -518,183 +406,43 @@
         display: none; /* Hide the label */
     }
     
-    /* Action Identification Banner */
-    .action-banner {
-        position: absolute;
-        top: 60px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        z-index: 10;
-        pointer-events: none;
-    }
-    
-    .action-text {
-        display: inline-block;
-        padding: 8px 20px;
-        background-color: rgba(0, 0, 0, 0.6);
-        color: white;
-        font-size: 1.2rem;
-        font-weight: bold;
-        border-radius: 30px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-    
-    .clock-in-text {
-        background-color: rgba(25, 135, 84, 0.8);
-    }
-    
-    .clock-out-text {
-        background-color: rgba(220, 53, 69, 0.8);
-    }
-    
-    /* Styled info panel */
-    .info-sidebar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        top: 0;
-        width: auto;
-        max-width: 400px;
-        z-index: 6;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        padding: 0;
-        pointer-events: none;
-        background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0) 100%);
-    }
-    
-    .info-content {
-        padding: 20px;
-        margin-top: auto;
-        margin-bottom: 90px;
-    }
-    
-    .clock-badge {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-        background: none;
-    }
-    
-    .clock-status {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 5px;
-        background-color: #28a745;
-        color: white;
-        font-weight: bold;
-        font-size: 0.9rem;
-        margin-right: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-    
-    .clock-out-status {
-        background-color: #dc3545;
-    }
-    
-    .clock-time {
-        font-size: 2rem;
-        font-weight: bold;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        font-family: Arial, sans-serif;
-    }
-    
-    .date-display {
-        font-size: 1.1rem;
-        color: white;
-        margin-bottom: 15px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .location-display {
-        color: white;
-        margin-bottom: 15px;
-        font-size: 0.9rem;
-        line-height: 1.4;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .user-display {
-        color: white;
-        margin-bottom: 5px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .user-name {
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-    
-    .user-company, .user-position {
-        font-size: 0.9rem;
-        opacity: 0.9;
-        margin-bottom: 5px;
-    }
-    
-    /* Vertical accent line */
-    .accent-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 5px;
-        background-color: #28a745;
-    }
-    
-    .accent-line.clock-out {
-        background-color: #dc3545;
-    }
-    
-    /* Timer & zoom controls */
     .zoom-controls {
         position: absolute;
-        bottom: 40%;
-        right: 20px;
+        bottom: 100px;
+        left: 0;
+        right: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        z-index: 10;
+        z-index: 5;
     }
     
     .zoom-indicator {
         color: white;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.4);
         padding: 4px 12px;
         border-radius: 20px;
         font-size: 0.9rem;
         margin-bottom: 10px;
-        font-weight: 500;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
     
     .zoom-slider-container {
-        width: 40px;
-        height: 150px;
+        width: 80%;
+        max-width: 300px;
         background: rgba(0, 0, 0, 0.4);
         border-radius: 20px;
-        padding: 10px 5px;
+        padding: 5px 15px;
         display: none;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
     }
     
     .zoom-slider {
-        width: 150px;
+        width: 100%;
         cursor: pointer;
         -webkit-appearance: none;
         height: 6px;
         border-radius: 3px;
         background: rgba(255, 255, 255, 0.3);
         outline: none;
-        transform: rotate(-90deg);
     }
     
     .zoom-slider::-webkit-slider-thumb {
@@ -795,7 +543,12 @@
         background: rgba(0, 0, 0, 0.5);
     }
     
-    /* Filter effects */
+    /* Camera switching animation */
+    .camera-transition {
+        opacity: 0.1;
+    }
+    
+    /* Enhanced filter effects */
     .filter-options {
         position: absolute;
         bottom: 100px;
@@ -854,27 +607,47 @@
         text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
     
-    /* Filter effects classes */
-    .filter-normal { filter: none; }
-    .filter-grayscale { filter: grayscale(100%); }
-    .filter-sepia { filter: sepia(80%); }
-    .filter-invert { filter: invert(85%); }
-    .filter-saturate { filter: saturate(200%) contrast(110%); }
-    .filter-warm { filter: sepia(30%) saturate(150%) brightness(105%) contrast(105%); }
-    .filter-cool { filter: hue-rotate(340deg) saturate(120%) brightness(102%); }
-    .filter-beauty { filter: brightness(105%) contrast(105%) saturate(110%); }
-    .filter-smooth { filter: brightness(105%) contrast(95%) saturate(105%) blur(0.5px); }
-    
-    /* Camera transition effect */
-    .camera-transition {
-        opacity: 0.1;
+    /* Enhanced filter effects */
+    .filter-normal {
+        filter: none;
     }
     
-    /* Responsive camera adjustments */
-    @media (max-width: 767.98px) {
+    .filter-grayscale {
+        filter: grayscale(100%);
+    }
+    
+    .filter-sepia {
+        filter: sepia(80%);
+    }
+    
+    .filter-invert {
+        filter: invert(85%);
+    }
+    
+    .filter-saturate {
+        filter: saturate(200%) contrast(110%);
+    }
+    
+    .filter-warm {
+        filter: sepia(30%) saturate(150%) brightness(105%) contrast(105%);
+    }
+    
+    .filter-cool {
+        filter: hue-rotate(340deg) saturate(120%) brightness(102%);
+    }
+    
+    .filter-beauty {
+        filter: brightness(105%) contrast(105%) saturate(110%);
+    }
+    
+    .filter-smooth {
+        filter: brightness(105%) contrast(95%) saturate(105%) blur(0.5px);
+    }
+    
+    @media (max-width: 768px) {
         .camera-container {
             width: 100%;
-            height: 100vh;
+            height: 100%;
         }
         
         .camera-frame {
@@ -885,94 +658,215 @@
         .timer-option {
             padding: 8px 12px;
         }
-        
-        .capture-btn {
-            width: 60px;
-            height: 60px;
-        }
-        
-        .capture-btn::before {
-            width: 46px;
-            height: 46px;
-        }
-        
-        .info-content {
-            padding: 15px;
-        }
-        
-        .clock-time {
-            font-size: 1.5rem;
-        }
-        
-        .date-display {
-            font-size: 0.9rem;
-        }
-        
-        .location-display, .user-name, .user-company, .user-position {
-            font-size: 0.8rem;
-        }
+    }
+
+    /* Action Identification Banner */
+    .action-banner {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        z-index: 10;
+        pointer-events: none;
     }
     
-    @media (max-width: 480px) {
-        .camera-frame {
-            width: 150px;
-            height: 150px;
-        }
-        
-        .filter-option {
-            width: 50px;
-            height: 50px;
-        }
-        
-        .action-text {
-            font-size: 1rem;
-            padding: 6px 15px;
-        }
-        
-        .clock-time {
-            font-size: 1.3rem;
-        }
+    .action-text {
+        display: inline-block;
+        padding: 8px 20px;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-radius: 30px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
     
-    @media (max-width: 360px) {
-        #current-time {
-            font-size: 2rem;
-        }
-        
-        .camera-frame {
-            width: 130px;
-            height: 130px;
-        }
-        
-        .gallery-btn-wrapper, .switch-camera-btn {
-            transform: scale(0.9);
-        }
-        
-        .capture-btn {
-            width: 55px;
-            height: 55px;
-        }
-        
-        .capture-btn::before {
-            width: 41px;
-            height: 41px;
-        }
-        
-        .info-content {
-            padding: 10px;
-        }
+    .clock-in-text {
+        background-color: rgba(25, 135, 84, 0.8);
     }
     
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-        .table {
-            color: inherit;
-        }
-        
-        .table-light th {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: inherit;
-        }
+    .clock-out-text {
+        background-color: rgba(220, 53, 69, 0.8);
+    }
+    
+    /* Action identifier at bottom left */
+    .minimized-action {
+        position: absolute;
+        bottom: 90px;
+        left: 15px;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    .minimized-action-text {
+        display: inline-block;
+        padding: 4px 8px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-radius: 4px;
+        text-transform: uppercase;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+    
+    .minimized-clock-in {
+        color: #20c997;
+    }
+    
+    .minimized-clock-out {
+        color: #ff6b6b;
+    }
+    
+    /* User information overlay */
+    .user-info-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 70%, rgba(0, 0, 0, 0) 100%);
+        padding: 20px 15px 80px;
+        z-index: 5;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .user-info-datetime {
+        color: white;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+        font-family: 'Courier New', monospace;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+    }
+    
+    .user-info-location {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.8rem;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+    }
+    
+    .user-info-details {
+        display: flex;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.75rem;
+        margin-bottom: 2px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+    }
+    
+    .user-info-name {
+        font-weight: 600;
+        margin-right: 10px;
+    }
+
+    /* New styled info panel like the image */
+    .info-sidebar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        top: 0;
+        width: auto;
+        max-width: 400px;
+        z-index: 6;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 0;
+        pointer-events: none;
+        background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0) 100%);
+    }
+    
+    .info-content {
+        padding: 20px;
+        margin-top: auto;
+        margin-bottom: 90px;
+    }
+    
+    .clock-badge {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        background: none;
+    }
+    
+    .clock-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 5px;
+        background-color: #28a745;
+        color: white;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-right: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .clock-out-status {
+        background-color: #dc3545;
+    }
+    
+    .clock-time {
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+    }
+    
+    .date-display {
+        font-size: 1.1rem;
+        color: white;
+        margin-bottom: 15px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .location-display {
+        color: white;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .user-display {
+        color: white;
+        margin-bottom: 5px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .user-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .user-company, .user-position {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+    
+    /* Vertical accent line */
+    .accent-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 5px;
+        background-color: #28a745;
+    }
+    
+    .accent-line.clock-out {
+        background-color: #dc3545;
     }
 </style>
 @endpush
@@ -1021,12 +915,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let hdrActive = false;
     let activeFilter = 'normal';
     let timerInterval = null;
-    let pinchZoomActive = false;
-    let startZoomDistance = 0;
-    let currentZoom = 1;
-    let locationUpdateInterval = null;
-    let locationRetryCount = 0;
-    let maxLocationRetries = 5;
     
     // Create camera modal element
     const cameraModal = document.createElement('div');
@@ -1073,7 +961,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <div class="date-display" id="date-display">Tue, Mar 18, 2025</div>
                         <div class="location-display" id="location-display">
-                            Fetching location...
+                            Jose L Briones Street, Lungsod ng Cebu,<br>
+                            6000 Lalawigan ng Cebu
                         </div>
                         <div class="user-display">
                             <div class="user-name" id="user-name">Name: Edmar Crescencio</div>
@@ -1220,7 +1109,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     zoomSlider.value = 1;
                     zoomValue = 1;
                     zoomIndicator.textContent = '1×';
-                    currentZoom = 1;
                 }
             } catch (e) {
                 console.log('Capabilities API not supported');
@@ -1286,12 +1174,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Set up pinch-to-zoom
-            setupPinchZoom();
-            
-            // Start updating date and location in real-time
-            startRealtimeUpdates();
-            
         } catch (error) {
             console.error('Error accessing camera:', error);
             alert('Unable to access camera. Please ensure you have granted camera permissions.');
@@ -1301,577 +1183,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Function to start real-time updates of date and location in camera
-    function startRealtimeUpdates() {
-        // Start updating the date and time every second
-        const cameraDateTimeInterval = setInterval(() => {
-            const now = new Date();
-            
-            // Update clock time in the format shown in the image (HH:MM)
-            clockTime.textContent = now.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            });
-            
-            // Format date like "Tue, Mar 18, 2025"
-            dateDisplay.textContent = now.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            });
-        }, 1000);
-        
-        // Update location immediately and then every 30 seconds
-        updateCameraLocation();
-        locationUpdateInterval = setInterval(updateCameraLocation, 30000);
-        
-        // Store interval IDs for cleanup
-        cameraModal.dataset.dateTimeInterval = cameraDateTimeInterval;
-        cameraModal.dataset.locationInterval = locationUpdateInterval;
-    }
-    
-    // Function to stop real-time updates
-    function stopRealtimeUpdates() {
-        // Clear the intervals
-        if (cameraModal.dataset.dateTimeInterval) {
-            clearInterval(parseInt(cameraModal.dataset.dateTimeInterval));
-        }
-        if (cameraModal.dataset.locationInterval) {
-            clearInterval(parseInt(cameraModal.dataset.locationInterval));
-        }
-        
-        // Also clear any ongoing location watch
-        if (cameraModal.dataset.locationWatchId) {
-            navigator.geolocation.clearWatch(parseInt(cameraModal.dataset.locationWatchId));
-        }
-    }
-    
-    // Function to update camera location with better error handling and fallbacks
-    function updateCameraLocation() {
-        // Reset retry count if this is a fresh attempt
-        if (!locationUpdateInterval) {
-            locationRetryCount = 0;
-        }
-        
-        // Update the UI to show location is being fetched
-        if (locationRetryCount === 0) {
-            locationDisplay.innerHTML = 'Fetching precise location...';
-        }
-        
-        // Function to handle location error with fallbacks
-        function handleLocationError(error) {
-            locationRetryCount++;
-            
-            if (locationRetryCount < maxLocationRetries) {
-                // Retry getting location
-                locationDisplay.innerHTML = `Retrying location fetch (${locationRetryCount}/${maxLocationRetries})...`;
-                setTimeout(updateCameraLocation, 3000);
-            } else {
-                // Fallback to IP-based location if geolocation fails multiple times
-                locationDisplay.innerHTML = 'Using approximate location...';
-                
-                // First try Google Geolocation API if available
-                tryIpBasedLocation();
-            }
-        }
-        
-        // Function to try IP-based geolocation as fallback
-        function tryIpBasedLocation() {
-            // Try multiple IP geolocation services as fallbacks
-            fetch('https://ipinfo.io/json?token=2b0a1eaf8eb87d')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.city && data.region) {
-                        // Try to get more precise location using the city and region
-                        return getAddressFromCityRegion(data.city, data.region, data.country);
-                    } else {
-                        throw new Error('Insufficient location data');
-                    }
-                })
-                .catch(err => {
-                    console.error('IP location fetch failed:', err);
-                    // Try another service as fallback
-                    return fetch('https://ipapi.co/json/');
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Response not OK');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.city && data.region) {
-                        return getAddressFromCityRegion(data.city, data.region, data.country_name || data.country);
-                    } else {
-                        locationDisplay.innerHTML = 'Location unavailable';
-                    }
-                })
-                .catch(err => {
-                    console.error('All location services failed:', err);
-                    locationDisplay.innerHTML = 'Location service unavailable';
-                });
-        }
-        
-        // Function to get more precise address from city and region
-        function getAddressFromCityRegion(city, region, country) {
-            // Use OpenStreetMap Nominatim to get more precise location from city and region
-            const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(city)}&state=${encodeURIComponent(region)}&country=${encodeURIComponent(country)}`;
-            
-            return fetch(apiUrl, {
-                headers: {
-                    'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        // Get the first result which is usually the most relevant
-                        const result = data[0];
-                        
-                        // Now use reverse geocoding to get the detailed address from these coordinates
-                        return getReverseGeocodedAddress(result.lat, result.lon);
-                    } else {
-                        // Just display city, region, country if no detailed results
-                        const formattedAddress = `${city}, ${region}, ${country}`;
-                        locationDisplay.innerHTML = formattedAddress;
-                        cameraModal.dataset.lastLocation = formattedAddress;
-                    }
-                })
-                .catch(err => {
-                    console.error('Address lookup from city failed:', err);
-                    const formattedAddress = `${city}, ${region}, ${country}`;
-                    locationDisplay.innerHTML = formattedAddress;
-                    cameraModal.dataset.lastLocation = formattedAddress;
-                });
-        }
-        
-        // Function to get reverse geocoded address with multiple fallbacks
-        function getReverseGeocodedAddress(latitude, longitude) {
-            // Store coordinates for fallback
-            cameraModal.dataset.lastCoords = `${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
-            
-            // Primary service: Google Maps Geocoding API (most accurate and detailed)
-            // Note: In production, you should replace this with your own API key
-            const googleApiKey = 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg'; // Example API key, replace with valid key in production
-            const googleMapsUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleApiKey}&result_type=street_address|premise|point_of_interest&language=en`;
-            
-            return fetch(googleMapsUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error('Google Maps API service unavailable');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'OK' && data.results && data.results.length > 0) {
-                        // Get the most detailed result (usually the first one)
-                        return formatGoogleMapsAddress(data.results[0], latitude, longitude);
-                    } else {
-                        throw new Error('No detailed results from Google Maps API');
-                    }
-                })
-                .catch(err => {
-                    console.error('Google Maps geocoding failed:', err);
-                    
-                    // Secondary geocoding service: OpenStreetMap Nominatim with higher zoom level for street detail
-                    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&namedetails=1`;
-                    
-                    return fetch(nominatimUrl, {
-                        headers: {
-                            'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
-                        }
-                    })
-                        .then(response => {
-                            if (!response.ok) throw new Error('Nominatim service unavailable');
-                            return response.json();
-                        })
-                        .then(data => formatAndDisplayAddress(data, latitude, longitude))
-                        .catch(secondErr => {
-                            console.error('Secondary geocoding failed:', secondErr);
-                            
-                            // Tertiary geocoding service: LocationIQ with higher detail level
-                            const locationIQKey = 'pk.31a7d9d4c6b5a77b7ab15fb1a4c38a6c'; // Free demonstration key - would need to be replaced in production
-                            const locationIQUrl = `https://us1.locationiq.com/v1/reverse.php?key=${locationIQKey}&lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1&normalizeaddress=1`;
-                            
-                            return fetch(locationIQUrl)
-                                .then(response => {
-                                    if (!response.ok) throw new Error('LocationIQ service unavailable');
-                                    return response.json();
-                                })
-                                .then(data => formatAndDisplayAddress(data, latitude, longitude))
-                                .catch(thirdErr => {
-                                    console.error('Tertiary geocoding failed:', thirdErr);
-                                    
-                                    // Fourth geocoding service: MapBox if available
-                                    const mapboxToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA'; // Public token for testing only
-                                    const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}&types=address&limit=1`;
-                                    
-                                    return fetch(mapboxUrl)
-                                        .then(response => {
-                                            if (!response.ok) throw new Error('Mapbox service unavailable');
-                                            return response.json();
-                                        })
-                                        .then(data => {
-                                            if (data.features && data.features.length > 0) {
-                                                const formattedAddress = data.features[0].place_name;
-                                                locationDisplay.innerHTML = formattedAddress.replace(/, /g, ',<br>');
-                                                cameraModal.dataset.lastLocation = formattedAddress;
-                                                return formattedAddress;
-                                            } else {
-                                                throw new Error('No address found in Mapbox response');
-                                            }
-                                        })
-                                        .catch(fourthErr => {
-                                            console.error('All geocoding services failed:', fourthErr);
-                                            
-                                            // Final fallback: Get city-level location from IP
-                                            return fetch('https://ipinfo.io/json?token=2b0a1eaf8eb87d')
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    if (data.city && data.region) {
-                                                        const ipLocation = `${data.city}, ${data.region}, ${data.country}`;
-                                                        locationDisplay.innerHTML = ipLocation;
-                                                        cameraModal.dataset.lastLocation = ipLocation;
-                                                        return ipLocation;
-                                                    } else {
-                                                        throw new Error('No location from IP service');
-                                                    }
-                                                })
-                                                .catch(finalErr => {
-                                                    console.error('All location methods failed:', finalErr);
-                                                    const fallbackMessage = `Location near coordinates: ${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)}`;
-                                                    locationDisplay.innerHTML = fallbackMessage;
-                                                    cameraModal.dataset.lastLocation = fallbackMessage;
-                                                    return fallbackMessage;
-                                                });
-                                        });
-                                });
-                        });
-                });
-        }
-        
-        // Format Google Maps API address response
-        function formatGoogleMapsAddress(result, latitude, longitude) {
-            if (!result || !result.address_components) {
-                throw new Error('Invalid Google Maps API response');
-            }
-            
-            // Extract components by type
-            const components = {};
-            result.address_components.forEach(component => {
-                component.types.forEach(type => {
-                    components[type] = component.long_name;
-                    // Store short name for certain types
-                    if (type === 'country' || type === 'administrative_area_level_1' || type === 'route') {
-                        components[type + '_short'] = component.short_name;
-                    }
-                });
-            });
-            
-            // Build address in format: "Street Number Street Name, Neighborhood, City, State, Country"
-            const addressParts = [];
-            
-            // Street address
-            let streetAddress = '';
-            if (components.street_number) {
-                streetAddress += components.street_number + ' ';
-            }
-            if (components.route) {
-                streetAddress += components.route;
-            } else if (components.route_short) {
-                streetAddress += components.route_short;
-            }
-            
-            if (streetAddress) {
-                addressParts.push(streetAddress);
-            }
-            
-            // Neighborhood or sublocality
-            if (components.sublocality_level_1) {
-                addressParts.push(components.sublocality_level_1);
-            } else if (components.neighborhood) {
-                addressParts.push(components.neighborhood);
-            } else if (components.sublocality) {
-                addressParts.push(components.sublocality);
-            }
-            
-            // City / locality
-            if (components.locality) {
-                addressParts.push(components.locality);
-            } else if (components.administrative_area_level_3) {
-                addressParts.push(components.administrative_area_level_3);
-            }
-            
-            // State / province / region
-            if (components.administrative_area_level_1) {
-                addressParts.push(components.administrative_area_level_1);
-            }
-            
-            // Country
-            if (components.country) {
-                addressParts.push(components.country);
-            }
-            
-            // Format the final address
-            let formattedAddress = addressParts.join(', ');
-            
-            // If we couldn't construct a good address, use the formatted_address from Google
-            if (!formattedAddress || addressParts.length < 2) {
-                formattedAddress = result.formatted_address;
-            }
-            
-            // Display address
-            const addressLines = splitAddressForDisplay(formattedAddress);
-            locationDisplay.innerHTML = addressLines;
-            
-            // Store the full address for later use
-            cameraModal.dataset.lastLocation = formattedAddress;
-            
-            return formattedAddress;
-        }
-        
-        // Format and display the geocoded address
-        function formatAndDisplayAddress(data, latitude, longitude) {
-            let formattedAddress = '';
-            
-            if (data.display_name) {
-                formattedAddress = data.display_name;
-            } else if (data.address) {
-                // Build address from components with priority on street information
-                const address = data.address;
-                const addressParts = [];
-                
-                // First collect all address components
-                const streetComponents = [];
-                const areaComponents = [];
-                const cityComponents = [];
-                const regionComponents = [];
-                const countryComponents = [];
-                
-                // Street level components (highest priority - most specific)
-                if (address.house_number) streetComponents.push(address.house_number);
-                if (address.building) streetComponents.push(address.building);
-                if (address.street_number) streetComponents.push(address.street_number);
-                
-                // Street name with variations
-                const streetName = address.road || address.street || address.street_name || address.pedestrian || 
-                                   address.footway || address.path || address.cycleway || address.highway;
-                if (streetName) {
-                    // Add street name with any prefix/suffix/directional info
-                    let fullStreetName = streetName;
-                    if (address.street_prefix) fullStreetName = `${address.street_prefix} ${fullStreetName}`;
-                    if (address.street_suffix) fullStreetName = `${fullStreetName} ${address.street_suffix}`;
-                    streetComponents.push(fullStreetName);
-                }
-                
-                // Local area components (neighborhood level)
-                if (address.suburb) areaComponents.push(address.suburb);
-                if (address.neighbourhood) areaComponents.push(address.neighbourhood);
-                if (address.quarter) areaComponents.push(address.quarter);
-                if (address.hamlet) areaComponents.push(address.hamlet);
-                if (address.residential) areaComponents.push(address.residential);
-                
-                // City level components
-                if (address.city) cityComponents.push(address.city);
-                if (address.town) cityComponents.push(address.town);
-                if (address.village) cityComponents.push(address.village);
-                if (address.municipality) cityComponents.push(address.municipality);
-                if (address.city_district) cityComponents.push(address.city_district);
-                if (address.district) cityComponents.push(address.district);
-                if (address.borough) cityComponents.push(address.borough);
-                
-                // Region/state level components
-                if (address.state) regionComponents.push(address.state);
-                if (address.province) regionComponents.push(address.province);
-                if (address.region) regionComponents.push(address.region);
-                if (address.county) regionComponents.push(address.county);
-                
-                // Country level components
-                if (address.country) countryComponents.push(address.country);
-                if (address.postcode) countryComponents.push(address.postcode);
-                
-                // Prioritize street information and eliminate duplicates
-                // First, add street level info if available
-                if (streetComponents.length > 0) {
-                    addressParts.push(streetComponents.join(' '));
-                }
-                
-                // Then add one area component if available
-                if (areaComponents.length > 0) {
-                    addressParts.push(areaComponents[0]); // Just use the first area to avoid redundancy
-                }
-                
-                // Then add one city component
-                if (cityComponents.length > 0) {
-                    addressParts.push(cityComponents[0]); // Just use the first city to avoid redundancy
-                }
-                
-                // Then add one region component
-                if (regionComponents.length > 0) {
-                    addressParts.push(regionComponents[0]); // Just use the first region to avoid redundancy
-                }
-                
-                // Finally add country
-                if (countryComponents.length > 0) {
-                    // Filter out postal code if both country and postal code exist
-                    const countryOnly = countryComponents.filter(comp => !comp.match(/^\d+$/));
-                    if (countryOnly.length > 0) {
-                        addressParts.push(countryOnly[0]);
-                    } else {
-                        addressParts.push(countryComponents[0]);
-                    }
-                }
-                
-                formattedAddress = addressParts.join(', ');
-            }
-            
-            // If we still don't have an address, use a fallback
-            if (!formattedAddress || formattedAddress.trim() === '') {
-                formattedAddress = `Location near ${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
-            }
-            
-            // Process the address to ensure proper formatting and readability
-            // Example goal: "Jose L. Briones St., Cebu City, Philippines"
-            const processedAddress = formattedAddress
-                .replace(/\s+/g, ' ')                // Replace multiple spaces with single space
-                .replace(/,\s*,/g, ',')              // Remove empty elements between commas
-                .replace(/^,\s*/g, '')               // Remove leading comma
-                .replace(/\s*,\s*$/g, '')            // Remove trailing comma
-                .trim();
-            
-            // Split into logical display parts for UI
-            const addressLines = splitAddressForDisplay(processedAddress);
-            locationDisplay.innerHTML = addressLines;
-            
-            // Store the full address for later use
-            cameraModal.dataset.lastLocation = processedAddress;
-            
-            // Return the address for chaining
-            return processedAddress;
-        }
-        
-        // Helper function to split address into display lines
-        function splitAddressForDisplay(address) {
-            const parts = address.split(',').map(part => part.trim()).filter(part => part.length > 0);
-            
-            if (parts.length <= 1) {
-                return address; // Nothing to split
-            } else if (parts.length === 2) {
-                return parts.join(',<br>'); // Simple two-line split
-            } else {
-                // For 3+ components, create a logical split that prioritizes street name on first line
-                const firstLine = parts[0]; // Street info on first line
-                const secondLine = parts.slice(1).join(', '); // Rest on second
-                return `${firstLine},<br>${secondLine}`;
-            }
-        }
-        
-        // Configure high accuracy with appropriate timeout
-        const geoOptions = {
-            enableHighAccuracy: true,
-            timeout: 15000, // Increased timeout for better results
-            maximumAge: 0
-        };
-        
-        // Try to get precise location
-        if ("geolocation" in navigator) {
-            const watchId = navigator.geolocation.watchPosition(
-                function(position) {
-                    // Get the precise coordinates
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    
-                    // Get reverse geocoded address
-                    getReverseGeocodedAddress(latitude, longitude);
-                    
-                    // Save the watch ID to clear it when closing the camera
-                    cameraModal.dataset.locationWatchId = watchId;
-                },
-                handleLocationError,
-                geoOptions
-            );
-        } else {
-            locationDisplay.innerHTML = 'Location services not available';
-            // Try IP-based location as fallback
-            tryIpBasedLocation();
-        }
-    }
-    
-    // Set up pinch-to-zoom functionality
-    function setupPinchZoom() {
-        const cameraContainer = document.querySelector('.camera-container');
-        
-        // Track touch points for pinch detection
-        let initialTouchDistance = 0;
-        let currentZoom = parseFloat(zoomSlider.value);
-        const maxZoom = parseFloat(zoomSlider.max);
-        
-        cameraContainer.addEventListener('touchstart', function(e) {
-            if (e.touches.length >= 2) {
-                // Get initial touch distance
-                initialTouchDistance = getTouchDistance(e.touches);
-                // Store starting zoom level
-                currentZoom = parseFloat(zoomSlider.value);
-                pinchZoomActive = true;
-            }
-        });
-        
-        cameraContainer.addEventListener('touchmove', function(e) {
-            if (pinchZoomActive && e.touches.length >= 2) {
-                e.preventDefault(); // Prevent default actions like scrolling
-                
-                // Calculate new distance
-                const currentDistance = getTouchDistance(e.touches);
-                
-                // Calculate zoom change factor (adjust sensitivity here)
-                const zoomChange = (currentDistance / initialTouchDistance) - 1;
-                
-                // Apply zoom (with bounds checking)
-                const newZoom = Math.min(Math.max(currentZoom + zoomChange * 2, 1), maxZoom);
-                
-                // Update UI and apply zoom
-                zoomSlider.value = newZoom;
-                zoomIndicator.textContent = `${newZoom.toFixed(1)}×`;
-                applyZoom(newZoom);
-            }
-        });
-        
-        cameraContainer.addEventListener('touchend', function(e) {
-            if (e.touches.length < 2) {
-                pinchZoomActive = false;
-            }
-        });
-        
-        // Helper function to calculate distance between touch points
-        function getTouchDistance(touches) {
-            const touch1 = touches[0];
-            const touch2 = touches[1];
-            
-            return Math.hypot(
-                touch2.clientX - touch1.clientX,
-                touch2.clientY - touch1.clientY
-            );
-        }
-    }
-    
-    // Apply zoom to camera
-    async function applyZoom(zoomLevel) {
-        if (!stream) return;
-        
-        try {
-            const track = stream.getVideoTracks()[0];
-            await track.applyConstraints({
-                advanced: [{ zoom: zoomLevel }]
-            });
-            zoomValue = zoomLevel;
-        } catch (e) {
-            console.log('Zoom not supported on this device');
-        }
-    }
-    
     // Function to stop camera
     function stopCamera(hideModal = true) {
-        // Stop real-time updates
-        stopRealtimeUpdates();
-        
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
             stream = null;
@@ -1940,7 +1253,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (timerOptions.style.display === 'none' || timerOptions.style.display === '') {
             timerOptions.style.display = 'block';
             filterOptionsContainer.style.display = 'none';
-            zoomSliderContainer.style.display = 'none';
         } else {
             timerOptions.style.display = 'none';
         }
@@ -2008,18 +1320,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Zoom controls
     zoomIndicator.addEventListener('click', function() {
         if (zoomSliderContainer.style.display === 'none' || zoomSliderContainer.style.display === '') {
-            zoomSliderContainer.style.display = 'flex';
+            zoomSliderContainer.style.display = 'block';
         } else {
             zoomSliderContainer.style.display = 'none';
         }
     });
     
-    zoomSlider.addEventListener('input', function() {
+    zoomSlider.addEventListener('input', async function() {
         if (!stream) return;
         
-        const newZoom = parseFloat(this.value);
-        zoomIndicator.textContent = `${newZoom.toFixed(1)}×`;
-        applyZoom(newZoom);
+        try {
+            const track = stream.getVideoTracks()[0];
+            zoomValue = parseFloat(this.value);
+            zoomIndicator.textContent = `${zoomValue.toFixed(1)}×`;
+            
+            await track.applyConstraints({
+                advanced: [{ zoom: zoomValue }]
+            });
+        } catch (e) {
+            console.log('Zoom not supported on this device');
+        }
     });
     
     // Add click event to attendance button
@@ -2281,49 +1601,184 @@ document.addEventListener('DOMContentLoaded', function() {
     const coordinates = document.getElementById('coordinates');
 
     if ("geolocation" in navigator) {
-        navigator.geolocation.watchPosition(
-            function(position) {
-                // Get address from coordinates using reverse geocoding
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        currentLocation.textContent = data.display_name;
-                        coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                        coordinatesInfo.classList.remove('d-none');
-                        locationStatus.classList.add('d-none');
-                    })
-                    .catch(error => {
-                        currentLocation.textContent = 'Unable to fetch address';
-                        coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                        coordinatesInfo.classList.remove('d-none');
-                        locationStatus.classList.remove('d-none');
-                        locationStatus.className = 'alert alert-warning';
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details';
-                    });
-            },
-            function(error) {
+        locationStatus.classList.remove('d-none');
+        locationStatus.className = 'alert alert-info';
+        locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Acquiring accurate location, please wait...';
+        
+        // High-accuracy options for geolocation
+        const geoOptions = {
+            enableHighAccuracy: true,  // Request the most accurate position available
+            timeout: 15000,           // Wait longer for a more accurate position
+            maximumAge: 0             // Always get a fresh location
+        };
+        
+        navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
+            // Handle permission status changes
+            permissionStatus.onchange = () => {
+                if (permissionStatus.state === 'granted') {
+                    locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Acquiring accurate location, please wait...';
+                    startLocationTracking();
+                } else if (permissionStatus.state === 'denied') {
+                    locationStatus.classList.remove('d-none');
+                    locationStatus.className = 'alert alert-danger';
+                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location services.';
+                    currentLocation.textContent = 'Location access required';
+                    coordinatesInfo.classList.add('d-none');
+                }
+            };
+            
+            if (permissionStatus.state === 'granted') {
+                startLocationTracking();
+            } else if (permissionStatus.state === 'prompt') {
+                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Please allow location access when prompted';
+                startLocationTracking();
+            } else if (permissionStatus.state === 'denied') {
                 locationStatus.classList.remove('d-none');
                 locationStatus.className = 'alert alert-danger';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location services.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable.';
-                        break;
-                    case error.TIMEOUT:
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out.';
-                        break;
-                }
+                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location services.';
                 currentLocation.textContent = 'Location access required';
                 coordinatesInfo.classList.add('d-none');
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
             }
-        );
+        }).catch(error => {
+            // Fallback if permissions API not supported
+            startLocationTracking();
+        });
+        
+        function startLocationTracking() {
+            // First get a single position with high accuracy
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    // Check if accuracy is good enough (less than 100 meters)
+                    if (position.coords.accuracy > 100) {
+                        locationStatus.classList.remove('d-none');
+                        locationStatus.className = 'alert alert-warning';
+                        locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Location accuracy is low. Please go to an open area.';
+                    } else {
+                        getDetailedAddress(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+                    }
+                    
+                    // Start watching position for changes
+                    startWatchPosition();
+                },
+                handleLocationError,
+                geoOptions
+            );
+        }
+        
+        function startWatchPosition() {
+            // Continue watching the position for changes
+            navigator.geolocation.watchPosition(
+                function(position) {
+                    // Only update if accuracy is good (less than 100 meters)
+                    if (position.coords.accuracy <= 100) {
+                        getDetailedAddress(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+                    }
+                },
+                handleLocationError,
+                geoOptions
+            );
+        }
+        
+        function getDetailedAddress(latitude, longitude, accuracy) {
+            // Update the coordinates display
+            coordinates.textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`;
+            coordinatesInfo.classList.remove('d-none');
+            
+            // Use a combination of services for better address resolution
+            // First try Nominatim (OpenStreetMap)
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.display_name) {
+                        // Format the address nicely
+                        let formattedAddress = formatDisplayAddress(data);
+                        currentLocation.textContent = formattedAddress;
+                        
+                        // Update location in the camera modal
+                        if (document.getElementById('location-display')) {
+                            const locationParts = formattedAddress.split(',');
+                            if (locationParts.length >= 3) {
+                                const firstLine = locationParts.slice(0, 2).join(',');
+                                const secondLine = locationParts.slice(2).join(',');
+                                document.getElementById('location-display').innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
+                            } else {
+                                document.getElementById('location-display').innerHTML = formattedAddress;
+                            }
+                        }
+                        
+                        // If we have a good accurate address, hide the status
+                        locationStatus.classList.add('d-none');
+                    } else {
+                        throw new Error('No address found');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching address:', error);
+                    // Fallback message if address lookup fails
+                    currentLocation.textContent = 'Address lookup failed. Using coordinate-based location.';
+                    locationStatus.classList.remove('d-none');
+                    locationStatus.className = 'alert alert-warning';
+                    locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Unable to fetch detailed address';
+                });
+        }
+        
+        function formatDisplayAddress(data) {
+            // Create a more user-friendly formatted address from Nominatim data
+            let address = '';
+            const details = data.address;
+            
+            // Building components
+            if (details.building) address += details.building + ', ';
+            if (details.house_number) address += details.house_number + ' ';
+            if (details.road) address += details.road + ', ';
+            if (details.suburb) address += details.suburb + ', ';
+            
+            // City/town components
+            if (details.city || details.town || details.village) {
+                address += (details.city || details.town || details.village) + ', ';
+            }
+            
+            // Region and postal code
+            if (details.state || details.state_district) {
+                address += (details.state || details.state_district) + ' ';
+            }
+            if (details.postcode) address += details.postcode + ', ';
+            
+            // Country
+            if (details.country) address += details.country;
+            
+            // If we couldn't build a good address, use the display_name
+            if (address.length < 10) {
+                address = data.display_name;
+            }
+            
+            return address;
+        }
+        
+        function handleLocationError(error) {
+            locationStatus.classList.remove('d-none');
+            locationStatus.className = 'alert alert-danger';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location services in your browser settings.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Please check your device\'s GPS.';
+                    break;
+                case error.TIMEOUT:
+                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please try again in an area with better GPS signal.';
+                    break;
+                default:
+                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unknown error occurred while getting location.';
+            }
+            
+            currentLocation.textContent = 'Location services inaccessible';
+            coordinatesInfo.classList.add('d-none');
+        }
     } else {
         locationStatus.classList.remove('d-none');
         locationStatus.className = 'alert alert-danger';
