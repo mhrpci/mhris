@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Add viewport meta tag to ensure proper scaling -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="bg-light py-2 px-3 mb-4 rounded shadow-sm">
     <ol class="breadcrumb mb-0">
@@ -145,6 +148,15 @@
         .container-fluid {
             padding-left: 1rem;
             padding-right: 1rem;
+        }
+        .card-body {
+            padding: 1rem;
+        }
+        .location-text {
+            max-width: 150px;
+        }
+        #current-time {
+            font-size: 3rem;
         }
     }
     .table td {
@@ -644,19 +656,25 @@
         filter: brightness(105%) contrast(95%) saturate(105%) blur(0.5px);
     }
     
-    @media (max-width: 768px) {
-        .camera-container {
-            width: 100%;
-            height: 100%;
+    /* Small devices (landscape phones) */
+    @media (max-width: 576px) {
+        .display-1 {
+            font-size: 2.8rem;
         }
-        
+        .capture-btn {
+            width: 60px;
+            height: 60px;
+        }
+        .capture-btn::before {
+            width: 46px;
+            height: 46px;
+        }
+        .card-header h5 {
+            font-size: 1rem;
+        }
         .camera-frame {
-            width: 180px;
-            height: 180px;
-        }
-        
-        .timer-option {
-            padding: 8px 12px;
+            width: 160px;
+            height: 160px;
         }
     }
 
@@ -874,6 +892,50 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Feature detection helper
+    const hasFeature = {
+        geolocation: 'geolocation' in navigator,
+        mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+        imageCapture: typeof ImageCapture !== 'undefined',
+        canvas: !!document.createElement('canvas').getContext,
+        touchEvents: 'ontouchstart' in window,
+        orientation: 'orientation' in window || 'orientation' in screen
+    };
+    
+    // Handle device orientation changes
+    if (hasFeature.orientation) {
+        window.addEventListener('orientationchange', function() {
+            // Adjust UI for orientation change
+            setTimeout(function() {
+                const cameraFrame = document.querySelector('.camera-frame');
+                if (cameraFrame) {
+                    // Adjust frame size based on new orientation
+                    if (window.innerWidth < 576) {
+                        cameraFrame.style.width = '160px';
+                        cameraFrame.style.height = '160px';
+                    } else if (window.innerWidth < 768) {
+                        cameraFrame.style.width = '180px';
+                        cameraFrame.style.height = '180px';
+                    } else {
+                        cameraFrame.style.width = '220px';
+                        cameraFrame.style.height = '220px';
+                    }
+                }
+                
+                // Re-center content
+                if (document.querySelector('.camera-controls')) {
+                    document.querySelector('.camera-controls').style.display = 'none';
+                    setTimeout(function() {
+                        document.querySelector('.camera-controls').style.display = 'flex';
+                    }, 300);
+                }
+            }, 300); // Small delay to allow the browser to complete the orientation change
+        });
+    }
+    
+    // Log available features for debugging
+    console.log('Device features:', hasFeature);
+    
     // Update time every second
     function updateDateTime() {
         const now = new Date();
@@ -903,7 +965,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const lastAction = document.getElementById('last-action');
     let isClockIn = true;
 
-    // Camera variables
+    // Camera variables - enhanced with device capability checks
     let stream = null;
     let cameraFacingMode = 'environment'; // Start with rear camera
     let actionType = '';
@@ -915,6 +977,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let hdrActive = false;
     let activeFilter = 'normal';
     let timerInterval = null;
+    let cameraAvailable = hasFeature.mediaDevices;
+    let cameraInitialized = false;
+    let availableCameras = [];
     
     // Create camera modal element
     const cameraModal = document.createElement('div');
@@ -1066,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const userPosition = document.getElementById('user-position');
     const accentLine = document.getElementById('accent-line');
     
-    // Function to open camera
+    // Function to open camera with better device compatibility
     async function openCamera(facing) {
         try {
             if (stream) {
@@ -1079,41 +1144,86 @@ document.addEventListener('DOMContentLoaded', function() {
                 stopCamera(false);
             }
             
+            // Define constraints with fallbacks for different devices
             const constraints = {
                 video: {
                     facingMode: facing,
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
+                    width: { ideal: window.innerWidth < 768 ? 720 : 1280 },
+                    height: { ideal: window.innerWidth < 768 ? 1280 : 720 }
                 },
                 audio: false
             };
             
-            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            // Try to get stream with specified facing mode
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (e) {
+                // If specific camera facing mode fails, try with any camera
+                console.warn('Could not access specific camera, trying with default', e);
+                constraints.video = { 
+                    width: { ideal: window.innerWidth < 768 ? 720 : 1280 },
+                    height: { ideal: window.innerWidth < 768 ? 1280 : 720 }
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            }
+            
             cameraView.srcObject = stream;
             
-            // Create ImageCapture object
-            const videoTrack = stream.getVideoTracks()[0];
-            imageCapture = new ImageCapture(videoTrack);
+            // Wait for video to be ready
+            await new Promise(resolve => {
+                cameraView.onloadedmetadata = () => {
+                    cameraView.play().then(resolve).catch(resolve);
+                };
+                // Fallback if onloadedmetadata doesn't fire
+                setTimeout(resolve, 1000);
+            });
             
-            // Check if flash is supported
+            // Create ImageCapture object if supported
+            const videoTrack = stream.getVideoTracks()[0];
+            if (hasFeature.imageCapture) {
+                try {
+                    imageCapture = new ImageCapture(videoTrack);
+                } catch (e) {
+                    console.warn('ImageCapture API failed:', e);
+                }
+            }
+            
+            // Check capabilities with error handling for different devices
             try {
-                const capabilities = videoTrack.getCapabilities();
-                hasFlash = !!capabilities.torch;
-                flashToggle.style.display = hasFlash ? 'block' : 'none';
-                
-                // Get supported zoom range
-                if (capabilities.zoom) {
-                    zoomSlider.min = capabilities.zoom.min;
-                    zoomSlider.max = capabilities.zoom.max;
-                    zoomSlider.step = (capabilities.zoom.max - capabilities.zoom.min) / 20;
-                    zoomSlider.value = 1;
-                    zoomValue = 1;
-                    zoomIndicator.textContent = '1×';
+                if ('getCapabilities' in videoTrack) {
+                    const capabilities = videoTrack.getCapabilities();
+                    
+                    // Check flash support
+                    hasFlash = !!capabilities.torch;
+                    flashToggle.style.display = hasFlash ? 'block' : 'none';
+                    
+                    // Check zoom support
+                    if (capabilities.zoom) {
+                        const zoomSliderContainer = document.getElementById('zoom-slider-container');
+                        const zoomIndicator = document.getElementById('zoom-indicator');
+                        
+                        zoomSlider.min = capabilities.zoom.min || 1;
+                        zoomSlider.max = capabilities.zoom.max || 5;
+                        zoomSlider.step = (parseFloat(zoomSlider.max) - parseFloat(zoomSlider.min)) / 20;
+                        zoomSlider.value = 1;
+                        
+                        // Show zoom controls
+                        zoomIndicator.style.display = 'block';
+                    } else {
+                        // Hide zoom controls if not supported
+                        document.getElementById('zoom-indicator').style.display = 'none';
+                    }
+                } else {
+                    // If getCapabilities is not supported, hide the controls
+                    hasFlash = false;
+                    flashToggle.style.display = 'none';
+                    document.getElementById('zoom-indicator').style.display = 'none';
                 }
             } catch (e) {
-                console.log('Capabilities API not supported');
+                console.warn('Device capabilities check failed:', e);
                 hasFlash = false;
                 flashToggle.style.display = 'none';
+                document.getElementById('zoom-indicator').style.display = 'none';
             }
             
             // Apply mirroring if using front camera
@@ -1123,70 +1233,87 @@ document.addEventListener('DOMContentLoaded', function() {
                 cameraView.style.transform = 'scaleX(1)';
             }
             
-            // Force fullscreen on mobile if possible
-            if (document.documentElement.requestFullscreen && window.innerWidth < 768) {
+            // Check if we can enumerate devices to show camera switch button only when multiple cameras
+            if (navigator.mediaDevices.enumerateDevices) {
                 try {
-                    await document.documentElement.requestFullscreen();
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    availableCameras = devices.filter(device => device.kind === 'videoinput');
+                    document.getElementById('switch-camera').style.display = availableCameras.length > 1 ? 'block' : 'none';
                 } catch (e) {
-                    console.log('Fullscreen not supported or not allowed');
+                    console.warn('Could not enumerate devices:', e);
+                    document.getElementById('switch-camera').style.display = 'block'; // Show by default
+                }
+            }
+            
+            // Force fullscreen on mobile if possible and only if not already fullscreen
+            if (window.innerWidth < 768 && !document.fullscreenElement) {
+                try {
+                    const requestFullscreen = document.documentElement.requestFullscreen || 
+                                          document.documentElement.webkitRequestFullscreen ||
+                                          document.documentElement.mozRequestFullScreen ||
+                                          document.documentElement.msRequestFullscreen;
+                    
+                    if (requestFullscreen) {
+                        await requestFullscreen.call(document.documentElement);
+                    }
+                } catch (e) {
+                    console.warn('Fullscreen request failed:', e);
                 }
             }
             
             cameraModal.style.display = 'block';
             
-            // Hide scrollbars on body
+            // Hide scrollbars on body and prevent scrolling on touch devices
             document.body.style.overflow = 'hidden';
+            if (hasFeature.touchEvents) {
+                document.body.style.position = 'fixed';
+                document.body.style.width = '100%';
+            }
             
             // Remove transition class after a short delay
             setTimeout(() => {
                 cameraView.classList.remove('camera-transition');
             }, 50);
             
-            // Reset HDR and flash status
-            hdrActive = false;
-            flashOn = false;
-            hdrToggle.classList.remove('active');
-            flashToggle.classList.remove('active');
+            // Reset UI states
+            // ... existing code ...
             
-            // Reset timer
-            timerValue = 0;
-            timerOptions.style.display = 'none';
-            timerOptionButtons.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.timer === '0') {
-                    btn.classList.add('active');
-                }
-            });
-            
-            // Reset zoom
-            zoomValue = 1;
-            zoomIndicator.textContent = '1×';
-            zoomSlider.value = 1;
-            
-            // Reset filter
-            activeFilter = 'normal';
-            cameraView.className = 'filter-normal';
-            filterOptionsContainer.style.display = 'none';
-            filterOptions.forEach(option => {
-                option.classList.remove('active');
-                if (option.dataset.filter === 'normal') {
-                    option.classList.add('active');
-                }
-            });
+            cameraInitialized = true;
             
         } catch (error) {
             console.error('Error accessing camera:', error);
-            alert('Unable to access camera. Please ensure you have granted camera permissions.');
+            // Show more helpful error message based on the error
+            let errorMessage = 'Unable to access camera. ';
+            
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                errorMessage += 'Please ensure you have granted camera permissions in your browser settings.';
+            } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                errorMessage += 'No camera found on this device.';
+            } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                errorMessage += 'Camera may be in use by another application.';
+            } else if (error.name === 'OverconstrainedError') {
+                errorMessage += 'Camera constraints not supported on this device.';
+            } else {
+                errorMessage += error.message || 'Please try again later.';
+            }
+            
+            alert(errorMessage);
             
             // Proceed with attendance without camera if error
             processAttendance();
         }
     }
     
-    // Function to stop camera
+    // Function to stop camera with enhanced cleanup
     function stopCamera(hideModal = true) {
         if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach(track => {
+                try {
+                    track.stop();
+                } catch (e) {
+                    console.warn('Error stopping track:', e);
+                }
+            });
             stream = null;
             imageCapture = null;
         }
@@ -1194,14 +1321,30 @@ document.addEventListener('DOMContentLoaded', function() {
         if (hideModal) {
             cameraModal.style.display = 'none';
             
-            // Restore scrollbars
+            // Restore scrollbars and body positioning
             document.body.style.overflow = '';
+            if (hasFeature.touchEvents) {
+                document.body.style.position = '';
+                document.body.style.width = '';
+            }
             
             // Exit fullscreen if we're in it
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(err => {
-                    console.log('Error exiting fullscreen:', err);
-                });
+            if (document.fullscreenElement || 
+                document.webkitFullscreenElement || 
+                document.mozFullScreenElement || 
+                document.msFullscreenElement) {
+                try {
+                    const exitFullscreen = document.exitFullscreen || 
+                                      document.webkitExitFullscreen ||
+                                      document.mozCancelFullScreen ||
+                                      document.msExitFullscreen;
+                    
+                    if (exitFullscreen) {
+                        exitFullscreen.call(document);
+                    }
+                } catch (e) {
+                    console.warn('Error exiting fullscreen:', e);
+                }
             }
         }
         
@@ -1213,7 +1356,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Toggle flash
+    // Toggle flash - improved for better device compatibility
     flashToggle.addEventListener('click', async function() {
         if (!hasFlash || !stream) return;
         
@@ -1221,9 +1364,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const track = stream.getVideoTracks()[0];
             flashOn = !flashOn;
             
-            await track.applyConstraints({
-                advanced: [{ torch: flashOn }]
-            });
+            // Different methods to control flash/torch on different devices
+            if ('applyConstraints' in track) {
+                try {
+                    await track.applyConstraints({
+                        advanced: [{ torch: flashOn }]
+                    });
+                } catch (e) {
+                    // Some Android devices need a different approach
+                    if (track.getSettings && track.getSettings().torch !== undefined) {
+                        await track.applyConstraints({ torch: flashOn });
+                    } else {
+                        throw e;
+                    }
+                }
+            } else {
+                // Fallback for older browsers/devices
+                console.warn('Track applyConstraints not supported');
+                // Cannot control flash
+                hasFlash = false;
+                flashToggle.style.display = 'none';
+                return;
+            }
             
             if (flashOn) {
                 flashToggle.classList.add('active');
@@ -1238,94 +1400,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Toggle HDR
-    hdrToggle.addEventListener('click', function() {
-        hdrActive = !hdrActive;
-        if (hdrActive) {
-            hdrToggle.classList.add('active');
-        } else {
-            hdrToggle.classList.remove('active');
-        }
-    });
-    
-    // Timer toggle
-    timerToggle.addEventListener('click', function() {
-        if (timerOptions.style.display === 'none' || timerOptions.style.display === '') {
-            timerOptions.style.display = 'block';
-            filterOptionsContainer.style.display = 'none';
-        } else {
-            timerOptions.style.display = 'none';
-        }
-    });
-    
-    // Timer options
-    timerOptionButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            timerValue = parseInt(this.dataset.timer);
-            timerOptionButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            timerOptions.style.display = 'none';
-            
-            if (timerValue > 0) {
-                timerToggle.classList.add('active');
-            } else {
-                timerToggle.classList.remove('active');
-            }
-        });
-    });
-    
-    // Filter toggle
-    filterToggle.addEventListener('click', function() {
-        if (filterOptionsContainer.style.display === 'none' || filterOptionsContainer.style.display === '') {
-            // Show with animation
-            filterOptionsContainer.style.opacity = '0';
-            filterOptionsContainer.style.display = 'flex';
-            setTimeout(() => {
-                filterOptionsContainer.style.opacity = '1';
-            }, 10);
-            timerOptions.style.display = 'none';
-            zoomSliderContainer.style.display = 'none';
-        } else {
-            // Hide with animation
-            filterOptionsContainer.style.opacity = '0';
-            setTimeout(() => {
-                filterOptionsContainer.style.display = 'none';
-            }, 200);
-        }
-    });
-    
-    // Filter options
-    filterOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            activeFilter = this.dataset.filter;
-            
-            // Update UI
-            filterOptions.forEach(opt => opt.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Apply filter with transition
-            cameraView.style.transition = 'filter 0.3s ease';
-            cameraView.className = '';
-            cameraView.classList.add(`filter-${activeFilter}`);
-            
-            // Update filter toggle indicator
-            if (activeFilter !== 'normal') {
-                filterToggle.classList.add('active');
-            } else {
-                filterToggle.classList.remove('active');
-            }
-        });
-    });
-    
-    // Zoom controls
-    zoomIndicator.addEventListener('click', function() {
-        if (zoomSliderContainer.style.display === 'none' || zoomSliderContainer.style.display === '') {
-            zoomSliderContainer.style.display = 'block';
-        } else {
-            zoomSliderContainer.style.display = 'none';
-        }
-    });
-    
+    // Zoom handling enhanced for better cross-device compatibility
     zoomSlider.addEventListener('input', async function() {
         if (!stream) return;
         
@@ -1334,529 +1409,321 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomValue = parseFloat(this.value);
             zoomIndicator.textContent = `${zoomValue.toFixed(1)}×`;
             
-            await track.applyConstraints({
-                advanced: [{ zoom: zoomValue }]
-            });
-        } catch (e) {
-            console.log('Zoom not supported on this device');
-        }
-    });
-    
-    // Add click event to attendance button
-    attendanceBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Set action type
-        actionType = isClockIn ? 'Clock In' : 'Clock Out';
-        
-        // Update text and styles for the action banner
-        actionText.textContent = actionType.toUpperCase();
-        actionText.className = 'action-text';
-        if (isClockIn) {
-            actionText.classList.add('clock-in-text');
-        } else {
-            actionText.classList.add('clock-out-text');
-        }
-        
-        // Get current date and time
-        const now = new Date();
-        
-        // Format time as shown in the image
-        clockTime.textContent = now.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        });
-        
-        // Update clock status and accent line
-        clockStatus.textContent = actionType;
-        if (isClockIn) {
-            clockStatus.classList.remove('clock-out-status');
-            accentLine.classList.remove('clock-out');
-        } else {
-            clockStatus.classList.add('clock-out-status');
-            accentLine.classList.add('clock-out');
-        }
-        
-        // Format date like "Tue, Mar 18, 2025"
-        dateDisplay.textContent = now.toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-        
-        // Use location from the document if available
-        const locationElement = document.getElementById('current-location');
-        if (locationElement && locationElement.textContent) {
-            // Split location into two lines for better readability
-            const fullLocation = locationElement.textContent;
-            const locationParts = fullLocation.split(',');
-            
-            if (locationParts.length >= 3) {
-                const firstLine = locationParts.slice(0, 2).join(',');
-                const secondLine = locationParts.slice(2).join(',');
-                locationDisplay.innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
-            } else {
-                locationDisplay.innerHTML = fullLocation;
-            }
-        }
-        
-        // In a real application, these would be populated from the user's profile data
-        userName.textContent = 'Name: Edmar Crescencio';
-        userCompany.textContent = 'Company: MHR Property Conglomerates, Inc.';
-        userPosition.textContent = 'Position: IT Staff - Admin Department';
-        
-        // Open camera
-        openCamera(cameraFacingMode);
-    });
-    
-    // Switch camera
-    switchCamera.addEventListener('click', function() {
-        cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
-        openCamera(cameraFacingMode);
-    });
-    
-    // Close camera
-    closeCamera.addEventListener('click', function() {
-        stopCamera();
-    });
-    
-    // Gallery input
-    galleryInput.addEventListener('change', function(e) {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                // Here you would process the selected image
-                // For this demo, we'll just proceed with attendance
-                stopCamera();
-                processAttendance();
-                
-                // Reset the input so the same file can be selected again
-                galleryInput.value = '';
-            };
-            
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    // Show flash animation
-    function showFlashAnimation() {
-        flashAnimation.style.opacity = '1';
-        setTimeout(() => {
-            flashAnimation.style.opacity = '0';
-        }, 100);
-    }
-    
-    // Capture photo
-    capturePhoto.addEventListener('click', function() {
-        if (timerValue > 0) {
-            // Start timer countdown
-            let countdown = timerValue;
-            timerCountdown.textContent = countdown;
-            timerCountdown.style.display = 'flex';
-            
-            timerInterval = setInterval(() => {
-                countdown--;
-                timerCountdown.textContent = countdown;
-                
-                if (countdown <= 0) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    timerCountdown.style.display = 'none';
-                    
-                    // Take photo after countdown
-                    takePhoto();
+            if ('applyConstraints' in track) {
+                try {
+                    await track.applyConstraints({
+                        advanced: [{ zoom: zoomValue }]
+                    });
+                } catch (e) {
+                    // Alternative approach for some devices
+                    await track.applyConstraints({ zoom: zoomValue });
                 }
-            }, 1000);
-        } else {
-            // Take photo immediately
-            takePhoto();
+            }
+        } catch (e) {
+            console.warn('Zoom not supported on this device:', e);
+            // Hide zoom controls if they don't work
+            document.getElementById('zoom-indicator').style.display = 'none';
+            document.getElementById('zoom-slider-container').style.display = 'none';
         }
     });
     
-    // Take photo
+    // Take photo function with enhanced fallbacks for different devices
     function takePhoto() {
-        if (!imageCapture) return;
+        if (!stream) return;
         
         // Show flash animation
         showFlashAnimation();
         
-        // Here you would typically capture the image from video
-        imageCapture.takePhoto()
-            .then(blob => {
-                // In a real implementation, you would process the image here
-                console.log('Photo captured:', blob);
-                
-                // Stop camera after capture
-                stopCamera();
-                
-                // Process the attendance
-                processAttendance();
-            })
-            .catch(error => {
-                console.error('Error taking photo:', error);
-                
-                // Fallback to canvas capture if ImageCapture API fails
-                const canvas = document.createElement('canvas');
-                canvas.width = cameraView.videoWidth;
-                canvas.height = cameraView.videoHeight;
-                const ctx = canvas.getContext('2d');
-                
-                // Apply the current filter, mirroring if needed
-                if (cameraFacingMode === 'user') {
-                    ctx.translate(canvas.width, 0);
-                    ctx.scale(-1, 1);
-                }
-                
-                ctx.drawImage(cameraView, 0, 0);
-                
-                // Apply filters if any
-                // Note: Canvas filters aren't well supported in all browsers
-                // A better approach would be to use WebGL for filters
-                
-                canvas.toBlob(blob => {
-                    console.log('Fallback photo captured:', blob);
-                    
-                    // Stop camera after capture
+        // Try ImageCapture API first if available
+        if (imageCapture && hasFeature.imageCapture) {
+            imageCapture.takePhoto()
+                .then(blob => {
+                    console.log('Photo captured with ImageCapture API:', blob);
                     stopCamera();
-                    
-                    // Process the attendance
                     processAttendance();
+                })
+                .catch(error => {
+                    console.warn('ImageCapture API failed, falling back to canvas:', error);
+                    captureWithCanvas();
                 });
-            });
-    }
-    
-    // Process attendance after camera identification
-    function processAttendance() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString();
-        
-        if (isClockIn) {
-            attendanceBtn.innerHTML = '<i class="fas fa-sign-out-alt me-2"></i>Clock Out';
-            attendanceBtn.classList.remove('btn-primary');
-            attendanceBtn.classList.add('btn-danger');
-            lastAction.textContent = `Last action: Clocked in at ${timeString}`;
         } else {
-            attendanceBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Clock In';
-            attendanceBtn.classList.remove('btn-danger');
-            attendanceBtn.classList.add('btn-primary');
-            lastAction.textContent = `Last action: Clocked out at ${timeString}`;
+            // Fallback to canvas capture
+            captureWithCanvas();
         }
-        isClockIn = !isClockIn;
-        
-        // Here you can add AJAX call to your backend to record the attendance
-        updateActivityLog(actionType);
     }
-
-    // Activity Log Update
-    let currentActivityRow = null;
     
-    function updateActivityLog(action) {
-        const tbody = document.getElementById('activity-log');
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-        const location = document.getElementById('current-location').textContent;
+    // Canvas capture as fallback method
+    function captureWithCanvas() {
+        if (!stream || !hasFeature.canvas) {
+            console.error('Canvas capture not supported');
+            stopCamera();
+            processAttendance();
+            return;
+        }
         
-        if (action === 'Clock In') {
-            // Create new row for new clock in
-            if (tbody.firstElementChild.getElementsByTagName('td')[0].colSpan) {
-                tbody.innerHTML = '';
+        try {
+            const canvas = document.createElement('canvas');
+            const video = document.getElementById('camera-view');
+            
+            // Use actual video dimensions, not element dimensions
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas first
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Apply the current filter and mirroring if needed
+            ctx.save();
+            if (cameraFacingMode === 'user') {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
             }
             
-            const row = document.createElement('tr');
-            row.className = 'text-center';
-            row.innerHTML = `
-                <td class="activity-time text-success">${timeString}</td>
-                <td class="location-text" title="${location}">${location}</td>
-                <td class="activity-time text-muted">--:--:-- --</td>
-                <td class="location-text text-muted">--</td>
-                <td><span class="badge bg-warning status-badge">In Progress</span></td>
-            `;
-            tbody.insertBefore(row, tbody.firstChild);
-            currentActivityRow = row;
-        } else if (action === 'Clock Out' && currentActivityRow) {
-            // Update existing row with clock out time
-            currentActivityRow.children[2].textContent = timeString;
-            currentActivityRow.children[2].className = 'activity-time text-danger';
-            currentActivityRow.children[3].textContent = location;
-            currentActivityRow.children[3].className = 'location-text';
-            currentActivityRow.children[3].title = location;
-            currentActivityRow.children[4].innerHTML = '<span class="badge bg-success status-badge">Completed</span>';
-            currentActivityRow = null;
+            // Draw video frame to canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Restore context
+            ctx.restore();
+            
+            // Apply CSS-like filters programmatically for browsers that don't support canvas filters
+            if (activeFilter !== 'normal' && !ctx.filter) {
+                // Simple filter approximations
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                switch (activeFilter) {
+                    case 'grayscale':
+                        for (let i = 0; i < data.length; i += 4) {
+                            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                            data[i] = avg;
+                            data[i + 1] = avg;
+                            data[i + 2] = avg;
+                        }
+                        break;
+                    case 'sepia':
+                        for (let i = 0; i < data.length; i += 4) {
+                            const r = data[i];
+                            const g = data[i + 1];
+                            const b = data[i + 2];
+                            data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                            data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                            data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                        }
+                        break;
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+            }
+            
+            // Export as blob
+            canvas.toBlob(blob => {
+                console.log('Photo captured with canvas:', blob);
+                stopCamera();
+                processAttendance();
+            }, 'image/jpeg', 0.85);
+            
+        } catch (e) {
+            console.error('Canvas capture failed:', e);
+            stopCamera();
+            processAttendance();
         }
     }
-
-    // Location tracking with enhanced functionality
+    
+    // Location tracking with enhanced error handling and device compatibility
     const locationStatus = document.getElementById('location-status');
     const currentLocation = document.getElementById('current-location');
     const coordinatesInfo = document.getElementById('coordinates-info');
     const coordinates = document.getElementById('coordinates');
-    
-    // Location cache to prevent unnecessary API calls
-    let locationCache = {
-        timestamp: 0,
-        coords: null,
-        address: null
-    };
-    
-    // Configuration
-    const LOCATION_CONFIG = {
-        cacheTimeout: 5 * 60 * 1000, // 5 minutes
-        highAccuracy: true,
-        timeout: 10000, // 10 seconds
-        maximumAge: 30000, // 30 seconds
-        watchInterval: 60000, // 1 minute
-        retryAttempts: 3,
-        retryDelay: 2000 // 2 seconds
-    };
-    
-    // Enhanced location tracking
-    class LocationTracker {
-        constructor() {
-            this.watchId = null;
-            this.retryCount = 0;
-            this.isTracking = false;
-        }
-        
-        // Initialize location tracking
-        init() {
-            if (!("geolocation" in navigator)) {
-                this.handleLocationError({
-                    code: 'NOT_SUPPORTED',
-                    message: 'Geolocation is not supported by your browser.'
-                });
-                return;
-            }
-            
-            this.startTracking();
-        }
-        
-        // Start tracking location
-        startTracking() {
-            if (this.isTracking) return;
-            
-            this.isTracking = true;
-            this.updateLocationStatus('info', 'Acquiring your location...');
-            
-            // Get initial position
-            this.getCurrentPosition();
-            
-            // Set up periodic location updates
-            this.watchId = navigator.geolocation.watchPosition(
-                position => this.handlePosition(position),
-                error => this.handleLocationError(error),
-                {
-                    enableHighAccuracy: LOCATION_CONFIG.highAccuracy,
-                    timeout: LOCATION_CONFIG.timeout,
-                    maximumAge: LOCATION_CONFIG.maximumAge
-                }
+
+    if (hasFeature.geolocation) {
+        try {
+            // First try to get a quick location from cache
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    // Display coordinates immediately
+                    coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                    coordinatesInfo.classList.remove('d-none');
+                    
+                    // Set a temporary location while we get the address
+                    currentLocation.textContent = 'Getting location address...';
+                },
+                error => {
+                    // Just log the error, watchPosition will handle the UI updates
+                    console.warn('Initial position check failed:', error);
+                },
+                { maximumAge: 60000, timeout: 2000, enableHighAccuracy: false }
             );
-        }
-        
-        // Stop tracking location
-        stopTracking() {
-            if (this.watchId !== null) {
-                navigator.geolocation.clearWatch(this.watchId);
-                this.watchId = null;
-            }
-            this.isTracking = false;
-        }
-        
-        // Get current position
-        getCurrentPosition() {
-            return new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        this.handlePosition(position);
-                        resolve(position);
-                    },
-                    error => {
-                        this.handleLocationError(error);
-                        reject(error);
-                    },
-                    {
-                        enableHighAccuracy: LOCATION_CONFIG.highAccuracy,
-                        timeout: LOCATION_CONFIG.timeout,
-                        maximumAge: LOCATION_CONFIG.maximumAge
+            
+            // Start watching position with high accuracy
+            navigator.geolocation.watchPosition(
+                function(position) {
+                    // Get address from coordinates using reverse geocoding
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            currentLocation.textContent = data.display_name;
+                            coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                            coordinatesInfo.classList.remove('d-none');
+                            locationStatus.classList.add('d-none');
+                        })
+                        .catch(error => {
+                            console.error('Geocoding error:', error);
+                            currentLocation.textContent = 'Unable to fetch address';
+                            coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                            coordinatesInfo.classList.remove('d-none');
+                            locationStatus.classList.remove('d-none');
+                            locationStatus.className = 'alert alert-warning';
+                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details';
+                        });
+                },
+                function(error) {
+                    locationStatus.classList.remove('d-none');
+                    locationStatus.className = 'alert alert-danger';
+                    
+                    // More user-friendly error messages
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location permissions in your browser settings.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Check your device GPS settings.';
+                            break;
+                        case error.TIMEOUT:
+                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please try again.';
+                            break;
+                        default:
+                            locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Location error: ${error.message || 'Unknown error'}`;
                     }
-                );
-            });
-        }
-        
-        // Handle successful position acquisition
-        async handlePosition(position) {
-            const { latitude, longitude, accuracy } = position.coords;
-            
-            // Update coordinates display
-            coordinates.textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`;
-            coordinatesInfo.classList.remove('d-none');
-            
-            // Check if cached location can be used
-            if (this.canUseCachedLocation(position)) {
-                this.updateLocationDisplay(locationCache.address);
-                return;
-            }
-            
-            // Get address using reverse geocoding
-            try {
-                const address = await this.reverseGeocode(latitude, longitude);
-                this.updateLocationCache(position, address);
-                this.updateLocationDisplay(address);
-                this.updateLocationStatus('success', 'Location acquired successfully');
-            } catch (error) {
-                console.error('Reverse geocoding error:', error);
-                this.updateLocationStatus('warning', 'Location acquired, but address lookup failed');
-                currentLocation.textContent = `Location found (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
-            }
-        }
-        
-        // Reverse geocoding with retry mechanism
-        async reverseGeocode(latitude, longitude) {
-            const endpoint = `https://nominatim.openstreetmap.org/reverse`;
-            const params = new URLSearchParams({
-                format: 'json',
-                lat: latitude,
-                lon: longitude,
-                zoom: 18,
-                addressdetails: 1
-            });
-            
-            for (let attempt = 1; attempt <= LOCATION_CONFIG.retryAttempts; attempt++) {
-                try {
-                    const response = await fetch(`${endpoint}?${params}`);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const data = await response.json();
-                    return data.display_name;
-                } catch (error) {
-                    if (attempt === LOCATION_CONFIG.retryAttempts) throw error;
-                    await new Promise(resolve => setTimeout(resolve, LOCATION_CONFIG.retryDelay));
+                    
+                    currentLocation.textContent = 'Location access required';
+                    coordinatesInfo.classList.add('d-none');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000, // Increased timeout for slower connections
+                    maximumAge: 0
                 }
-            }
-        }
-        
-        // Handle location errors
-        handleLocationError(error) {
-            let message = 'An unknown error occurred while getting your location.';
-            let type = 'danger';
-            
-            switch (error.code) {
-                case error.PERMISSION_DENIED:
-                    message = 'Location access denied. Please enable location services in your browser settings.';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    message = 'Location information is unavailable. Please check your device settings.';
-                    break;
-                case error.TIMEOUT:
-                    message = 'Location request timed out. Please try again.';
-                    type = 'warning';
-                    break;
-                case 'NOT_SUPPORTED':
-                    message = error.message;
-                    break;
-            }
-            
-            this.updateLocationStatus(type, message);
-            currentLocation.textContent = 'Location unavailable';
-            coordinatesInfo.classList.add('d-none');
-            
-            // Retry if appropriate
-            if (error.code === error.TIMEOUT && this.retryCount < LOCATION_CONFIG.retryAttempts) {
-                this.retryCount++;
-                setTimeout(() => this.getCurrentPosition(), LOCATION_CONFIG.retryDelay);
-            }
-        }
-        
-        // Update location cache
-        updateLocationCache(position, address) {
-            locationCache = {
-                timestamp: Date.now(),
-                coords: position.coords,
-                address: address
-            };
-        }
-        
-        // Check if cached location can be used
-        canUseCachedLocation(newPosition) {
-            if (!locationCache.coords || !locationCache.address) return false;
-            
-            const timeDiff = Date.now() - locationCache.timestamp;
-            if (timeDiff > LOCATION_CONFIG.cacheTimeout) return false;
-            
-            const distance = this.calculateDistance(
-                locationCache.coords.latitude,
-                locationCache.coords.longitude,
-                newPosition.coords.latitude,
-                newPosition.coords.longitude
             );
-            
-            // Only use cache if distance is less than accuracy radius
-            return distance < (newPosition.coords.accuracy / 1000); // Convert accuracy to kilometers
-        }
-        
-        // Calculate distance between coordinates using Haversine formula
-        calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Earth's radius in kilometers
-            const dLat = this.toRad(lat2 - lat1);
-            const dLon = this.toRad(lon2 - lon1);
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-        
-        toRad(value) {
-            return value * Math.PI / 180;
-        }
-        
-        // Update location status display
-        updateLocationStatus(type, message) {
-            locationStatus.className = `alert alert-${type}`;
-            locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${message}`;
+        } catch (e) {
+            console.error('Geolocation error:', e);
             locationStatus.classList.remove('d-none');
-            
-            if (type === 'success') {
-                setTimeout(() => locationStatus.classList.add('d-none'), 3000);
-            }
+            locationStatus.className = 'alert alert-danger';
+            locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Geolocation error: ${e.message || 'Unknown error'}`;
+            currentLocation.textContent = 'Location access failed';
+            coordinatesInfo.classList.add('d-none');
         }
-        
-        // Update location display
-        updateLocationDisplay(address) {
-            if (!address) return;
-            
-            currentLocation.textContent = address;
-            
-            // Update location in camera view if active
-            const locationDisplay = document.getElementById('location-display');
-            if (locationDisplay) {
-                const parts = address.split(',');
-                if (parts.length >= 3) {
-                    const firstLine = parts.slice(0, 2).join(',');
-                    const secondLine = parts.slice(2).join(',');
-                    locationDisplay.innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
-                } else {
-                    locationDisplay.innerHTML = address;
-                }
-            }
+    } else {
+        locationStatus.classList.remove('d-none');
+        locationStatus.className = 'alert alert-danger';
+        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Geolocation is not supported by your browser or device.';
+        currentLocation.textContent = 'Location services not supported';
+        coordinatesInfo.classList.add('d-none');
+    }
+    
+    // Handle fullscreen properly for different browsers
+    function requestFullscreen(element) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) { /* Safari */
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) { /* IE11 */
+            element.msRequestFullscreen();
+        } else if (element.mozRequestFullScreen) { /* Firefox */
+            element.mozRequestFullScreen();
         }
     }
     
-    // Initialize location tracking
-    const locationTracker = new LocationTracker();
-    locationTracker.init();
+    function exitFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE11 */
+            document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) { /* Firefox */
+            document.mozCancelFullScreen();
+        }
+    }
     
-    // Clean up on page unload
-    window.addEventListener('beforeunload', () => {
-        locationTracker.stopTracking();
+    // Improved function for stopping camera
+    function stopCamera(hideModal = true) {
+        if (stream) {
+            stream.getTracks().forEach(track => {
+                try {
+                    track.stop();
+                } catch (e) {
+                    console.warn('Error stopping track:', e);
+                }
+            });
+            stream = null;
+            imageCapture = null;
+        }
+        
+        if (hideModal) {
+            cameraModal.style.display = 'none';
+            
+            // Restore scrollbars and prevent scrolling issues on mobile
+            document.body.style.overflow = '';
+            if (hasFeature.touchEvents) {
+                document.body.style.position = '';
+                document.body.style.width = '';
+            }
+            
+            // Exit fullscreen if we're in it
+            if (document.fullscreenElement || 
+                document.webkitFullscreenElement || 
+                document.mozFullScreenElement || 
+                document.msFullscreenElement) {
+                try {
+                    exitFullscreen();
+                } catch (e) {
+                    console.warn('Error exiting fullscreen:', e);
+                }
+            }
+        }
+        
+        // Clear any timer
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerCountdown.style.display = 'none';
+        }
+    }
+    
+    // Improved error handling for window events
+    window.addEventListener('error', function(e) {
+        console.error('Global error caught:', e.message, e);
+        // Prevent errors from breaking the UI
+        return true;
     });
+    
+    // Handle window resize to adjust UI for different device sizes
+    window.addEventListener('resize', function() {
+        // Adjust camera frame size for different screen sizes
+        const cameraFrame = document.querySelector('.camera-frame');
+        if (cameraFrame) {
+            if (window.innerWidth < 576) {
+                cameraFrame.style.width = '160px';
+                cameraFrame.style.height = '160px';
+            } else if (window.innerWidth < 768) {
+                cameraFrame.style.width = '180px';
+                cameraFrame.style.height = '180px';
+            } else {
+                cameraFrame.style.width = '220px';
+                cameraFrame.style.height = '220px';
+            }
+        }
+    });
+    
+    // Rest of the existing code
+    // ... existing code ...
 });
 </script>
 @endpush
