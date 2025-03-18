@@ -43,15 +43,15 @@
 
                     <!-- Camera Capture Modal -->
                     <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-dialog modal-dialog-centered modal-fullscreen">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h5 class="modal-title" id="cameraModalLabel">Identity Verification</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
-                                <div class="modal-body text-center">
-                                    <div class="camera-container mb-3">
-                                        <video id="camera-stream" class="w-100 rounded" autoplay playsinline></video>
+                                <div class="modal-body text-center d-flex flex-column align-items-center justify-content-center">
+                                    <div class="camera-container mb-3" style="max-width: 100%; width: 100%; max-height: 80vh;">
+                                        <video id="camera-stream" class="rounded w-100 h-100" autoplay playsinline style="object-fit: cover;"></video>
                                         <canvas id="camera-canvas" class="d-none"></canvas>
                                     </div>
                                     <div id="camera-status" class="alert alert-info">
@@ -59,11 +59,16 @@
                                         <span>Please look at the camera for identification</span>
                                     </div>
                                 </div>
-                                <div class="modal-footer">
+                                <div class="modal-footer justify-content-between">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" id="capture-btn">
-                                        <i class="fas fa-camera me-2"></i>Capture
-                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-primary" id="fullscreen-btn">
+                                            <i class="fas fa-expand me-2"></i>Toggle Fullscreen
+                                        </button>
+                                        <button type="button" class="btn btn-primary" id="capture-btn">
+                                            <i class="fas fa-camera me-2"></i>Capture
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -192,6 +197,32 @@
     .status-badge {
         min-width: 90px;
     }
+    
+    /* Camera fullscreen styles */
+    .camera-fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 2000;
+        background-color: #000;
+    }
+    .camera-fullscreen video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .fullscreen-controls {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        z-index: 2001;
+    }
 </style>
 @endpush
 
@@ -225,17 +256,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Camera access variables
     let stream = null;
     let actionType = '';
+    let isFullscreen = false;
     const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
     const captureBtn = document.getElementById('capture-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
     const cameraStream = document.getElementById('camera-stream');
     const cameraCanvas = document.getElementById('camera-canvas');
     const cameraStatus = document.getElementById('camera-status');
+    const cameraContainer = document.querySelector('.camera-container');
 
     // Start camera function
     async function startCamera() {
         try {
             stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'user' }, 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }, 
                 audio: false 
             });
             cameraStream.srcObject = stream;
@@ -248,8 +286,50 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Toggle fullscreen mode
+    function toggleFullscreen() {
+        if (!isFullscreen) {
+            // Enter fullscreen
+            cameraContainer.classList.add('camera-fullscreen');
+            
+            // Create fullscreen controls
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'fullscreen-controls';
+            controlsDiv.innerHTML = `
+                <button type="button" class="btn btn-light" id="exit-fullscreen-btn">
+                    <i class="fas fa-compress me-2"></i>Exit Fullscreen
+                </button>
+                <button type="button" class="btn btn-primary" id="fullscreen-capture-btn">
+                    <i class="fas fa-camera me-2"></i>Capture
+                </button>
+            `;
+            cameraContainer.appendChild(controlsDiv);
+            
+            // Add event listeners to fullscreen controls
+            document.getElementById('exit-fullscreen-btn').addEventListener('click', toggleFullscreen);
+            document.getElementById('fullscreen-capture-btn').addEventListener('click', captureImage);
+            
+            isFullscreen = true;
+        } else {
+            // Exit fullscreen
+            cameraContainer.classList.remove('camera-fullscreen');
+            
+            // Remove fullscreen controls
+            const controlsDiv = cameraContainer.querySelector('.fullscreen-controls');
+            if (controlsDiv) {
+                cameraContainer.removeChild(controlsDiv);
+            }
+            
+            isFullscreen = false;
+        }
+    }
+
     // Stop camera function
     function stopCamera() {
+        if (isFullscreen) {
+            toggleFullscreen();
+        }
+        
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
             stream = null;
@@ -269,6 +349,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show processing notification
         cameraStatus.className = 'alert alert-success';
         cameraStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i><span>Identity verified successfully!</span>';
+        
+        // Exit fullscreen if active
+        if (isFullscreen) {
+            toggleFullscreen();
+        }
         
         // Close modal and perform clock in/out after short delay
         setTimeout(() => {
@@ -315,6 +400,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Capture button event
     captureBtn.addEventListener('click', captureImage);
+    
+    // Fullscreen button event
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    
+    // Stream click event for fullscreen
+    cameraStream.addEventListener('click', function() {
+        if (!isFullscreen) {
+            toggleFullscreen();
+        }
+    });
 
     // Clean up when modal is closed
     document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () {
