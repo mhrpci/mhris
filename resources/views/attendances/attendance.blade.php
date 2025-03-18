@@ -63,6 +63,9 @@
                         <div class="mb-3">
                             <label class="text-muted small">Current Address</label>
                             <p id="current-location" class="mb-0 fw-bold">Waiting for location...</p>
+                            <div id="accuracy-info" class="d-none small text-muted mt-1">
+                                <i class="fas fa-crosshairs me-1"></i><span id="accuracy-value">Waiting...</span>
+                            </div>
                         </div>
                         <div id="coordinates-info" class="d-none">
                             <label class="text-muted small">Coordinates</label>
@@ -1599,192 +1602,108 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentLocation = document.getElementById('current-location');
     const coordinatesInfo = document.getElementById('coordinates-info');
     const coordinates = document.getElementById('coordinates');
+    const accuracyInfo = document.getElementById('accuracy-info');
+    const accuracyValue = document.getElementById('accuracy-value');
 
     if ("geolocation" in navigator) {
-        locationStatus.classList.remove('d-none');
-        locationStatus.className = 'alert alert-info';
-        locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Acquiring accurate location, please wait...';
-        
-        // High-accuracy options for geolocation
+        // Set options for high accuracy
         const geoOptions = {
-            enableHighAccuracy: true,  // Request the most accurate position available
-            timeout: 15000,           // Wait longer for a more accurate position
-            maximumAge: 0             // Always get a fresh location
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
         };
         
-        navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
-            // Handle permission status changes
-            permissionStatus.onchange = () => {
-                if (permissionStatus.state === 'granted') {
-                    locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Acquiring accurate location, please wait...';
-                    startLocationTracking();
-                } else if (permissionStatus.state === 'denied') {
-                    locationStatus.classList.remove('d-none');
-                    locationStatus.className = 'alert alert-danger';
-                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location services.';
-                    currentLocation.textContent = 'Location access required';
-                    coordinatesInfo.classList.add('d-none');
-                }
-            };
-            
-            if (permissionStatus.state === 'granted') {
-                startLocationTracking();
-            } else if (permissionStatus.state === 'prompt') {
-                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Please allow location access when prompted';
-                startLocationTracking();
-            } else if (permissionStatus.state === 'denied') {
-                locationStatus.classList.remove('d-none');
-                locationStatus.className = 'alert alert-danger';
-                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location services.';
-                currentLocation.textContent = 'Location access required';
-                coordinatesInfo.classList.add('d-none');
-            }
-        }).catch(error => {
-            // Fallback if permissions API not supported
-            startLocationTracking();
-        });
+        locationStatus.classList.remove('d-none');
+        locationStatus.className = 'alert alert-info';
+        locationStatus.innerHTML = '<i class="fas fa-location-arrow me-2"></i>Requesting precise location...';
         
-        function startLocationTracking() {
-            // First get a single position with high accuracy
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    // Check if accuracy is good enough (less than 100 meters)
-                    if (position.coords.accuracy > 100) {
+        navigator.geolocation.watchPosition(
+            function(position) {
+                // Format for reverse geocoding with detailed results
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1&zoom=18`;
+                
+                fetch(url, {
+                    headers: {
+                        'User-Agent': 'HRIS Attendance Application'
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Parse and display detailed address information
+                        const addr = data.address;
+                        
+                        // Format address in a more readable way
+                        let formattedAddress = '';
+                        if (addr.road || addr.house_number) {
+                            formattedAddress += (addr.house_number || '') + ' ' + (addr.road || '') + ', ';
+                        }
+                        if (addr.suburb) formattedAddress += addr.suburb + ', ';
+                        if (addr.city || addr.town || addr.village) {
+                            formattedAddress += (addr.city || addr.town || addr.village) + ', ';
+                        }
+                        if (addr.county) formattedAddress += addr.county + ', ';
+                        if (addr.state) formattedAddress += addr.state + ', ';
+                        if (addr.postcode) formattedAddress += addr.postcode + ', ';
+                        if (addr.country) formattedAddress += addr.country;
+                        
+                        // Remove trailing comma and space if present
+                        formattedAddress = formattedAddress.replace(/, $/, '');
+                        
+                        currentLocation.textContent = formattedAddress || data.display_name;
+                        coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                        
+                        // Show accuracy information
+                        accuracyValue.textContent = `Accuracy: ${Math.round(position.coords.accuracy)} meters`;
+                        accuracyInfo.classList.remove('d-none');
+                        
+                        // Always show coordinates for precision
+                        coordinatesInfo.classList.remove('d-none');
+                        locationStatus.classList.add('d-none');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching address:', error);
+                        currentLocation.textContent = 'Unable to fetch detailed address';
+                        coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                        coordinatesInfo.classList.remove('d-none');
                         locationStatus.classList.remove('d-none');
                         locationStatus.className = 'alert alert-warning';
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Location accuracy is low. Please go to an open area.';
-                    } else {
-                        getDetailedAddress(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
-                    }
-                    
-                    // Start watching position for changes
-                    startWatchPosition();
-                },
-                handleLocationError,
-                geoOptions
-            );
-        }
-        
-        function startWatchPosition() {
-            // Continue watching the position for changes
-            navigator.geolocation.watchPosition(
-                function(position) {
-                    // Only update if accuracy is good (less than 100 meters)
-                    if (position.coords.accuracy <= 100) {
-                        getDetailedAddress(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
-                    }
-                },
-                handleLocationError,
-                geoOptions
-            );
-        }
-        
-        function getDetailedAddress(latitude, longitude, accuracy) {
-            // Update the coordinates display
-            coordinates.textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`;
-            coordinatesInfo.classList.remove('d-none');
-            
-            // Use a combination of services for better address resolution
-            // First try Nominatim (OpenStreetMap)
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data && data.display_name) {
-                        // Format the address nicely
-                        let formattedAddress = formatDisplayAddress(data);
-                        currentLocation.textContent = formattedAddress;
-                        
-                        // Update location in the camera modal
-                        if (document.getElementById('location-display')) {
-                            const locationParts = formattedAddress.split(',');
-                            if (locationParts.length >= 3) {
-                                const firstLine = locationParts.slice(0, 2).join(',');
-                                const secondLine = locationParts.slice(2).join(',');
-                                document.getElementById('location-display').innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
-                            } else {
-                                document.getElementById('location-display').innerHTML = formattedAddress;
-                            }
-                        }
-                        
-                        // If we have a good accurate address, hide the status
-                        locationStatus.classList.add('d-none');
-                    } else {
-                        throw new Error('No address found');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching address:', error);
-                    // Fallback message if address lookup fails
-                    currentLocation.textContent = 'Address lookup failed. Using coordinate-based location.';
-                    locationStatus.classList.remove('d-none');
-                    locationStatus.className = 'alert alert-warning';
-                    locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Unable to fetch detailed address';
-                });
-        }
-        
-        function formatDisplayAddress(data) {
-            // Create a more user-friendly formatted address from Nominatim data
-            let address = '';
-            const details = data.address;
-            
-            // Building components
-            if (details.building) address += details.building + ', ';
-            if (details.house_number) address += details.house_number + ' ';
-            if (details.road) address += details.road + ', ';
-            if (details.suburb) address += details.suburb + ', ';
-            
-            // City/town components
-            if (details.city || details.town || details.village) {
-                address += (details.city || details.town || details.village) + ', ';
-            }
-            
-            // Region and postal code
-            if (details.state || details.state_district) {
-                address += (details.state || details.state_district) + ' ';
-            }
-            if (details.postcode) address += details.postcode + ', ';
-            
-            // Country
-            if (details.country) address += details.country;
-            
-            // If we couldn't build a good address, use the display_name
-            if (address.length < 10) {
-                address = data.display_name;
-            }
-            
-            return address;
-        }
-        
-        function handleLocationError(error) {
-            locationStatus.classList.remove('d-none');
-            locationStatus.className = 'alert alert-danger';
-            
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location services in your browser settings.';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Please check your device\'s GPS.';
-                    break;
-                case error.TIMEOUT:
-                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please try again in an area with better GPS signal.';
-                    break;
-                default:
-                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unknown error occurred while getting location.';
-            }
-            
-            currentLocation.textContent = 'Location services inaccessible';
-            coordinatesInfo.classList.add('d-none');
-        }
+                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details. Using GPS coordinates instead.';
+                    });
+            },
+            function(error) {
+                locationStatus.classList.remove('d-none');
+                locationStatus.className = 'alert alert-danger';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable precise location services in your browser settings to continue.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Please check your device settings.';
+                        break;
+                    case error.TIMEOUT:
+                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please try again.';
+                        break;
+                    default:
+                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>An unknown error occurred accessing location.';
+                }
+                currentLocation.textContent = 'Location access required';
+                coordinatesInfo.classList.add('d-none');
+                accuracyInfo.classList.add('d-none');
+            },
+            geoOptions
+        );
     } else {
         locationStatus.classList.remove('d-none');
         locationStatus.className = 'alert alert-danger';
         locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Geolocation is not supported by your browser.';
         currentLocation.textContent = 'Location services not supported';
         coordinatesInfo.classList.add('d-none');
+        accuracyInfo.classList.add('d-none');
     }
 });
 </script>
