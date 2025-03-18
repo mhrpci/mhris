@@ -767,6 +767,107 @@
         font-weight: 600;
         margin-right: 10px;
     }
+
+    /* New styled info panel like the image */
+    .info-sidebar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        top: 0;
+        width: auto;
+        max-width: 400px;
+        z-index: 6;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 0;
+        pointer-events: none;
+        background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0) 100%);
+    }
+    
+    .info-content {
+        padding: 20px;
+        margin-top: auto;
+        margin-bottom: 90px;
+    }
+    
+    .clock-badge {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        background: none;
+    }
+    
+    .clock-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 5px;
+        background-color: #28a745;
+        color: white;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-right: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .clock-out-status {
+        background-color: #dc3545;
+    }
+    
+    .clock-time {
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+    }
+    
+    .date-display {
+        font-size: 1.1rem;
+        color: white;
+        margin-bottom: 15px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .location-display {
+        color: white;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .user-display {
+        color: white;
+        margin-bottom: 5px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .user-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .user-company, .user-position {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+    
+    /* Vertical accent line */
+    .accent-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 5px;
+        background-color: #28a745;
+    }
+    
+    .accent-line.clock-out {
+        background-color: #dc3545;
+    }
 </style>
 @endpush
 
@@ -851,16 +952,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="timer-countdown" id="timer-countdown">3</div>
                 <div class="flash-animation" id="flash-animation"></div>
                 
-                <div class="minimized-action">
-                    <div class="minimized-action-text" id="minimized-action-text">CLOCK IN</div>
-                </div>
-                
-                <div class="user-info-overlay">
-                    <div class="user-info-datetime" id="user-info-datetime">2023-07-21 08:45:22</div>
-                    <div class="user-info-location" id="user-info-location">Location: 123 Business Street, Business City</div>
-                    <div class="user-info-details">
-                        <div class="user-info-name" id="user-info-name">John Doe</div>
-                        <div class="user-info-position" id="user-info-position">Software Engineer | IT Department | Acme Corp</div>
+                <div class="info-sidebar">
+                    <div class="accent-line" id="accent-line"></div>
+                    <div class="info-content">
+                        <div class="clock-badge">
+                            <div class="clock-status" id="clock-status">Clock In</div>
+                            <div class="clock-time" id="clock-time">07:55</div>
+                        </div>
+                        <div class="date-display" id="date-display">Tue, Mar 18, 2025</div>
+                        <div class="location-display" id="location-display">
+                            Jose L Briones Street, Lungsod ng Cebu,<br>
+                            6000 Lalawigan ng Cebu
+                        </div>
+                        <div class="user-display">
+                            <div class="user-name" id="user-name">Name: Edmar Crescencio</div>
+                            <div class="user-company" id="user-company">Company: MHR Property Conglomerates, Inc.</div>
+                            <div class="user-position" id="user-position">Position: IT Staff - Admin Department</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -948,12 +1056,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const captureLabel = document.getElementById('capture-label');
     const actionText = document.getElementById('action-text');
     
-    // Add these lines to get the minimized action text and user info elements
-    const minimizedActionText = document.getElementById('minimized-action-text');
-    const userInfoDatetime = document.getElementById('user-info-datetime');
-    const userInfoLocation = document.getElementById('user-info-location');
-    const userInfoName = document.getElementById('user-info-name');
-    const userInfoPosition = document.getElementById('user-info-position');
+    // Get references to the new elements
+    const clockStatus = document.getElementById('clock-status');
+    const clockTime = document.getElementById('clock-time');
+    const dateDisplay = document.getElementById('date-display');
+    const locationDisplay = document.getElementById('location-display');
+    const userName = document.getElementById('user-name');
+    const userCompany = document.getElementById('user-company');
+    const userPosition = document.getElementById('user-position');
+    const accentLine = document.getElementById('accent-line');
     
     // Function to open camera
     async function openCamera(facing) {
@@ -1243,37 +1354,58 @@ document.addEventListener('DOMContentLoaded', function() {
         actionText.className = 'action-text';
         if (isClockIn) {
             actionText.classList.add('clock-in-text');
-            minimizedActionText.className = 'minimized-action-text minimized-clock-in';
         } else {
             actionText.classList.add('clock-out-text');
-            minimizedActionText.className = 'minimized-action-text minimized-clock-out';
         }
         
-        // Update minimized action text
-        minimizedActionText.textContent = actionType.toUpperCase();
-        
-        // Update user info with current data
+        // Get current date and time
         const now = new Date();
-        userInfoDatetime.textContent = now.toLocaleString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
+        
+        // Format time as shown in the image
+        clockTime.textContent = now.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
-            second: '2-digit',
-            hour12: true
+            hour12: false
+        });
+        
+        // Update clock status and accent line
+        clockStatus.textContent = actionType;
+        if (isClockIn) {
+            clockStatus.classList.remove('clock-out-status');
+            accentLine.classList.remove('clock-out');
+        } else {
+            clockStatus.classList.add('clock-out-status');
+            accentLine.classList.add('clock-out');
+        }
+        
+        // Format date like "Tue, Mar 18, 2025"
+        dateDisplay.textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
         });
         
         // Use location from the document if available
         const locationElement = document.getElementById('current-location');
         if (locationElement && locationElement.textContent) {
-            userInfoLocation.textContent = 'Location: ' + locationElement.textContent;
+            // Split location into two lines for better readability
+            const fullLocation = locationElement.textContent;
+            const locationParts = fullLocation.split(',');
+            
+            if (locationParts.length >= 3) {
+                const firstLine = locationParts.slice(0, 2).join(',');
+                const secondLine = locationParts.slice(2).join(',');
+                locationDisplay.innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
+            } else {
+                locationDisplay.innerHTML = fullLocation;
+            }
         }
         
         // In a real application, these would be populated from the user's profile data
-        // For now, we'll use placeholder data
-        userInfoName.textContent = 'Employee Name';
-        userInfoPosition.textContent = 'Position | Department | Company';
+        userName.textContent = 'Name: Edmar Crescencio';
+        userCompany.textContent = 'Company: MHR Property Conglomerates, Inc.';
+        userPosition.textContent = 'Position: IT Staff - Admin Department';
         
         // Open camera
         openCamera(cameraFacingMode);
