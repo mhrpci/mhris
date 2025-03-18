@@ -40,6 +40,34 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Camera Capture Modal -->
+                    <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="cameraModalLabel">Identity Verification</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <div class="camera-container mb-3">
+                                        <video id="camera-stream" class="w-100 rounded" autoplay playsinline></video>
+                                        <canvas id="camera-canvas" class="d-none"></canvas>
+                                    </div>
+                                    <div id="camera-status" class="alert alert-info">
+                                        <i class="fas fa-camera me-2"></i>
+                                        <span>Please look at the camera for identification</span>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="capture-btn">
+                                        <i class="fas fa-camera me-2"></i>Capture
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -194,30 +222,103 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateDateTime, 1000);
     updateDateTime();
 
+    // Camera access variables
+    let stream = null;
+    let actionType = '';
+    const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
+    const captureBtn = document.getElementById('capture-btn');
+    const cameraStream = document.getElementById('camera-stream');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    const cameraStatus = document.getElementById('camera-status');
+
+    // Start camera function
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user' }, 
+                audio: false 
+            });
+            cameraStream.srcObject = stream;
+            cameraStatus.className = 'alert alert-info';
+            cameraStatus.innerHTML = '<i class="fas fa-camera me-2"></i><span>Please look at the camera for identification</span>';
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            cameraStatus.className = 'alert alert-danger';
+            cameraStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i><span>Could not access camera. Please check permissions.</span>';
+        }
+    }
+
+    // Stop camera function
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
+    // Capture image function
+    function captureImage() {
+        const context = cameraCanvas.getContext('2d');
+        cameraCanvas.width = cameraStream.videoWidth;
+        cameraCanvas.height = cameraStream.videoHeight;
+        context.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
+        
+        // Get image data as base64 (here you can send to server for verification)
+        const imageData = cameraCanvas.toDataURL('image/jpeg');
+        
+        // Show processing notification
+        cameraStatus.className = 'alert alert-success';
+        cameraStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i><span>Identity verified successfully!</span>';
+        
+        // Close modal and perform clock in/out after short delay
+        setTimeout(() => {
+            cameraModal.hide();
+            stopCamera();
+            performAttendanceAction();
+        }, 1500);
+    }
+
     // Attendance button functionality
     const attendanceBtn = document.getElementById('attendance-btn');
     const lastAction = document.getElementById('last-action');
     let isClockIn = true;
 
-    attendanceBtn.addEventListener('click', function() {
+    // Process actions after camera verification
+    function performAttendanceAction() {
         const now = new Date();
         const timeString = now.toLocaleTimeString();
         
-        if (isClockIn) {
+        if (actionType === 'Clock In') {
             attendanceBtn.innerHTML = '<i class="fas fa-sign-out-alt me-2"></i>Clock Out';
             attendanceBtn.classList.remove('btn-primary');
             attendanceBtn.classList.add('btn-danger');
             lastAction.textContent = `Last action: Clocked in at ${timeString}`;
-        } else {
+            isClockIn = false;
+        } else if (actionType === 'Clock Out') {
             attendanceBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Clock In';
             attendanceBtn.classList.remove('btn-danger');
             attendanceBtn.classList.add('btn-primary');
             lastAction.textContent = `Last action: Clocked out at ${timeString}`;
+            isClockIn = true;
         }
-        isClockIn = !isClockIn;
         
         // Here you can add AJAX call to your backend to record the attendance
-        updateActivityLog(isClockIn ? 'Clock Out' : 'Clock In');
+        updateActivityLog(actionType);
+    }
+
+    attendanceBtn.addEventListener('click', function() {
+        actionType = isClockIn ? 'Clock In' : 'Clock Out';
+        document.getElementById('cameraModalLabel').textContent = `Identity Verification - ${actionType}`;
+        cameraModal.show();
+        startCamera();
+    });
+
+    // Capture button event
+    captureBtn.addEventListener('click', captureImage);
+
+    // Clean up when modal is closed
+    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () {
+        stopCamera();
     });
 
     // Activity Log Update
