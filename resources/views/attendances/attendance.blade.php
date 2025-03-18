@@ -352,6 +352,14 @@
         cursor: pointer;
     }
     
+    /* Enhanced capture button with text */
+    .capture-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
     .capture-btn {
         width: 70px;
         height: 70px;
@@ -373,6 +381,28 @@
         border-radius: 50%;
         background: white;
         border: 2px solid #ddd;
+    }
+    
+    .capture-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .capture-label {
+        position: absolute;
+        bottom: -30px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: white;
+        font-weight: 500;
+        font-size: 14px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.3);
+        padding: 4px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+        max-width: 120px;
+        margin: 0 auto;
     }
     
     .zoom-controls {
@@ -517,7 +547,7 @@
         opacity: 0.1;
     }
     
-    /* Filter effects */
+    /* Enhanced filter effects */
     .filter-options {
         position: absolute;
         bottom: 100px;
@@ -527,20 +557,23 @@
         justify-content: center;
         z-index: 11;
         overflow-x: auto;
-        padding: 10px 0;
+        padding: 15px 0;
         display: none;
-        background: rgba(0, 0, 0, 0.3);
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
     
     .filter-option {
+        position: relative;
         width: 60px;
         height: 60px;
-        margin: 0 5px;
-        border-radius: 5px;
+        margin: 0 8px;
+        border-radius: 8px;
         overflow: hidden;
         border: 2px solid transparent;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.25s ease;
     }
     
     .filter-option.active {
@@ -549,8 +582,8 @@
     }
     
     .filter-option:not(.active):hover {
-        transform: scale(1.02);
-        border-color: rgba(255, 255, 255, 0.5);
+        transform: scale(1.05);
+        border-color: rgba(255, 255, 255, 0.7);
     }
     
     .filter-preview {
@@ -562,17 +595,18 @@
     
     .filter-label {
         position: absolute;
-        bottom: -20px;
+        bottom: -22px;
         left: 0;
         right: 0;
         text-align: center;
         color: white;
-        font-size: 10px;
+        font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
     
-    /* Filter CSS classes */
+    /* Enhanced filter effects */
     .filter-normal {
         filter: none;
     }
@@ -591,6 +625,22 @@
     
     .filter-saturate {
         filter: saturate(200%) contrast(110%);
+    }
+    
+    .filter-warm {
+        filter: sepia(30%) saturate(150%) brightness(105%) contrast(105%);
+    }
+    
+    .filter-cool {
+        filter: hue-rotate(340deg) saturate(120%) brightness(102%);
+    }
+    
+    .filter-beauty {
+        filter: brightness(105%) contrast(105%) saturate(110%);
+    }
+    
+    .filter-smooth {
+        filter: brightness(105%) contrast(95%) saturate(105%) blur(0.5px);
     }
     
     @media (max-width: 768px) {
@@ -672,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button class="camera-option" id="timer-toggle" title="Timer">
                         <i class="fas fa-clock"></i>
                     </button>
-                    <button class="camera-option" id="filter-toggle" title="Filters">
+                    <button class="camera-option" id="filter-toggle" title="Filters & Beauty">
                         <i class="fas fa-magic"></i>
                     </button>
                 </div>
@@ -700,6 +750,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="filter-preview" style="background-image: url('https://via.placeholder.com/60');"></div>
                     <div class="filter-label">Normal</div>
                 </div>
+                <div class="filter-option" data-filter="beauty">
+                    <div class="filter-preview filter-beauty" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">Beauty</div>
+                </div>
+                <div class="filter-option" data-filter="smooth">
+                    <div class="filter-preview filter-smooth" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">Smooth</div>
+                </div>
+                <div class="filter-option" data-filter="warm">
+                    <div class="filter-preview filter-warm" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">Warm</div>
+                </div>
+                <div class="filter-option" data-filter="cool">
+                    <div class="filter-preview filter-cool" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">Cool</div>
+                </div>
                 <div class="filter-option" data-filter="grayscale">
                     <div class="filter-preview filter-grayscale" style="background-image: url('https://via.placeholder.com/60');"></div>
                     <div class="filter-label">B&W</div>
@@ -707,10 +773,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="filter-option" data-filter="sepia">
                     <div class="filter-preview filter-sepia" style="background-image: url('https://via.placeholder.com/60');"></div>
                     <div class="filter-label">Sepia</div>
-                </div>
-                <div class="filter-option" data-filter="invert">
-                    <div class="filter-preview filter-invert" style="background-image: url('https://via.placeholder.com/60');"></div>
-                    <div class="filter-label">Invert</div>
                 </div>
                 <div class="filter-option" data-filter="saturate">
                     <div class="filter-preview filter-saturate" style="background-image: url('https://via.placeholder.com/60');"></div>
@@ -724,7 +786,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <input type="file" accept="image/*" class="gallery-input" id="gallery-input">
                 </div>
-                <div class="capture-btn" id="capture-photo"></div>
+                <div class="capture-container">
+                    <div class="capture-btn" id="capture-photo"></div>
+                    <div class="capture-label" id="capture-label">Clock In</div>
+                </div>
                 <button class="switch-camera-btn" id="switch-camera">
                     <i class="fas fa-sync-alt"></i>
                 </button>
@@ -755,6 +820,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterOptionsContainer = document.getElementById('filter-options');
     const filterOptions = document.querySelectorAll('.filter-option');
     const galleryInput = document.getElementById('gallery-input');
+    const captureLabel = document.getElementById('capture-label');
     
     // Function to open camera
     async function openCamera(facing) {
@@ -974,6 +1040,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 filterOptionsContainer.style.opacity = '1';
             }, 10);
             timerOptions.style.display = 'none';
+            zoomSliderContainer.style.display = 'none';
         } else {
             // Hide with animation
             filterOptionsContainer.style.opacity = '0';
@@ -987,13 +1054,17 @@ document.addEventListener('DOMContentLoaded', function() {
     filterOptions.forEach(option => {
         option.addEventListener('click', function() {
             activeFilter = this.dataset.filter;
+            
+            // Update UI
             filterOptions.forEach(opt => opt.classList.remove('active'));
             this.classList.add('active');
             
-            // Apply filter class to video with improved visuals
+            // Apply filter with transition
+            cameraView.style.transition = 'filter 0.3s ease';
             cameraView.className = '';
             cameraView.classList.add(`filter-${activeFilter}`);
             
+            // Update filter toggle indicator
             if (activeFilter !== 'normal') {
                 filterToggle.classList.add('active');
             } else {
@@ -1033,6 +1104,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set action type
         actionType = isClockIn ? 'Clock In' : 'Clock Out';
+        
+        // Update capture button label
+        captureLabel.textContent = actionType;
         
         // Open camera
         openCamera(cameraFacingMode);
