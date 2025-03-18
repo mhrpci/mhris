@@ -63,9 +63,6 @@
                         <div class="mb-3">
                             <label class="text-muted small">Current Address</label>
                             <p id="current-location" class="mb-0 fw-bold">Waiting for location...</p>
-                            <div id="accuracy-info" class="d-none small text-muted mt-1">
-                                <i class="fas fa-crosshairs me-1"></i><span id="accuracy-value">Waiting...</span>
-                            </div>
                         </div>
                         <div id="coordinates-info" class="d-none">
                             <label class="text-muted small">Coordinates</label>
@@ -1597,114 +1594,269 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Location tracking
+    // Location tracking with enhanced functionality
     const locationStatus = document.getElementById('location-status');
     const currentLocation = document.getElementById('current-location');
     const coordinatesInfo = document.getElementById('coordinates-info');
     const coordinates = document.getElementById('coordinates');
-    const accuracyInfo = document.getElementById('accuracy-info');
-    const accuracyValue = document.getElementById('accuracy-value');
-
-    if ("geolocation" in navigator) {
-        // Set options for high accuracy
-        const geoOptions = {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        };
+    
+    // Location cache to prevent unnecessary API calls
+    let locationCache = {
+        timestamp: 0,
+        coords: null,
+        address: null
+    };
+    
+    // Configuration
+    const LOCATION_CONFIG = {
+        cacheTimeout: 5 * 60 * 1000, // 5 minutes
+        highAccuracy: true,
+        timeout: 10000, // 10 seconds
+        maximumAge: 30000, // 30 seconds
+        watchInterval: 60000, // 1 minute
+        retryAttempts: 3,
+        retryDelay: 2000 // 2 seconds
+    };
+    
+    // Enhanced location tracking
+    class LocationTracker {
+        constructor() {
+            this.watchId = null;
+            this.retryCount = 0;
+            this.isTracking = false;
+        }
         
-        locationStatus.classList.remove('d-none');
-        locationStatus.className = 'alert alert-info';
-        locationStatus.innerHTML = '<i class="fas fa-location-arrow me-2"></i>Requesting precise location...';
+        // Initialize location tracking
+        init() {
+            if (!("geolocation" in navigator)) {
+                this.handleLocationError({
+                    code: 'NOT_SUPPORTED',
+                    message: 'Geolocation is not supported by your browser.'
+                });
+                return;
+            }
+            
+            this.startTracking();
+        }
         
-        navigator.geolocation.watchPosition(
-            function(position) {
-                // Format for reverse geocoding with detailed results
-                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1&zoom=18`;
-                
-                fetch(url, {
-                    headers: {
-                        'User-Agent': 'HRIS Attendance Application'
-                    }
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Parse and display detailed address information
-                        const addr = data.address;
-                        
-                        // Format address in a more readable way
-                        let formattedAddress = '';
-                        if (addr.road || addr.house_number) {
-                            formattedAddress += (addr.house_number || '') + ' ' + (addr.road || '') + ', ';
-                        }
-                        if (addr.suburb) formattedAddress += addr.suburb + ', ';
-                        if (addr.city || addr.town || addr.village) {
-                            formattedAddress += (addr.city || addr.town || addr.village) + ', ';
-                        }
-                        if (addr.county) formattedAddress += addr.county + ', ';
-                        if (addr.state) formattedAddress += addr.state + ', ';
-                        if (addr.postcode) formattedAddress += addr.postcode + ', ';
-                        if (addr.country) formattedAddress += addr.country;
-                        
-                        // Remove trailing comma and space if present
-                        formattedAddress = formattedAddress.replace(/, $/, '');
-                        
-                        currentLocation.textContent = formattedAddress || data.display_name;
-                        coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                        
-                        // Show accuracy information
-                        accuracyValue.textContent = `Accuracy: ${Math.round(position.coords.accuracy)} meters`;
-                        accuracyInfo.classList.remove('d-none');
-                        
-                        // Always show coordinates for precision
-                        coordinatesInfo.classList.remove('d-none');
-                        locationStatus.classList.add('d-none');
-                    })
-                    .catch(error => {
-                        console.error('Error fetching address:', error);
-                        currentLocation.textContent = 'Unable to fetch detailed address';
-                        coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                        coordinatesInfo.classList.remove('d-none');
-                        locationStatus.classList.remove('d-none');
-                        locationStatus.className = 'alert alert-warning';
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details. Using GPS coordinates instead.';
-                    });
-            },
-            function(error) {
-                locationStatus.classList.remove('d-none');
-                locationStatus.className = 'alert alert-danger';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable precise location services in your browser settings to continue.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Please check your device settings.';
-                        break;
-                    case error.TIMEOUT:
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please try again.';
-                        break;
-                    default:
-                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>An unknown error occurred accessing location.';
+        // Start tracking location
+        startTracking() {
+            if (this.isTracking) return;
+            
+            this.isTracking = true;
+            this.updateLocationStatus('info', 'Acquiring your location...');
+            
+            // Get initial position
+            this.getCurrentPosition();
+            
+            // Set up periodic location updates
+            this.watchId = navigator.geolocation.watchPosition(
+                position => this.handlePosition(position),
+                error => this.handleLocationError(error),
+                {
+                    enableHighAccuracy: LOCATION_CONFIG.highAccuracy,
+                    timeout: LOCATION_CONFIG.timeout,
+                    maximumAge: LOCATION_CONFIG.maximumAge
                 }
-                currentLocation.textContent = 'Location access required';
-                coordinatesInfo.classList.add('d-none');
-                accuracyInfo.classList.add('d-none');
-            },
-            geoOptions
-        );
-    } else {
-        locationStatus.classList.remove('d-none');
-        locationStatus.className = 'alert alert-danger';
-        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Geolocation is not supported by your browser.';
-        currentLocation.textContent = 'Location services not supported';
-        coordinatesInfo.classList.add('d-none');
-        accuracyInfo.classList.add('d-none');
+            );
+        }
+        
+        // Stop tracking location
+        stopTracking() {
+            if (this.watchId !== null) {
+                navigator.geolocation.clearWatch(this.watchId);
+                this.watchId = null;
+            }
+            this.isTracking = false;
+        }
+        
+        // Get current position
+        getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        this.handlePosition(position);
+                        resolve(position);
+                    },
+                    error => {
+                        this.handleLocationError(error);
+                        reject(error);
+                    },
+                    {
+                        enableHighAccuracy: LOCATION_CONFIG.highAccuracy,
+                        timeout: LOCATION_CONFIG.timeout,
+                        maximumAge: LOCATION_CONFIG.maximumAge
+                    }
+                );
+            });
+        }
+        
+        // Handle successful position acquisition
+        async handlePosition(position) {
+            const { latitude, longitude, accuracy } = position.coords;
+            
+            // Update coordinates display
+            coordinates.textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`;
+            coordinatesInfo.classList.remove('d-none');
+            
+            // Check if cached location can be used
+            if (this.canUseCachedLocation(position)) {
+                this.updateLocationDisplay(locationCache.address);
+                return;
+            }
+            
+            // Get address using reverse geocoding
+            try {
+                const address = await this.reverseGeocode(latitude, longitude);
+                this.updateLocationCache(position, address);
+                this.updateLocationDisplay(address);
+                this.updateLocationStatus('success', 'Location acquired successfully');
+            } catch (error) {
+                console.error('Reverse geocoding error:', error);
+                this.updateLocationStatus('warning', 'Location acquired, but address lookup failed');
+                currentLocation.textContent = `Location found (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+            }
+        }
+        
+        // Reverse geocoding with retry mechanism
+        async reverseGeocode(latitude, longitude) {
+            const endpoint = `https://nominatim.openstreetmap.org/reverse`;
+            const params = new URLSearchParams({
+                format: 'json',
+                lat: latitude,
+                lon: longitude,
+                zoom: 18,
+                addressdetails: 1
+            });
+            
+            for (let attempt = 1; attempt <= LOCATION_CONFIG.retryAttempts; attempt++) {
+                try {
+                    const response = await fetch(`${endpoint}?${params}`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    return data.display_name;
+                } catch (error) {
+                    if (attempt === LOCATION_CONFIG.retryAttempts) throw error;
+                    await new Promise(resolve => setTimeout(resolve, LOCATION_CONFIG.retryDelay));
+                }
+            }
+        }
+        
+        // Handle location errors
+        handleLocationError(error) {
+            let message = 'An unknown error occurred while getting your location.';
+            let type = 'danger';
+            
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    message = 'Location access denied. Please enable location services in your browser settings.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = 'Location information is unavailable. Please check your device settings.';
+                    break;
+                case error.TIMEOUT:
+                    message = 'Location request timed out. Please try again.';
+                    type = 'warning';
+                    break;
+                case 'NOT_SUPPORTED':
+                    message = error.message;
+                    break;
+            }
+            
+            this.updateLocationStatus(type, message);
+            currentLocation.textContent = 'Location unavailable';
+            coordinatesInfo.classList.add('d-none');
+            
+            // Retry if appropriate
+            if (error.code === error.TIMEOUT && this.retryCount < LOCATION_CONFIG.retryAttempts) {
+                this.retryCount++;
+                setTimeout(() => this.getCurrentPosition(), LOCATION_CONFIG.retryDelay);
+            }
+        }
+        
+        // Update location cache
+        updateLocationCache(position, address) {
+            locationCache = {
+                timestamp: Date.now(),
+                coords: position.coords,
+                address: address
+            };
+        }
+        
+        // Check if cached location can be used
+        canUseCachedLocation(newPosition) {
+            if (!locationCache.coords || !locationCache.address) return false;
+            
+            const timeDiff = Date.now() - locationCache.timestamp;
+            if (timeDiff > LOCATION_CONFIG.cacheTimeout) return false;
+            
+            const distance = this.calculateDistance(
+                locationCache.coords.latitude,
+                locationCache.coords.longitude,
+                newPosition.coords.latitude,
+                newPosition.coords.longitude
+            );
+            
+            // Only use cache if distance is less than accuracy radius
+            return distance < (newPosition.coords.accuracy / 1000); // Convert accuracy to kilometers
+        }
+        
+        // Calculate distance between coordinates using Haversine formula
+        calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in kilometers
+            const dLat = this.toRad(lat2 - lat1);
+            const dLon = this.toRad(lon2 - lon1);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        toRad(value) {
+            return value * Math.PI / 180;
+        }
+        
+        // Update location status display
+        updateLocationStatus(type, message) {
+            locationStatus.className = `alert alert-${type}`;
+            locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${message}`;
+            locationStatus.classList.remove('d-none');
+            
+            if (type === 'success') {
+                setTimeout(() => locationStatus.classList.add('d-none'), 3000);
+            }
+        }
+        
+        // Update location display
+        updateLocationDisplay(address) {
+            if (!address) return;
+            
+            currentLocation.textContent = address;
+            
+            // Update location in camera view if active
+            const locationDisplay = document.getElementById('location-display');
+            if (locationDisplay) {
+                const parts = address.split(',');
+                if (parts.length >= 3) {
+                    const firstLine = parts.slice(0, 2).join(',');
+                    const secondLine = parts.slice(2).join(',');
+                    locationDisplay.innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
+                } else {
+                    locationDisplay.innerHTML = address;
+                }
+            }
+        }
     }
+    
+    // Initialize location tracking
+    const locationTracker = new LocationTracker();
+    locationTracker.init();
+    
+    // Clean up on page unload
+    window.addEventListener('beforeunload', () => {
+        locationTracker.stopTracking();
+    });
 });
 </script>
 @endpush
