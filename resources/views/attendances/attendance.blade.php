@@ -655,41 +655,46 @@
     /* Timer & zoom controls */
     .zoom-controls {
         position: absolute;
-        bottom: 100px;
-        left: 0;
-        right: 0;
+        bottom: 40%;
+        right: 20px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        z-index: 5;
+        z-index: 10;
     }
     
     .zoom-indicator {
         color: white;
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.5);
         padding: 4px 12px;
         border-radius: 20px;
         font-size: 0.9rem;
         margin-bottom: 10px;
+        font-weight: 500;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
     
     .zoom-slider-container {
-        width: 80%;
-        max-width: 300px;
+        width: 40px;
+        height: 150px;
         background: rgba(0, 0, 0, 0.4);
         border-radius: 20px;
-        padding: 5px 15px;
+        padding: 10px 5px;
         display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
     }
     
     .zoom-slider {
-        width: 100%;
+        width: 150px;
         cursor: pointer;
         -webkit-appearance: none;
         height: 6px;
         border-radius: 3px;
         background: rgba(255, 255, 255, 0.3);
         outline: none;
+        transform: rotate(-90deg);
     }
     
     .zoom-slider::-webkit-slider-thumb {
@@ -1016,6 +1021,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let hdrActive = false;
     let activeFilter = 'normal';
     let timerInterval = null;
+    let pinchZoomActive = false;
+    let startZoomDistance = 0;
+    let currentZoom = 1;
+    let locationUpdateInterval = null;
+    let locationRetryCount = 0;
+    let maxLocationRetries = 5;
     
     // Create camera modal element
     const cameraModal = document.createElement('div');
@@ -1062,8 +1073,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <div class="date-display" id="date-display">Tue, Mar 18, 2025</div>
                         <div class="location-display" id="location-display">
-                            Jose L Briones Street, Lungsod ng Cebu,<br>
-                            6000 Lalawigan ng Cebu
+                            Fetching location...
                         </div>
                         <div class="user-display">
                             <div class="user-name" id="user-name">Name: Edmar Crescencio</div>
@@ -1210,6 +1220,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     zoomSlider.value = 1;
                     zoomValue = 1;
                     zoomIndicator.textContent = '1×';
+                    currentZoom = 1;
                 }
             } catch (e) {
                 console.log('Capabilities API not supported');
@@ -1275,6 +1286,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            // Set up pinch-to-zoom
+            setupPinchZoom();
+            
+            // Start updating date and location in real-time
+            startRealtimeUpdates();
+            
         } catch (error) {
             console.error('Error accessing camera:', error);
             alert('Unable to access camera. Please ensure you have granted camera permissions.');
@@ -1284,8 +1301,244 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Function to start real-time updates of date and location in camera
+    function startRealtimeUpdates() {
+        // Start updating the date and time every second
+        const cameraDateTimeInterval = setInterval(() => {
+            const now = new Date();
+            
+            // Update clock time in the format shown in the image (HH:MM)
+            clockTime.textContent = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            // Format date like "Tue, Mar 18, 2025"
+            dateDisplay.textContent = now.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }, 1000);
+        
+        // Update location immediately and then every 30 seconds
+        updateCameraLocation();
+        locationUpdateInterval = setInterval(updateCameraLocation, 30000);
+        
+        // Store interval IDs for cleanup
+        cameraModal.dataset.dateTimeInterval = cameraDateTimeInterval;
+        cameraModal.dataset.locationInterval = locationUpdateInterval;
+    }
+    
+    // Function to stop real-time updates
+    function stopRealtimeUpdates() {
+        // Clear the intervals
+        if (cameraModal.dataset.dateTimeInterval) {
+            clearInterval(parseInt(cameraModal.dataset.dateTimeInterval));
+        }
+        if (cameraModal.dataset.locationInterval) {
+            clearInterval(parseInt(cameraModal.dataset.locationInterval));
+        }
+        
+        // Also clear any ongoing location watch
+        if (cameraModal.dataset.locationWatchId) {
+            navigator.geolocation.clearWatch(parseInt(cameraModal.dataset.locationWatchId));
+        }
+    }
+    
+    // Function to update camera location with better error handling and fallbacks
+    function updateCameraLocation() {
+        // Reset retry count if this is a fresh attempt
+        if (!locationUpdateInterval) {
+            locationRetryCount = 0;
+        }
+        
+        // Update the UI to show location is being fetched
+        if (locationRetryCount === 0) {
+            locationDisplay.innerHTML = 'Fetching location...';
+        }
+        
+        // Function to handle location error with fallbacks
+        function handleLocationError(error) {
+            locationRetryCount++;
+            
+            if (locationRetryCount < maxLocationRetries) {
+                // Retry getting location
+                locationDisplay.innerHTML = `Retrying location fetch (${locationRetryCount}/${maxLocationRetries})...`;
+                setTimeout(updateCameraLocation, 3000);
+            } else {
+                // Fallback to IP-based location if geolocation fails multiple times
+                locationDisplay.innerHTML = 'Using approximate location...';
+                
+                // Try to get IP-based location from a free service
+                fetch('https://ipinfo.io/json?token=2b0a1eaf8eb87d')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.city && data.region) {
+                            locationDisplay.innerHTML = `${data.city}, ${data.region}, ${data.country}`;
+                        } else {
+                            locationDisplay.innerHTML = 'Location unavailable';
+                        }
+                    })
+                    .catch(err => {
+                        locationDisplay.innerHTML = 'Location unavailable';
+                        console.error('IP location fetch failed:', err);
+                    });
+            }
+        }
+        
+        // Configure high accuracy with appropriate timeout
+        const geoOptions = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
+        
+        // Try to get precise location
+        if ("geolocation" in navigator) {
+            const watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    // Get address from coordinates using reverse geocoding
+                    const apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`;
+                    
+                    fetch(apiUrl, {
+                        headers: {
+                            'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Format address for better display
+                            let addressParts = [];
+                            if (data.address) {
+                                if (data.address.road) addressParts.push(data.address.road);
+                                if (data.address.suburb) addressParts.push(data.address.suburb);
+                                if (data.address.city) addressParts.push(data.address.city);
+                                if (data.address.state) addressParts.push(data.address.state);
+                                if (data.address.country) addressParts.push(data.address.country);
+                            }
+                            
+                            const formattedAddress = addressParts.length ? addressParts.join(', ') : data.display_name;
+                            
+                            // Split location into two lines for better readability
+                            const locationParts = formattedAddress.split(',');
+                            
+                            if (locationParts.length >= 3) {
+                                const firstLine = locationParts.slice(0, 2).join(',');
+                                const secondLine = locationParts.slice(2).join(',');
+                                locationDisplay.innerHTML = `${firstLine.trim()},<br>${secondLine.trim()}`;
+                            } else {
+                                locationDisplay.innerHTML = formattedAddress;
+                            }
+                            
+                            // Store to allow use at clock-in/out time
+                            cameraModal.dataset.lastLocation = formattedAddress;
+                            cameraModal.dataset.lastCoords = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                            
+                            // Reset retry count as we succeeded
+                            locationRetryCount = 0;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching address:', error);
+                            
+                            // Fallback to showing coordinates if geocoding fails
+                            locationDisplay.innerHTML = `Lat: ${position.coords.latitude.toFixed(5)}<br>Long: ${position.coords.longitude.toFixed(5)}`;
+                            
+                            // Store coordinates for use at clock-in/out time
+                            cameraModal.dataset.lastCoords = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                            cameraModal.dataset.lastLocation = `Location at ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                        });
+                    
+                    // Save the watch ID to clear it when closing the camera
+                    cameraModal.dataset.locationWatchId = watchId;
+                },
+                handleLocationError,
+                geoOptions
+            );
+        } else {
+            locationDisplay.innerHTML = 'Location not supported';
+        }
+    }
+    
+    // Set up pinch-to-zoom functionality
+    function setupPinchZoom() {
+        const cameraContainer = document.querySelector('.camera-container');
+        
+        // Track touch points for pinch detection
+        let initialTouchDistance = 0;
+        let currentZoom = parseFloat(zoomSlider.value);
+        const maxZoom = parseFloat(zoomSlider.max);
+        
+        cameraContainer.addEventListener('touchstart', function(e) {
+            if (e.touches.length >= 2) {
+                // Get initial touch distance
+                initialTouchDistance = getTouchDistance(e.touches);
+                // Store starting zoom level
+                currentZoom = parseFloat(zoomSlider.value);
+                pinchZoomActive = true;
+            }
+        });
+        
+        cameraContainer.addEventListener('touchmove', function(e) {
+            if (pinchZoomActive && e.touches.length >= 2) {
+                e.preventDefault(); // Prevent default actions like scrolling
+                
+                // Calculate new distance
+                const currentDistance = getTouchDistance(e.touches);
+                
+                // Calculate zoom change factor (adjust sensitivity here)
+                const zoomChange = (currentDistance / initialTouchDistance) - 1;
+                
+                // Apply zoom (with bounds checking)
+                const newZoom = Math.min(Math.max(currentZoom + zoomChange * 2, 1), maxZoom);
+                
+                // Update UI and apply zoom
+                zoomSlider.value = newZoom;
+                zoomIndicator.textContent = `${newZoom.toFixed(1)}×`;
+                applyZoom(newZoom);
+            }
+        });
+        
+        cameraContainer.addEventListener('touchend', function(e) {
+            if (e.touches.length < 2) {
+                pinchZoomActive = false;
+            }
+        });
+        
+        // Helper function to calculate distance between touch points
+        function getTouchDistance(touches) {
+            const touch1 = touches[0];
+            const touch2 = touches[1];
+            
+            return Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+            );
+        }
+    }
+    
+    // Apply zoom to camera
+    async function applyZoom(zoomLevel) {
+        if (!stream) return;
+        
+        try {
+            const track = stream.getVideoTracks()[0];
+            await track.applyConstraints({
+                advanced: [{ zoom: zoomLevel }]
+            });
+            zoomValue = zoomLevel;
+        } catch (e) {
+            console.log('Zoom not supported on this device');
+        }
+    }
+    
     // Function to stop camera
     function stopCamera(hideModal = true) {
+        // Stop real-time updates
+        stopRealtimeUpdates();
+        
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
             stream = null;
@@ -1354,6 +1607,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (timerOptions.style.display === 'none' || timerOptions.style.display === '') {
             timerOptions.style.display = 'block';
             filterOptionsContainer.style.display = 'none';
+            zoomSliderContainer.style.display = 'none';
         } else {
             timerOptions.style.display = 'none';
         }
@@ -1421,26 +1675,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Zoom controls
     zoomIndicator.addEventListener('click', function() {
         if (zoomSliderContainer.style.display === 'none' || zoomSliderContainer.style.display === '') {
-            zoomSliderContainer.style.display = 'block';
+            zoomSliderContainer.style.display = 'flex';
         } else {
             zoomSliderContainer.style.display = 'none';
         }
     });
     
-    zoomSlider.addEventListener('input', async function() {
+    zoomSlider.addEventListener('input', function() {
         if (!stream) return;
         
-        try {
-            const track = stream.getVideoTracks()[0];
-            zoomValue = parseFloat(this.value);
-            zoomIndicator.textContent = `${zoomValue.toFixed(1)}×`;
-            
-            await track.applyConstraints({
-                advanced: [{ zoom: zoomValue }]
-            });
-        } catch (e) {
-            console.log('Zoom not supported on this device');
-        }
+        const newZoom = parseFloat(this.value);
+        zoomIndicator.textContent = `${newZoom.toFixed(1)}×`;
+        applyZoom(newZoom);
     });
     
     // Add click event to attendance button
