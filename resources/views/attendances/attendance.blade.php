@@ -658,6 +658,39 @@
             padding: 8px 12px;
         }
     }
+
+    /* Action Identification Banner */
+    .action-banner {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    .action-text {
+        display: inline-block;
+        padding: 8px 20px;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-radius: 30px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    
+    .clock-in-text {
+        background-color: rgba(25, 135, 84, 0.8);
+    }
+    
+    .clock-out-text {
+        background-color: rgba(220, 53, 69, 0.8);
+    }
 </style>
 @endpush
 
@@ -727,6 +760,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                 </div>
             </div>
+            <div class="action-banner">
+                <div class="action-text" id="action-text">CLOCK IN</div>
+            </div>
             <div class="timer-options" id="timer-options">
                 <button class="timer-option" data-timer="0">Off</button>
                 <button class="timer-option" data-timer="3">3s</button>
@@ -747,35 +783,35 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="filter-options" id="filter-options">
                 <div class="filter-option active" data-filter="normal">
-                    <div class="filter-preview" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-preview" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
                     <div class="filter-label">Normal</div>
                 </div>
                 <div class="filter-option" data-filter="beauty">
-                    <div class="filter-preview filter-beauty" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-preview filter-beauty" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
                     <div class="filter-label">Beauty</div>
                 </div>
                 <div class="filter-option" data-filter="smooth">
-                    <div class="filter-preview filter-smooth" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-preview filter-smooth" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
                     <div class="filter-label">Smooth</div>
                 </div>
                 <div class="filter-option" data-filter="warm">
-                    <div class="filter-preview filter-warm" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-preview filter-warm" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
                     <div class="filter-label">Warm</div>
                 </div>
                 <div class="filter-option" data-filter="cool">
-                    <div class="filter-preview filter-cool" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-preview filter-cool" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
                     <div class="filter-label">Cool</div>
                 </div>
                 <div class="filter-option" data-filter="grayscale">
-                    <div class="filter-preview filter-grayscale" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-preview filter-grayscale" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
                     <div class="filter-label">B&W</div>
                 </div>
                 <div class="filter-option" data-filter="sepia">
-                    <div class="filter-preview filter-sepia" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-preview filter-sepia" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
                     <div class="filter-label">Sepia</div>
                 </div>
                 <div class="filter-option" data-filter="saturate">
-                    <div class="filter-preview filter-saturate" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-preview filter-saturate" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
                     <div class="filter-label">Vivid</div>
                 </div>
             </div>
@@ -821,6 +857,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterOptions = document.querySelectorAll('.filter-option');
     const galleryInput = document.getElementById('gallery-input');
     const captureLabel = document.getElementById('capture-label');
+    const actionText = document.getElementById('action-text');
     
     // Function to open camera
     async function openCamera(facing) {
@@ -1104,6 +1141,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set action type
         actionType = isClockIn ? 'Clock In' : 'Clock Out';
+        
+        // Update text and styles for the action banner
+        actionText.textContent = actionType.toUpperCase();
+        actionText.className = 'action-text';
+        if (isClockIn) {
+            actionText.classList.add('clock-in-text');
+        } else {
+            actionText.classList.add('clock-out-text');
+        }
         
         // Update capture button label
         captureLabel.textContent = actionType;
