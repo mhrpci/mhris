@@ -173,89 +173,161 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: #000;
         z-index: 9999;
     }
     
     .camera-container {
         position: relative;
         width: 100%;
-        max-width: 640px;
-        margin: 30px auto;
-        background: #fff;
-        border-radius: 8px;
+        height: 100%;
+        background: #000;
         overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
     
     .camera-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
         padding: 15px;
-        background: #f8f9fa;
-        border-bottom: 1px solid #eee;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        z-index: 10;
     }
     
     .camera-title {
         font-size: 1.1rem;
         font-weight: 600;
-        color: #333;
+        color: #fff;
         margin: 0;
+        display: none;
     }
     
     .camera-body {
         position: relative;
         width: 100%;
+        height: 100%;
     }
     
     #camera-view {
         width: 100%;
-        height: auto;
-        display: block;
-        background-color: #000;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    
+    .camera-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 220px;
+        height: 220px;
+        border: 2px solid rgba(255, 215, 0, 0.8);
+        box-sizing: border-box;
+        z-index: 5;
+        pointer-events: none;
+    }
+    
+    .camera-frame::before,
+    .camera-frame::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: rgba(255, 215, 0, 0.8);
+        border-style: solid;
+    }
+    
+    /* Top left corner */
+    .camera-frame::before {
+        top: -2px;
+        left: -2px;
+        border-width: 2px 0 0 2px;
+    }
+    
+    /* Bottom right corner */
+    .camera-frame::after {
+        bottom: -2px;
+        right: -2px;
+        border-width: 0 2px 2px 0;
     }
     
     .camera-controls {
-        padding: 15px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 20px 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: #f8f9fa;
-        border-top: 1px solid #eee;
+        z-index: 10;
     }
     
-    .camera-btn {
-        border-radius: 50px;
-        padding: 10px 20px;
-        font-weight: 500;
-        transition: all 0.2s;
+    .camera-options {
+        display: flex;
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        justify-content: space-between;
+        z-index: 10;
+    }
+    
+    .camera-option {
+        color: white;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        padding: 8px;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+    
+    .camera-option:hover {
+        opacity: 1;
     }
     
     .switch-camera-btn {
         background: none;
         border: none;
         font-size: 1.3rem;
-        color: #555;
+        color: #fff;
         cursor: pointer;
         padding: 8px;
         border-radius: 50%;
-        transition: all 0.2s;
+        opacity: 0.8;
+        transition: opacity 0.2s;
     }
     
     .switch-camera-btn:hover {
-        background: rgba(0,0,0,0.1);
-        color: #333;
+        opacity: 1;
+    }
+    
+    .gallery-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
     }
     
     .capture-btn {
-        width: 60px;
-        height: 60px;
+        width: 70px;
+        height: 70px;
         border-radius: 50%;
-        background: #dc3545;
-        border: 3px solid white;
-        color: white;
-        font-size: 1.5rem;
+        background: white;
+        border: 4px solid rgba(255, 255, 255, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -264,39 +336,52 @@
         transition: all 0.2s;
     }
     
-    .capture-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 3px 15px rgba(0,0,0,0.3);
+    .capture-btn::before {
+        content: '';
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #ddd;
+    }
+    
+    .zoom-indicator {
+        position: absolute;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        z-index: 5;
     }
     
     .cancel-btn {
         background: none;
         border: none;
-        color: #6c757d;
+        color: white;
+        font-size: 1.5rem;
         cursor: pointer;
-        padding: 10px;
-        font-weight: 500;
-        transition: all 0.2s;
+        padding: 8px;
+        opacity: 0.8;
+        transition: opacity 0.2s;
     }
     
     .cancel-btn:hover {
-        color: #343a40;
+        opacity: 1;
     }
     
     @media (max-width: 768px) {
         .camera-container {
-            width: 95%;
-            margin: 15px auto;
+            width: 100%;
+            height: 100%;
         }
         
-        .camera-controls {
-            padding: 10px;
-        }
-        
-        .capture-btn {
-            width: 50px;
-            height: 50px;
-            font-size: 1.2rem;
+        .camera-frame {
+            width: 180px;
+            height: 180px;
         }
     }
 </style>
@@ -344,25 +429,37 @@ document.addEventListener('DOMContentLoaded', function() {
     cameraModal.id = 'camera-modal';
     cameraModal.innerHTML = `
         <div class="camera-container">
-            <div class="camera-header">
-                <button class="cancel-btn" id="close-camera">
-                    <i class="fas fa-times"></i>
+            <div class="camera-options">
+                <button class="camera-option" id="flash-toggle">
+                    <i class="fas fa-bolt"></i>
                 </button>
-                <h5 class="camera-title" id="camera-action-title">Camera Identification</h5>
-                <button class="switch-camera-btn" id="switch-camera">
-                    <i class="fas fa-sync-alt"></i>
+                <button class="camera-option" id="hdr-toggle">
+                    HDR
+                </button>
+                <button class="camera-option" id="timer-toggle">
+                    <i class="fas fa-clock"></i>
+                </button>
+                <button class="camera-option" id="filter-toggle">
+                    <i class="fas fa-circle"></i>
                 </button>
             </div>
             <div class="camera-body">
                 <video id="camera-view" autoplay playsinline></video>
+                <div class="camera-frame"></div>
+                <div class="zoom-indicator">1×</div>
             </div>
             <div class="camera-controls">
-                <div></div> <!-- Empty div for flex spacing -->
-                <div class="capture-btn" id="capture-photo">
-                    <i class="fas fa-camera"></i>
+                <div class="gallery-btn" id="gallery-btn">
+                    <i class="fas fa-images"></i>
                 </div>
-                <div></div> <!-- Empty div for flex spacing -->
+                <div class="capture-btn" id="capture-photo"></div>
+                <button class="switch-camera-btn" id="switch-camera">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
             </div>
+            <button class="cancel-btn" id="close-camera">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
     `;
     document.body.appendChild(cameraModal);
@@ -372,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const switchCamera = document.getElementById('switch-camera');
     const capturePhoto = document.getElementById('capture-photo');
     const cameraView = document.getElementById('camera-view');
-    const cameraActionTitle = document.getElementById('camera-action-title');
+    const galleryBtn = document.getElementById('gallery-btn');
     
     // Function to open camera
     async function openCamera(facing) {
@@ -384,8 +481,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const constraints = {
                 video: {
                     facingMode: facing,
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 },
                 audio: false
             };
@@ -400,7 +497,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 cameraView.style.transform = 'scaleX(1)';
             }
             
+            // Force fullscreen on mobile if possible
+            if (document.documentElement.requestFullscreen && window.innerWidth < 768) {
+                try {
+                    await document.documentElement.requestFullscreen();
+                } catch (e) {
+                    console.log('Fullscreen not supported or not allowed');
+                }
+            }
+            
             cameraModal.style.display = 'block';
+            
+            // Hide scrollbars on body
+            document.body.style.overflow = 'hidden';
+            
+            // Set camera modal to fixed position with full dimensions
+            cameraModal.style.position = 'fixed';
+            cameraModal.style.top = '0';
+            cameraModal.style.left = '0';
+            cameraModal.style.width = '100%';
+            cameraModal.style.height = '100%';
+            
         } catch (error) {
             console.error('Error accessing camera:', error);
             alert('Unable to access camera. Please ensure you have granted camera permissions.');
@@ -417,6 +534,14 @@ document.addEventListener('DOMContentLoaded', function() {
             stream = null;
         }
         cameraModal.style.display = 'none';
+        
+        // Restore scrollbars
+        document.body.style.overflow = '';
+        
+        // Exit fullscreen if we're in it
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        }
     }
     
     // Add click event to attendance button
@@ -425,7 +550,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set action type
         actionType = isClockIn ? 'Clock In' : 'Clock Out';
-        cameraActionTitle.textContent = `${actionType} Identification`;
         
         // Open camera
         openCamera(cameraFacingMode);
@@ -440,6 +564,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close camera
     closeCamera.addEventListener('click', function() {
         stopCamera();
+    });
+    
+    // Gallery button (simulated)
+    galleryBtn.addEventListener('click', function() {
+        alert('Gallery access would be implemented here in a real app');
     });
     
     // Capture photo
