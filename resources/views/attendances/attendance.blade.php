@@ -197,14 +197,6 @@
         z-index: 10;
     }
     
-    .camera-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #fff;
-        margin: 0;
-        display: none;
-    }
-    
     .camera-body {
         position: relative;
         width: 100%;
@@ -218,6 +210,7 @@
         position: absolute;
         top: 0;
         left: 0;
+        transition: transform 0.3s ease;
     }
     
     .camera-frame {
@@ -289,6 +282,11 @@
         transition: opacity 0.2s;
     }
     
+    .camera-option.active {
+        color: #ffcc00;
+        opacity: 1;
+    }
+    
     .camera-option:hover {
         opacity: 1;
     }
@@ -302,11 +300,15 @@
         padding: 8px;
         border-radius: 50%;
         opacity: 0.8;
-        transition: opacity 0.2s;
+        transition: opacity 0.2s, transform 0.3s;
     }
     
     .switch-camera-btn:hover {
         opacity: 1;
+    }
+    
+    .switch-camera-btn.rotating {
+        transform: rotate(180deg);
     }
     
     .gallery-btn {
@@ -320,6 +322,13 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .gallery-preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
     
     .capture-btn {
@@ -345,6 +354,10 @@
         border: 2px solid #ddd;
     }
     
+    .capture-btn:active {
+        transform: scale(0.95);
+    }
+    
     .zoom-indicator {
         position: absolute;
         bottom: 100px;
@@ -358,7 +371,63 @@
         z-index: 5;
     }
     
+    .zoom-controls {
+        position: absolute;
+        bottom: 130px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .zoom-slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.3);
+        outline: none;
+    }
+    
+    .zoom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+    }
+    
+    .timer-countdown {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 10rem;
+        color: white;
+        z-index: 15;
+        display: none;
+        text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    .flash-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        opacity: 0;
+        z-index: 12;
+    }
+    
     .cancel-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
         background: none;
         border: none;
         color: white;
@@ -367,10 +436,15 @@
         padding: 8px;
         opacity: 0.8;
         transition: opacity 0.2s;
+        z-index: 20;
     }
     
     .cancel-btn:hover {
         opacity: 1;
+    }
+    
+    .hidden-file-input {
+        display: none;
     }
     
     @media (max-width: 768px) {
@@ -423,6 +497,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let stream = null;
     let cameraFacingMode = 'environment'; // Start with rear camera
     let actionType = '';
+    let zoomLevel = 1;
+    let flashMode = 'off';
+    let hdrMode = false;
+    let timerSeconds = 0;
+    let activeFilter = 'none';
+    let cameraSwitching = false;
+    let mediaRecorder = null;
     
     // Create camera modal element
     const cameraModal = document.createElement('div');
@@ -447,6 +528,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <video id="camera-view" autoplay playsinline></video>
                 <div class="camera-frame"></div>
                 <div class="zoom-indicator">1×</div>
+                <div class="zoom-controls">
+                    <input type="range" min="1" max="5" step="0.1" value="1" class="zoom-slider" id="zoom-slider">
+                </div>
+                <div class="timer-countdown" id="timer-countdown">3</div>
+                <div class="flash-overlay" id="flash-overlay"></div>
             </div>
             <div class="camera-controls">
                 <div class="gallery-btn" id="gallery-btn">
@@ -460,6 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <button class="cancel-btn" id="close-camera">
                 <i class="fas fa-times"></i>
             </button>
+            <input type="file" accept="image/*" class="hidden-file-input" id="gallery-file-input">
         </div>
     `;
     document.body.appendChild(cameraModal);
@@ -470,12 +557,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const capturePhoto = document.getElementById('capture-photo');
     const cameraView = document.getElementById('camera-view');
     const galleryBtn = document.getElementById('gallery-btn');
+    const zoomIndicator = document.querySelector('.zoom-indicator');
+    const zoomSlider = document.getElementById('zoom-slider');
+    const flashToggle = document.getElementById('flash-toggle');
+    const hdrToggle = document.getElementById('hdr-toggle');
+    const timerToggle = document.getElementById('timer-toggle');
+    const filterToggle = document.getElementById('filter-toggle');
+    const timerCountdown = document.getElementById('timer-countdown');
+    const flashOverlay = document.getElementById('flash-overlay');
+    const galleryFileInput = document.getElementById('gallery-file-input');
     
     // Function to open camera
     async function openCamera(facing) {
         try {
-            if (stream) {
+            if (stream && !cameraSwitching) {
                 stopCamera();
+            }
+            
+            if (cameraSwitching && stream) {
+                // Stop current stream before switching
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
             }
             
             const constraints = {
@@ -487,8 +589,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 audio: false
             };
             
+            // Add loading indicator
+            cameraView.style.opacity = '0.5';
+            switchCamera.classList.add('rotating');
+            cameraSwitching = true;
+            
             stream = await navigator.mediaDevices.getUserMedia(constraints);
             cameraView.srcObject = stream;
+            
+            // Get camera capabilities for features like zoom and torch
+            const videoTrack = stream.getVideoTracks()[0];
+            const capabilities = videoTrack.getCapabilities();
+            
+            // Check if zoom is supported
+            if (capabilities.zoom) {
+                zoomSlider.min = capabilities.zoom.min;
+                zoomSlider.max = capabilities.zoom.max;
+                zoomSlider.step = (capabilities.zoom.max - capabilities.zoom.min) / 20;
+                zoomSlider.value = zoomLevel;
+                document.querySelector('.zoom-controls').style.display = 'flex';
+            } else {
+                document.querySelector('.zoom-controls').style.display = 'none';
+            }
+            
+            // Check if torch/flash is supported
+            if (capabilities.torch) {
+                flashToggle.style.display = 'block';
+                updateFlashMode();
+            } else {
+                flashToggle.style.display = 'none';
+            }
             
             // Apply mirroring if using front camera
             if (facing === 'user') {
@@ -496,6 +626,20 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 cameraView.style.transform = 'scaleX(1)';
             }
+            
+            // Wait for video to be ready
+            cameraView.onloadedmetadata = function() {
+                // Remove loading state
+                cameraView.style.opacity = '1';
+                switchCamera.classList.remove('rotating');
+                cameraSwitching = false;
+                
+                // Apply current zoom level
+                applyZoom(zoomLevel);
+                
+                // Apply current filter
+                applyFilter(activeFilter);
+            };
             
             // Force fullscreen on mobile if possible
             if (document.documentElement.requestFullscreen && window.innerWidth < 768) {
@@ -522,6 +666,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error accessing camera:', error);
             alert('Unable to access camera. Please ensure you have granted camera permissions.');
             
+            // Reset camera switching state
+            switchCamera.classList.remove('rotating');
+            cameraSwitching = false;
+            
             // Proceed with attendance without camera if error
             processAttendance();
         }
@@ -544,6 +692,139 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Function to apply zoom
+    function applyZoom(level) {
+        if (!stream) return;
+        
+        const videoTrack = stream.getVideoTracks()[0];
+        const capabilities = videoTrack.getCapabilities();
+        
+        if (capabilities.zoom) {
+            try {
+                videoTrack.applyConstraints({
+                    advanced: [{ zoom: level }]
+                });
+                zoomIndicator.textContent = `${level.toFixed(1)}×`;
+            } catch (error) {
+                console.error('Error applying zoom:', error);
+            }
+        }
+    }
+    
+    // Function to toggle flash
+    function updateFlashMode() {
+        if (!stream) return;
+        
+        const videoTrack = stream.getVideoTracks()[0];
+        
+        switch (flashMode) {
+            case 'off':
+                try {
+                    videoTrack.applyConstraints({
+                        advanced: [{ torch: false }]
+                    });
+                    flashToggle.innerHTML = '<i class="fas fa-bolt"></i>';
+                    flashToggle.classList.remove('active');
+                } catch (error) {
+                    console.error('Error turning off torch:', error);
+                }
+                break;
+            case 'on':
+                try {
+                    videoTrack.applyConstraints({
+                        advanced: [{ torch: true }]
+                    });
+                    flashToggle.innerHTML = '<i class="fas fa-bolt"></i>';
+                    flashToggle.classList.add('active');
+                } catch (error) {
+                    console.error('Error turning on torch:', error);
+                }
+                break;
+            case 'auto':
+                // Auto flash would trigger flash only when taking photo
+                videoTrack.applyConstraints({
+                    advanced: [{ torch: false }]
+                });
+                flashToggle.innerHTML = '<i class="fas fa-bolt"></i> A';
+                flashToggle.classList.add('active');
+                break;
+        }
+    }
+    
+    // Function to show flash effect
+    function flashEffect() {
+        flashOverlay.style.opacity = '1';
+        setTimeout(() => {
+            flashOverlay.style.opacity = '0';
+        }, 100);
+    }
+    
+    // Function to apply filter
+    function applyFilter(filter) {
+        switch (filter) {
+            case 'none':
+                cameraView.style.filter = 'none';
+                break;
+            case 'grayscale':
+                cameraView.style.filter = 'grayscale(100%)';
+                break;
+            case 'sepia':
+                cameraView.style.filter = 'sepia(100%)';
+                break;
+            case 'saturate':
+                cameraView.style.filter = 'saturate(200%)';
+                break;
+            case 'contrast':
+                cameraView.style.filter = 'contrast(150%)';
+                break;
+        }
+        activeFilter = filter;
+    }
+    
+    // Function to cycle through filters
+    function cycleFilter() {
+        const filters = ['none', 'grayscale', 'sepia', 'saturate', 'contrast'];
+        const currentIndex = filters.indexOf(activeFilter);
+        const nextIndex = (currentIndex + 1) % filters.length;
+        applyFilter(filters[nextIndex]);
+    }
+    
+    // Function to start timer
+    function startTimer() {
+        if (timerSeconds <= 0) return;
+        
+        timerCountdown.textContent = timerSeconds;
+        timerCountdown.style.display = 'block';
+        
+        let secondsLeft = timerSeconds;
+        
+        const countdownInterval = setInterval(() => {
+            secondsLeft--;
+            timerCountdown.textContent = secondsLeft;
+            
+            if (secondsLeft <= 0) {
+                clearInterval(countdownInterval);
+                timerCountdown.style.display = 'none';
+                captureImage();
+            }
+        }, 1000);
+    }
+    
+    // Function to capture image
+    function captureImage() {
+        // If using auto flash, flash when taking photo
+        if (flashMode === 'auto') {
+            flashEffect();
+        }
+        
+        // Here you would capture the actual image from video
+        // For now we just simulate the capture
+        
+        // Process the attendance
+        stopCamera();
+        processAttendance();
+    }
+    
     // Add click event to attendance button
     attendanceBtn.addEventListener('click', function(e) {
         e.preventDefault();
@@ -557,6 +838,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Switch camera
     switchCamera.addEventListener('click', function() {
+        // Prevent multiple clicks
+        if (cameraSwitching) return;
+        
+        cameraSwitching = true;
         cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
         openCamera(cameraFacingMode);
     });
@@ -566,25 +851,95 @@ document.addEventListener('DOMContentLoaded', function() {
         stopCamera();
     });
     
-    // Gallery button (simulated)
+    // Gallery button
     galleryBtn.addEventListener('click', function() {
-        alert('Gallery access would be implemented here in a real app');
+        galleryFileInput.click();
+    });
+    
+    // Handle gallery file selection
+    galleryFileInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            // Close camera and process attendance
+            stopCamera();
+            processAttendance();
+        }
+    });
+    
+    // Zoom slider
+    zoomSlider.addEventListener('input', function() {
+        zoomLevel = parseFloat(this.value);
+        applyZoom(zoomLevel);
+    });
+    
+    // Flash toggle
+    flashToggle.addEventListener('click', function() {
+        switch (flashMode) {
+            case 'off':
+                flashMode = 'on';
+                break;
+            case 'on':
+                flashMode = 'auto';
+                break;
+            case 'auto':
+                flashMode = 'off';
+                break;
+        }
+        updateFlashMode();
+    });
+    
+    // HDR toggle
+    hdrToggle.addEventListener('click', function() {
+        hdrMode = !hdrMode;
+        if (hdrMode) {
+            hdrToggle.classList.add('active');
+        } else {
+            hdrToggle.classList.remove('active');
+        }
+    });
+    
+    // Timer toggle
+    timerToggle.addEventListener('click', function() {
+        switch (timerSeconds) {
+            case 0:
+                timerSeconds = 3;
+                timerToggle.innerHTML = '<i class="fas fa-clock"></i> 3s';
+                timerToggle.classList.add('active');
+                break;
+            case 3:
+                timerSeconds = 5;
+                timerToggle.innerHTML = '<i class="fas fa-clock"></i> 5s';
+                timerToggle.classList.add('active');
+                break;
+            case 5:
+                timerSeconds = 10;
+                timerToggle.innerHTML = '<i class="fas fa-clock"></i> 10s';
+                timerToggle.classList.add('active');
+                break;
+            case 10:
+                timerSeconds = 0;
+                timerToggle.innerHTML = '<i class="fas fa-clock"></i>';
+                timerToggle.classList.remove('active');
+                break;
+        }
+    });
+    
+    // Filter toggle
+    filterToggle.addEventListener('click', function() {
+        cycleFilter();
+        if (activeFilter !== 'none') {
+            filterToggle.classList.add('active');
+        } else {
+            filterToggle.classList.remove('active');
+        }
     });
     
     // Capture photo
     capturePhoto.addEventListener('click', function() {
-        // Here you would typically:
-        // 1. Capture the image from video
-        // 2. Create a canvas to store the image
-        // 3. Send the image to server for processing/storage
-        
-        // For this implementation, we'll just simulate capture and proceed with attendance
-        
-        // Stop camera after capture
-        stopCamera();
-        
-        // Process the attendance
-        processAttendance();
+        if (timerSeconds > 0) {
+            startTimer();
+        } else {
+            captureImage();
+        }
     });
     
     // Process attendance after camera identification
