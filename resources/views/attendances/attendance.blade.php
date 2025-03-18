@@ -978,7 +978,6 @@
 @endpush
 
 @push('scripts')
-<script src="https://maps.googleapis.com/maps/api/js?libraries=places&loading=async&callback=Function.prototype"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Update time every second
@@ -1028,21 +1027,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let locationUpdateInterval = null;
     let locationRetryCount = 0;
     let maxLocationRetries = 5;
-    let googleGeocoder = null;
-    
-    // Initialize Google Geocoder when Google Maps is loaded
-    function initGoogleGeocoder() {
-        if (window.google && window.google.maps) {
-            googleGeocoder = new google.maps.Geocoder();
-            console.log('Google Geocoder initialized');
-        } else {
-            // Retry after a delay if Google Maps hasn't loaded yet
-            setTimeout(initGoogleGeocoder, 1000);
-        }
-    }
-    
-    // Start initializing Google Geocoder
-    initGoogleGeocoder();
     
     // Create camera modal element
     const cameraModal = document.createElement('div');
@@ -1373,7 +1357,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update the UI to show location is being fetched
         if (locationRetryCount === 0) {
-            locationDisplay.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Finding your precise location...';
+            locationDisplay.innerHTML = 'Fetching precise location...';
         }
         
         // Function to handle location error with fallbacks
@@ -1382,11 +1366,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (locationRetryCount < maxLocationRetries) {
                 // Retry getting location
-                locationDisplay.innerHTML = `<i class="fas fa-sync-alt me-2"></i>Improving location accuracy (${locationRetryCount}/${maxLocationRetries})...`;
+                locationDisplay.innerHTML = `Retrying location fetch (${locationRetryCount}/${maxLocationRetries})...`;
                 setTimeout(updateCameraLocation, 3000);
             } else {
                 // Fallback to IP-based location if geolocation fails multiple times
-                locationDisplay.innerHTML = '<i class="fas fa-map-pin me-2"></i>Using approximate location...';
+                locationDisplay.innerHTML = 'Using approximate location...';
                 
                 // First try Google Geolocation API if available
                 tryIpBasedLocation();
@@ -1430,46 +1414,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Function to get more precise address from city and region
         function getAddressFromCityRegion(city, region, country) {
-            // Try Google Geocoder first if available
-            if (googleGeocoder) {
-                const address = `${city}, ${region}, ${country}`;
-                googleGeocoder.geocode({ 'address': address }, function(results, status) {
-                    if (status === 'OK' && results && results.length > 0) {
-                        // Get the first result which is usually the most relevant
-                        const result = results[0];
-                        
-                        // Use the formatted address from Google
-                        const formattedAddress = result.formatted_address;
-                        processAndDisplayAddress(formattedAddress, true);
-                        
-                        // Also get the detailed components for even more precise address
-                        const components = result.address_components;
-                        const detailedAddress = formatAddressFromComponents(components);
-                        
-                        if (detailedAddress) {
-                            processAndDisplayAddress(detailedAddress, true);
-                        }
-                        
-                        // Store for later use
-                        cameraModal.dataset.lastLocation = formattedAddress;
-                        cameraModal.dataset.lastCoords = `${result.geometry.location.lat()}, ${result.geometry.location.lng()}`;
-                    } else {
-                        // Fall back to OpenStreetMap if Google fails
-                        fallbackToOpenStreetMap(city, region, country);
-                    }
-                });
-            } else {
-                // Fall back to OpenStreetMap if Google Geocoder isn't available
-                fallbackToOpenStreetMap(city, region, country);
-            }
-        }
-        
-        // Fallback to OpenStreetMap
-        function fallbackToOpenStreetMap(city, region, country) {
             // Use OpenStreetMap Nominatim to get more precise location from city and region
             const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(city)}&state=${encodeURIComponent(region)}&country=${encodeURIComponent(country)}`;
             
-            fetch(apiUrl, {
+            return fetch(apiUrl, {
                 headers: {
                     'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
                 }
@@ -1481,86 +1429,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         const result = data[0];
                         
                         // Now use reverse geocoding to get the detailed address from these coordinates
-                        getReverseGeocodedAddress(result.lat, result.lon);
+                        return getReverseGeocodedAddress(result.lat, result.lon);
                     } else {
                         // Just display city, region, country if no detailed results
                         const formattedAddress = `${city}, ${region}, ${country}`;
-                        processAndDisplayAddress(formattedAddress);
+                        locationDisplay.innerHTML = formattedAddress;
+                        cameraModal.dataset.lastLocation = formattedAddress;
                     }
                 })
                 .catch(err => {
                     console.error('Address lookup from city failed:', err);
                     const formattedAddress = `${city}, ${region}, ${country}`;
-                    processAndDisplayAddress(formattedAddress);
+                    locationDisplay.innerHTML = formattedAddress;
+                    cameraModal.dataset.lastLocation = formattedAddress;
                 });
-        }
-        
-        // Format address from Google address components
-        function formatAddressFromComponents(components) {
-            if (!components || components.length === 0) return null;
-            
-            // Extract different parts of the address
-            let streetNumber = '';
-            let route = '';
-            let neighborhood = '';
-            let locality = '';
-            let city = '';
-            let region = '';
-            let country = '';
-            
-            for (const component of components) {
-                const types = component.types;
-                
-                if (types.includes('street_number')) {
-                    streetNumber = component.long_name;
-                } else if (types.includes('route')) {
-                    route = component.long_name;
-                } else if (types.includes('neighborhood') || types.includes('sublocality')) {
-                    neighborhood = component.long_name;
-                } else if (types.includes('locality')) {
-                    locality = component.long_name;
-                } else if (types.includes('administrative_area_level_2')) {
-                    city = component.long_name;
-                } else if (types.includes('administrative_area_level_1')) {
-                    region = component.long_name;
-                } else if (types.includes('country')) {
-                    country = component.long_name;
-                }
-            }
-            
-            // Build address prioritizing street information
-            const addressParts = [];
-            
-            // Street address
-            if (streetNumber && route) {
-                addressParts.push(`${streetNumber} ${route}`);
-            } else if (route) {
-                addressParts.push(route);
-            }
-            
-            // Neighborhood
-            if (neighborhood) {
-                addressParts.push(neighborhood);
-            }
-            
-            // City/Locality
-            if (locality) {
-                addressParts.push(locality);
-            } else if (city) {
-                addressParts.push(city);
-            }
-            
-            // Region
-            if (region) {
-                addressParts.push(region);
-            }
-            
-            // Country
-            if (country) {
-                addressParts.push(country);
-            }
-            
-            return addressParts.join(', ');
         }
         
         // Function to get reverse geocoded address with multiple fallbacks
@@ -1568,92 +1450,182 @@ document.addEventListener('DOMContentLoaded', function() {
             // Store coordinates for fallback
             cameraModal.dataset.lastCoords = `${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
             
-            // Try Google Geocoder first if available
-            if (googleGeocoder) {
-                const latlng = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
-                
-                googleGeocoder.geocode({ 'location': latlng }, function(results, status) {
-                    if (status === 'OK' && results && results.length > 0) {
-                        // Use the most detailed result (usually the first one)
-                        const addressResult = results.find(r => r.types.includes('street_address')) || 
-                                             results.find(r => r.types.includes('route')) || 
-                                             results[0];
-                        
-                        const formattedAddress = addressResult.formatted_address;
-                        processAndDisplayAddress(formattedAddress, true);
-                        
-                        // Store for later use
-                        cameraModal.dataset.lastLocation = formattedAddress;
-                    } else {
-                        // Fall back to OpenStreetMap if Google fails
-                        fallbackToOpenStreetMapReverse(latitude, longitude);
-                    }
-                });
-            } else {
-                // Fall back to OpenStreetMap if Google Geocoder isn't available
-                fallbackToOpenStreetMapReverse(latitude, longitude);
-            }
-        }
-        
-        // Fallback to OpenStreetMap for reverse geocoding
-        function fallbackToOpenStreetMapReverse(latitude, longitude) {
-            // Primary geocoding service: OpenStreetMap Nominatim with higher zoom level for street detail
-            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&namedetails=1`;
+            // Primary service: Google Maps Geocoding API (most accurate and detailed)
+            // Note: In production, you should replace this with your own API key
+            const googleApiKey = 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg'; // Example API key, replace with valid key in production
+            const googleMapsUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleApiKey}&result_type=street_address|premise|point_of_interest&language=en`;
             
-            fetch(nominatimUrl, {
-                headers: {
-                    'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
-                }
-            })
+            return fetch(googleMapsUrl)
                 .then(response => {
-                    if (!response.ok) throw new Error('Nominatim service unavailable');
+                    if (!response.ok) throw new Error('Google Maps API service unavailable');
                     return response.json();
                 })
-                .then(data => formatAndDisplayAddress(data, latitude, longitude))
+                .then(data => {
+                    if (data.status === 'OK' && data.results && data.results.length > 0) {
+                        // Get the most detailed result (usually the first one)
+                        return formatGoogleMapsAddress(data.results[0], latitude, longitude);
+                    } else {
+                        throw new Error('No detailed results from Google Maps API');
+                    }
+                })
                 .catch(err => {
-                    console.error('Primary geocoding failed:', err);
+                    console.error('Google Maps geocoding failed:', err);
                     
-                    // Secondary geocoding service: LocationIQ with higher detail level
-                    const locationIQKey = 'pk.31a7d9d4c6b5a77b7ab15fb1a4c38a6c'; // Free demonstration key - would need to be replaced in production
-                    const locationIQUrl = `https://us1.locationiq.com/v1/reverse.php?key=${locationIQKey}&lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1&normalizeaddress=1`;
+                    // Secondary geocoding service: OpenStreetMap Nominatim with higher zoom level for street detail
+                    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&namedetails=1`;
                     
-                    return fetch(locationIQUrl)
+                    return fetch(nominatimUrl, {
+                        headers: {
+                            'User-Agent': 'HRIS Attendance System (mailto:support@example.com)'
+                        }
+                    })
                         .then(response => {
-                            if (!response.ok) throw new Error('LocationIQ service unavailable');
+                            if (!response.ok) throw new Error('Nominatim service unavailable');
                             return response.json();
                         })
                         .then(data => formatAndDisplayAddress(data, latitude, longitude))
                         .catch(secondErr => {
                             console.error('Secondary geocoding failed:', secondErr);
                             
-                            // Third geocoding service: MapBox if available
-                            const mapboxToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA'; // Public token for testing only
-                            const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}&types=address&limit=1`;
+                            // Tertiary geocoding service: LocationIQ with higher detail level
+                            const locationIQKey = 'pk.31a7d9d4c6b5a77b7ab15fb1a4c38a6c'; // Free demonstration key - would need to be replaced in production
+                            const locationIQUrl = `https://us1.locationiq.com/v1/reverse.php?key=${locationIQKey}&lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1&normalizeaddress=1`;
                             
-                            return fetch(mapboxUrl)
+                            return fetch(locationIQUrl)
                                 .then(response => {
-                                    if (!response.ok) throw new Error('Mapbox service unavailable');
+                                    if (!response.ok) throw new Error('LocationIQ service unavailable');
                                     return response.json();
                                 })
-                                .then(data => {
-                                    if (data.features && data.features.length > 0) {
-                                        const formattedAddress = data.features[0].place_name;
-                                        processAndDisplayAddress(formattedAddress);
-                                        return formattedAddress;
-                                    } else {
-                                        throw new Error('No address found in Mapbox response');
-                                    }
-                                })
+                                .then(data => formatAndDisplayAddress(data, latitude, longitude))
                                 .catch(thirdErr => {
                                     console.error('Tertiary geocoding failed:', thirdErr);
                                     
-                                    // Last resort: Display the coordinates with a message
-                                    const coordsMessage = `Location at coordinates: ${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)}`;
-                                    locationDisplay.innerHTML = coordsMessage;
-                                    cameraModal.dataset.lastLocation = coordsMessage;
+                                    // Fourth geocoding service: MapBox if available
+                                    const mapboxToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA'; // Public token for testing only
+                                    const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}&types=address&limit=1`;
+                                    
+                                    return fetch(mapboxUrl)
+                                        .then(response => {
+                                            if (!response.ok) throw new Error('Mapbox service unavailable');
+                                            return response.json();
+                                        })
+                                        .then(data => {
+                                            if (data.features && data.features.length > 0) {
+                                                const formattedAddress = data.features[0].place_name;
+                                                locationDisplay.innerHTML = formattedAddress.replace(/, /g, ',<br>');
+                                                cameraModal.dataset.lastLocation = formattedAddress;
+                                                return formattedAddress;
+                                            } else {
+                                                throw new Error('No address found in Mapbox response');
+                                            }
+                                        })
+                                        .catch(fourthErr => {
+                                            console.error('All geocoding services failed:', fourthErr);
+                                            
+                                            // Final fallback: Get city-level location from IP
+                                            return fetch('https://ipinfo.io/json?token=2b0a1eaf8eb87d')
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.city && data.region) {
+                                                        const ipLocation = `${data.city}, ${data.region}, ${data.country}`;
+                                                        locationDisplay.innerHTML = ipLocation;
+                                                        cameraModal.dataset.lastLocation = ipLocation;
+                                                        return ipLocation;
+                                                    } else {
+                                                        throw new Error('No location from IP service');
+                                                    }
+                                                })
+                                                .catch(finalErr => {
+                                                    console.error('All location methods failed:', finalErr);
+                                                    const fallbackMessage = `Location near coordinates: ${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)}`;
+                                                    locationDisplay.innerHTML = fallbackMessage;
+                                                    cameraModal.dataset.lastLocation = fallbackMessage;
+                                                    return fallbackMessage;
+                                                });
+                                        });
                                 });
                         });
                 });
+        }
+        
+        // Format Google Maps API address response
+        function formatGoogleMapsAddress(result, latitude, longitude) {
+            if (!result || !result.address_components) {
+                throw new Error('Invalid Google Maps API response');
+            }
+            
+            // Extract components by type
+            const components = {};
+            result.address_components.forEach(component => {
+                component.types.forEach(type => {
+                    components[type] = component.long_name;
+                    // Store short name for certain types
+                    if (type === 'country' || type === 'administrative_area_level_1' || type === 'route') {
+                        components[type + '_short'] = component.short_name;
+                    }
+                });
+            });
+            
+            // Build address in format: "Street Number Street Name, Neighborhood, City, State, Country"
+            const addressParts = [];
+            
+            // Street address
+            let streetAddress = '';
+            if (components.street_number) {
+                streetAddress += components.street_number + ' ';
+            }
+            if (components.route) {
+                streetAddress += components.route;
+            } else if (components.route_short) {
+                streetAddress += components.route_short;
+            }
+            
+            if (streetAddress) {
+                addressParts.push(streetAddress);
+            }
+            
+            // Neighborhood or sublocality
+            if (components.sublocality_level_1) {
+                addressParts.push(components.sublocality_level_1);
+            } else if (components.neighborhood) {
+                addressParts.push(components.neighborhood);
+            } else if (components.sublocality) {
+                addressParts.push(components.sublocality);
+            }
+            
+            // City / locality
+            if (components.locality) {
+                addressParts.push(components.locality);
+            } else if (components.administrative_area_level_3) {
+                addressParts.push(components.administrative_area_level_3);
+            }
+            
+            // State / province / region
+            if (components.administrative_area_level_1) {
+                addressParts.push(components.administrative_area_level_1);
+            }
+            
+            // Country
+            if (components.country) {
+                addressParts.push(components.country);
+            }
+            
+            // Format the final address
+            let formattedAddress = addressParts.join(', ');
+            
+            // If we couldn't construct a good address, use the formatted_address from Google
+            if (!formattedAddress || addressParts.length < 2) {
+                formattedAddress = result.formatted_address;
+            }
+            
+            // Display address
+            const addressLines = splitAddressForDisplay(formattedAddress);
+            locationDisplay.innerHTML = addressLines;
+            
+            // Store the full address for later use
+            cameraModal.dataset.lastLocation = formattedAddress;
+            
+            return formattedAddress;
         }
         
         // Format and display the geocoded address
@@ -1753,20 +1725,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If we still don't have an address, use a fallback
             if (!formattedAddress || formattedAddress.trim() === '') {
-                formattedAddress = `Location at ${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
+                formattedAddress = `Location near ${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
             }
             
-            processAndDisplayAddress(formattedAddress);
-            
-            // Return the address for chaining
-            return formattedAddress;
-        }
-        
-        // Process and display address
-        function processAndDisplayAddress(address, isFromGoogle = false) {
             // Process the address to ensure proper formatting and readability
             // Example goal: "Jose L. Briones St., Cebu City, Philippines"
-            const processedAddress = address
+            const processedAddress = formattedAddress
                 .replace(/\s+/g, ' ')                // Replace multiple spaces with single space
                 .replace(/,\s*,/g, ',')              // Remove empty elements between commas
                 .replace(/^,\s*/g, '')               // Remove leading comma
@@ -1775,20 +1739,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Split into logical display parts for UI
             const addressLines = splitAddressForDisplay(processedAddress);
-            
-            // Add a small visual indicator for the source of geocoding
-            let displayHTML = addressLines;
-            if (isFromGoogle) {
-                displayHTML += '<div class="location-source"><i class="fas fa-map-marker-alt text-danger"></i> Google Maps</div>';
-            }
-            
-            locationDisplay.innerHTML = displayHTML;
+            locationDisplay.innerHTML = addressLines;
             
             // Store the full address for later use
             cameraModal.dataset.lastLocation = processedAddress;
             
-            // Reset retry count as we succeeded
-            locationRetryCount = 0;
+            // Return the address for chaining
+            return processedAddress;
         }
         
         // Helper function to split address into display lines
