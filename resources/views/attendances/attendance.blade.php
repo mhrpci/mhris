@@ -9,19 +9,19 @@
     </ol>
 </nav>
 
-<div class="container-fluid px-4">
-    <div class="row">
+<div class="container-fluid px-3 px-md-4">
+    <div class="row g-3">
         <!-- Time and Attendance Card -->
-        <div class="col-lg-8 col-md-7 mb-4">
-            <div class="card shadow-sm h-100">
+        <div class="col-12 col-md-7 col-lg-8">
+            <div class="card shadow-sm h-100 border-0 rounded-3">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-clock me-2"></i>
                         Attendance System
                     </h5>
-                    <span class="badge bg-light text-primary" id="current-date"></span>
+                    <span class="badge bg-light text-primary rounded-pill px-3" id="current-date"></span>
                 </div>
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                     <!-- Real-time Clock -->
                     <div class="text-center mb-4">
                         <div class="display-1 fw-bold text-primary mb-2" id="current-time">00:00:00</div>
@@ -29,8 +29,8 @@
                     </div>
 
                     <!-- Clock In/Out Button -->
-                    <div class="text-center mb-4">
-                        <div class="d-grid gap-2 col-lg-6 col-md-8 mx-auto">
+                    <div class="text-center mt-auto">
+                        <div class="d-grid gap-2 col-12 col-sm-8 col-md-10 col-lg-6 mx-auto">
                             <button id="attendance-btn" class="btn btn-lg btn-primary px-5 py-3 shadow-sm">
                                 <i class="fas fa-sign-in-alt me-2"></i>
                                 Clock In
@@ -45,8 +45,8 @@
         </div>
 
         <!-- Location Card -->
-        <div class="col-lg-4 col-md-5 mb-4">
-            <div class="card shadow-sm h-100">
+        <div class="col-12 col-md-5 col-lg-4">
+            <div class="card shadow-sm h-100 border-0 rounded-3">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-map-marker-alt me-2"></i>
@@ -54,19 +54,19 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div id="location-status" class="alert alert-info d-none">
+                    <div id="location-status" class="alert alert-info d-none mb-3 py-2">
                         <i class="fas fa-exclamation-circle me-2"></i>
                         <span class="status-message">Waiting for location access...</span>
                     </div>
                     
                     <div class="location-info">
                         <div class="mb-3">
-                            <label class="text-muted small">Current Address</label>
+                            <label class="text-muted small mb-1">Current Address</label>
                             <p id="current-location" class="mb-0 fw-bold">Waiting for location...</p>
                         </div>
                         <div id="coordinates-info" class="d-none">
-                            <label class="text-muted small">Coordinates</label>
-                            <p id="coordinates" class="mb-0 font-monospace"></p>
+                            <label class="text-muted small mb-1">Coordinates</label>
+                            <p id="coordinates" class="mb-0 font-monospace small"></p>
                         </div>
                     </div>
                 </div>
@@ -75,15 +75,15 @@
     </div>
 
     <!-- Attendance History Card -->
-    <div class="row">
+    <div class="row mt-4">
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap">
                     <h5 class="mb-0">
                         <i class="fas fa-history me-2"></i>
                         Today's Activity
                     </h5>
-                    <span class="badge bg-primary" id="activity-date"></span>
+                    <span class="badge bg-primary rounded-pill px-3 mt-2 mt-sm-0" id="activity-date"></span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -113,47 +113,82 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <style>
+    /* General Styles */
+    body {
+        background-color: #f8f9fa;
+    }
+    
     .breadcrumb {
         background: transparent;
     }
-    .location-info {
-        border-radius: 0.375rem;
+    
+    .container-fluid {
+        max-width: 1400px;
+        margin: 0 auto;
     }
-    #attendance-btn {
-        transition: all 0.3s ease;
-        border-radius: 50px;
+    
+    /* Card Styles */
+    .card {
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
     }
-    #attendance-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
     }
+    
+    .card-header {
+        border-bottom: none;
+        padding: 1rem 1.25rem;
+    }
+    
+    .badge {
+        font-weight: 500;
+    }
+    
+    /* Clock Styles */
     #current-time {
         font-feature-settings: "tnum";
         font-variant-numeric: tabular-nums;
+        letter-spacing: -1px;
     }
-    .card {
-        border: none;
-        transition: transform 0.2s ease;
+    
+    /* Button Styles */
+    #attendance-btn {
+        transition: all 0.3s ease;
+        border-radius: 50px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        font-weight: 600;
     }
-    .card:hover {
-        transform: translateY(-5px);
+    
+    #attendance-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
     }
-    @media (max-width: 768px) {
-        .display-1 {
-            font-size: 3.5rem;
-        }
-        .container-fluid {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
+    
+    #attendance-btn:active {
+        transform: translateY(1px);
     }
+    
+    /* Table Styles */
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    
     .table td {
         vertical-align: middle;
     }
+    
     .activity-time {
         font-family: 'Courier New', monospace;
         font-weight: 600;
     }
+    
     .location-text {
         max-width: 200px;
         overflow: hidden;
@@ -161,8 +196,85 @@
         white-space: nowrap;
         font-size: 0.9rem;
     }
+    
     .status-badge {
         min-width: 90px;
+        padding: 0.5em 0.8em;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        border-radius: 30px;
+    }
+    
+    /* Alert Styles */
+    .alert {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 1199.98px) {
+        #current-time {
+            font-size: 3.5rem;
+        }
+    }
+    
+    @media (max-width: 991.98px) {
+        .display-1 {
+            font-size: 3.5rem;
+        }
+        
+        .table th {
+            font-size: 0.75rem;
+        }
+        
+        .location-text {
+            max-width: 150px;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .display-1 {
+            font-size: 3rem;
+        }
+        
+        .card-header h5 {
+            font-size: 1.1rem;
+        }
+        
+        .table {
+            font-size: 0.85rem;
+        }
+        
+        .location-text {
+            max-width: 120px;
+        }
+        
+        .table th {
+            white-space: nowrap;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .display-1 {
+            font-size: 2.5rem;
+        }
+        
+        .table-responsive {
+            border-radius: 0;
+        }
+        
+        .card-header {
+            padding: 0.875rem 1rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        #attendance-btn {
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem !important;
+        }
     }
     
     /* Camera modal styles */
@@ -406,6 +518,141 @@
         display: none; /* Hide the label */
     }
     
+    /* Action Identification Banner */
+    .action-banner {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    .action-text {
+        display: inline-block;
+        padding: 8px 20px;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-radius: 30px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    
+    .clock-in-text {
+        background-color: rgba(25, 135, 84, 0.8);
+    }
+    
+    .clock-out-text {
+        background-color: rgba(220, 53, 69, 0.8);
+    }
+    
+    /* Styled info panel */
+    .info-sidebar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        top: 0;
+        width: auto;
+        max-width: 400px;
+        z-index: 6;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 0;
+        pointer-events: none;
+        background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0) 100%);
+    }
+    
+    .info-content {
+        padding: 20px;
+        margin-top: auto;
+        margin-bottom: 90px;
+    }
+    
+    .clock-badge {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        background: none;
+    }
+    
+    .clock-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 5px;
+        background-color: #28a745;
+        color: white;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-right: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .clock-out-status {
+        background-color: #dc3545;
+    }
+    
+    .clock-time {
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+    }
+    
+    .date-display {
+        font-size: 1.1rem;
+        color: white;
+        margin-bottom: 15px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .location-display {
+        color: white;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .user-display {
+        color: white;
+        margin-bottom: 5px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .user-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .user-company, .user-position {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+    
+    /* Vertical accent line */
+    .accent-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 5px;
+        background-color: #28a745;
+    }
+    
+    .accent-line.clock-out {
+        background-color: #dc3545;
+    }
+    
+    /* Timer & zoom controls */
     .zoom-controls {
         position: absolute;
         bottom: 100px;
@@ -543,12 +790,7 @@
         background: rgba(0, 0, 0, 0.5);
     }
     
-    /* Camera switching animation */
-    .camera-transition {
-        opacity: 0.1;
-    }
-    
-    /* Enhanced filter effects */
+    /* Filter effects */
     .filter-options {
         position: absolute;
         bottom: 100px;
@@ -607,47 +849,27 @@
         text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
     
-    /* Enhanced filter effects */
-    .filter-normal {
-        filter: none;
+    /* Filter effects classes */
+    .filter-normal { filter: none; }
+    .filter-grayscale { filter: grayscale(100%); }
+    .filter-sepia { filter: sepia(80%); }
+    .filter-invert { filter: invert(85%); }
+    .filter-saturate { filter: saturate(200%) contrast(110%); }
+    .filter-warm { filter: sepia(30%) saturate(150%) brightness(105%) contrast(105%); }
+    .filter-cool { filter: hue-rotate(340deg) saturate(120%) brightness(102%); }
+    .filter-beauty { filter: brightness(105%) contrast(105%) saturate(110%); }
+    .filter-smooth { filter: brightness(105%) contrast(95%) saturate(105%) blur(0.5px); }
+    
+    /* Camera transition effect */
+    .camera-transition {
+        opacity: 0.1;
     }
     
-    .filter-grayscale {
-        filter: grayscale(100%);
-    }
-    
-    .filter-sepia {
-        filter: sepia(80%);
-    }
-    
-    .filter-invert {
-        filter: invert(85%);
-    }
-    
-    .filter-saturate {
-        filter: saturate(200%) contrast(110%);
-    }
-    
-    .filter-warm {
-        filter: sepia(30%) saturate(150%) brightness(105%) contrast(105%);
-    }
-    
-    .filter-cool {
-        filter: hue-rotate(340deg) saturate(120%) brightness(102%);
-    }
-    
-    .filter-beauty {
-        filter: brightness(105%) contrast(105%) saturate(110%);
-    }
-    
-    .filter-smooth {
-        filter: brightness(105%) contrast(95%) saturate(105%) blur(0.5px);
-    }
-    
-    @media (max-width: 768px) {
+    /* Responsive camera adjustments */
+    @media (max-width: 767.98px) {
         .camera-container {
             width: 100%;
-            height: 100%;
+            height: 100vh;
         }
         
         .camera-frame {
@@ -658,215 +880,94 @@
         .timer-option {
             padding: 8px 12px;
         }
-    }
-
-    /* Action Identification Banner */
-    .action-banner {
-        position: absolute;
-        top: 60px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        z-index: 10;
-        pointer-events: none;
-    }
-    
-    .action-text {
-        display: inline-block;
-        padding: 8px 20px;
-        background-color: rgba(0, 0, 0, 0.6);
-        color: white;
-        font-size: 1.2rem;
-        font-weight: bold;
-        border-radius: 30px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-    
-    .clock-in-text {
-        background-color: rgba(25, 135, 84, 0.8);
+        
+        .capture-btn {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .capture-btn::before {
+            width: 46px;
+            height: 46px;
+        }
+        
+        .info-content {
+            padding: 15px;
+        }
+        
+        .clock-time {
+            font-size: 1.5rem;
+        }
+        
+        .date-display {
+            font-size: 0.9rem;
+        }
+        
+        .location-display, .user-name, .user-company, .user-position {
+            font-size: 0.8rem;
+        }
     }
     
-    .clock-out-text {
-        background-color: rgba(220, 53, 69, 0.8);
+    @media (max-width: 480px) {
+        .camera-frame {
+            width: 150px;
+            height: 150px;
+        }
+        
+        .filter-option {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .action-text {
+            font-size: 1rem;
+            padding: 6px 15px;
+        }
+        
+        .clock-time {
+            font-size: 1.3rem;
+        }
     }
     
-    /* Action identifier at bottom left */
-    .minimized-action {
-        position: absolute;
-        bottom: 90px;
-        left: 15px;
-        z-index: 10;
-        pointer-events: none;
+    @media (max-width: 360px) {
+        #current-time {
+            font-size: 2rem;
+        }
+        
+        .camera-frame {
+            width: 130px;
+            height: 130px;
+        }
+        
+        .gallery-btn-wrapper, .switch-camera-btn {
+            transform: scale(0.9);
+        }
+        
+        .capture-btn {
+            width: 55px;
+            height: 55px;
+        }
+        
+        .capture-btn::before {
+            width: 41px;
+            height: 41px;
+        }
+        
+        .info-content {
+            padding: 10px;
+        }
     }
     
-    .minimized-action-text {
-        display: inline-block;
-        padding: 4px 8px;
-        background-color: rgba(0, 0, 0, 0.5);
-        color: white;
-        font-size: 0.9rem;
-        font-weight: 500;
-        border-radius: 4px;
-        text-transform: uppercase;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-    }
-    
-    .minimized-clock-in {
-        color: #20c997;
-    }
-    
-    .minimized-clock-out {
-        color: #ff6b6b;
-    }
-    
-    /* User information overlay */
-    .user-info-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 70%, rgba(0, 0, 0, 0) 100%);
-        padding: 20px 15px 80px;
-        z-index: 5;
-        pointer-events: none;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .user-info-datetime {
-        color: white;
-        font-size: 0.9rem;
-        margin-bottom: 5px;
-        font-family: 'Courier New', monospace;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
-    }
-    
-    .user-info-location {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 0.8rem;
-        margin-bottom: 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 300px;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
-    }
-    
-    .user-info-details {
-        display: flex;
-        color: rgba(255, 255, 255, 0.85);
-        font-size: 0.75rem;
-        margin-bottom: 2px;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
-    }
-    
-    .user-info-name {
-        font-weight: 600;
-        margin-right: 10px;
-    }
-
-    /* New styled info panel like the image */
-    .info-sidebar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        top: 0;
-        width: auto;
-        max-width: 400px;
-        z-index: 6;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        padding: 0;
-        pointer-events: none;
-        background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0) 100%);
-    }
-    
-    .info-content {
-        padding: 20px;
-        margin-top: auto;
-        margin-bottom: 90px;
-    }
-    
-    .clock-badge {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-        background: none;
-    }
-    
-    .clock-status {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 5px;
-        background-color: #28a745;
-        color: white;
-        font-weight: bold;
-        font-size: 0.9rem;
-        margin-right: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-    
-    .clock-out-status {
-        background-color: #dc3545;
-    }
-    
-    .clock-time {
-        font-size: 2rem;
-        font-weight: bold;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        font-family: Arial, sans-serif;
-    }
-    
-    .date-display {
-        font-size: 1.1rem;
-        color: white;
-        margin-bottom: 15px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .location-display {
-        color: white;
-        margin-bottom: 15px;
-        font-size: 0.9rem;
-        line-height: 1.4;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .user-display {
-        color: white;
-        margin-bottom: 5px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .user-name {
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-    
-    .user-company, .user-position {
-        font-size: 0.9rem;
-        opacity: 0.9;
-        margin-bottom: 5px;
-    }
-    
-    /* Vertical accent line */
-    .accent-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 5px;
-        background-color: #28a745;
-    }
-    
-    .accent-line.clock-out {
-        background-color: #dc3545;
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .table {
+            color: inherit;
+        }
+        
+        .table-light th {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: inherit;
+        }
     }
 </style>
 @endpush
