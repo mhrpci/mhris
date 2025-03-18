@@ -403,6 +403,7 @@
         white-space: nowrap;
         max-width: 120px;
         margin: 0 auto;
+        display: none; /* Hide the label */
     }
     
     .zoom-controls {
@@ -691,6 +692,81 @@
     .clock-out-text {
         background-color: rgba(220, 53, 69, 0.8);
     }
+    
+    /* Action identifier at bottom left */
+    .minimized-action {
+        position: absolute;
+        bottom: 90px;
+        left: 15px;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    .minimized-action-text {
+        display: inline-block;
+        padding: 4px 8px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-radius: 4px;
+        text-transform: uppercase;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+    
+    .minimized-clock-in {
+        color: #20c997;
+    }
+    
+    .minimized-clock-out {
+        color: #ff6b6b;
+    }
+    
+    /* User information overlay */
+    .user-info-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 70%, rgba(0, 0, 0, 0) 100%);
+        padding: 20px 15px 80px;
+        z-index: 5;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .user-info-datetime {
+        color: white;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+        font-family: 'Courier New', monospace;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+    }
+    
+    .user-info-location {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.8rem;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+    }
+    
+    .user-info-details {
+        display: flex;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.75rem;
+        margin-bottom: 2px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+    }
+    
+    .user-info-name {
+        font-weight: 600;
+        margin-right: 10px;
+    }
 </style>
 @endpush
 
@@ -774,6 +850,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="camera-frame"></div>
                 <div class="timer-countdown" id="timer-countdown">3</div>
                 <div class="flash-animation" id="flash-animation"></div>
+                
+                <div class="minimized-action">
+                    <div class="minimized-action-text" id="minimized-action-text">CLOCK IN</div>
+                </div>
+                
+                <div class="user-info-overlay">
+                    <div class="user-info-datetime" id="user-info-datetime">2023-07-21 08:45:22</div>
+                    <div class="user-info-location" id="user-info-location">Location: 123 Business Street, Business City</div>
+                    <div class="user-info-details">
+                        <div class="user-info-name" id="user-info-name">John Doe</div>
+                        <div class="user-info-position" id="user-info-position">Software Engineer | IT Department | Acme Corp</div>
+                    </div>
+                </div>
             </div>
             <div class="zoom-controls">
                 <div class="zoom-indicator" id="zoom-indicator">1×</div>
@@ -858,6 +947,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const galleryInput = document.getElementById('gallery-input');
     const captureLabel = document.getElementById('capture-label');
     const actionText = document.getElementById('action-text');
+    
+    // Add these lines to get the minimized action text and user info elements
+    const minimizedActionText = document.getElementById('minimized-action-text');
+    const userInfoDatetime = document.getElementById('user-info-datetime');
+    const userInfoLocation = document.getElementById('user-info-location');
+    const userInfoName = document.getElementById('user-info-name');
+    const userInfoPosition = document.getElementById('user-info-position');
     
     // Function to open camera
     async function openCamera(facing) {
@@ -1147,12 +1243,37 @@ document.addEventListener('DOMContentLoaded', function() {
         actionText.className = 'action-text';
         if (isClockIn) {
             actionText.classList.add('clock-in-text');
+            minimizedActionText.className = 'minimized-action-text minimized-clock-in';
         } else {
             actionText.classList.add('clock-out-text');
+            minimizedActionText.className = 'minimized-action-text minimized-clock-out';
         }
         
-        // Update capture button label
-        captureLabel.textContent = actionType;
+        // Update minimized action text
+        minimizedActionText.textContent = actionType.toUpperCase();
+        
+        // Update user info with current data
+        const now = new Date();
+        userInfoDatetime.textContent = now.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+        
+        // Use location from the document if available
+        const locationElement = document.getElementById('current-location');
+        if (locationElement && locationElement.textContent) {
+            userInfoLocation.textContent = 'Location: ' + locationElement.textContent;
+        }
+        
+        // In a real application, these would be populated from the user's profile data
+        // For now, we'll use placeholder data
+        userInfoName.textContent = 'Employee Name';
+        userInfoPosition.textContent = 'Position | Department | Company';
         
         // Open camera
         openCamera(cameraFacingMode);
