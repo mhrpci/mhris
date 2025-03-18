@@ -3,6 +3,8 @@
 @section('content')
 <!-- Add viewport meta tag to ensure proper scaling -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- CSRF Token -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="bg-light py-2 px-3 mb-4 rounded shadow-sm">
@@ -66,20 +68,9 @@
                         <div class="mb-3">
                             <label class="text-muted small">Current Address</label>
                             <p id="current-location" class="mb-0 fw-bold">Waiting for location...</p>
-                            <div class="d-flex align-items-center mt-1">
-                                <div class="spinner-border spinner-border-sm text-primary me-2 d-none" id="location-loading" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <small id="location-updated" class="text-muted"></small>
-                            </div>
                         </div>
                         <div id="coordinates-info" class="d-none">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <label class="text-muted small">Coordinates</label>
-                                <span class="badge bg-light text-dark" id="accuracy-badge">
-                                    <i class="fas fa-crosshairs me-1"></i><span id="accuracy-meter">0</span>m
-                                </span>
-                            </div>
+                            <label class="text-muted small">Coordinates</label>
                             <p id="coordinates" class="mb-0 font-monospace"></p>
                         </div>
                     </div>
@@ -686,6 +677,80 @@
         .camera-frame {
             width: 160px;
             height: 160px;
+        }
+        .location-text {
+            max-width: 100px;
+        }
+        .card-body {
+            padding: 0.75rem;
+        }
+        .table th, .table td {
+            padding: 0.5rem 0.25rem;
+            font-size: 0.8rem;
+        }
+        .breadcrumb {
+            font-size: 0.85rem;
+        }
+        .info-content {
+            padding: 15px;
+            margin-bottom: 70px;
+        }
+        .clock-time {
+            font-size: 1.5rem;
+        }
+        .date-display {
+            font-size: 0.9rem;
+        }
+        .user-name, .user-company, .user-position {
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Extra small devices */
+    @media (max-width: 400px) {
+        .display-1 {
+            font-size: 2.5rem;
+        }
+        #current-time {
+            font-size: 2.5rem;
+        }
+        .camera-frame {
+            width: 140px;
+            height: 140px;
+        }
+        .camera-option {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+        .camera-controls-group {
+            gap: 10px;
+        }
+        .capture-btn {
+            width: 55px;
+            height: 55px;
+        }
+        .capture-btn::before {
+            width: 42px;
+            height: 42px;
+        }
+        .gallery-btn-wrapper, .gallery-btn {
+            width: 36px;
+            height: 36px;
+        }
+        .switch-camera-btn {
+            font-size: 1.1rem;
+        }
+        .action-text {
+            font-size: 1rem;
+            padding: 6px 16px;
+        }
+        .info-content {
+            padding: 10px;
+            margin-bottom: 60px;
+        }
+        .info-sidebar {
+            max-width: 70%;
         }
     }
 
@@ -1542,327 +1607,510 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Location tracking with enhanced real-time updates and professional display
+    // Location tracking with enhanced error handling and device compatibility
     const locationStatus = document.getElementById('location-status');
     const currentLocation = document.getElementById('current-location');
     const coordinatesInfo = document.getElementById('coordinates-info');
     const coordinates = document.getElementById('coordinates');
-    const locationLoading = document.getElementById('location-loading');
-    const locationUpdated = document.getElementById('location-updated');
-    const accuracyMeter = document.getElementById('accuracy-meter');
-    const accuracyBadge = document.getElementById('accuracy-badge');
+
+    if (hasFeature.geolocation) {
+        try {
+            // First try to get a quick location from cache
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    // Display coordinates immediately
+                    coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                    coordinatesInfo.classList.remove('d-none');
+                    
+                    // Set a temporary location while we get the address
+                    currentLocation.textContent = 'Getting location address...';
+                },
+                error => {
+                    // Just log the error, watchPosition will handle the UI updates
+                    console.warn('Initial position check failed:', error);
+                },
+                { maximumAge: 60000, timeout: 2000, enableHighAccuracy: false }
+            );
+            
+            // Start watching position with high accuracy
+            navigator.geolocation.watchPosition(
+                function(position) {
+                    // Get address from coordinates using reverse geocoding
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            currentLocation.textContent = data.display_name;
+                            coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                            coordinatesInfo.classList.remove('d-none');
+                            locationStatus.classList.add('d-none');
+                        })
+                        .catch(error => {
+                            console.error('Geocoding error:', error);
+                            currentLocation.textContent = 'Unable to fetch address';
+                            coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                            coordinatesInfo.classList.remove('d-none');
+                            locationStatus.classList.remove('d-none');
+                            locationStatus.className = 'alert alert-warning';
+                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details';
+                        });
+                },
+                function(error) {
+                    locationStatus.classList.remove('d-none');
+                    locationStatus.className = 'alert alert-danger';
+                    
+                    // More user-friendly error messages
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location permissions in your browser settings.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Check your device GPS settings.';
+                            break;
+                        case error.TIMEOUT:
+                            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please try again.';
+                            break;
+                        default:
+                            locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Location error: ${error.message || 'Unknown error'}`;
+                    }
+                    
+                    currentLocation.textContent = 'Location access required';
+                    coordinatesInfo.classList.add('d-none');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000, // Increased timeout for slower connections
+                    maximumAge: 0
+                }
+            );
+        } catch (e) {
+            console.error('Geolocation error:', e);
+            locationStatus.classList.remove('d-none');
+            locationStatus.className = 'alert alert-danger';
+            locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Geolocation error: ${e.message || 'Unknown error'}`;
+            currentLocation.textContent = 'Location access failed';
+            coordinatesInfo.classList.add('d-none');
+        }
+    } else {
+        locationStatus.classList.remove('d-none');
+        locationStatus.className = 'alert alert-danger';
+        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Geolocation is not supported by your browser or device.';
+        currentLocation.textContent = 'Location services not supported';
+        coordinatesInfo.classList.add('d-none');
+    }
     
-    // Location cache for rate limiting and comparison
-    let locationCache = {
-        lastUpdate: 0,
-        lastCoords: null,
-        lastAddress: '',
-        updating: false,
-        watchId: null,
-        highAccuracyFailed: false
-    };
+    // Handle fullscreen properly for different browsers
+    function requestFullscreen(element) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) { /* Safari */
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) { /* IE11 */
+            element.msRequestFullscreen();
+        } else if (element.mozRequestFullScreen) { /* Firefox */
+            element.mozRequestFullScreen();
+        }
+    }
     
-    // Format location update time
-    function formatUpdateTime() {
+    function exitFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE11 */
+            document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) { /* Firefox */
+            document.mozCancelFullScreen();
+        }
+    }
+    
+    // Improved function for stopping camera
+    function stopCamera(hideModal = true) {
+        if (stream) {
+            stream.getTracks().forEach(track => {
+                try {
+                    track.stop();
+                } catch (e) {
+                    console.warn('Error stopping track:', e);
+                }
+            });
+            stream = null;
+            imageCapture = null;
+        }
+        
+        if (hideModal) {
+            cameraModal.style.display = 'none';
+            
+            // Restore scrollbars and prevent scrolling issues on mobile
+            document.body.style.overflow = '';
+            if (hasFeature.touchEvents) {
+                document.body.style.position = '';
+                document.body.style.width = '';
+            }
+            
+            // Exit fullscreen if we're in it
+            if (document.fullscreenElement || 
+                document.webkitFullscreenElement || 
+                document.mozFullScreenElement || 
+                document.msFullscreenElement) {
+                try {
+                    exitFullscreen();
+                } catch (e) {
+                    console.warn('Error exiting fullscreen:', e);
+                }
+            }
+        }
+        
+        // Clear any timer
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerCountdown.style.display = 'none';
+        }
+    }
+    
+    // Improved error handling for window events
+    window.addEventListener('error', function(e) {
+        console.error('Global error caught:', e.message, e);
+        // Prevent errors from breaking the UI
+        return true;
+    });
+    
+    // Handle window resize to adjust UI for different device sizes
+    window.addEventListener('resize', function() {
+        // Adjust camera frame size for different screen sizes
+        const cameraFrame = document.querySelector('.camera-frame');
+        if (cameraFrame) {
+            if (window.innerWidth < 576) {
+                cameraFrame.style.width = '160px';
+                cameraFrame.style.height = '160px';
+            } else if (window.innerWidth < 768) {
+                cameraFrame.style.width = '180px';
+                cameraFrame.style.height = '180px';
+            } else {
+                cameraFrame.style.width = '220px';
+                cameraFrame.style.height = '220px';
+            }
+        }
+    });
+    
+    // HDR toggle
+    hdrToggle.addEventListener('click', function() {
+        hdrActive = !hdrActive;
+        if (hdrActive) {
+            hdrToggle.classList.add('active');
+        } else {
+            hdrToggle.classList.remove('active');
+        }
+    });
+    
+    // Timer toggle
+    timerToggle.addEventListener('click', function() {
+        const isVisible = timerOptions.style.display === 'block';
+        timerOptions.style.display = isVisible ? 'none' : 'block';
+        
+        if (!isVisible) {
+            // Set default timer option active
+            timerOptionButtons.forEach(btn => {
+                if (parseInt(btn.dataset.timer) === timerValue) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+    });
+    
+    // Timer options
+    timerOptionButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            timerValue = parseInt(this.dataset.timer);
+            
+            // Update UI
+            timerOptionButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Hide options after selection
+            timerOptions.style.display = 'none';
+            
+            // Update timer toggle button
+            if (timerValue > 0) {
+                timerToggle.classList.add('active');
+            } else {
+                timerToggle.classList.remove('active');
+            }
+        });
+    });
+    
+    // Zoom indicator click to show/hide slider
+    zoomIndicator.addEventListener('click', function() {
+        const isVisible = zoomSliderContainer.style.display === 'block';
+        zoomSliderContainer.style.display = isVisible ? 'none' : 'block';
+    });
+    
+    // Filter toggle
+    filterToggle.addEventListener('click', function() {
+        const isVisible = filterOptionsContainer.style.display === 'flex';
+        
+        if (isVisible) {
+            // Animate hiding
+            filterOptionsContainer.style.opacity = '0';
+            setTimeout(() => {
+                filterOptionsContainer.style.display = 'none';
+                filterOptionsContainer.style.opacity = '1';
+            }, 300);
+        } else {
+            // Animate showing
+            filterOptionsContainer.style.opacity = '0';
+            filterOptionsContainer.style.display = 'flex';
+            setTimeout(() => {
+                filterOptionsContainer.style.opacity = '1';
+            }, 10);
+        }
+    });
+    
+    // Filter option selection
+    filterOptions.forEach(function(option) {
+        option.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            
+            // Update UI
+            filterOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Apply filter to video
+            cameraView.className = '';
+            cameraView.classList.add(`filter-${filter}`);
+            
+            activeFilter = filter;
+        });
+    });
+    
+    // Show flash animation
+    function showFlashAnimation() {
+        flashAnimation.style.opacity = '1';
+        setTimeout(() => {
+            flashAnimation.style.opacity = '0';
+        }, 50);
+    }
+    
+    // Start timer and take photo when timer completes
+    function startTimer() {
+        if (timerValue <= 0) {
+            takePhoto();
+            return;
+        }
+        
+        let timeLeft = timerValue;
+        timerCountdown.textContent = timeLeft;
+        timerCountdown.style.display = 'flex';
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerCountdown.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                timerCountdown.style.display = 'none';
+                takePhoto();
+            }
+        }, 1000);
+    }
+    
+    // Switch camera
+    switchCamera.addEventListener('click', function() {
+        cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+        openCamera(cameraFacingMode);
+    });
+    
+    // Close camera
+    closeCamera.addEventListener('click', function() {
+        stopCamera();
+    });
+    
+    // Capture photo button
+    capturePhoto.addEventListener('click', function() {
+        startTimer();
+    });
+    
+    // Gallery input change
+    galleryInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            // Process the selected image
+            stopCamera();
+            processAttendance();
+        }
+    });
+    
+    // Main attendance button (starts the process)
+    attendanceBtn.addEventListener('click', function() {
+        actionType = isClockIn ? 'clock-in' : 'clock-out';
+        
+        // Update action text and styles
+        if (actionText) {
+            actionText.textContent = isClockIn ? 'CLOCK IN' : 'CLOCK OUT';
+            actionText.className = 'action-text';
+            actionText.classList.add(isClockIn ? 'clock-in-text' : 'clock-out-text');
+        }
+        
+        if (clockStatus) {
+            clockStatus.textContent = isClockIn ? 'Clock In' : 'Clock Out';
+            clockStatus.className = 'clock-status';
+            if (!isClockIn) clockStatus.classList.add('clock-out-status');
+        }
+        
+        if (accentLine) {
+            accentLine.className = 'accent-line';
+            if (!isClockIn) accentLine.classList.add('clock-out');
+        }
+        
+        // Update time in info sidebar
         const now = new Date();
-        return `Updated at ${now.toLocaleTimeString('en-US', {
+        clockTime.textContent = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        dateDisplay.textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+        
+        // Try to get user info from the window object if available
+        if (window.userInfo) {
+            userName.textContent = `Name: ${window.userInfo.name || 'Unknown'}`;
+            userCompany.textContent = `Company: ${window.userInfo.company || 'Unknown'}`;
+            userPosition.textContent = `Position: ${window.userInfo.position || 'Unknown'}`;
+        }
+        
+        // Update location display with current location
+        if (currentLocation) {
+            locationDisplay.textContent = currentLocation.textContent;
+        }
+        
+        // Check if camera is available and initialize
+        if (cameraAvailable) {
+            openCamera(cameraFacingMode);
+        } else {
+            // Fallback if no camera
+            processAttendance();
+        }
+    });
+    
+    // Process attendance (after photo is taken or if no camera)
+    function processAttendance() {
+        // Get current time
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
             hour12: true
-        })}`;
-    }
-    
-    // Format address for better readability
-    function formatAddress(address) {
-        // Split the address by commas
-        const parts = address.split(',').map(part => part.trim());
+        });
         
-        // Remove any empty parts
-        const filteredParts = parts.filter(part => part.length > 0);
+        // Get location text (or fallback)
+        const locationText = currentLocation.textContent || 'Location unavailable';
         
-        // For long addresses, try to structure them better
-        if (filteredParts.length > 3) {
-            const mainLocation = filteredParts.slice(0, 2).join(', ');
-            const secondaryLocation = filteredParts.slice(2, 4).join(', ');
-            const region = filteredParts.slice(4).join(', ');
+        // Update UI based on action type (clock in or out)
+        if (isClockIn) {
+            // Update the button to allow clocking out next
+            attendanceBtn.innerHTML = '<i class="fas fa-sign-out-alt me-2"></i>Clock Out';
+            attendanceBtn.classList.remove('btn-primary');
+            attendanceBtn.classList.add('btn-danger');
             
-            return `${mainLocation}<br>${secondaryLocation}<br>${region}`;
-        } else if (filteredParts.length > 2) {
-            const mainLocation = filteredParts[0];
-            const secondaryLocation = filteredParts.slice(1, -1).join(', ');
-            const region = filteredParts[filteredParts.length - 1];
+            // Update last action
+            lastAction.textContent = `Last action: Clocked in at ${timeString}`;
             
-            return `${mainLocation}<br>${secondaryLocation}, ${region}`;
+            // Add to activity log
+            updateActivityLog(timeString, locationText, '', '', 'Working');
+            
+        } else {
+            // Update the button to allow clocking in again
+            attendanceBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Clock In';
+            attendanceBtn.classList.remove('btn-danger');
+            attendanceBtn.classList.add('btn-primary');
+            
+            // Update last action
+            lastAction.textContent = `Last action: Clocked out at ${timeString}`;
+            
+            // Update the activity log with clock out time
+            updateActivityLog(null, null, timeString, locationText, 'Completed');
         }
         
-        return address;
-    }
-    
-    // Determine accuracy level class
-    function getAccuracyClass(accuracy) {
-        if (accuracy <= 10) return 'bg-success text-white'; // High accuracy
-        if (accuracy <= 50) return 'bg-info text-white';    // Good accuracy
-        if (accuracy <= 100) return 'bg-warning text-dark'; // Moderate accuracy
-        return 'bg-danger text-white';                      // Low accuracy
-    }
-    
-    // Significant location change detection
-    function isSignificantLocationChange(oldCoords, newCoords) {
-        if (!oldCoords) return true;
+        // Toggle state for next action
+        isClockIn = !isClockIn;
         
-        // Calculate distance between points using Haversine formula
-        const toRadian = value => value * Math.PI / 180;
-        const R = 6371e3; // Earth's radius in meters
-        const φ1 = toRadian(oldCoords.latitude);
-        const φ2 = toRadian(newCoords.latitude);
-        const Δφ = toRadian(newCoords.latitude - oldCoords.latitude);
-        const Δλ = toRadian(newCoords.longitude - oldCoords.longitude);
-        
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const distance = R * c;
-        
-        // Return true if distance is greater than 10 meters
-        return distance > 10;
-    }
-    
-    // Update location display
-    function updateLocationDisplay(position, address = null) {
-        // Update coordinates
-        coordinates.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-        coordinatesInfo.classList.remove('d-none');
-        
-        // Update accuracy
-        const accuracy = Math.round(position.coords.accuracy);
-        accuracyMeter.textContent = accuracy;
-        accuracyBadge.className = `badge ${getAccuracyClass(accuracy)}`;
-        
-        // Update address if provided
-        if (address) {
-            currentLocation.innerHTML = formatAddress(address);
-            locationLoading.classList.add('d-none');
-            locationUpdated.textContent = formatUpdateTime();
-        }
-        
-        // Update location timestamp
-        locationCache.lastUpdate = Date.now();
-        locationCache.lastCoords = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
+        // Send data to server if needed (Ajax call)
+        const attendanceData = {
+            action: actionType,
+            timestamp: now.toISOString(),
+            location: locationText,
+            coordinates: coordinates.textContent || ''
         };
+        
+        console.log('Attendance data recorded:', attendanceData);
+        
+        // Optional: Send data to server
+        /*
+        fetch('/api/attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(attendanceData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+        */
     }
     
-    // Get address from coordinates
-    function getAddressFromCoords(position) {
-        // Don't make redundant API calls
-        if (locationCache.updating) return;
+    // Update activity log with new entry or update existing
+    function updateActivityLog(clockInTime, clockInLocation, clockOutTime, clockOutLocation, status) {
+        const activityLog = document.getElementById('activity-log');
         
-        // Check if coordinates changed significantly since last update
-        if (!isSignificantLocationChange(locationCache.lastCoords, position.coords) && 
-            locationCache.lastAddress && 
-            Date.now() - locationCache.lastUpdate < 60000) {
-            return;
+        // Clear "no activity" message if it exists
+        if (activityLog.querySelector('td[colspan="5"]')) {
+            activityLog.innerHTML = '';
         }
         
-        locationCache.updating = true;
-        locationLoading.classList.remove('d-none');
-        
-        // Use OpenStreetMap's Nominatim service with proper parameters
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1&accept-language=en`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                locationCache.lastAddress = data.display_name;
-                updateLocationDisplay(position, data.display_name);
-                locationStatus.classList.add('d-none');
-            })
-            .catch(error => {
-                console.error('Geocoding error:', error);
-                currentLocation.textContent = 'Unable to fetch address';
-                locationLoading.classList.add('d-none');
-                
-                // Still update coordinates even if address lookup fails
-                updateLocationDisplay(position);
-                
-                locationStatus.classList.remove('d-none');
-                locationStatus.className = 'alert alert-warning';
-                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Unable to fetch address details';
-            })
-            .finally(() => {
-                locationCache.updating = false;
-            });
-    }
-    
-    // Initialize location tracking
-    function initLocationTracking() {
-        if (!hasFeature.geolocation) {
-            locationStatus.classList.remove('d-none');
-            locationStatus.className = 'alert alert-danger';
-            locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Geolocation is not supported by your browser or device.';
-            currentLocation.textContent = 'Location services not supported';
-            return;
-        }
-        
-        // Show initial loading state
-        locationStatus.classList.remove('d-none');
-        locationStatus.className = 'alert alert-info';
-        locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Detecting your location...';
-        
-        try {
-            // First try to get a quick location from cache with low accuracy
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    // Initial display of coordinates
-                    updateLocationDisplay(position);
-                    currentLocation.textContent = 'Getting location address...';
-                    locationLoading.classList.remove('d-none');
-                    
-                    // Begin address lookup
-                    getAddressFromCoords(position);
-                    
-                    // Start watching with high accuracy after initial fix
-                    startHighAccuracyWatch();
-                },
-                error => {
-                    // If high accuracy failed in the past, go straight to low accuracy
-                    if (locationCache.highAccuracyFailed) {
-                        startLowAccuracyWatch();
-                        return;
-                    }
-                    
-                    // Log error but don't show it yet - the watchPosition will handle UI updates
-                    console.warn('Initial position check failed:', error);
-                    startHighAccuracyWatch();
-                },
-                { maximumAge: 30000, timeout: 5000, enableHighAccuracy: false }
-            );
-        } catch (e) {
-            handleLocationError(e);
-        }
-    }
-    
-    // Start watching position with high accuracy
-    function startHighAccuracyWatch() {
-        try {
-            // Clear any existing watch
-            if (locationCache.watchId !== null) {
-                navigator.geolocation.clearWatch(locationCache.watchId);
+        if (isClockIn) {
+            // Create a new row for clock in
+            const row = document.createElement('tr');
+            row.id = 'current-activity';
+            row.className = 'text-center';
+            row.innerHTML = `
+                <td class="activity-time">${clockInTime}</td>
+                <td><div class="location-text">${clockInLocation}</div></td>
+                <td>-</td>
+                <td>-</td>
+                <td><span class="badge bg-success status-badge">${status}</span></td>
+            `;
+            activityLog.appendChild(row);
+        } else {
+            // Update existing row with clock out information
+            const row = document.getElementById('current-activity');
+            if (row) {
+                row.cells[2].textContent = clockOutTime;
+                row.cells[3].innerHTML = `<div class="location-text">${clockOutLocation}</div>`;
+                row.cells[4].innerHTML = `<span class="badge bg-info status-badge">${status}</span>`;
+                row.removeAttribute('id');
             }
-            
-            // Start watching with high accuracy
-            locationCache.watchId = navigator.geolocation.watchPosition(
-                handlePositionUpdate,
-                error => {
-                    locationCache.highAccuracyFailed = true;
-                    console.warn('High accuracy location failed:', error);
-                    startLowAccuracyWatch();
-                },
-                { 
-                    enableHighAccuracy: true, 
-                    timeout: 15000,
-                    maximumAge: 0 
-                }
-            );
-        } catch (e) {
-            handleLocationError(e);
         }
     }
-    
-    // Fall back to low accuracy if high accuracy failed
-    function startLowAccuracyWatch() {
-        try {
-            // Clear any existing watch
-            if (locationCache.watchId !== null) {
-                navigator.geolocation.clearWatch(locationCache.watchId);
-            }
-            
-            // Start watching with lower accuracy (which has better compatibility)
-            locationCache.watchId = navigator.geolocation.watchPosition(
-                handlePositionUpdate,
-                handlePositionError,
-                { 
-                    enableHighAccuracy: false, 
-                    timeout: 30000,
-                    maximumAge: 30000 
-                }
-            );
-        } catch (e) {
-            handleLocationError(e);
-        }
-    }
-    
-    // Handle position updates
-    function handlePositionUpdate(position) {
-        // Hide any error messages
-        locationStatus.classList.add('d-none');
-        
-        // Update the display
-        updateLocationDisplay(position);
-        
-        // Get address if needed
-        getAddressFromCoords(position);
-    }
-    
-    // Handle position errors
-    function handlePositionError(error) {
-        locationStatus.classList.remove('d-none');
-        locationStatus.className = 'alert alert-danger';
-        
-        // More user-friendly error messages
-        switch(error.code) {
-            case error.PERMISSION_DENIED:
-                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location access denied. Please enable location permissions in your browser settings.';
-                break;
-            case error.POSITION_UNAVAILABLE:
-                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location information unavailable. Check your device GPS settings.';
-                break;
-            case error.TIMEOUT:
-                locationStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Location request timed out. Please ensure you have a stable connection.';
-                break;
-            default:
-                locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Location error: ${error.message || 'Unknown error'}`;
-        }
-        
-        currentLocation.textContent = 'Location access required';
-        locationLoading.classList.add('d-none');
-        coordinatesInfo.classList.add('d-none');
-    }
-    
-    // Handle location API errors
-    function handleLocationError(error) {
-        console.error('Geolocation error:', error);
-        locationStatus.classList.remove('d-none');
-        locationStatus.className = 'alert alert-danger';
-        locationStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Geolocation error: ${error.message || 'Unknown error'}`;
-        currentLocation.textContent = 'Location access failed';
-        locationLoading.classList.add('d-none');
-        coordinatesInfo.classList.add('d-none');
-    }
-    
-    // Start location tracking
-    initLocationTracking();
-    
-    // Set up periodic location refresh when tab becomes visible
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible' && Date.now() - locationCache.lastUpdate > 60000) {
-            // If it's been more than a minute since the last update, refresh location
-            navigator.geolocation.getCurrentPosition(
-                handlePositionUpdate,
-                error => console.warn('Visibility refresh location error:', error),
-                { maximumAge: 0, timeout: 10000, enableHighAccuracy: true }
-            );
-        }
-    });
-    
-    // Rest of existing code
-    // ... existing code ...
 });
 </script>
 @endpush
