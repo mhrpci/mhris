@@ -253,11 +253,19 @@
     .camera-options {
         display: flex;
         position: absolute;
-        top: 15px;
-        left: 15px;
-        right: 15px;
-        justify-content: space-between;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 15px 15px 10px;
+        justify-content: center;
         z-index: 10;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%);
+    }
+    
+    .camera-controls-group {
+        display: flex;
+        gap: 20px;
+        align-items: center;
     }
     
     .camera-option {
@@ -265,9 +273,14 @@
         background: none;
         border: none;
         font-size: 1.2rem;
-        padding: 8px;
-        opacity: 0.8;
-        transition: opacity 0.2s;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0.85;
+        transition: all 0.2s;
+        position: relative;
     }
     
     .camera-option.active {
@@ -275,8 +288,21 @@
         opacity: 1;
     }
     
+    .camera-option.active::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #ffcc00;
+    }
+    
     .camera-option:hover {
         opacity: 1;
+        transform: scale(1.05);
     }
     
     .switch-camera-btn {
@@ -465,18 +491,25 @@
         position: absolute;
         top: 15px;
         right: 15px;
-        background: none;
+        background: rgba(0, 0, 0, 0.3);
         border: none;
         color: white;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         cursor: pointer;
         z-index: 15;
-        opacity: 0.8;
+        opacity: 0.9;
         transition: opacity 0.2s;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     .close-btn:hover {
         opacity: 1;
+        background: rgba(0, 0, 0, 0.5);
     }
     
     /* Camera switching animation */
@@ -496,6 +529,7 @@
         overflow-x: auto;
         padding: 10px 0;
         display: none;
+        background: rgba(0, 0, 0, 0.3);
     }
     
     .filter-option {
@@ -506,10 +540,17 @@
         overflow: hidden;
         border: 2px solid transparent;
         cursor: pointer;
+        transition: all 0.2s ease;
     }
     
     .filter-option.active {
-        border-color: white;
+        border-color: #ffcc00;
+        transform: scale(1.05);
+    }
+    
+    .filter-option:not(.active):hover {
+        transform: scale(1.02);
+        border-color: rgba(255, 255, 255, 0.5);
     }
     
     .filter-preview {
@@ -517,6 +558,18 @@
         height: 100%;
         background-position: center;
         background-size: cover;
+    }
+    
+    .filter-label {
+        position: absolute;
+        bottom: -20px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: white;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
     /* Filter CSS classes */
@@ -529,15 +582,15 @@
     }
     
     .filter-sepia {
-        filter: sepia(100%);
+        filter: sepia(80%);
     }
     
     .filter-invert {
-        filter: invert(80%);
+        filter: invert(85%);
     }
     
     .filter-saturate {
-        filter: saturate(200%);
+        filter: saturate(200%) contrast(110%);
     }
     
     @media (max-width: 768px) {
@@ -609,18 +662,20 @@ document.addEventListener('DOMContentLoaded', function() {
     cameraModal.innerHTML = `
         <div class="camera-container">
             <div class="camera-options">
-                <button class="camera-option" id="flash-toggle">
-                    <i class="fas fa-bolt"></i>
-                </button>
-                <button class="camera-option" id="hdr-toggle">
-                    HDR
-                </button>
-                <button class="camera-option" id="timer-toggle">
-                    <i class="fas fa-clock"></i>
-                </button>
-                <button class="camera-option" id="filter-toggle">
-                    <i class="fas fa-circle"></i>
-                </button>
+                <div class="camera-controls-group">
+                    <button class="camera-option" id="flash-toggle" title="Flash">
+                        <i class="fas fa-bolt"></i>
+                    </button>
+                    <button class="camera-option" id="hdr-toggle" title="HDR">
+                        HDR
+                    </button>
+                    <button class="camera-option" id="timer-toggle" title="Timer">
+                        <i class="fas fa-clock"></i>
+                    </button>
+                    <button class="camera-option" id="filter-toggle" title="Filters">
+                        <i class="fas fa-magic"></i>
+                    </button>
+                </div>
             </div>
             <div class="timer-options" id="timer-options">
                 <button class="timer-option" data-timer="0">Off</button>
@@ -643,18 +698,23 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="filter-options" id="filter-options">
                 <div class="filter-option active" data-filter="normal">
                     <div class="filter-preview" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">Normal</div>
                 </div>
                 <div class="filter-option" data-filter="grayscale">
                     <div class="filter-preview filter-grayscale" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">B&W</div>
                 </div>
                 <div class="filter-option" data-filter="sepia">
                     <div class="filter-preview filter-sepia" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">Sepia</div>
                 </div>
                 <div class="filter-option" data-filter="invert">
                     <div class="filter-preview filter-invert" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">Invert</div>
                 </div>
                 <div class="filter-option" data-filter="saturate">
                     <div class="filter-preview filter-saturate" style="background-image: url('https://via.placeholder.com/60');"></div>
+                    <div class="filter-label">Vivid</div>
                 </div>
             </div>
             <div class="camera-controls">
@@ -907,10 +967,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Filter toggle
     filterToggle.addEventListener('click', function() {
         if (filterOptionsContainer.style.display === 'none' || filterOptionsContainer.style.display === '') {
+            // Show with animation
+            filterOptionsContainer.style.opacity = '0';
             filterOptionsContainer.style.display = 'flex';
+            setTimeout(() => {
+                filterOptionsContainer.style.opacity = '1';
+            }, 10);
             timerOptions.style.display = 'none';
         } else {
-            filterOptionsContainer.style.display = 'none';
+            // Hide with animation
+            filterOptionsContainer.style.opacity = '0';
+            setTimeout(() => {
+                filterOptionsContainer.style.display = 'none';
+            }, 200);
         }
     });
     
@@ -921,7 +990,7 @@ document.addEventListener('DOMContentLoaded', function() {
             filterOptions.forEach(opt => opt.classList.remove('active'));
             this.classList.add('active');
             
-            // Apply filter class to video
+            // Apply filter class to video with improved visuals
             cameraView.className = '';
             cameraView.classList.add(`filter-${activeFilter}`);
             
