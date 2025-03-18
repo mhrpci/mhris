@@ -433,28 +433,38 @@
     
     .zoom-indicator {
         color: white;
-        background: rgba(0, 0, 0, 0.4);
-        padding: 4px 12px;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 6px 14px;
         border-radius: 20px;
-        font-size: 0.9rem;
+        font-size: 1rem;
         margin-bottom: 10px;
+        font-weight: bold;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .zoom-indicator:hover {
+        background: rgba(0, 0, 0, 0.8);
+        transform: scale(1.05);
     }
     
     .zoom-slider-container {
         width: 80%;
         max-width: 300px;
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.6);
         border-radius: 20px;
-        padding: 5px 15px;
+        padding: 8px 20px;
         display: none;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
     }
     
     .zoom-slider {
         width: 100%;
         cursor: pointer;
         -webkit-appearance: none;
-        height: 6px;
-        border-radius: 3px;
+        height: 8px;
+        border-radius: 4px;
         background: rgba(255, 255, 255, 0.3);
         outline: none;
     }
@@ -462,19 +472,21 @@
     .zoom-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 18px;
-        height: 18px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         background: white;
         cursor: pointer;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
     }
     
     .zoom-slider::-moz-range-thumb {
-        width: 18px;
-        height: 18px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         background: white;
         cursor: pointer;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
     }
     
     .timer-options {
@@ -962,6 +974,33 @@
     .accent-line.clock-out {
         background-color: #dc3545;
     }
+
+    .hd-badge {
+        font-size: 0.7rem;
+        font-weight: bold;
+        margin-left: 2px;
+        color: #ffcc00;
+    }
+
+    .camera-quality-indicator {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        opacity: 0.8;
+    }
+
+    .camera-quality-indicator i {
+        color: #66ff66;
+        margin-right: 4px;
+    }
 </style>
 @endpush
 
@@ -1075,6 +1114,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                     <button class="camera-option" id="filter-toggle" title="Filters & Beauty">
                         <i class="fas fa-magic"></i>
+                    </button>
+                    <button class="camera-option active" id="hd-toggle" title="HD Mode">
+                        <i class="fas fa-video"></i>
+                        <span class="hd-badge">HD</span>
                     </button>
                 </div>
             </div>
@@ -1224,8 +1267,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const constraints = {
                 video: {
                     facingMode: facing,
-                    width: { ideal: window.innerWidth < 768 ? 720 : 1280 },
-                    height: { ideal: window.innerWidth < 768 ? 1280 : 720 }
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 },
                 audio: false
             };
@@ -1237,8 +1280,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If specific camera facing mode fails, try with any camera
                 console.warn('Could not access specific camera, trying with default', e);
                 constraints.video = { 
-                    width: { ideal: window.innerWidth < 768 ? 720 : 1280 },
-                    height: { ideal: window.innerWidth < 768 ? 1280 : 720 }
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 };
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
             }
@@ -1278,16 +1321,37 @@ document.addEventListener('DOMContentLoaded', function() {
                         const zoomSliderContainer = document.getElementById('zoom-slider-container');
                         const zoomIndicator = document.getElementById('zoom-indicator');
                         
-                        zoomSlider.min = capabilities.zoom.min || 1;
-                        zoomSlider.max = capabilities.zoom.max || 5;
-                        zoomSlider.step = (parseFloat(zoomSlider.max) - parseFloat(zoomSlider.min)) / 20;
-                        zoomSlider.value = 1;
+                        zoomSlider.min = 1.0;
+                        zoomSlider.max = 10.0;
+                        zoomSlider.step = 0.1;
+                        zoomSlider.value = 1.0;
                         
-                        // Show zoom controls
+                        // Show zoom controls and make slider container visible by default
                         zoomIndicator.style.display = 'block';
+                        zoomIndicator.textContent = '1.0×';
+                        zoomSliderContainer.style.display = 'block';
                     } else {
-                        // Hide zoom controls if not supported
-                        document.getElementById('zoom-indicator').style.display = 'none';
+                        // Try fallback CSS zoom
+                        try {
+                            const zoomSliderContainer = document.getElementById('zoom-slider-container');
+                            const zoomIndicator = document.getElementById('zoom-indicator');
+                            
+                            zoomSlider.min = 1.0;
+                            zoomSlider.max = 10.0;
+                            zoomSlider.step = 0.1;
+                            zoomSlider.value = 1.0;
+                            
+                            // Show zoom controls with CSS fallback
+                            zoomIndicator.style.display = 'block';
+                            zoomIndicator.textContent = '1.0×';
+                            zoomSliderContainer.style.display = 'block';
+                            
+                            // Add attribute to indicate CSS fallback
+                            cameraView.setAttribute('data-zoom-fallback', 'true');
+                        } catch (e) {
+                            // Hide zoom controls if they don't work
+                            document.getElementById('zoom-indicator').style.display = 'none';
+                        }
                     }
                 } else {
                     // If getCapabilities is not supported, hide the controls
@@ -1410,14 +1474,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.mozFullScreenElement || 
                 document.msFullscreenElement) {
                 try {
-                    const exitFullscreen = document.exitFullscreen || 
-                                      document.webkitExitFullscreen ||
-                                      document.mozCancelFullScreen ||
-                                      document.msExitFullscreen;
-                    
-                    if (exitFullscreen) {
-                        exitFullscreen.call(document);
-                    }
+                    exitFullscreen();
                 } catch (e) {
                     console.warn('Error exiting fullscreen:', e);
                 }
@@ -1481,10 +1538,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!stream) return;
         
         try {
-            const track = stream.getVideoTracks()[0];
             zoomValue = parseFloat(this.value);
             zoomIndicator.textContent = `${zoomValue.toFixed(1)}×`;
             
+            // Check if we're using the CSS fallback mode
+            if (cameraView.hasAttribute('data-zoom-fallback')) {
+                const scale = zoomValue;
+                cameraView.style.transform = `${cameraFacingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)'} scale(${scale})`;
+                return;
+            }
+            
+            // Use the standard API if available
+            const track = stream.getVideoTracks()[0];
             if ('applyConstraints' in track) {
                 try {
                     await track.applyConstraints({
@@ -1494,12 +1559,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Alternative approach for some devices
                     await track.applyConstraints({ zoom: zoomValue });
                 }
+            } else {
+                throw new Error('Zoom not supported via constraints');
             }
         } catch (e) {
             console.warn('Zoom not supported on this device:', e);
-            // Hide zoom controls if they don't work
-            document.getElementById('zoom-indicator').style.display = 'none';
-            document.getElementById('zoom-slider-container').style.display = 'none';
+            // If zoom fails, try to create a fallback digital zoom using CSS transform
+            try {
+                cameraView.setAttribute('data-zoom-fallback', 'true');
+                const scale = zoomValue;
+                cameraView.style.transform = `${cameraFacingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)'} scale(${scale})`;
+            } catch (cssError) {
+                console.warn('CSS fallback zoom also failed:', cssError);
+                // Hide zoom controls if they don't work
+                document.getElementById('zoom-indicator').style.display = 'none';
+                document.getElementById('zoom-slider-container').style.display = 'none';
+            }
         }
     });
     
@@ -2109,6 +2184,175 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.cells[4].innerHTML = `<span class="badge bg-info status-badge">${status}</span>`;
                 row.removeAttribute('id');
             }
+        }
+    }
+
+    // Add after camera modal is created
+    const cameraBody = document.querySelector('.camera-body');
+
+    // Add pinch-to-zoom gesture support for mobile devices
+    let initialDistance = 0;
+    let currentZoom = 1.0;
+
+    // Prevent default touch behavior to avoid page zooming/scrolling
+    cameraBody.addEventListener('touchmove', function(e) {
+        if (e.touches.length >= 2) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // Detect pinch gesture start
+    cameraBody.addEventListener('touchstart', function(e) {
+        if (e.touches.length >= 2) {
+            initialDistance = getDistance(e.touches[0], e.touches[1]);
+            currentZoom = parseFloat(zoomSlider.value);
+        }
+    });
+
+    // Handle pinch gesture
+    cameraBody.addEventListener('touchmove', function(e) {
+        if (e.touches.length >= 2) {
+            const currentDistance = getDistance(e.touches[0], e.touches[1]);
+            const deltaDistance = currentDistance - initialDistance;
+            
+            // Calculate new zoom value based on pinch distance
+            let newZoom = currentZoom + (deltaDistance / 200);
+            
+            // Constrain to min/max
+            newZoom = Math.min(Math.max(newZoom, 1.0), 10.0);
+            
+            // Update zoom slider and apply zoom
+            zoomSlider.value = newZoom;
+            
+            // Trigger input event to apply zoom
+            const event = new Event('input', { bubbles: true });
+            zoomSlider.dispatchEvent(event);
+        }
+    });
+
+    // Helper to calculate distance between two touch points
+    function getDistance(touch1, touch2) {
+        const x = touch1.clientX - touch2.clientX;
+        const y = touch1.clientY - touch2.clientY;
+        return Math.sqrt(x * x + y * y);
+    }
+
+    // Double tap to toggle between 1.0 and 3.0 zoom
+    let lastTap = 0;
+    cameraBody.addEventListener('touchend', function(e) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        
+        if (tapLength < 300 && tapLength > 0 && e.touches.length === 0) {
+            // Double tap detected
+            if (parseFloat(zoomSlider.value) > 1.1) {
+                // If already zoomed, reset to 1.0
+                zoomSlider.value = 1.0;
+            } else {
+                // Zoom to 3.0
+                zoomSlider.value = 3.0;
+            }
+            
+            // Trigger input event to apply zoom
+            const event = new Event('input', { bubbles: true });
+            zoomSlider.dispatchEvent(event);
+        }
+        
+        lastTap = currentTime;
+    });
+
+    // After cameraModal creation, add a quality indicator
+    const qualityIndicator = document.createElement('div');
+    qualityIndicator.className = 'camera-quality-indicator';
+    qualityIndicator.innerHTML = '<i class="fas fa-check-circle"></i> HD Mode Enabled';
+    cameraModal.querySelector('.camera-container').appendChild(qualityIndicator);
+
+    // Get reference to HD toggle button
+    const hdToggle = document.getElementById('hd-toggle');
+
+    // HD toggle functionality
+    hdToggle.addEventListener('click', async function() {
+        const isActive = hdToggle.classList.contains('active');
+        
+        if (isActive) {
+            // Already in HD mode, switch to standard
+            hdToggle.classList.remove('active');
+            qualityIndicator.innerHTML = '<i class="fas fa-circle" style="color: #ffcc00;"></i> Standard Mode';
+            
+            // Re-initialize camera with lower resolution
+            if (stream) {
+                const facing = cameraFacingMode;
+                await openCameraWithResolution(facing, 640, 480);
+            }
+        } else {
+            // Switch to HD mode
+            hdToggle.classList.add('active');
+            qualityIndicator.innerHTML = '<i class="fas fa-check-circle"></i> HD Mode Enabled';
+            
+            // Re-initialize camera with HD resolution
+            if (stream) {
+                const facing = cameraFacingMode;
+                await openCameraWithResolution(facing, 1920, 1080);
+            }
+        }
+    });
+
+    // Helper function to open camera with specific resolution
+    async function openCameraWithResolution(facing, width, height) {
+        try {
+            if (stream) {
+                // Add transition effect
+                cameraView.classList.add('camera-transition');
+                
+                // Wait for transition to complete
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                stopCamera(false);
+            }
+            
+            // Define constraints with specified resolution
+            const constraints = {
+                video: {
+                    facingMode: facing,
+                    width: { ideal: width },
+                    height: { ideal: height }
+                },
+                audio: false
+            };
+            
+            // Try to get stream with specified facing mode
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (e) {
+                console.warn('Could not access specific camera, trying with default', e);
+                constraints.video = { 
+                    width: { ideal: width },
+                    height: { ideal: height }
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            }
+            
+            cameraView.srcObject = stream;
+            
+            // Apply settings as before
+            // Additional initialization code...
+            
+            // Apply mirroring if using front camera
+            if (facing === 'user') {
+                cameraView.style.transform = 'scaleX(-1)';
+            } else {
+                cameraView.style.transform = 'scaleX(1)';
+            }
+            
+            // Remove transition class after a short delay
+            setTimeout(() => {
+                cameraView.classList.remove('camera-transition');
+            }, 50);
+            
+        } catch (error) {
+            console.error('Error accessing camera with specified resolution:', error);
+            // Fallback to regular open camera
+            openCamera(facing);
         }
     }
 });
