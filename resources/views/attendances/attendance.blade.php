@@ -422,13 +422,71 @@
     
     .zoom-controls {
         position: absolute;
-        bottom: 120px;
+        top: 50%;
         right: 20px;
+        transform: translateY(-50%);
         display: flex;
         flex-direction: column;
-        align-items: flex-end;
+        align-items: center;
         z-index: 5;
-        gap: 10px;
+        gap: 15px;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 15px 10px;
+        border-radius: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .zoom-level {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        font-size: 1.1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .zoom-level:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+    }
+    
+    .zoom-level.active {
+        background: #ffcc00;
+        color: #000;
+        transform: scale(1.1);
+    }
+    
+    @media (max-width: 768px) {
+        .zoom-controls {
+            right: 15px;
+            padding: 12px 8px;
+        }
+        
+        .zoom-level {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .zoom-controls {
+            right: 10px;
+            padding: 10px 6px;
+        }
+        
+        .zoom-level {
+            width: 35px;
+            height: 35px;
+            font-size: 0.9rem;
+        }
     }
     
     .zoom-indicator {
@@ -1211,10 +1269,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="zoom-controls">
-                <div class="zoom-indicator" id="zoom-indicator">1×</div>
-                <div class="zoom-slider-container" id="zoom-slider-container">
-                    <input type="range" min="1" max="5" step="0.1" value="1" class="zoom-slider" id="zoom-slider">
-                </div>
+                <button class="zoom-level" data-zoom="1">1x</button>
+                <button class="zoom-level" data-zoom="2">2x</button>
+                <button class="zoom-level" data-zoom="3">3x</button>
             </div>
             <div class="filter-options" id="filter-options">
                 <div class="filter-option active" data-filter="normal">
