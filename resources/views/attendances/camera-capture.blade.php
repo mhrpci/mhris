@@ -179,39 +179,57 @@
 
 <!-- Add this after the camera-overlay div -->
 <div class="attendance-info-overlay">
-    <div class="attendance-info-content">
-        <div class="attendance-type">
-            <i class="fas fa-user-circle"></i>
-            <span id="attendanceTypeText">Clock In</span>
+    <div class="attendance-info-timemark">
+        <!-- Company logo in top right -->
+        <div class="company-logo">
+            <img src="{{ asset('images/logo.png') }}" alt="Company Logo">
         </div>
-        <div class="attendance-details">
-            <div class="detail-item highlight">
-                <i class="fas fa-calendar-alt"></i>
-                <span id="attendanceDate">--/--/----</span>
+        
+        <!-- Clock In/Out pill button -->
+        <div class="clock-status-pill">
+            <div class="pill-label">
+                <span id="attendanceTypeText">Clock In</span>
             </div>
-            <div class="detail-item highlight">
-                <i class="fas fa-clock"></i>
-                <span id="attendanceTime">--:--:--</span>
+            <div class="pill-time">
+                <span id="attendanceTimeShort">00:00</span>
             </div>
-            <div class="detail-item highlight">
-                <i class="fas fa-map-marker-alt"></i>
-                <span id="attendanceLocation">Fetching location...</span>
-            </div>
-            <div class="detail-item">
-                <i class="fas fa-user"></i>
+        </div>
+        
+        <!-- Date in large format -->
+        <div class="date-display">
+            <span id="attendanceDateFormatted">Wed, Mar 19, 2025</span>
+        </div>
+        
+        <!-- Location address with green indicator line -->
+        <div class="location-display">
+            <div class="location-indicator"></div>
+            <span id="attendanceLocation">Fetching location...</span>
+        </div>
+        
+        <!-- Employee information -->
+        <div class="employee-info">
+            <div class="info-row">
+                <span class="info-label">Name:</span>
                 <span id="attendanceName">John Doe</span>
             </div>
-            <div class="detail-item">
-                <i class="fas fa-building"></i>
+            <div class="info-row">
+                <span class="info-label">Company:</span>
                 <span id="attendanceCompany">Company Name</span>
             </div>
-            <div class="detail-item">
-                <i class="fas fa-sitemap"></i>
-                <span id="attendanceDepartment">Department Name</span>
-            </div>
-            <div class="detail-item">
-                <i class="fas fa-briefcase"></i>
+            <div class="info-row">
+                <span class="info-label">Position:</span>
                 <span id="attendancePosition">Position Name</span>
+            </div>
+        </div>
+        
+        <!-- Verification code and Timemark -->
+        <div class="verification-footer">
+            <div class="verification-code">
+                <i class="fas fa-shield-alt"></i>
+                <span>Photo code: <span id="photoVerificationCode">UPCM3368</span>, verified by</span>
+            </div>
+            <div class="timemark-brand">
+                Timemark
             </div>
         </div>
     </div>
@@ -678,93 +696,158 @@
     /* Attendance Info Overlay Styles - Enhanced for visibility and capture */
     .attendance-info-overlay {
         position: absolute;
-        bottom: 30px;
-        left: 20px;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         z-index: 30;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 12px;
-        padding: 16px;
-        max-width: 350px;
-        color: white;
-        font-size: 14px;
         pointer-events: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .attendance-info-content {
         display: flex;
         flex-direction: column;
-        gap: 12px;
     }
     
-    .attendance-type {
+    .attendance-info-timemark {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+    
+    /* Company logo */
+    .company-logo {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 10px;
+        width: 100px;
+        height: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .company-logo img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+    
+    /* Clock in/out pill */
+    .clock-status-pill {
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        display: flex;
+        border-radius: 50px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .pill-label {
+        background-color: #28a745;  /* Green for clock in */
+        color: white;
+        padding: 8px 20px;
+        font-weight: 600;
+        font-size: 18px;
+    }
+    
+    .pill-time {
+        background-color: white;
+        color: #333;
+        padding: 8px 20px;
+        font-weight: 700;
+        font-size: 18px;
+    }
+    
+    /* Date display */
+    .date-display {
+        position: absolute;
+        top: 100px;
+        left: 30px;
+        font-size: 26px;
+        font-weight: 600;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Location display */
+    .location-display {
+        position: absolute;
+        top: 150px;
+        left: 30px;
+        display: flex;
+        align-items: flex-start;
+        max-width: 80%;
+    }
+    
+    .location-indicator {
+        width: 5px;
+        height: 100%;
+        background-color: #28a745; /* Green indicator */
+        margin-right: 10px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+    
+    #attendanceLocation {
+        color: white;
+        font-size: 18px;
+        font-weight: 500;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Employee information */
+    .employee-info {
+        position: absolute;
+        bottom: 100px;
+        left: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .info-row {
+        display: flex;
+        color: white;
+        font-size: 18px;
+        font-weight: 400;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .info-label {
+        min-width: 100px;
+        font-weight: 600;
+    }
+    
+    /* Verification footer */
+    .verification-footer {
+        position: absolute;
+        bottom: 30px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 30px;
+        align-items: center;
+    }
+    
+    .verification-code {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 18px;
-        font-weight: 600;
-        padding-bottom: 10px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        color: #ffffff;
+        color: white;
+        font-size: 14px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
     
-    .attendance-type i {
-        font-size: 22px;
-        color: #0d6efd;
-    }
-    
-    .attendance-details {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .detail-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: rgba(255, 255, 255, 1);
-        font-weight: 400;
-    }
-    
-    .detail-item i {
-        width: 18px;
-        color: rgba(255, 255, 255, 0.9);
+    .verification-code i {
         font-size: 16px;
     }
     
-    .detail-item span {
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    /* Highlight date and location */
-    .detail-item.highlight span {
-        font-weight: 500;
-        color: #ffffff;
-    }
-    
-    /* Adjust camera footer to not overlap with info overlay */
-    .camera-footer {
-        padding-bottom: 30px;
-    }
-    
-    /* Ensure the info overlay doesn't interfere with camera controls */
-    .camera-top-controls {
-        z-index: 31;
-    }
-    
-    .zoom-control {
-        z-index: 31;
-    }
-    
-    .action-status {
-        z-index: 31;
+    .timemark-brand {
+        color: #ffc107; /* Gold/yellow color */
+        font-size: 24px;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
 </style>
 
@@ -1118,82 +1201,181 @@
             context.setTransform(1, 0, 0, 1, 0, 0);
         }
         
-        // Render the info overlay into the capture
-        // Save current filter state
-        const currentContextFilter = context.filter;
+        // Render the info overlay directly onto the canvas similar to the UI
         context.filter = 'none'; // Clear filters for overlay text
         
-        // Calculate info overlay position (in same relative position)
-        const overlayScale = canvas.width / window.innerWidth;
-        const overlayX = 20 * overlayScale;
-        const overlayY = canvas.height - (infoOverlay.offsetHeight * overlayScale) - (30 * overlayScale);
-        
-        // Create new overlay directly on canvas for better quality
-        context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        // Draw company logo (placeholder - would need a proper logo image)
+        const logoSize = 80 * overlayScale;
+        context.fillStyle = 'rgba(255, 255, 255, 0.9)';
         context.roundRect(
-            overlayX, 
-            overlayY, 
-            Math.min(350 * overlayScale, canvas.width - 40 * overlayScale), 
-            infoOverlay.offsetHeight * overlayScale, 
-            12 * overlayScale
+            canvas.width - logoSize - (20 * overlayScale), 
+            20 * overlayScale, 
+            logoSize, 
+            logoSize, 
+            10 * overlayScale
         );
         context.fill();
         
-        // Draw text directly
-        context.fillStyle = 'white';
-        context.font = `bold ${20 * overlayScale}px Arial`;
+        // Draw clock status pill
+        const pillWidth = 240 * overlayScale;
+        const pillHeight = 40 * overlayScale;
+        const pillRadius = pillHeight / 2;
         
-        // Draw icon placeholder and attendance type
-        context.fillStyle = '#0d6efd';
-        context.fillText('●', overlayX + (10 * overlayScale), overlayY + (30 * overlayScale));
+        // Draw pill background
+        if (actionType === 'clock-in') {
+            context.fillStyle = '#28a745'; // Green for clock in
+        } else {
+            context.fillStyle = '#dc3545'; // Red for clock out
+        }
+        context.roundRect(
+            30 * overlayScale, 
+            30 * overlayScale, 
+            pillWidth / 2, 
+            pillHeight, 
+            [pillRadius, 0, 0, pillRadius]
+        );
+        context.fill();
+        
         context.fillStyle = 'white';
+        context.roundRect(
+            30 * overlayScale + (pillWidth / 2), 
+            30 * overlayScale, 
+            pillWidth / 2, 
+            pillHeight, 
+            [0, pillRadius, pillRadius, 0]
+        );
+        context.fill();
+        
+        // Draw pill text
+        context.fillStyle = 'white';
+        context.font = `bold ${18 * overlayScale}px Arial`;
         context.fillText(
             actionType === 'clock-in' ? 'Clock In' : 'Clock Out', 
-            overlayX + (40 * overlayScale), 
-            overlayY + (30 * overlayScale)
+            (30 + 20) * overlayScale, 
+            (30 + 28) * overlayScale
         );
         
-        // Draw separator line
-        context.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        context.beginPath();
-        context.moveTo(overlayX + (10 * overlayScale), overlayY + (40 * overlayScale));
-        context.lineTo(overlayX + (Math.min(340, canvas.width - 50) * overlayScale), overlayY + (40 * overlayScale));
-        context.stroke();
-        
-        // Draw details - first date and time with smaller font
-        context.font = `${16 * overlayScale}px Arial`;
-        let detailY = overlayY + (65 * overlayScale);
-        
-        // Date
-        const now = new Date();
-        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const dateString = now.toLocaleDateString('en-US', dateOptions);
-        context.fillText(dateString, overlayX + (40 * overlayScale), detailY);
-        detailY += (25 * overlayScale);
-        
-        // Time
-        const timeString = now.toLocaleTimeString('en-US', { 
-            hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' 
+        context.fillStyle = '#333333';
+        const time = now.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
         });
-        context.fillText(timeString, overlayX + (40 * overlayScale), detailY);
-        detailY += (25 * overlayScale);
+        context.fillText(
+            time,
+            (30 + 20 + pillWidth/2) * overlayScale, 
+            (30 + 28) * overlayScale
+        );
         
-        // Location
+        // Draw date
+        context.fillStyle = 'white';
+        context.font = `bold ${26 * overlayScale}px Arial`;
+        context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        context.shadowBlur = 4 * overlayScale;
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 2 * overlayScale;
+        context.fillText(
+            dateString, 
+            30 * overlayScale, 
+            (100 + 30) * overlayScale
+        );
+        
+        // Reset shadow
+        context.shadowColor = 'transparent';
+        context.shadowBlur = 0;
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 0;
+        
+        // Draw location with green indicator
+        context.fillStyle = '#28a745';
+        context.fillRect(
+            30 * overlayScale, 
+            150 * overlayScale,
+            5 * overlayScale,
+            50 * overlayScale
+        );
+        
+        context.fillStyle = 'white';
+        context.font = `${18 * overlayScale}px Arial`;
+        context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        context.shadowBlur = 4 * overlayScale;
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 2 * overlayScale;
+        
+        // Split location text into multiple lines if too long
         const locationText = window.currentLocationAddress || 'Location unavailable';
-        context.fillText(locationText, overlayX + (40 * overlayScale), detailY);
-        detailY += (25 * overlayScale);
+        const maxWidth = canvas.width - (80 * overlayScale);
+        const words = locationText.split(' ');
+        let line = '';
+        let locationY = (150 + 18) * overlayScale;
         
-        // Employee info
-        context.fillText(attendanceInfo.name, overlayX + (40 * overlayScale), detailY);
-        detailY += (25 * overlayScale);
-        context.fillText(attendanceInfo.company, overlayX + (40 * overlayScale), detailY);
-        detailY += (25 * overlayScale);
-        context.fillText(attendanceInfo.department, overlayX + (40 * overlayScale), detailY);
-        detailY += (25 * overlayScale);
-        context.fillText(attendanceInfo.position, overlayX + (40 * overlayScale), detailY);
+        for (let i = 0; i < words.length; i++) {
+            const testLine = line + words[i] + ' ';
+            const metrics = context.measureText(testLine);
+            const testWidth = metrics.width;
+            
+            if (testWidth > maxWidth && i > 0) {
+                context.fillText(line, (30 + 15) * overlayScale, locationY);
+                line = words[i] + ' ';
+                locationY += 25 * overlayScale;
+            } else {
+                line = testLine;
+            }
+        }
+        context.fillText(line, (30 + 15) * overlayScale, locationY);
         
-        // Restore filter
-        context.filter = currentContextFilter;
+        // Reset shadow
+        context.shadowColor = 'transparent';
+        context.shadowBlur = 0;
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 0;
+        
+        // Draw employee info at bottom
+        const infoY = canvas.height - (100 + 3 * (25 * overlayScale));
+        context.fillStyle = 'white';
+        context.font = `${18 * overlayScale}px Arial`;
+        context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        context.shadowBlur = 4 * overlayScale;
+        
+        // Name
+        context.font = `bold ${18 * overlayScale}px Arial`;
+        context.fillText('Name:', 30 * overlayScale, infoY);
+        context.font = `${18 * overlayScale}px Arial`;
+        context.fillText(attendanceInfo.name, (30 + 100) * overlayScale, infoY);
+        
+        // Company
+        context.font = `bold ${18 * overlayScale}px Arial`;
+        context.fillText('Company:', 30 * overlayScale, infoY + (25 * overlayScale));
+        context.font = `${18 * overlayScale}px Arial`;
+        context.fillText(attendanceInfo.company, (30 + 100) * overlayScale, infoY + (25 * overlayScale));
+        
+        // Position
+        context.font = `bold ${18 * overlayScale}px Arial`;
+        context.fillText('Position:', 30 * overlayScale, infoY + (2 * 25 * overlayScale));
+        context.font = `${18 * overlayScale}px Arial`;
+        context.fillText(attendanceInfo.position, (30 + 100) * overlayScale, infoY + (2 * 25 * overlayScale));
+        
+        // Draw verification code and timemark
+        const footerY = canvas.height - (30 * overlayScale);
+        
+        // Verification code
+        context.font = `${14 * overlayScale}px Arial`;
+        context.fillText(
+            'Photo code: ' + (window.photoCode || 'UPCM3368') + ', verified by', 
+            30 * overlayScale, 
+            footerY
+        );
+        
+        // Timemark brand
+        context.font = `bold ${24 * overlayScale}px Arial`;
+        context.fillStyle = '#ffc107'; // Gold/yellow color
+        const timemarkText = 'Timemark';
+        const timemarkWidth = context.measureText(timemarkText).width;
+        context.fillText(
+            timemarkText, 
+            canvas.width - timemarkWidth - (30 * overlayScale), 
+            footerY
+        );
         
         // Convert to data URL
         capturedData = canvas.toDataURL('image/jpeg', 0.95); // Higher quality for better text rendering
@@ -1297,25 +1479,58 @@
     function updateAttendanceInfo() {
         const now = new Date();
         
-        // Format date like in attendance blade (e.g., Monday, January 1, 2023)
-        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        // Formatted date like: Wed, Mar 19, 2025
+        const dateOptions = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
         const dateString = now.toLocaleDateString('en-US', dateOptions);
         
-        // Format time with hours, minutes, seconds (24-hour format)
-        const timeString = now.toLocaleTimeString('en-US', { 
+        // Short time format for pill (HH:MM)
+        const shortTimeString = now.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Full time format for details (HH:MM:SS)
+        const fullTimeString = now.toLocaleTimeString('en-US', { 
             hour12: false,
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit'
         });
         
+        // Update UI elements
         $('#attendanceTypeText').text(actionType === 'clock-in' ? 'Clock In' : 'Clock Out');
-        $('#attendanceDate').text(dateString);
-        $('#attendanceTime').text(timeString);
+        
+        // Set pill color based on action type
+        if (actionType === 'clock-in') {
+            $('.pill-label').css('background-color', '#28a745'); // Green for clock in
+        } else {
+            $('.pill-label').css('background-color', '#dc3545'); // Red for clock out
+        }
+        
+        $('#attendanceTimeShort').text(shortTimeString);
+        $('#attendanceDateFormatted').text(dateString);
+        $('#attendanceTime').text(fullTimeString);
         $('#attendanceLocation').text(window.currentLocationAddress || 'Fetching location...');
         $('#attendanceName').text(attendanceInfo.name);
         $('#attendanceCompany').text(attendanceInfo.company);
         $('#attendanceDepartment').text(attendanceInfo.department);
         $('#attendancePosition').text(attendanceInfo.position);
+        
+        // Generate a random verification code if not already set
+        if (!window.photoCode) {
+            window.photoCode = generateRandomCode();
+        }
+        $('#photoVerificationCode').text(window.photoCode);
+    }
+
+    // Update the generateRandomCode function to the existing script
+    function generateRandomCode() {
+        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let result = '';
+        for (let i = 0; i < 8; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
     }
 </script> 
