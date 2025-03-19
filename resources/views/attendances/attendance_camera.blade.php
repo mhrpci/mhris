@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Full Screen Camera</title>
     <style>
         * {
@@ -20,6 +22,7 @@
             height: 100%;
             position: fixed;
             touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .camera-container {
@@ -37,6 +40,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            z-index: 1;
         }
         
         /* For iOS devices to ensure proper display */
@@ -87,6 +91,10 @@
         
         .btn:hover {
             background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
         }
         
         .btn-capture {
@@ -373,6 +381,20 @@
             animation: spin 1s ease-in-out infinite;
         }
         
+        .error-message {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            z-index: 30;
+            display: none;
+        }
+        
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -394,14 +416,16 @@
         <p>Please allow access to your camera to use this application. You may need to update your browser settings.</p>
     </div>
 
+    <div class="error-message" id="errorMessage"></div>
+
     <div class="camera-container">
-        <video id="video" autoplay playsinline></video>
+        <video id="video" autoplay playsinline muted></video>
         <canvas id="canvas"></canvas>
         <img id="photo" alt="">
         
         <div class="top-controls">
-            <div class="flash-options">Flash: Auto</div>
-            <div class="camera-options">HD</div>
+            <div class="flash-options" id="flashOptions">Flash: Auto</div>
+            <div class="camera-options" id="cameraOptions">HD</div>
         </div>
         
         <div class="switch-camera" id="switchCameraBtn">
@@ -448,7 +472,7 @@
         <div class="gallery-header">
             <button class="close-btn" id="closeGallery">Close</button>
             <h2>Gallery</h2>
-            <button class="action-btn">Select</button>
+            <button class="action-btn" id="selectBtn">Select</button>
         </div>
         <div class="gallery-content" id="galleryContent">
             <!-- Gallery items will be added here -->
@@ -458,14 +482,14 @@
     <div class="preview-screen" id="previewScreen">
         <div class="preview-header">
             <button class="close-btn" id="closePreview">Back</button>
-            <button class="action-btn">Edit</button>
+            <button class="action-btn" id="editBtn">Edit</button>
         </div>
         <div class="preview-content" id="previewContent">
             <!-- Preview image will be added here -->
         </div>
         <div class="preview-actions">
-            <button class="action-btn">Share</button>
-            <button class="action-btn">Delete</button>
+            <button class="action-btn" id="shareBtn">Share</button>
+            <button class="action-btn" id="deleteBtn">Delete</button>
         </div>
     </div>
 
@@ -487,11 +511,32 @@
             const previewContent = document.getElementById('previewContent');
             const loading = document.getElementById('loading');
             const noCamera = document.getElementById('noCamera');
+            const errorMessage = document.getElementById('errorMessage');
+            const flashOptions = document.getElementById('flashOptions');
+            const cameraOptions = document.getElementById('cameraOptions');
+            const shareBtn = document.getElementById('shareBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
             
             const photos = [];
             let currentStream = null;
             let facingMode = 'environment'; // Start with back camera
             let hasMultipleCameras = false;
+            let wakeLock = null;
+            let flashMode = 'auto';
+            let currentCameraId = null;
+            let videoDevices = [];
+            let retryAttempts = 0;
+            const MAX_RETRY_ATTEMPTS = 3;
+            
+            // Show error message
+            function showError(message, duration = 3000) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, duration);
+            }
             
             // Check if device has multiple cameras
             async function checkForMultipleCameras() {
@@ -502,64 +547,194 @@
                 
                 try {
                     const devices = await navigator.mediaDevices.enumerateDevices();
-                    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    videoDevices = devices.filter(device => device.kind === 'videoinput');
                     hasMultipleCameras = videoDevices.length > 1;
                     
                     // Hide camera switch button if only one camera
                     if (!hasMultipleCameras) {
                         switchCameraBtn.style.display = 'none';
                         switchBtn.style.display = 'none';
+                    } else {
+                        switchCameraBtn.style.display = 'flex';
+                        switchBtn.style.display = 'flex';
                     }
+                    
+                    return hasMultipleCameras;
                 } catch(err) {
                     console.error("Error checking cameras:", err);
+                    return false;
                 }
+            }
+            
+            // Get optimal camera constraints
+            function getOptimalConstraints() {
+                const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                // Base constraints
+                let constraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: isLandscape ? 1920 : 1080 },
+                        height: { ideal: isLandscape ? 1080 : 1920 }
+                    },
+                    audio: false
+                };
+                
+                // Add device ID if we have one selected
+                if (currentCameraId) {
+                    constraints.video.deviceId = { exact: currentCameraId };
+                    delete constraints.video.facingMode;
+                }
+                
+                // Add flash if supported and requested
+                if ('torch' in ImageCapture.prototype && flashMode === 'on') {
+                    constraints.video.advanced = [{ torch: true }];
+                }
+                
+                return constraints;
             }
             
             // Access the camera
             async function startCamera() {
                 if (currentStream) {
-                    currentStream.getTracks().forEach(track => {
-                        track.stop();
-                    });
+                    stopCamera();
                 }
                 
                 loading.style.display = 'flex';
-                
-                // Set constraints based on device orientation and screen size
-                const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-                
-                const constraints = {
-                    video: {
-                        facingMode: facingMode,
-                        width: { ideal: isLandscape ? 1920 : 1080 },
-                        height: { ideal: isLandscape ? 1080 : 1920 }
-                    }
-                };
+                noCamera.style.display = 'none';
                 
                 try {
+                    const constraints = getOptimalConstraints();
                     currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                    video.srcObject = currentStream;
-                    video.play();
-                    loading.style.display = 'none';
-                    noCamera.style.display = 'none';
+                    
+                    // Check for new permissions after access
                     await checkForMultipleCameras();
+                    
+                    video.srcObject = currentStream;
+                    
+                    // Get camera information
+                    const track = currentStream.getVideoTracks()[0];
+                    const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+                    
+                    // Update UI based on camera capabilities
+                    updateCameraUI(capabilities);
+                    
+                    loading.style.display = 'none';
+                    retryAttempts = 0;
+                    
+                    // Try to enable torch if requested and available
+                    if (flashMode === 'on' && 'torch' in capabilities) {
+                        try {
+                            await track.applyConstraints({ advanced: [{ torch: true }] });
+                        } catch (e) {
+                            console.log('Could not enable torch:', e);
+                        }
+                    }
+                    
+                    // Request wake lock
+                    requestWakeLock();
+                    
                 } catch(err) {
                     console.error('Error accessing camera:', err);
-                    loading.style.display = 'none';
-                    noCamera.style.display = 'flex';
+                    
+                    if (err.name === 'NotAllowedError') {
+                        loading.style.display = 'none';
+                        noCamera.style.display = 'flex';
+                    } else if (retryAttempts < MAX_RETRY_ATTEMPTS) {
+                        retryAttempts++;
+                        // Try different constraints on failure
+                        facingMode = facingMode === 'user' ? 'environment' : 'user';
+                        setTimeout(() => {
+                            startCamera();
+                        }, 500);
+                    } else {
+                        loading.style.display = 'none';
+                        showError('Could not access camera. Please try again.');
+                    }
                 }
+            }
+            
+            // Stop camera stream
+            function stopCamera() {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => {
+                        track.stop();
+                    });
+                    currentStream = null;
+                }
+            }
+            
+            // Update UI based on camera capabilities
+            function updateCameraUI(capabilities) {
+                // Update flash options based on availability
+                if ('torch' in capabilities) {
+                    flashOptions.style.display = 'block';
+                    flashOptions.textContent = `Flash: ${flashMode.charAt(0).toUpperCase() + flashMode.slice(1)}`;
+                    flashOptions.addEventListener('click', toggleFlash);
+                } else {
+                    flashOptions.style.display = 'none';
+                }
+                
+                // Update camera quality options
+                const track = currentStream.getVideoTracks()[0];
+                const settings = track.getSettings();
+                
+                if (settings.width && settings.height) {
+                    const mp = (settings.width * settings.height / 1000000).toFixed(1);
+                    cameraOptions.textContent = `${mp}MP`;
+                }
+            }
+            
+            // Toggle flash modes (if supported)
+            function toggleFlash() {
+                if (!currentStream) return;
+                
+                const track = currentStream.getVideoTracks()[0];
+                if (!track.getCapabilities || !('torch' in track.getCapabilities())) {
+                    return;
+                }
+                
+                // Cycle through flash modes
+                if (flashMode === 'auto') {
+                    flashMode = 'on';
+                    track.applyConstraints({ advanced: [{ torch: true }] });
+                } else if (flashMode === 'on') {
+                    flashMode = 'off';
+                    track.applyConstraints({ advanced: [{ torch: false }] });
+                } else {
+                    flashMode = 'auto';
+                }
+                
+                flashOptions.textContent = `Flash: ${flashMode.charAt(0).toUpperCase() + flashMode.slice(1)}`;
             }
             
             // Check if video is ready and playing
             video.addEventListener('loadedmetadata', () => {
-                video.play();
+                video.play().catch(err => {
+                    console.error('Error playing video:', err);
+                });
             });
             
             // Switch between front and back cameras
             function toggleCamera() {
                 if (!hasMultipleCameras) return;
                 
-                facingMode = facingMode === 'user' ? 'environment' : 'user';
+                if (videoDevices.length > 1) {
+                    // Use device IDs if available
+                    if (currentCameraId) {
+                        const currentIndex = videoDevices.findIndex(device => device.deviceId === currentCameraId);
+                        const nextIndex = (currentIndex + 1) % videoDevices.length;
+                        currentCameraId = videoDevices[nextIndex].deviceId;
+                    } else {
+                        currentCameraId = videoDevices[0].deviceId;
+                    }
+                } else {
+                    // Fallback to facingMode
+                    facingMode = facingMode === 'user' ? 'environment' : 'user';
+                    currentCameraId = null;
+                }
+                
                 startCamera();
             }
             
@@ -569,7 +744,7 @@
                 const height = video.videoHeight;
                 
                 if (width === 0 || height === 0) {
-                    console.error('Cannot capture image, video not ready');
+                    showError('Camera not ready yet. Please try again.');
                     return;
                 }
                 
@@ -626,7 +801,7 @@
                         item.innerHTML = `<img src="${photo}" alt="Photo ${index}">`;
                         
                         item.addEventListener('click', () => {
-                            showPreview(photo);
+                            showPreview(photo, index);
                         });
                         
                         galleryContent.appendChild(item);
@@ -637,10 +812,56 @@
             }
             
             // Show a single photo in preview mode
-            function showPreview(photoSrc) {
+            function showPreview(photoSrc, index) {
                 gallery.style.display = 'none';
                 previewContent.innerHTML = `<img src="${photoSrc}" alt="Preview">`;
                 previewScreen.style.display = 'flex';
+                
+                // Set up delete handler
+                deleteBtn.onclick = () => {
+                    deletePhoto(index);
+                };
+                
+                // Set up share handler
+                shareBtn.onclick = () => {
+                    sharePhoto(photoSrc);
+                };
+            }
+            
+            // Delete a photo
+            function deletePhoto(index) {
+                if (index >= 0 && index < photos.length) {
+                    photos.splice(index, 1);
+                    
+                    // Update the preview thumbnail
+                    updatePhotoPreview();
+                    
+                    // Close preview and return to gallery
+                    previewScreen.style.display = 'none';
+                    showGallery();
+                }
+            }
+            
+            // Share a photo if Web Share API is available
+            async function sharePhoto(photoSrc) {
+                if (!navigator.share) {
+                    showError('Sharing not supported on this browser');
+                    return;
+                }
+                
+                try {
+                    // Convert data URL to blob for sharing
+                    const blob = await (await fetch(photoSrc)).blob();
+                    const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+                    
+                    await navigator.share({
+                        files: [file],
+                        title: 'Camera Photo',
+                    });
+                } catch (err) {
+                    console.error('Error sharing:', err);
+                    showError('Could not share the photo');
+                }
             }
             
             // Prevent double tap zoom on buttons
@@ -653,12 +874,10 @@
             captureBtn.addEventListener('touchend', preventZoom);
             
             // Camera switch buttons
-            if (hasMultipleCameras) {
-                switchBtn.addEventListener('click', toggleCamera);
-                switchBtn.addEventListener('touchend', preventZoom);
-                switchCameraBtn.addEventListener('click', toggleCamera);
-                switchCameraBtn.addEventListener('touchend', preventZoom);
-            }
+            switchBtn.addEventListener('click', toggleCamera);
+            switchBtn.addEventListener('touchend', preventZoom);
+            switchCameraBtn.addEventListener('click', toggleCamera);
+            switchCameraBtn.addEventListener('touchend', preventZoom);
             
             galleryBtn.addEventListener('click', showGallery);
             galleryBtn.addEventListener('touchend', preventZoom);
@@ -674,7 +893,7 @@
             
             photoPreview.addEventListener('click', () => {
                 if (photos.length > 0) {
-                    showPreview(photos[0]);
+                    showPreview(photos[0], 0);
                 }
             });
             
@@ -692,7 +911,9 @@
             window.addEventListener('orientationchange', () => {
                 // Small delay to allow the orientation to fully change
                 setTimeout(() => {
-                    startCamera();
+                    if (currentStream) {
+                        startCamera();
+                    }
                 }, 300);
             });
             
@@ -711,45 +932,114 @@
             // Handle visibility change (when user switches tabs/apps)
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
-                    if (!currentStream || currentStream.getVideoTracks()[0].readyState !== 'live') {
+                    if (!currentStream || !currentStream.active) {
                         startCamera();
                     }
+                } else {
+                    // Release wake lock when not visible
+                    releaseWakeLock();
                 }
             });
             
             // Create full-screen experience
             function requestFullscreen() {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen();
-                } else if (document.documentElement.msRequestFullscreen) {
-                    document.documentElement.msRequestFullscreen();
+                const elem = document.documentElement;
+                
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => {
+                        console.log('Error attempting to enable fullscreen:', err);
+                    });
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
                 }
             }
-            
-            // Start the camera when page loads
-            startCamera();
-            
-            // Prevent default touch behaviors
-            document.addEventListener('touchmove', (e) => {
-                if (e.target.classList.contains('gallery-content')) return;
-                e.preventDefault();
-            }, { passive: false });
             
             // Wake lock to prevent screen from turning off (if supported)
             async function requestWakeLock() {
                 if ('wakeLock' in navigator) {
                     try {
-                        await navigator.wakeLock.request('screen');
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        wakeLock.addEventListener('release', () => {
+                            console.log('Wake Lock released');
+                        });
                     } catch (err) {
                         console.log(`Wake Lock error: ${err.name}, ${err.message}`);
                     }
                 }
             }
             
-            // Try to keep screen on when using camera
-            requestWakeLock();
+            // Release wake lock
+            function releaseWakeLock() {
+                if (wakeLock !== null) {
+                    wakeLock.release()
+                        .then(() => {
+                            wakeLock = null;
+                        });
+                }
+            }
+            
+            // Prevent default touch behaviors except for gallery scrolling
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.closest('.gallery-content')) return;
+                e.preventDefault();
+            }, { passive: false });
+            
+            // Prevent pull-to-refresh
+            document.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                startY = e.touches[0].clientY;
+            }, { passive: false });
+            
+            let startY = 0;
+            document.addEventListener('touchmove', (e) => {
+                if (e.touches.length !== 1) return;
+                const y = e.touches[0].clientY;
+                const deltaY = y - startY;
+                
+                // Prevent pull-to-refresh behavior
+                if (deltaY > 0 && window.scrollY === 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Fix for iOS audio context
+            function unlockAudioContext() {
+                if (!/iPhone|iPad|iPod/i.test(navigator.userAgent)) return;
+                
+                document.addEventListener('touchstart', () => {
+                    // Create and play silent audio to unlock audio context
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    oscillator.frequency.value = 1;
+                    oscillator.connect(audioCtx.destination);
+                    oscillator.start(0);
+                    oscillator.stop(0.001);
+                }, { once: true });
+            }
+            
+            // Fix ImageCapture polyfill if not available
+            if (typeof ImageCapture === 'undefined') {
+                window.ImageCapture = function() {
+                    this.prototype = {};
+                };
+            }
+            
+            // Start the app
+            unlockAudioContext();
+            
+            // Try to start in fullscreen for a better experience
+            document.addEventListener('click', requestFullscreen, { once: true });
+            
+            // Start the camera when page loads
+            startCamera();
+            
+            // Listen for unload to clean up resources
+            window.addEventListener('beforeunload', () => {
+                stopCamera();
+                releaseWakeLock();
+            });
         });
     </script>
 </body>
