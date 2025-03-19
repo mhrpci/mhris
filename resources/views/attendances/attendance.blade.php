@@ -1257,29 +1257,80 @@
             if (processingCapture) return;
             processingCapture = true;
             
-            // Reset UI for retaking photo
-            $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
-            $('#statusText').text('Position your face in the center');
+            // Show visual feedback for button press
+            $(this).addClass('active');
+            setTimeout(() => $(this).removeClass('active'), 150);
+            
+            // Update status to show retaking
+            $('#statusText').html('<i class="fas fa-sync-alt fa-spin mr-2"></i> Preparing camera...');
             
             // Hide action button during recapture
             $('#actionButtonContainer').addClass('d-none');
             
-            // Show animation for transitioning back to camera
+            // Apply transition effect
             $(capturedPhoto).fadeOut(200, function() {
-                // Start camera again
-                startCamera();
-                
-                // Add a brief animation to the outline to draw attention
-                setTimeout(() => {
-                    if (!modalClosing) {
-                        $('.face-outline').css('border-color', 'rgba(59, 130, 246, 0.9)');
-                        setTimeout(() => {
-                            $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
-                        }, 300);
+                try {
+                    // Clean previous state completely
+                    if (stream) {
+                        stream.getTracks().forEach(track => {
+                            try {
+                                track.stop();
+                            } catch (e) {
+                                console.warn('Error stopping track during retake:', e);
+                            }
+                        });
+                        stream = null;
                     }
-                }, 300);
-                
-                processingCapture = false;
+                    
+                    // Reset camera parameters to default state
+                    cameraInitialized = false;
+                    photoTaken = false;
+                    
+                    // Reset UI elements
+                    $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
+                    $('#statusText').text('Position your face in the center');
+                    $('#captureBtn').addClass('d-none');
+                    
+                    // Reinitialize the camera with the same process as initial capture
+                    startCamera();
+                    
+                    // Add a brief highlight animation to the outline to draw attention
+                    setTimeout(() => {
+                        if (!modalClosing) {
+                            $('.face-outline').css('border-color', 'rgba(59, 130, 246, 0.9)');
+                            setTimeout(() => {
+                                $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
+                            }, 300);
+                        }
+                    }, 300);
+                } catch (error) {
+                    console.error('Error during retake setup:', error);
+                    
+                    // Show error message
+                    $('#statusText').html('<i class="fas fa-exclamation-circle mr-1"></i> Error restarting camera');
+                    
+                    // Try once more after a brief delay
+                    setTimeout(() => {
+                        try {
+                            startCamera();
+                        } catch (retryError) {
+                            console.error('Failed retry during retake:', retryError);
+                            // Notify user of error
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Camera Error',
+                                text: 'Could not restart camera. Please try again.',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    popup: 'swal-minimalist'
+                                }
+                            });
+                        }
+                    }, 500);
+                } finally {
+                    // Always ensure processingCapture is reset
+                    processingCapture = false;
+                }
             });
         });
         
