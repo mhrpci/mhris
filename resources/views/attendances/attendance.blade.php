@@ -870,7 +870,26 @@
         
         // Retake photo button
         $('#retakeBtn').click(function() {
-            startCamera();
+            // Reset UI for retaking photo
+            $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
+            $('#statusText').text('Position your face in the center');
+            
+            // Hide action button during recapture
+            $('#actionButtonContainer').addClass('d-none');
+            
+            // Show animation for transitioning back to camera
+            $(capturedPhoto).fadeOut(200, function() {
+                // Start camera again
+                startCamera();
+                
+                // Add a brief animation to the outline to draw attention
+                setTimeout(() => {
+                    $('.face-outline').css('border-color', 'rgba(59, 130, 246, 0.9)');
+                    setTimeout(() => {
+                        $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
+                    }, 300);
+                }, 300);
+            });
         });
         
         // Confirm attendance button (after photo capture)
