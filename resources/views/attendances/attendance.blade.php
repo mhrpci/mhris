@@ -582,6 +582,10 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Prevent double initialization
+        if (window.attendanceInitialized) return;
+        window.attendanceInitialized = true;
+        
         // Update current time every second
         function updateTime() {
             const now = new Date();
@@ -719,35 +723,63 @@
         let photoTaken = false;
         let photoDataUrl = null;
         let cameraInitialized = false;
+        let processingCapture = false;
+        let modalClosing = false;
+        let orientationHandler = null;
+        
+        // Device capability detection
+        const deviceCapabilities = {
+            camera: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+            fullscreen: !!(document.documentElement.requestFullscreen || 
+                          document.documentElement.webkitRequestFullscreen || 
+                          document.documentElement.msRequestFullscreen),
+            orientation: !!(window.screen && window.screen.orientation || window.orientation !== undefined)
+        };
         
         // Check if camera is supported
         const isCameraSupported = () => {
-            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            return deviceCapabilities.camera;
         };
         
-        // Camera elements
+        // Camera elements - with safe access
         const cameraModal = $('#cameraModal');
-        const cameraFeed = document.getElementById('cameraFeed');
-        const cameraCanvas = document.getElementById('cameraCanvas');
-        const capturedPhoto = document.getElementById('capturedPhoto');
-        const captureBtn = document.getElementById('captureBtn');
-        const retakeBtn = document.getElementById('retakeBtn');
-        const switchCameraBtn = document.getElementById('switchCameraBtn');
-        const confirmAttendanceBtn = document.getElementById('confirmAttendanceBtn');
-        const actionButtonContainer = document.getElementById('actionButtonContainer');
-        const cameraActionType = document.getElementById('cameraActionType');
-        const statusText = document.getElementById('statusText');
+        const safeGetElement = (id) => document.getElementById(id) || {};
+        const cameraFeed = safeGetElement('cameraFeed');
+        const cameraCanvas = safeGetElement('cameraCanvas');
+        const capturedPhoto = safeGetElement('capturedPhoto');
+        const captureBtn = safeGetElement('captureBtn');
+        const retakeBtn = safeGetElement('retakeBtn');
+        const switchCameraBtn = safeGetElement('switchCameraBtn');
+        const confirmAttendanceBtn = safeGetElement('confirmAttendanceBtn');
+        const actionButtonContainer = safeGetElement('actionButtonContainer');
+        const cameraActionType = safeGetElement('cameraActionType');
+        const statusText = safeGetElement('statusText');
         
-        // Start the camera stream
-        async function startCamera() {
+        // Operation timeout handler
+        function withTimeout(promise, timeoutMs = 10000) {
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => {
+                    reject(new Error('Operation timed out'));
+                }, timeoutMs);
+            });
+            
+            return Promise.race([
+                promise,
+                timeoutPromise
+            ]).finally(() => {
+                clearTimeout(timeoutId);
+            });
+        }
+        
+        // Start the camera stream with timeout and auto-retry
+        async function startCamera(retryCount = 0) {
             try {
                 // Show initializing message
                 $('#statusText').text('Initializing camera...');
                 
                 // Clean up any existing stream first
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                }
+                stopCamera();
                 
                 // Check if camera is supported
                 if (!isCameraSupported()) {
@@ -764,17 +796,42 @@
                     audio: false
                 };
                 
-                // Request camera access
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                // Request camera access with timeout
+                stream = await withTimeout(
+                    navigator.mediaDevices.getUserMedia(constraints), 
+                    8000
+                );
                 
                 // Set video source
-                cameraFeed.srcObject = stream;
-                
-                // Handle video loaded event
-                $(cameraFeed).one('loadedmetadata', function() {
-                    cameraInitialized = true;
-                    console.log('Camera initialized successfully');
-                });
+                if (cameraFeed && stream) {
+                    cameraFeed.srcObject = stream;
+                    
+                    // Play the video - handle autoplay restrictions
+                    const playPromise = cameraFeed.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.warn('Autoplay prevented:', error);
+                            // Show play button or instructions if needed
+                            $('#statusText').html('<i class="fas fa-exclamation-circle mr-1"></i> Tap to activate camera');
+                            
+                            // Allow user to tap on viewfinder to start video
+                            $(cameraFeed).one('click', function() {
+                                cameraFeed.play().catch(e => console.error('Manual play failed:', e));
+                            });
+                        });
+                    }
+                    
+                    // Handle video loaded event
+                    $(cameraFeed).one('loadedmetadata', function() {
+                        cameraInitialized = true;
+                        console.log('Camera initialized successfully');
+                        
+                        // Update UI once camera is ready
+                        $('#captureBtn').removeClass('d-none');
+                    });
+                } else {
+                    throw new Error('Camera elements not found');
+                }
                 
                 // Mirror the front camera display but not back camera
                 if (facingMode === 'user') {
@@ -787,7 +844,7 @@
                 $(cameraFeed).removeClass('d-none');
                 $(capturedPhoto).addClass('d-none');
                 $('#retakeBtn').addClass('d-none');
-                $('#captureBtn').removeClass('d-none');
+                $('#captureBtn').addClass('d-none'); // Will be shown once video loads
                 $('#actionButtonContainer').addClass('d-none');
                 photoTaken = false;
                 
@@ -796,7 +853,7 @@
                 
                 // Simulate face detection with setTimeout
                 setTimeout(() => {
-                    if (cameraInitialized) {
+                    if (cameraInitialized && !modalClosing) {
                         $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Face detected');
                         $('.face-outline').css('border-color', 'rgba(40, 167, 69, 0.7)');
                     }
@@ -805,6 +862,7 @@
             } catch (error) {
                 console.error('Error accessing camera:', error);
                 let errorMessage = 'Unable to access camera';
+                let shouldRetry = false;
                 
                 if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
                     errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
@@ -812,11 +870,29 @@
                     errorMessage = 'No camera device found on this device.';
                 } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
                     errorMessage = 'Camera is already in use by another application.';
+                    shouldRetry = true;
                 } else if (error.name === 'OverconstrainedError' || error.name === 'ConstraintNotSatisfiedError') {
-                    errorMessage = 'Camera constraints not satisfied. Try reloading the page.';
+                    errorMessage = 'Camera constraints not satisfied. Trying simpler settings...';
+                    shouldRetry = true;
+                } else if (error.message === 'Operation timed out') {
+                    errorMessage = 'Camera access timed out. Trying again...';
+                    shouldRetry = true;
                 }
                 
                 $('#statusText').html(`<i class="fas fa-exclamation-circle mr-1"></i> ${errorMessage}`);
+                
+                // Auto retry with simpler constraints if appropriate
+                if (shouldRetry && retryCount < 2 && !modalClosing) {
+                    console.log(`Retrying camera initialization (attempt ${retryCount + 1})`);
+                    
+                    // Wait a moment before retry
+                    setTimeout(() => {
+                        // Try with simpler constraints on retry
+                        facingMode = 'user'; // Default to front camera on retry
+                        startCamera(retryCount + 1);
+                    }, 1000);
+                    return;
+                }
                 
                 Swal.fire({
                     icon: 'error',
@@ -828,7 +904,9 @@
                     }
                 }).then(() => {
                     // Close the modal if camera can't be accessed
-                    cameraModal.modal('hide');
+                    if (!modalClosing) {
+                        cameraModal.modal('hide');
+                    }
                 });
             }
         }
@@ -837,57 +915,98 @@
         function stopCamera() {
             if (stream) {
                 stream.getTracks().forEach(track => {
-                    track.stop();
+                    try {
+                        track.stop();
+                    } catch (e) {
+                        console.warn('Error stopping track:', e);
+                    }
                 });
                 stream = null;
             }
             cameraInitialized = false;
             
             // Clear video source
-            if (cameraFeed.srcObject) {
-                cameraFeed.srcObject = null;
+            if (cameraFeed && cameraFeed.srcObject) {
+                try {
+                    cameraFeed.pause();
+                    cameraFeed.srcObject = null;
+                } catch (e) {
+                    console.warn('Error clearing video source:', e);
+                }
             }
         }
         
-        // Take photo with error handling
+        // Take photo with error handling and debouncing
         function takePhoto() {
+            // Prevent double captures
+            if (processingCapture) return;
+            processingCapture = true;
+            
             try {
                 if (!cameraInitialized || !stream) {
+                    processingCapture = false;
                     throw new Error('Camera not properly initialized');
                 }
                 
                 const context = cameraCanvas.getContext('2d');
+                if (!context) {
+                    processingCapture = false;
+                    throw new Error('Could not get canvas context');
+                }
                 
-                // Set canvas dimensions to match video
-                cameraCanvas.width = cameraFeed.videoWidth || 640;
-                cameraCanvas.height = cameraFeed.videoHeight || 480;
+                // Set canvas dimensions to match video with fallbacks
+                const videoWidth = cameraFeed.videoWidth || 640;
+                const videoHeight = cameraFeed.videoHeight || 480;
+                cameraCanvas.width = videoWidth;
+                cameraCanvas.height = videoHeight;
                 
                 // Draw video frame to canvas with appropriate mirroring
-                if (facingMode === 'user') {
-                    // For front camera, we need to un-mirror the image when saving
-                    // First flip the context horizontally
-                    context.translate(cameraCanvas.width, 0);
-                    context.scale(-1, 1);
-                    // Then draw the flipped video
-                    context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
-                    // Reset transform
-                    context.setTransform(1, 0, 0, 1, 0, 0);
-                } else {
-                    // For back camera, just draw normally
+                try {
+                    if (facingMode === 'user') {
+                        // For front camera, we need to un-mirror the image when saving
+                        // First flip the context horizontally
+                        context.translate(cameraCanvas.width, 0);
+                        context.scale(-1, 1);
+                        // Then draw the flipped video
+                        context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                        // Reset transform
+                        context.setTransform(1, 0, 0, 1, 0, 0);
+                    } else {
+                        // For back camera, just draw normally
+                        context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                    }
+                } catch (drawError) {
+                    console.error('Error drawing to canvas:', drawError);
+                    // Try alternate approach
+                    context.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
                     context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
                 }
                 
-                // Get data URL from canvas
-                photoDataUrl = cameraCanvas.toDataURL('image/jpeg', 0.8);
-                
-                // Verify that photo was captured
-                if (!photoDataUrl || photoDataUrl === 'data:,') {
-                    throw new Error('Failed to capture photo');
+                // Get data URL from canvas with error handling
+                try {
+                    photoDataUrl = cameraCanvas.toDataURL('image/jpeg', 0.85);
+                    
+                    // Verify that photo was captured
+                    if (!photoDataUrl || photoDataUrl === 'data:,') {
+                        throw new Error('Failed to capture photo');
+                    }
+                } catch (dataUrlError) {
+                    console.error('Error converting canvas to data URL:', dataUrlError);
+                    // Try PNG as fallback
+                    try {
+                        photoDataUrl = cameraCanvas.toDataURL('image/png');
+                    } catch (pngError) {
+                        processingCapture = false;
+                        throw new Error('Could not retrieve photo data');
+                    }
                 }
                 
-                // Display the captured photo (we don't want the display to be mirrored)
-                capturedPhoto.style.backgroundImage = `url(${photoDataUrl})`;
-                $(capturedPhoto).removeClass('d-none').removeClass('mirror');
+                // Display the captured photo
+                if (capturedPhoto) {
+                    capturedPhoto.style.backgroundImage = `url(${photoDataUrl})`;
+                    $(capturedPhoto).removeClass('d-none').removeClass('mirror');
+                }
+                
                 $(cameraFeed).addClass('d-none');
                 
                 // Update UI for photo taken
@@ -899,8 +1018,10 @@
                 $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Photo captured');
                 
                 photoTaken = true;
+                processingCapture = false;
             } catch (error) {
                 console.error('Error taking photo:', error);
+                processingCapture = false;
                 
                 Swal.fire({
                     icon: 'error',
@@ -919,9 +1040,14 @@
         
         // Handle modal open and setup camera
         function openCameraModal(action) {
+            // Prevent opening if already processing
+            if (processingCapture) return;
+            
             // Reset state variables
             photoTaken = false;
             photoDataUrl = null;
+            processingCapture = false;
+            modalClosing = false;
             currentAction = action;
             
             // Set the modal title based on the action
@@ -944,6 +1070,9 @@
             $('#retakeBtn').addClass('d-none');
             $('#actionButtonContainer').addClass('d-none');
             
+            // Setup page visibility detection
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            
             // Show the camera modal
             cameraModal.modal({
                 backdrop: 'static',
@@ -963,28 +1092,46 @@
                 startCamera();
                 
                 // Try to go fullscreen if supported
-                try {
-                    const elem = document.documentElement;
-                    if (elem.requestFullscreen) {
-                        elem.requestFullscreen();
-                    } else if (elem.webkitRequestFullscreen) { /* Safari */
-                        elem.webkitRequestFullscreen();
-                    } else if (elem.msRequestFullscreen) { /* IE11 */
-                        elem.msRequestFullscreen();
+                if (deviceCapabilities.fullscreen) {
+                    try {
+                        const elem = document.documentElement;
+                        if (elem.requestFullscreen) {
+                            elem.requestFullscreen();
+                        } else if (elem.webkitRequestFullscreen) { /* Safari */
+                            elem.webkitRequestFullscreen();
+                        } else if (elem.msRequestFullscreen) { /* IE11 */
+                            elem.msRequestFullscreen();
+                        }
+                    } catch (err) {
+                        console.log('Fullscreen request failed:', err);
                     }
-                } catch (err) {
-                    console.log('Fullscreen not supported');
+                }
+                
+                // Handle orientation changes
+                if (deviceCapabilities.orientation) {
+                    orientationHandler = handleOrientationChange;
+                    window.addEventListener('orientationchange', orientationHandler);
                 }
             });
             
             // Stop the camera when modal is hidden
             cameraModal.one('hidden.bs.modal', function() {
-                stopCamera();
-                
-                // Reset the modal state for next use
-                photoTaken = false;
-                
-                // Exit fullscreen if needed
+                modalClosing = true;
+                cleanupCameraResources();
+            });
+        }
+        
+        // Cleanup all camera resources
+        function cleanupCameraResources() {
+            // Stop camera
+            stopCamera();
+            
+            // Reset the modal state for next use
+            photoTaken = false;
+            processingCapture = false;
+            
+            // Exit fullscreen if needed
+            if (deviceCapabilities.fullscreen) {
                 try {
                     if (document.fullscreenElement) {
                         if (document.exitFullscreen) {
@@ -996,71 +1143,120 @@
                         }
                     }
                 } catch (err) {
-                    console.log('Exit fullscreen error');
+                    console.log('Exit fullscreen error:', err);
                 }
-                
-                // Restore body scrolling
-                document.documentElement.style.overflow = '';
-                document.body.style.overflow = '';
-            });
+            }
             
-            // Handle orientation changes
-            window.addEventListener('orientationchange', handleOrientationChange);
+            // Remove event listeners
+            if (orientationHandler) {
+                window.removeEventListener('orientationchange', orientationHandler);
+                orientationHandler = null;
+            }
+            
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            
+            // Restore body scrolling
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+        }
+        
+        // Handle page visibility changes
+        function handleVisibilityChange() {
+            if (document.hidden) {
+                // Page is hidden, pause camera if needed
+                if (cameraFeed && !cameraFeed.paused) {
+                    try {
+                        cameraFeed.pause();
+                    } catch (e) {
+                        console.warn('Error pausing video:', e);
+                    }
+                }
+            } else {
+                // Page is visible again, resume camera if initialized
+                if (cameraInitialized && cameraFeed && cameraFeed.paused) {
+                    try {
+                        cameraFeed.play().catch(e => {
+                            console.warn('Error resuming video:', e);
+                            // Restart camera if play failed
+                            startCamera();
+                        });
+                    } catch (e) {
+                        console.warn('Error playing video:', e);
+                        // Restart camera if an exception occurred
+                        startCamera();
+                    }
+                }
+            }
         }
         
         // Handle device orientation changes
         function handleOrientationChange() {
-            if (cameraInitialized && stream) {
+            if (cameraInitialized && stream && !modalClosing) {
                 // Give the browser time to adjust layout
                 setTimeout(() => {
                     // Readjust camera view if needed
                     if (cameraFeed && !cameraFeed.paused && !cameraFeed.ended) {
-                        cameraFeed.style.height = 'auto';
-                        cameraFeed.style.width = '100%';
+                        try {
+                            cameraFeed.style.height = 'auto';
+                            cameraFeed.style.width = '100%';
+                        } catch (e) {
+                            console.warn('Error adjusting video size:', e);
+                        }
                     }
                 }, 300);
             }
         }
         
-        // Switch between front and back cameras
+        // Switch between front and back cameras with debouncing
         $('#switchCameraBtn').click(function() {
+            if (processingCapture || !cameraInitialized) return;
+            processingCapture = true;
+            
             // Toggle facing mode
             facingMode = facingMode === 'user' ? 'environment' : 'user';
             
-            // Restart camera with new facing mode
-            if (cameraInitialized) {
-                // Add a loading spinner to show that camera is switching
-                $('#statusText').html('<i class="fas fa-sync-alt fa-spin mr-2"></i> Switching camera...');
-                
-                // Reset UI
-                $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
-                
-                // Start camera with new facing mode
+            // Add a loading spinner to show that camera is switching
+            $('#statusText').html('<i class="fas fa-sync-alt fa-spin mr-2"></i> Switching camera...');
+            
+            // Reset UI
+            $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
+            
+            // Start camera with new facing mode
+            setTimeout(() => {
                 startCamera();
-            }
+                processingCapture = false;
+            }, 300);
         });
         
-        // Capture photo button with error handling
+        // Capture photo button with error handling and debouncing
         $('#captureBtn').click(function() {
+            if (processingCapture) return;
+            
             if (!cameraInitialized) {
                 $('#statusText').html('<i class="fas fa-exclamation-circle mr-1"></i> Camera not ready');
+                // Try to reinitialize camera
                 setTimeout(() => {
                     startCamera();
-                }, 1000);
+                }, 500);
                 return;
             }
             
             // Show capturing state
             $('#statusText').html('<i class="fas fa-camera mr-1"></i> Capturing...');
+            $(this).addClass('capturing');
             
             // Slight delay to show the capturing state
             setTimeout(() => {
                 takePhoto();
+                $(this).removeClass('capturing');
             }, 200);
         });
         
-        // Retake photo button
+        // Retake photo button with debouncing
         $('#retakeBtn, #previewRetakeBtn').click(function() {
+            if (processingCapture) return;
+            processingCapture = true;
+            
             // Reset UI for retaking photo
             $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
             $('#statusText').text('Position your face in the center');
@@ -1075,27 +1271,39 @@
                 
                 // Add a brief animation to the outline to draw attention
                 setTimeout(() => {
-                    $('.face-outline').css('border-color', 'rgba(59, 130, 246, 0.9)');
-                    setTimeout(() => {
-                        $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
-                    }, 300);
+                    if (!modalClosing) {
+                        $('.face-outline').css('border-color', 'rgba(59, 130, 246, 0.9)');
+                        setTimeout(() => {
+                            $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
+                        }, 300);
+                    }
                 }, 300);
+                
+                processingCapture = false;
             });
         });
         
-        // Confirm attendance button (after photo capture)
+        // Confirm attendance button with debouncing
         $('#confirmAttendanceBtn').click(function() {
+            if (processingCapture) return;
+            
             if (!photoTaken || !photoDataUrl) {
                 $('#statusText').html('<i class="fas fa-exclamation-circle mr-1"></i> Please take a photo first');
                 return;
             }
             
+            processingCapture = true;
+            
             // Show submitting state
-            $('#confirmAttendanceBtn').prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> Processing...');
+            $(this).prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> Processing...');
+            
+            // Store photo data for use after modal close
+            const storedPhotoData = photoDataUrl;
             
             // Short delay to show processing state
             setTimeout(() => {
                 // Close the camera modal
+                modalClosing = true;
                 cameraModal.modal('hide');
                 
                 // Get current time
@@ -1103,16 +1311,29 @@
                 const timeString = now.toLocaleTimeString('en-US', { hour12: false });
                 
                 // Reset button state
-                $('#confirmAttendanceBtn').prop('disabled', false).html(`<span id="actionButtonText">${currentAction === 'clockIn' ? 'Confirm Clock In' : 'Confirm Clock Out'}</span>`);
+                $(this).prop('disabled', false).html(`<span id="actionButtonText">${currentAction === 'clockIn' ? 'Confirm Clock In' : 'Confirm Clock Out'}</span>`);
                 
                 // Process the action (clock in or clock out)
-                if (currentAction === 'clockIn') {
-                    processClockIn(timeString, photoDataUrl);
-                } else {
-                    processClockOut(timeString, photoDataUrl);
-                }
+                setTimeout(() => {
+                    if (currentAction === 'clockIn') {
+                        processClockIn(timeString, storedPhotoData);
+                    } else {
+                        processClockOut(timeString, storedPhotoData);
+                    }
+                    processingCapture = false;
+                }, 300);
             }, 500);
         });
+        
+        // Add touch feedback
+        $('.btn, .capture-btn, .preview-retake-btn').on('touchstart', function() {
+            $(this).addClass('active');
+        }).on('touchend touchcancel', function() {
+            $(this).removeClass('active');
+        });
+        
+        // Add capturing animation
+        $('<style>.capture-btn.capturing{transform:scale(0.95);}.btn.active,.preview-retake-btn.active{opacity:0.8;transform:translateY(1px);}</style>').appendTo('head');
         
         // Process Clock In
         function processClockIn(timeString, photoData) {
@@ -1217,6 +1438,7 @@
                             popup: 'swal-minimalist'
                         }
                     });
+                }
             });
             */
         }
