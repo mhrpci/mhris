@@ -345,6 +345,11 @@
         object-fit: cover;
     }
 
+    /* Mirror effect for front camera */
+    #cameraFeed.mirror {
+        transform: scaleX(-1);
+    }
+
     .captured-photo {
         position: absolute;
         top: 0;
@@ -689,6 +694,13 @@
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 cameraFeed.srcObject = stream;
                 
+                // Mirror the front camera display but not back camera
+                if (facingMode === 'user') {
+                    $(cameraFeed).addClass('mirror');
+                } else {
+                    $(cameraFeed).removeClass('mirror');
+                }
+                
                 // Update UI for camera start
                 $(cameraFeed).removeClass('d-none');
                 $(capturedPhoto).addClass('d-none');
@@ -736,14 +748,26 @@
             cameraCanvas.height = cameraFeed.videoHeight;
             
             // Draw video frame to canvas
-            context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+            if (facingMode === 'user') {
+                // For front camera, we need to un-mirror the image when saving
+                // First flip the context horizontally
+                context.translate(cameraCanvas.width, 0);
+                context.scale(-1, 1);
+                // Then draw the flipped video
+                context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                // Reset transform
+                context.setTransform(1, 0, 0, 1, 0, 0);
+            } else {
+                // For back camera, just draw normally
+                context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+            }
             
             // Get data URL from canvas
             photoDataUrl = cameraCanvas.toDataURL('image/jpeg');
             
-            // Display the captured photo
+            // Display the captured photo (we don't want the display to be mirrored)
             capturedPhoto.style.backgroundImage = `url(${photoDataUrl})`;
-            $(capturedPhoto).removeClass('d-none');
+            $(capturedPhoto).removeClass('d-none').removeClass('mirror');
             $(cameraFeed).addClass('d-none');
             
             // Update UI for photo taken
