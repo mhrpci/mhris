@@ -215,8 +215,6 @@
         transition: opacity 0.3s ease;
     }
     
-    /* Remove camera frame */
-    
     .camera-controls {
         position: absolute;
         bottom: 0;
@@ -227,19 +225,18 @@
         justify-content: space-between;
         align-items: center;
         z-index: 10;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 70%, rgba(0, 0, 0, 0) 100%);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%);
     }
     
     .camera-options {
-        display: flex;
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        padding: 15px 15px 10px;
-        justify-content: center;
+        padding: 15px;
         z-index: 10;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 100%);
+        background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%);
+        display: none;
     }
     
     .camera-controls-group {
@@ -263,31 +260,29 @@
         position: relative;
         border-radius: 50%;
     }
-
-    /* Remove HD toggle and badge */
-    .hd-badge {
-        display: none;
+    
+    .action-banner {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        z-index: 10;
+        pointer-events: none;
     }
     
-    #hd-toggle {
-        display: none;
-    }
-
-    .camera-quality-indicator {
-        display: none;
-    }
-    
-    .camera-option.active {
-        color: #ffffff;
-        opacity: 1;
-        background: rgba(0, 122, 255, 0.6);
-        box-shadow: 0 0 10px rgba(0, 122, 255, 0.4);
-    }
-    
-    .camera-option:hover {
-        opacity: 1;
-        transform: scale(1.05);
-        background: rgba(255, 255, 255, 0.25);
+    .action-text {
+        display: inline-block;
+        padding: 10px 24px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-radius: 30px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
     
     .switch-camera-btn {
@@ -302,50 +297,10 @@
         transition: all 0.25s;
     }
     
-    .switch-camera-btn:hover {
-        opacity: 1;
-        background: rgba(255, 255, 255, 0.25);
-        transform: scale(1.05);
-    }
-    
-    /* Gallery button */
     .gallery-btn-wrapper {
-        position: relative;
-        width: 44px;
-        height: 44px;
+        display: none;
     }
     
-    .gallery-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background-color: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        cursor: pointer;
-        transition: all 0.25s;
-    }
-    
-    .gallery-btn:hover {
-        background-color: rgba(255, 255, 255, 0.25);
-        transform: scale(1.05);
-    }
-    
-    .gallery-input {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        cursor: pointer;
-    }
-    
-    /* Enhanced capture button with text */
     .capture-container {
         position: relative;
         display: flex;
@@ -382,94 +337,10 @@
         box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
     }
     
-    .capture-label {
-        position: absolute;
-        bottom: -30px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        color: white;
-        font-weight: 500;
-        font-size: 14px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        background: rgba(0,0,0,0.3);
-        padding: 4px 8px;
-        border-radius: 20px;
-        white-space: nowrap;
-        max-width: 120px;
-        margin: 0 auto;
-        display: none; /* Hide the label */
-    }
-    
     .zoom-controls {
-        position: absolute;
-        bottom: 100px;
-        left: 0;
-        right: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        z-index: 5;
-    }
-    
-    .zoom-indicator {
-        color: white;
-        background: rgba(0, 0, 0, 0.6);
-        padding: 8px 16px;
-        border-radius: 24px;
-        font-size: 1rem;
-        margin-bottom: 10px;
-        font-weight: bold;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .zoom-indicator:hover {
-        background: rgba(0, 0, 0, 0.8);
-        transform: scale(1.05);
-    }
-    
-    .zoom-slider-container {
-        width: 80%;
-        max-width: 300px;
-        background: rgba(0, 0, 0, 0.6);
-        border-radius: 20px;
-        padding: 8px 20px;
         display: none;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
     }
     
-    .zoom-slider {
-        width: 100%;
-        cursor: pointer;
-        -webkit-appearance: none;
-        height: 8px;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.3);
-        outline: none;
-    }
-    
-    .zoom-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: white;
-        cursor: pointer;
-        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
-    }
-    
-    .zoom-slider::-moz-range-thumb {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: white;
-        cursor: pointer;
-        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
-    }
-
     .timer-options {
         position: absolute;
         top: 70px;
@@ -483,23 +354,8 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     
-    .timer-option {
-        color: white;
-        background: none;
-        border: none;
-        padding: 8px 14px;
-        margin: 0 2px;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .timer-option.active {
-        background: rgba(0, 122, 255, 0.4);
-    }
-    
-    .timer-option:hover:not(.active) {
-        background: rgba(255, 255, 255, 0.1);
+    .filter-options {
+        display: none;
     }
     
     .timer-countdown {
@@ -552,138 +408,8 @@
         align-items: center;
     }
     
-    .close-btn:hover {
-        opacity: 1;
-        background: rgba(255, 0, 0, 0.5);
-        transform: scale(1.05);
-    }
-    
-    /* Camera switching animation */
     .camera-transition {
         opacity: 0.1;
-    }
-    
-    /* Enhanced filter effects */
-    .filter-options {
-        position: absolute;
-        bottom: 100px;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: center;
-        z-index: 11;
-        overflow-x: auto;
-        padding: 20px 0;
-        display: none;
-        background: rgba(0, 0, 0, 0.6);
-        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
-    }
-    
-    .filter-option {
-        position: relative;
-        width: 65px;
-        height: 65px;
-        margin: 0 8px;
-        border-radius: 10px;
-        overflow: hidden;
-        border: 2px solid transparent;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    }
-    
-    .filter-option.active {
-        border-color: #007bff;
-        transform: scale(1.05);
-        box-shadow: 0 0 15px rgba(0, 122, 255, 0.5);
-    }
-    
-    .filter-option:not(.active):hover {
-        transform: scale(1.05);
-        border-color: rgba(255, 255, 255, 0.7);
-    }
-    
-    .filter-preview {
-        width: 100%;
-        height: 100%;
-        background-position: center;
-        background-size: cover;
-    }
-    
-    .filter-label {
-        position: absolute;
-        bottom: -24px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        color: white;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        font-weight: 500;
-    }
-    
-    /* Enhanced filter effects */
-    .filter-normal {
-        filter: none;
-    }
-    
-    .filter-grayscale {
-        filter: grayscale(100%);
-    }
-    
-    .filter-sepia {
-        filter: sepia(80%);
-    }
-    
-    .filter-invert {
-        filter: invert(85%);
-    }
-    
-    .filter-saturate {
-        filter: saturate(200%) contrast(110%);
-    }
-    
-    .filter-warm {
-        filter: sepia(30%) saturate(150%) brightness(105%) contrast(105%);
-    }
-    
-    .filter-cool {
-        filter: hue-rotate(340deg) saturate(120%) brightness(102%);
-    }
-    
-    .filter-beauty {
-        filter: brightness(105%) contrast(105%) saturate(110%);
-    }
-    
-    .filter-smooth {
-        filter: brightness(105%) contrast(95%) saturate(105%);
-    }
-    
-    /* Action Identification Banner */
-    .action-banner {
-        position: absolute;
-        top: 70px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        z-index: 10;
-        pointer-events: none;
-    }
-    
-    .action-text {
-        display: inline-block;
-        padding: 10px 24px;
-        background-color: rgba(0, 0, 0, 0.7);
-        color: white;
-        font-size: 1.2rem;
-        font-weight: bold;
-        border-radius: 30px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
     
     .clock-in-text {
@@ -694,121 +420,11 @@
         background-color: rgba(220, 53, 69, 0.8);
     }
     
-    /* User information overlay */
     .info-sidebar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        top: 0;
-        width: auto;
-        max-width: 400px;
-        z-index: 6;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        padding: 0;
-        pointer-events: none;
-        background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%);
-    }
-    
-    .info-content {
-        padding: 25px;
-        margin-top: auto;
-        margin-bottom: 90px;
-    }
-    
-    .clock-badge {
-        display: flex;
-        align-items: center;
-        margin-bottom: 12px;
-        background: none;
-    }
-    
-    .clock-status {
-        display: inline-block;
-        padding: 6px 12px;
-        border-radius: 6px;
-        background-color: #007bff;
-        color: white;
-        font-weight: bold;
-        font-size: 0.9rem;
-        margin-right: 10px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    
-    .clock-out-status {
-        background-color: #dc3545;
-    }
-    
-    .clock-time {
-        font-size: 2.2rem;
-        font-weight: bold;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        font-family: 'Segoe UI', Arial, sans-serif;
-    }
-    
-    .date-display {
-        font-size: 1.1rem;
-        color: white;
-        margin-bottom: 20px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .location-display {
-        color: white;
-        margin-bottom: 20px;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .user-display {
-        color: white;
-        margin-bottom: 5px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        padding: 10px 12px;
-        background-color: rgba(0, 0, 0, 0.3);
-        border-radius: 8px;
-    }
-    
-    .user-name {
-        font-size: 1.05rem;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-    
-    .user-company, .user-position {
-        font-size: 0.9rem;
-        opacity: 0.95;
-        margin-bottom: 6px;
-    }
-    
-    /* Vertical accent line */
-    .accent-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 4px;
-        background-color: #007bff;
-        box-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
-    }
-    
-    .accent-line.clock-out {
-        background-color: #dc3545;
-        box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
-    }
-
-    .camera-quality-indicator {
         display: none;
     }
     
-    /* Small devices (landscape phones) */
     @media (max-width: 576px) {
-        .display-1 {
-            font-size: 2.8rem;
-        }
         .capture-btn {
             width: 65px;
             height: 65px;
@@ -817,69 +433,9 @@
             width: 52px;
             height: 52px;
         }
-        .card-header h5 {
-            font-size: 1rem;
-        }
-        .camera-frame {
-            width: 180px;
-            height: 180px;
-        }
-        .location-text {
-            max-width: 100px;
-        }
-        .card-body {
-            padding: 0.75rem;
-        }
-        .table th, .table td {
-            padding: 0.5rem 0.25rem;
-            font-size: 0.8rem;
-        }
-        .breadcrumb {
-            font-size: 0.85rem;
-        }
-        .info-content {
-            padding: 15px;
-            margin-bottom: 70px;
-        }
-        .clock-time {
-            font-size: 1.8rem;
-        }
-        .date-display {
-            font-size: 0.9rem;
-        }
-        .user-name, .user-company, .user-position {
-            font-size: 0.8rem;
-        }
-        .camera-option {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-        }
-        .camera-controls-group {
-            gap: 15px;
-        }
     }
     
-    /* Extra small devices */
     @media (max-width: 400px) {
-        .display-1 {
-            font-size: 2.5rem;
-        }
-        #current-time {
-            font-size: 2.5rem;
-        }
-        .camera-frame {
-            width: 160px;
-            height: 160px;
-        }
-        .camera-option {
-            width: 36px;
-            height: 36px;
-            font-size: 1rem;
-        }
-        .camera-controls-group {
-            gap: 10px;
-        }
         .capture-btn {
             width: 60px;
             height: 60px;
@@ -888,10 +444,6 @@
             width: 48px;
             height: 48px;
         }
-        .gallery-btn-wrapper, .gallery-btn {
-            width: 36px;
-            height: 36px;
-        }
         .switch-camera-btn {
             font-size: 1.1rem;
             padding: 8px;
@@ -899,13 +451,6 @@
         .action-text {
             font-size: 1rem;
             padding: 6px 16px;
-        }
-        .info-content {
-            padding: 10px;
-            margin-bottom: 60px;
-        }
-        .info-sidebar {
-            max-width: 70%;
         }
     }
 </style>
@@ -1008,22 +553,6 @@ document.addEventListener('DOMContentLoaded', function() {
     cameraModal.id = 'camera-modal';
     cameraModal.innerHTML = `
         <div class="camera-container">
-            <div class="camera-options">
-                <div class="camera-controls-group">
-                    <button class="camera-option" id="flash-toggle" title="Flash">
-                        <i class="fas fa-bolt"></i>
-                    </button>
-                    <button class="camera-option" id="hdr-toggle" title="HDR">
-                        HDR
-                    </button>
-                    <button class="camera-option" id="timer-toggle" title="Timer">
-                        <i class="fas fa-clock"></i>
-                    </button>
-                    <button class="camera-option" id="filter-toggle" title="Filters & Beauty">
-                        <i class="fas fa-magic"></i>
-                    </button>
-                </div>
-            </div>
             <div class="action-banner">
                 <div class="action-text" id="action-text">CLOCK IN</div>
             </div>
@@ -1037,77 +566,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <video id="camera-view" autoplay playsinline class="filter-normal"></video>
                 <div class="timer-countdown" id="timer-countdown">3</div>
                 <div class="flash-animation" id="flash-animation"></div>
-                
-                <div class="info-sidebar">
-                    <div class="accent-line" id="accent-line"></div>
-                    <div class="info-content">
-                        <div class="clock-badge">
-                            <div class="clock-status" id="clock-status">Clock In</div>
-                            <div class="clock-time" id="clock-time">07:55</div>
-                        </div>
-                        <div class="date-display" id="date-display">Tue, Mar 18, 2025</div>
-                        <div class="location-display" id="location-display">
-                            Jose L Briones Street, Lungsod ng Cebu,<br>
-                            6000 Lalawigan ng Cebu
-                        </div>
-                        <div class="user-display">
-                            <div class="user-name" id="user-name">Name: Edmar Crescencio</div>
-                            <div class="user-company" id="user-company">Company: MHR Property Conglomerates, Inc.</div>
-                            <div class="user-position" id="user-position">Position: IT Staff - Admin Department</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="zoom-controls">
-                <div class="zoom-indicator" id="zoom-indicator">1×</div>
-                <div class="zoom-slider-container" id="zoom-slider-container">
-                    <input type="range" min="1" max="5" step="0.1" value="1" class="zoom-slider" id="zoom-slider">
-                </div>
-            </div>
-            <div class="filter-options" id="filter-options">
-                <div class="filter-option active" data-filter="normal">
-                    <div class="filter-preview" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
-                    <div class="filter-label">Normal</div>
-                </div>
-                <div class="filter-option" data-filter="beauty">
-                    <div class="filter-preview filter-beauty" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
-                    <div class="filter-label">Beauty</div>
-                </div>
-                <div class="filter-option" data-filter="smooth">
-                    <div class="filter-preview filter-smooth" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
-                    <div class="filter-label">Smooth</div>
-                </div>
-                <div class="filter-option" data-filter="warm">
-                    <div class="filter-preview filter-warm" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
-                    <div class="filter-label">Warm</div>
-                </div>
-                <div class="filter-option" data-filter="cool">
-                    <div class="filter-preview filter-cool" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
-                    <div class="filter-label">Cool</div>
-                </div>
-                <div class="filter-option" data-filter="grayscale">
-                    <div class="filter-preview filter-grayscale" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
-                    <div class="filter-label">B&W</div>
-                </div>
-                <div class="filter-option" data-filter="sepia">
-                    <div class="filter-preview filter-sepia" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
-                    <div class="filter-label">Sepia</div>
-                </div>
-                <div class="filter-option" data-filter="saturate">
-                    <div class="filter-preview filter-saturate" style="background-image: url('https://images.pexels.com/photos/1270076/pexels-photo-1270076.jpeg?auto=compress&cs=tinysrgb&w=120');"></div>
-                    <div class="filter-label">Vivid</div>
-                </div>
             </div>
             <div class="camera-controls">
-                <div class="gallery-btn-wrapper">
-                    <div class="gallery-btn" id="gallery-btn">
-                        <i class="fas fa-images"></i>
-                    </div>
-                    <input type="file" accept="image/*" class="gallery-input" id="gallery-input">
-                </div>
                 <div class="capture-container">
                     <div class="capture-btn" id="capture-photo"></div>
-                    <div class="capture-label" id="capture-label">Clock In</div>
                 </div>
                 <button class="switch-camera-btn" id="switch-camera">
                     <i class="fas fa-sync-alt"></i>
@@ -1165,27 +627,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 stopCamera(false);
             }
             
-            // Define constraints with fallbacks for different devices
+            // Define constraints for highest quality video
             const constraints = {
                 video: {
                     facingMode: facing,
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
+                    width: { ideal: 3840 }, // 4K UHD resolution
+                    height: { ideal: 2160 },
+                    frameRate: { ideal: 30 }
                 },
                 audio: false
             };
             
-            // Try to get stream with specified facing mode
+            // Try to get stream with highest quality
             try {
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (e) {
-                // If specific camera facing mode fails, try with any camera
-                console.warn('Could not access specific camera, trying with default', e);
-                constraints.video = { 
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
+                console.warn('Could not access camera with 4K resolution, trying with HD', e);
+                // Fall back to Full HD
+                const hdConstraints = {
+                    video: {
+                        facingMode: facing,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: false
                 };
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia(hdConstraints);
+                } catch (e2) {
+                    console.warn('Could not access camera with HD resolution, trying default', e2);
+                    // Default fallback
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: facing },
+                        audio: false
+                    });
+                }
             }
             
             cameraView.srcObject = stream;
@@ -1204,6 +680,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (hasFeature.imageCapture) {
                 try {
                     imageCapture = new ImageCapture(videoTrack);
+                    
+                    // Set highest image capture quality if possible
+                    if (imageCapture.getPhotoCapabilities) {
+                        const capabilities = await imageCapture.getPhotoCapabilities();
+                        if (capabilities) {
+                            // Use highest available quality for photo capture
+                            console.log('Photo capabilities:', capabilities);
+                        }
+                    }
                 } catch (e) {
                     console.warn('ImageCapture API failed:', e);
                 }
@@ -1213,59 +698,21 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 if ('getCapabilities' in videoTrack) {
                     const capabilities = videoTrack.getCapabilities();
+                    console.log('Camera capabilities:', capabilities);
                     
                     // Check flash support
                     hasFlash = !!capabilities.torch;
-                    flashToggle.style.display = hasFlash ? 'block' : 'none';
                     
-                    // Check zoom support
-                    if (capabilities.zoom) {
-                        const zoomSliderContainer = document.getElementById('zoom-slider-container');
-                        const zoomIndicator = document.getElementById('zoom-indicator');
-                        
-                        zoomSlider.min = 1.0;
-                        zoomSlider.max = 10.0;
-                        zoomSlider.step = 0.1;
-                        zoomSlider.value = 1.0;
-                        
-                        // Show zoom controls and make slider container visible by default
-                        zoomIndicator.style.display = 'block';
-                        zoomIndicator.textContent = '1.0×';
-                        zoomSliderContainer.style.display = 'block';
-                    } else {
-                        // Try fallback CSS zoom
-                        try {
-                            const zoomSliderContainer = document.getElementById('zoom-slider-container');
-                            const zoomIndicator = document.getElementById('zoom-indicator');
-                            
-                            zoomSlider.min = 1.0;
-                            zoomSlider.max = 10.0;
-                            zoomSlider.step = 0.1;
-                            zoomSlider.value = 1.0;
-                            
-                            // Show zoom controls with CSS fallback
-                            zoomIndicator.style.display = 'block';
-                            zoomIndicator.textContent = '1.0×';
-                            zoomSliderContainer.style.display = 'block';
-                            
-                            // Add attribute to indicate CSS fallback
-                            cameraView.setAttribute('data-zoom-fallback', 'true');
-                        } catch (e) {
-                            // Hide zoom controls if they don't work
-                            document.getElementById('zoom-indicator').style.display = 'none';
-                        }
+                    // Log the actual camera resolution being used
+                    const settings = videoTrack.getSettings();
+                    console.log('Camera actual settings:', settings);
+                    
+                    if (settings.width && settings.height) {
+                        console.log(`Camera resolution: ${settings.width}x${settings.height}`);
                     }
-                } else {
-                    // If getCapabilities is not supported, hide the controls
-                    hasFlash = false;
-                    flashToggle.style.display = 'none';
-                    document.getElementById('zoom-indicator').style.display = 'none';
-                }
+                } 
             } catch (e) {
                 console.warn('Device capabilities check failed:', e);
-                hasFlash = false;
-                flashToggle.style.display = 'none';
-                document.getElementById('zoom-indicator').style.display = 'none';
             }
             
             // Apply mirroring if using front camera
@@ -1482,9 +929,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show flash animation
         showFlashAnimation();
         
-        // Try ImageCapture API first if available
+        // Try ImageCapture API first if available for highest quality
         if (imageCapture && hasFeature.imageCapture) {
-            imageCapture.takePhoto()
+            // Set photo options for max quality
+            const photoSettings = {
+                imageWidth: 3840,
+                imageHeight: 2160,
+                fillLightMode: hasFlash ? "flash" : "off"
+            };
+            
+            imageCapture.takePhoto(photoSettings)
                 .then(blob => {
                     console.log('Photo captured with ImageCapture API:', blob);
                     stopCamera();
@@ -1500,7 +954,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Canvas capture as fallback method
+    // Canvas capture as fallback method - optimized for quality
     function captureWithCanvas() {
         if (!stream || !hasFeature.canvas) {
             console.error('Canvas capture not supported');
@@ -1513,16 +967,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const canvas = document.createElement('canvas');
             const video = document.getElementById('camera-view');
             
-            // Use actual video dimensions, not element dimensions
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
+            // Use actual video dimensions for highest quality
+            canvas.width = video.videoWidth || 1920;
+            canvas.height = video.videoHeight || 1080;
             
             const ctx = canvas.getContext('2d');
             
             // Clear canvas first
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Apply the current filter and mirroring if needed
+            // Apply mirroring if needed
             ctx.save();
             if (cameraFacingMode === 'user') {
                 ctx.translate(canvas.width, 0);
@@ -1535,42 +989,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Restore context
             ctx.restore();
             
-            // Apply CSS-like filters programmatically for browsers that don't support canvas filters
-            if (activeFilter !== 'normal' && !ctx.filter) {
-                // Simple filter approximations
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                
-                switch (activeFilter) {
-                    case 'grayscale':
-                        for (let i = 0; i < data.length; i += 4) {
-                            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                            data[i] = avg;
-                            data[i + 1] = avg;
-                            data[i + 2] = avg;
-                        }
-                        break;
-                    case 'sepia':
-                        for (let i = 0; i < data.length; i += 4) {
-                            const r = data[i];
-                            const g = data[i + 1];
-                            const b = data[i + 2];
-                            data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
-                            data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
-                            data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
-                        }
-                        break;
-                }
-                
-                ctx.putImageData(imageData, 0, 0);
-            }
-            
-            // Export as blob
+            // Export as high quality blob
             canvas.toBlob(blob => {
                 console.log('Photo captured with canvas:', blob);
                 stopCamera();
                 processAttendance();
-            }, 'image/jpeg', 0.85);
+            }, 'image/jpeg', 0.95); // High quality JPEG
             
         } catch (e) {
             console.error('Canvas capture failed:', e);
@@ -1931,44 +1355,6 @@ document.addEventListener('DOMContentLoaded', function() {
             actionText.textContent = isClockIn ? 'CLOCK IN' : 'CLOCK OUT';
             actionText.className = 'action-text';
             actionText.classList.add(isClockIn ? 'clock-in-text' : 'clock-out-text');
-        }
-        
-        if (clockStatus) {
-            clockStatus.textContent = isClockIn ? 'Clock In' : 'Clock Out';
-            clockStatus.className = 'clock-status';
-            if (!isClockIn) clockStatus.classList.add('clock-out-status');
-        }
-        
-        if (accentLine) {
-            accentLine.className = 'accent-line';
-            if (!isClockIn) accentLine.classList.add('clock-out');
-        }
-        
-        // Update time in info sidebar
-        const now = new Date();
-        clockTime.textContent = now.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
-        
-        dateDisplay.textContent = now.toLocaleDateString('en-US', {
-            weekday: 'short',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-        
-        // Try to get user info from the window object if available
-        if (window.userInfo) {
-            userName.textContent = `Name: ${window.userInfo.name || 'Unknown'}`;
-            userCompany.textContent = `Company: ${window.userInfo.company || 'Unknown'}`;
-            userPosition.textContent = `Position: ${window.userInfo.position || 'Unknown'}`;
-        }
-        
-        // Update location display with current location
-        if (currentLocation) {
-            locationDisplay.textContent = currentLocation.textContent;
         }
         
         // Check if camera is available and initialize
