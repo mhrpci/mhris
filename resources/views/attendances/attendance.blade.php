@@ -279,8 +279,6 @@
         justify-content: center;
         z-index: 10;
         background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 100%);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
     }
     
     .camera-controls-group {
@@ -303,8 +301,6 @@
         transition: all 0.2s;
         position: relative;
         border-radius: 50%;
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
     }
     
     .camera-option.active {
@@ -330,8 +326,6 @@
         border-radius: 50%;
         opacity: 0.9;
         transition: all 0.25s;
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
     }
     
     .switch-camera-btn:hover {
@@ -359,8 +353,6 @@
         justify-content: center;
         overflow: hidden;
         cursor: pointer;
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
         transition: all 0.25s;
     }
     
@@ -457,8 +449,6 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         cursor: pointer;
         transition: all 0.2s ease;
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
     }
     
     .zoom-indicator:hover {
@@ -474,8 +464,6 @@
         padding: 8px 20px;
         display: none;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
     }
     
     .zoom-slider {
@@ -518,8 +506,6 @@
         padding: 8px;
         display: none;
         z-index: 15;
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     
@@ -590,8 +576,6 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
     }
     
     .close-btn:hover {
@@ -618,8 +602,6 @@
         padding: 20px 0;
         display: none;
         background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
         box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
     }
     
@@ -702,7 +684,7 @@
     }
     
     .filter-smooth {
-        filter: brightness(105%) contrast(95%) saturate(105%) blur(0.5px);
+        filter: brightness(105%) contrast(95%) saturate(105%);
     }
     
     /* Action Identification Banner */
@@ -728,8 +710,6 @@
         text-transform: uppercase;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
     }
     
     .clock-in-text {
@@ -755,8 +735,6 @@
         padding: 0;
         pointer-events: none;
         background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
     }
     
     .info-content {
@@ -818,8 +796,6 @@
         padding: 10px 12px;
         background-color: rgba(0, 0, 0, 0.3);
         border-radius: 8px;
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
     }
     
     .user-name {
@@ -870,8 +846,6 @@
         display: flex;
         align-items: center;
         opacity: 0.9;
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
     }
 
     .camera-quality-indicator i {
