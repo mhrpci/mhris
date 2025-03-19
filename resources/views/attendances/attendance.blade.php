@@ -220,14 +220,12 @@
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 25px 20px 35px;
+        padding: 25px 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         z-index: 10;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%);
     }
     
     .camera-options {
@@ -237,9 +235,7 @@
         right: 0;
         padding: 15px;
         z-index: 10;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%);
         display: none;
     }
     
@@ -251,7 +247,7 @@
     
     .camera-option {
         color: white;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.15);
         border: none;
         font-size: 1.2rem;
         width: 48px;
@@ -259,16 +255,10 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        opacity: 0.9;
+        opacity: 0.85;
         transition: all 0.2s;
         position: relative;
         border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-    
-    .camera-option:active {
-        transform: scale(0.95);
-        background: rgba(255, 255, 255, 0.25);
     }
     
     .action-banner {
@@ -284,36 +274,27 @@
     .action-text {
         display: inline-block;
         padding: 10px 24px;
-        background-color: rgba(0, 0, 0, 0.6);
+        background-color: rgba(0, 0, 0, 0.5);
         color: white;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: bold;
         border-radius: 30px;
         letter-spacing: 1px;
         text-transform: uppercase;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .switch-camera-btn {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.15);
         border: none;
         font-size: 1.3rem;
         color: #fff;
         cursor: pointer;
-        padding: 16px;
+        padding: 12px;
         border-radius: 50%;
         opacity: 0.9;
         transition: all 0.25s;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-    
-    .switch-camera-btn:active {
-        transform: scale(0.95);
-        background: rgba(255, 255, 255, 0.25);
     }
     
     .gallery-btn-wrapper {
@@ -331,14 +312,14 @@
         width: 76px;
         height: 76px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.95);
-        border: 4px solid rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.9);
+        border: 4px solid rgba(255, 255, 255, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        transition: all 0.2s ease;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        transition: all 0.2s;
     }
     
     .capture-btn::before {
@@ -351,7 +332,7 @@
     }
     
     .capture-btn:active {
-        transform: scale(0.92);
+        transform: scale(0.95);
         background: rgba(255, 255, 255, 1);
         box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
     }
@@ -365,15 +346,16 @@
         top: 70px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.7);
         border-radius: 14px;
         padding: 8px;
         display: none;
         z-index: 15;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .filter-options {
+        display: none;
     }
     
     .timer-countdown {
@@ -385,7 +367,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.6);
         color: white;
         font-size: 8rem;
         font-weight: bold;
@@ -410,7 +392,7 @@
         position: absolute;
         top: 15px;
         right: 15px;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.5);
         border: none;
         color: white;
         font-size: 1.2rem;
@@ -424,18 +406,6 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .close-btn:hover {
-        background: rgba(0, 0, 0, 0.75);
-    }
-    
-    .close-btn:active {
-        transform: scale(0.95);
     }
     
     .camera-transition {
@@ -443,105 +413,11 @@
     }
     
     .clock-in-text {
-        background-color: rgba(25, 135, 84, 0.75);
+        background-color: rgba(25, 135, 84, 0.8);
     }
     
     .clock-out-text {
-        background-color: rgba(220, 53, 69, 0.75);
-    }
-    
-    .camera-quality-indicator {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        background: rgba(0, 0, 0, 0.6);
-        color: white;
-        padding: 8px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        z-index: 15;
-        opacity: 0.9;
-        transition: all 0.25s;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .camera-quality-indicator i {
-        color: #4CAF50;
-        margin-right: 5px;
-    }
-    
-    .camera-frame-indicator {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 250px;
-        height: 250px;
-        border: 2px solid rgba(255, 255, 255, 0.5);
-        border-radius: 10px;
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
-        z-index: 5;
-        pointer-events: none;
-        animation: pulse-focus 2s ease-in-out infinite;
-    }
-    
-    @keyframes pulse-focus {
-        0% { border-color: rgba(255, 255, 255, 0.5); }
-        50% { border-color: rgba(255, 255, 255, 0.8); }
-        100% { border-color: rgba(255, 255, 255, 0.5); }
-    }
-    
-    .camera-frame-corners {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-    }
-    
-    .camera-frame-corner {
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        border-color: rgba(255, 255, 255, 0.9);
-        border-style: solid;
-        border-width: 0;
-    }
-    
-    .corner-top-left {
-        top: -2px;
-        left: -2px;
-        border-top-width: 3px;
-        border-left-width: 3px;
-        border-top-left-radius: 8px;
-    }
-    
-    .corner-top-right {
-        top: -2px;
-        right: -2px;
-        border-top-width: 3px;
-        border-right-width: 3px;
-        border-top-right-radius: 8px;
-    }
-    
-    .corner-bottom-left {
-        bottom: -2px;
-        left: -2px;
-        border-bottom-width: 3px;
-        border-left-width: 3px;
-        border-bottom-left-radius: 8px;
-    }
-    
-    .corner-bottom-right {
-        bottom: -2px;
-        right: -2px;
-        border-bottom-width: 3px;
-        border-right-width: 3px;
-        border-bottom-right-radius: 8px;
+        background-color: rgba(220, 53, 69, 0.8);
     }
     
     .info-sidebar {
@@ -557,10 +433,6 @@
             width: 52px;
             height: 52px;
         }
-        .camera-frame-indicator {
-            width: 200px;
-            height: 200px;
-        }
     }
     
     @media (max-width: 400px) {
@@ -574,15 +446,11 @@
         }
         .switch-camera-btn {
             font-size: 1.1rem;
-            padding: 14px;
+            padding: 8px;
         }
         .action-text {
             font-size: 1rem;
             padding: 6px 16px;
-        }
-        .camera-frame-indicator {
-            width: 180px;
-            height: 180px;
         }
     }
 </style>
@@ -688,9 +556,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="action-banner">
                 <div class="action-text" id="action-text">CLOCK IN</div>
             </div>
-            <div class="camera-quality-indicator">
-                <i class="fas fa-check-circle"></i> HD Mode Enabled
-            </div>
             <div class="timer-options" id="timer-options">
                 <button class="timer-option" data-timer="0">Off</button>
                 <button class="timer-option" data-timer="3">3s</button>
@@ -699,14 +564,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="camera-body">
                 <video id="camera-view" autoplay playsinline class="filter-normal"></video>
-                <div class="camera-frame-indicator">
-                    <div class="camera-frame-corners">
-                        <div class="camera-frame-corner corner-top-left"></div>
-                        <div class="camera-frame-corner corner-top-right"></div>
-                        <div class="camera-frame-corner corner-bottom-left"></div>
-                        <div class="camera-frame-corner corner-bottom-right"></div>
-                    </div>
-                </div>
                 <div class="timer-countdown" id="timer-countdown">3</div>
                 <div class="flash-animation" id="flash-animation"></div>
             </div>
@@ -1460,19 +1317,7 @@ document.addEventListener('DOMContentLoaded', function() {
         flashAnimation.style.opacity = '1';
         setTimeout(() => {
             flashAnimation.style.opacity = '0';
-        }, 150);
-        
-        // Add a subtle focus animation
-        const frameIndicator = document.querySelector('.camera-frame-indicator');
-        if (frameIndicator) {
-            frameIndicator.style.borderColor = 'rgba(255, 255, 255, 0.95)';
-            frameIndicator.style.boxShadow = '0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3)';
-            
-            setTimeout(() => {
-                frameIndicator.style.borderColor = '';
-                frameIndicator.style.boxShadow = '';
-            }, 300);
-        }
+        }, 50);
     }
     
     // Start timer and take photo when timer completes
@@ -1763,13 +1608,18 @@ document.addEventListener('DOMContentLoaded', function() {
         lastTap = currentTime;
     });
 
+    // After cameraModal creation, add a quality indicator
+    const qualityIndicator = document.createElement('div');
+    qualityIndicator.className = 'camera-quality-indicator';
+    qualityIndicator.innerHTML = '<i class="fas fa-check-circle"></i> HD Mode Enabled';
+    cameraModal.querySelector('.camera-container').appendChild(qualityIndicator);
+
     // Get reference to HD toggle button
     const hdToggle = document.getElementById('hd-toggle');
 
     // HD toggle functionality
     hdToggle.addEventListener('click', async function() {
         const isActive = hdToggle.classList.contains('active');
-        const qualityIndicator = document.querySelector('.camera-quality-indicator');
         
         if (isActive) {
             // Already in HD mode, switch to standard
