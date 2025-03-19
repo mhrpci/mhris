@@ -215,46 +215,7 @@
         transition: opacity 0.3s ease;
     }
     
-    .camera-frame {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 220px;
-        height: 220px;
-        border: 2px solid rgba(255, 255, 255, 0.8);
-        border-radius: 8px;
-        box-sizing: border-box;
-        z-index: 5;
-        pointer-events: none;
-        box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4);
-    }
-    
-    .camera-frame::before,
-    .camera-frame::after {
-        content: '';
-        position: absolute;
-        width: 24px;
-        height: 24px;
-        border-color: rgba(255, 255, 255, 0.9);
-        border-style: solid;
-    }
-    
-    /* Top left corner */
-    .camera-frame::before {
-        top: -2px;
-        left: -2px;
-        border-width: 3px 0 0 3px;
-        border-radius: 4px 0 0 0;
-    }
-    
-    /* Bottom right corner */
-    .camera-frame::after {
-        bottom: -2px;
-        right: -2px;
-        border-width: 0 3px 3px 0;
-        border-radius: 0 0 4px 0;
-    }
+    /* Remove camera frame */
     
     .camera-controls {
         position: absolute;
@@ -301,6 +262,19 @@
         transition: all 0.2s;
         position: relative;
         border-radius: 50%;
+    }
+
+    /* Remove HD toggle and badge */
+    .hd-badge {
+        display: none;
+    }
+    
+    #hd-toggle {
+        display: none;
+    }
+
+    .camera-quality-indicator {
+        display: none;
     }
     
     .camera-option.active {
@@ -826,31 +800,8 @@
         box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
     }
 
-    .hd-badge {
-        font-size: 0.7rem;
-        font-weight: bold;
-        margin-left: 2px;
-        color: #007bff;
-    }
-
     .camera-quality-indicator {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        background: rgba(0, 0, 0, 0.6);
-        color: white;
-        font-size: 0.8rem;
-        padding: 6px 12px;
-        border-radius: 20px;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        opacity: 0.9;
-    }
-
-    .camera-quality-indicator i {
-        color: #00e676;
-        margin-right: 6px;
+        display: none;
     }
     
     /* Small devices (landscape phones) */
@@ -1071,10 +1022,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button class="camera-option" id="filter-toggle" title="Filters & Beauty">
                         <i class="fas fa-magic"></i>
                     </button>
-                    <button class="camera-option active" id="hd-toggle" title="HD Mode">
-                        <i class="fas fa-video"></i>
-                        <span class="hd-badge">HD</span>
-                    </button>
                 </div>
             </div>
             <div class="action-banner">
@@ -1088,7 +1035,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="camera-body">
                 <video id="camera-view" autoplay playsinline class="filter-normal"></video>
-                <div class="camera-frame"></div>
                 <div class="timer-countdown" id="timer-countdown">3</div>
                 <div class="flash-animation" id="flash-animation"></div>
                 
@@ -1341,20 +1287,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // Force fullscreen on mobile if possible and only if not already fullscreen
-            if (window.innerWidth < 768 && !document.fullscreenElement) {
-                try {
-                    const requestFullscreen = document.documentElement.requestFullscreen || 
-                                          document.documentElement.webkitRequestFullscreen ||
-                                          document.documentElement.mozRequestFullScreen ||
-                                          document.documentElement.msRequestFullscreen;
-                    
-                    if (requestFullscreen) {
-                        await requestFullscreen.call(document.documentElement);
-                    }
-                } catch (e) {
-                    console.warn('Fullscreen request failed:', e);
+            // Force fullscreen mode
+            try {
+                const requestFullscreen = document.documentElement.requestFullscreen || 
+                                      document.documentElement.webkitRequestFullscreen ||
+                                      document.documentElement.mozRequestFullScreen ||
+                                      document.documentElement.msRequestFullscreen;
+                
+                if (requestFullscreen) {
+                    await requestFullscreen.call(document.documentElement);
                 }
+            } catch (e) {
+                console.warn('Fullscreen request failed:', e);
             }
             
             cameraModal.style.display = 'block';
@@ -1370,9 +1314,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 cameraView.classList.remove('camera-transition');
             }, 50);
-            
-            // Reset UI states
-            // ... existing code ...
             
             cameraInitialized = true;
             
@@ -1813,18 +1754,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle window resize to adjust UI for different device sizes
     window.addEventListener('resize', function() {
-        // Adjust camera frame size for different screen sizes
-        const cameraFrame = document.querySelector('.camera-frame');
-        if (cameraFrame) {
-            if (window.innerWidth < 576) {
-                cameraFrame.style.width = '160px';
-                cameraFrame.style.height = '160px';
-            } else if (window.innerWidth < 768) {
-                cameraFrame.style.width = '180px';
-                cameraFrame.style.height = '180px';
-            } else {
-                cameraFrame.style.width = '220px';
-                cameraFrame.style.height = '220px';
+        // Force fullscreen mode if camera is active
+        if (cameraInitialized && stream) {
+            try {
+                if (!document.fullscreenElement) {
+                    const requestFullscreen = document.documentElement.requestFullscreen || 
+                        document.documentElement.webkitRequestFullscreen ||
+                        document.documentElement.mozRequestFullScreen ||
+                        document.documentElement.msRequestFullscreen;
+                    
+                    if (requestFullscreen) {
+                        requestFullscreen.call(document.documentElement);
+                    }
+                }
+            } catch (e) {
+                console.warn('Fullscreen request failed on resize:', e);
             }
         }
     });
@@ -2253,7 +2197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Helper function to open camera with specific resolution
+    // Helper function to open camera with specific resolution - always use high quality
     async function openCameraWithResolution(facing, width, height) {
         try {
             if (stream) {
