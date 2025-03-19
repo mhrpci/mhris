@@ -222,10 +222,12 @@
         transform: translate(-50%, -50%);
         width: 220px;
         height: 220px;
-        border: 2px solid rgba(255, 215, 0, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        border-radius: 8px;
         box-sizing: border-box;
         z-index: 5;
         pointer-events: none;
+        box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.5);
     }
     
     .camera-frame::before,
@@ -234,7 +236,7 @@
         position: absolute;
         width: 20px;
         height: 20px;
-        border-color: rgba(255, 215, 0, 0.8);
+        border-color: rgba(255, 255, 255, 0.8);
         border-style: solid;
     }
     
@@ -243,6 +245,7 @@
         top: -2px;
         left: -2px;
         border-width: 2px 0 0 2px;
+        border-radius: 4px 0 0 0;
     }
     
     /* Bottom right corner */
@@ -250,6 +253,7 @@
         bottom: -2px;
         right: -2px;
         border-width: 0 2px 2px 0;
+        border-radius: 0 0 4px 0;
     }
     
     .camera-controls {
@@ -262,6 +266,9 @@
         justify-content: space-between;
         align-items: center;
         z-index: 10;
+        background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
     
     .camera-options {
@@ -273,7 +280,9 @@
         padding: 15px 15px 10px;
         justify-content: center;
         z-index: 10;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%);
+        background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
     
     .camera-controls-group {
@@ -284,22 +293,25 @@
     
     .camera-option {
         color: white;
-        background: none;
+        background: rgba(0, 0, 0, 0.3);
         border: none;
         font-size: 1.2rem;
         width: 44px;
         height: 44px;
+        border-radius: 50%;
         display: flex;
         justify-content: center;
         align-items: center;
         opacity: 0.85;
         transition: all 0.2s;
         position: relative;
+        margin: 0 4px;
     }
     
     .camera-option.active {
-        color: #ffcc00;
+        color: #ffffff;
         opacity: 1;
+        background: rgba(0, 123, 255, 0.7);
     }
     
     .camera-option.active::after {
@@ -311,7 +323,7 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background-color: #ffcc00;
+        background-color: #ffffff;
     }
     
     .camera-option:hover {
@@ -320,7 +332,7 @@
     }
     
     .switch-camera-btn {
-        background: none;
+        background: rgba(0, 0, 0, 0.3);
         border: none;
         font-size: 1.3rem;
         color: #fff;
@@ -328,11 +340,17 @@
         padding: 8px;
         border-radius: 50%;
         opacity: 0.8;
-        transition: opacity 0.2s;
+        transition: all 0.2s;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     .switch-camera-btn:hover {
         opacity: 1;
+        background: rgba(0, 0, 0, 0.5);
     }
     
     /* Gallery button */
@@ -345,15 +363,21 @@
     .gallery-btn {
         width: 40px;
         height: 40px;
-        border-radius: 5px;
+        border-radius: 50%;
         background-color: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.4);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
         cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .gallery-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
     }
     
     .gallery-input {
@@ -378,13 +402,13 @@
         width: 70px;
         height: 70px;
         border-radius: 50%;
-        background: white;
-        border: 4px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.15);
+        border: 3px solid rgba(255, 255, 255, 0.8);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         transition: all 0.2s;
     }
     
@@ -394,7 +418,7 @@
         height: 54px;
         border-radius: 50%;
         background: white;
-        border: 2px solid #ddd;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
     }
     
     .capture-btn:active {
@@ -780,23 +804,23 @@
     .action-text {
         display: inline-block;
         padding: 8px 20px;
-        background-color: rgba(0, 0, 0, 0.6);
+        background-color: rgba(0, 0, 0, 0.7);
         color: white;
         font-size: 1.2rem;
-        font-weight: bold;
+        font-weight: 600;
         border-radius: 30px;
         letter-spacing: 1px;
         text-transform: uppercase;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
     
     .clock-in-text {
-        background-color: rgba(25, 135, 84, 0.8);
+        background-color: rgba(25, 135, 84, 0.9);
     }
     
     .clock-out-text {
-        background-color: rgba(220, 53, 69, 0.8);
+        background-color: rgba(220, 53, 69, 0.9);
     }
     
     /* Action identifier at bottom left */
@@ -888,7 +912,9 @@
         justify-content: flex-start;
         padding: 0;
         pointer-events: none;
-        background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0) 100%);
+        background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
     
     .info-content {
@@ -908,16 +934,16 @@
         display: inline-block;
         padding: 5px 10px;
         border-radius: 5px;
-        background-color: #28a745;
+        background-color: rgba(40, 167, 69, 0.9);
         color: white;
         font-weight: bold;
         font-size: 0.9rem;
         margin-right: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     
     .clock-out-status {
-        background-color: #dc3545;
+        background-color: rgba(220, 53, 69, 0.9);
     }
     
     .clock-time {
@@ -986,20 +1012,22 @@
         position: absolute;
         top: 15px;
         left: 15px;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
         color: white;
         font-size: 0.8rem;
-        padding: 4px 8px;
-        border-radius: 12px;
+        padding: 6px 10px;
+        border-radius: 20px;
         z-index: 10;
         display: flex;
         align-items: center;
-        opacity: 0.8;
+        opacity: 0.9;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
     }
 
     .camera-quality-indicator i {
-        color: #66ff66;
-        margin-right: 4px;
+        color: #2ecc71;
+        margin-right: 6px;
     }
 </style>
 @endpush
@@ -1107,10 +1135,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fas fa-bolt"></i>
                     </button>
                     <button class="camera-option" id="hdr-toggle" title="HDR">
-                        HDR
+                        <span>HDR</span>
                     </button>
                     <button class="camera-option" id="timer-toggle" title="Timer">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-stopwatch"></i>
                     </button>
                     <button class="camera-option" id="filter-toggle" title="Filters & Beauty">
                         <i class="fas fa-magic"></i>
@@ -1120,6 +1148,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span class="hd-badge">HD</span>
                     </button>
                 </div>
+            </div>
+            <div class="camera-quality-indicator">
+                <i class="fas fa-check-circle"></i> HD Mode
             </div>
             <div class="action-banner">
                 <div class="action-text" id="action-text">CLOCK IN</div>
@@ -1268,7 +1299,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 video: {
                     facingMode: facing,
                     width: { ideal: 1920 },
-                    height: { ideal: 1080 }
+                    height: { ideal: 1080 },
+                    frameRate: { ideal: 30 }
                 },
                 audio: false
             };
@@ -1277,13 +1309,18 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (e) {
-                // If specific camera facing mode fails, try with any camera
                 console.warn('Could not access specific camera, trying with default', e);
-                constraints.video = { 
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
-                };
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                // Try with more basic constraints
+                try {
+                    constraints.video = { 
+                        facingMode: facing
+                    };
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (e2) {
+                    console.warn('Still failed with facingMode only, trying with any camera', e2);
+                    constraints.video = true;
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                }
             }
             
             cameraView.srcObject = stream;
@@ -1291,7 +1328,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Wait for video to be ready
             await new Promise(resolve => {
                 cameraView.onloadedmetadata = () => {
-                    cameraView.play().then(resolve).catch(resolve);
+                    cameraView.play().then(resolve).catch(e => {
+                        console.warn('Error starting video playback:', e);
+                        resolve();
+                    });
                 };
                 // Fallback if onloadedmetadata doesn't fire
                 setTimeout(resolve, 1000);
@@ -1299,71 +1339,81 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Create ImageCapture object if supported
             const videoTrack = stream.getVideoTracks()[0];
-            if (hasFeature.imageCapture) {
+            if (videoTrack && hasFeature.imageCapture) {
                 try {
                     imageCapture = new ImageCapture(videoTrack);
+                    console.log('ImageCapture API initialized successfully');
                 } catch (e) {
                     console.warn('ImageCapture API failed:', e);
+                    imageCapture = null;
                 }
             }
             
             // Check capabilities with error handling for different devices
             try {
-                if ('getCapabilities' in videoTrack) {
+                if (videoTrack && 'getCapabilities' in videoTrack) {
                     const capabilities = videoTrack.getCapabilities();
+                    console.log('Camera capabilities:', capabilities);
                     
                     // Check flash support
-                    hasFlash = !!capabilities.torch;
+                    hasFlash = !!(capabilities && capabilities.torch);
                     flashToggle.style.display = hasFlash ? 'block' : 'none';
                     
                     // Check zoom support
-                    if (capabilities.zoom) {
-                        const zoomSliderContainer = document.getElementById('zoom-slider-container');
-                        const zoomIndicator = document.getElementById('zoom-indicator');
-                        
-                        zoomSlider.min = 1.0;
-                        zoomSlider.max = 10.0;
-                        zoomSlider.step = 0.1;
+                    if (capabilities && capabilities.zoom) {
+                        zoomSlider.min = capabilities.zoom.min || 1.0;
+                        zoomSlider.max = capabilities.zoom.max || 10.0;
+                        zoomSlider.step = (capabilities.zoom.max - capabilities.zoom.min) / 20 || 0.1;
                         zoomSlider.value = 1.0;
                         
                         // Show zoom controls and make slider container visible by default
                         zoomIndicator.style.display = 'block';
                         zoomIndicator.textContent = '1.0×';
-                        zoomSliderContainer.style.display = 'block';
+                        
+                        // Show slider on click
+                        zoomIndicator.onclick = function() {
+                            zoomSliderContainer.style.display = zoomSliderContainer.style.display === 'block' ? 'none' : 'block';
+                        };
                     } else {
                         // Try fallback CSS zoom
-                        try {
-                            const zoomSliderContainer = document.getElementById('zoom-slider-container');
-                            const zoomIndicator = document.getElementById('zoom-indicator');
-                            
-                            zoomSlider.min = 1.0;
-                            zoomSlider.max = 10.0;
-                            zoomSlider.step = 0.1;
-                            zoomSlider.value = 1.0;
-                            
-                            // Show zoom controls with CSS fallback
-                            zoomIndicator.style.display = 'block';
-                            zoomIndicator.textContent = '1.0×';
-                            zoomSliderContainer.style.display = 'block';
-                            
-                            // Add attribute to indicate CSS fallback
-                            cameraView.setAttribute('data-zoom-fallback', 'true');
-                        } catch (e) {
-                            // Hide zoom controls if they don't work
-                            document.getElementById('zoom-indicator').style.display = 'none';
-                        }
+                        configureCssZoom();
                     }
                 } else {
-                    // If getCapabilities is not supported, hide the controls
+                    // If getCapabilities is not supported, use CSS fallback
                     hasFlash = false;
                     flashToggle.style.display = 'none';
-                    document.getElementById('zoom-indicator').style.display = 'none';
+                    configureCssZoom();
                 }
             } catch (e) {
                 console.warn('Device capabilities check failed:', e);
                 hasFlash = false;
                 flashToggle.style.display = 'none';
-                document.getElementById('zoom-indicator').style.display = 'none';
+                configureCssZoom();
+            }
+            
+            // Function to set up CSS zoom
+            function configureCssZoom() {
+                try {
+                    zoomSlider.min = 1.0;
+                    zoomSlider.max = 5.0;
+                    zoomSlider.step = 0.1;
+                    zoomSlider.value = 1.0;
+                    
+                    // Show zoom controls with CSS fallback
+                    zoomIndicator.style.display = 'block';
+                    zoomIndicator.textContent = '1.0×';
+                    
+                    // Show slider on click
+                    zoomIndicator.onclick = function() {
+                        zoomSliderContainer.style.display = zoomSliderContainer.style.display === 'block' ? 'none' : 'block';
+                    };
+                    
+                    // Add attribute to indicate CSS fallback
+                    cameraView.setAttribute('data-zoom-fallback', 'true');
+                } catch (e) {
+                    // Hide zoom controls if they don't work
+                    document.getElementById('zoom-indicator').style.display = 'none';
+                }
             }
             
             // Apply mirroring if using front camera
@@ -1377,29 +1427,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (navigator.mediaDevices.enumerateDevices) {
                 try {
                     const devices = await navigator.mediaDevices.enumerateDevices();
-                    availableCameras = devices.filter(device => device.kind === 'videoinput');
-                    document.getElementById('switch-camera').style.display = availableCameras.length > 1 ? 'block' : 'none';
+                    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    availableCameras = videoDevices;
+                    
+                    // Show camera switch button only if there are multiple cameras
+                    document.getElementById('switch-camera').style.display = videoDevices.length > 1 ? 'block' : 'none';
+                    
+                    // Log available cameras for debugging
+                    console.log(`Found ${videoDevices.length} video devices:`, videoDevices);
                 } catch (e) {
                     console.warn('Could not enumerate devices:', e);
                     document.getElementById('switch-camera').style.display = 'block'; // Show by default
                 }
+            } else {
+                // If enumeration not supported, always show the switch button
+                document.getElementById('switch-camera').style.display = 'block';
             }
             
-            // Force fullscreen on mobile if possible and only if not already fullscreen
-            if (window.innerWidth < 768 && !document.fullscreenElement) {
-                try {
-                    const requestFullscreen = document.documentElement.requestFullscreen || 
-                                          document.documentElement.webkitRequestFullscreen ||
-                                          document.documentElement.mozRequestFullScreen ||
-                                          document.documentElement.msRequestFullscreen;
-                    
-                    if (requestFullscreen) {
-                        await requestFullscreen.call(document.documentElement);
-                    }
-                } catch (e) {
-                    console.warn('Fullscreen request failed:', e);
-                }
-            }
+            // Initialize camera UI
+            updateCameraUI();
             
             cameraModal.style.display = 'block';
             
@@ -1413,12 +1459,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // Remove transition class after a short delay
             setTimeout(() => {
                 cameraView.classList.remove('camera-transition');
-            }, 50);
-            
-            // Reset UI states
-            // ... existing code ...
+            }, 200);
             
             cameraInitialized = true;
+            console.log('Camera initialized successfully:', cameraFacingMode);
+            
+            // Force focus
+            setTimeout(() => {
+                if (videoTrack && 'applyConstraints' in videoTrack) {
+                    videoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
+                        .catch(e => console.warn('Could not set continuous focus:', e));
+                }
+            }, 500);
             
         } catch (error) {
             console.error('Error accessing camera:', error);
@@ -1441,6 +1493,59 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Proceed with attendance without camera if error
             processAttendance();
+        }
+    }
+    
+    // Update camera UI based on current state
+    function updateCameraUI() {
+        // Update action text
+        if (actionText) {
+            actionText.textContent = isClockIn ? 'CLOCK IN' : 'CLOCK OUT';
+            actionText.className = 'action-text';
+            actionText.classList.add(isClockIn ? 'clock-in-text' : 'clock-out-text');
+        }
+        
+        // Update clock status in sidebar
+        if (clockStatus) {
+            clockStatus.textContent = isClockIn ? 'Clock In' : 'Clock Out';
+            clockStatus.className = 'clock-status';
+            if (!isClockIn) clockStatus.classList.add('clock-out-status');
+        }
+        
+        // Update accent line color
+        if (accentLine) {
+            accentLine.className = 'accent-line';
+            if (!isClockIn) accentLine.classList.add('clock-out');
+        }
+        
+        // Update current time in sidebar
+        const now = new Date();
+        if (clockTime) {
+            clockTime.textContent = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+        
+        // Update date in sidebar
+        if (dateDisplay) {
+            dateDisplay.textContent = now.toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        // Update quality indicator
+        const qualityIndicator = document.querySelector('.camera-quality-indicator');
+        if (qualityIndicator) {
+            if (document.getElementById('hd-toggle').classList.contains('active')) {
+                qualityIndicator.innerHTML = '<i class="fas fa-check-circle"></i> HD Mode';
+            } else {
+                qualityIndicator.innerHTML = '<i class="fas fa-circle" style="color: #ffcc00;"></i> SD Mode';
+            }
         }
     }
     
@@ -1585,101 +1690,178 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show flash animation
         showFlashAnimation();
         
-        // Try ImageCapture API first if available
-        if (imageCapture && hasFeature.imageCapture) {
-            imageCapture.takePhoto()
-                .then(blob => {
-                    console.log('Photo captured with ImageCapture API:', blob);
-                    stopCamera();
-                    processAttendance();
-                })
-                .catch(error => {
-                    console.warn('ImageCapture API failed, falling back to canvas:', error);
-                    captureWithCanvas();
-                });
-        } else {
-            // Fallback to canvas capture
-            captureWithCanvas();
-        }
+        // Create a promise to resolve when photo is captured
+        return new Promise((resolve, reject) => {
+            // Try ImageCapture API first if available
+            if (imageCapture && hasFeature.imageCapture) {
+                const photoSettings = {
+                    imageWidth: 1920,
+                    imageHeight: 1080
+                };
+                
+                // Try taking high quality photo
+                imageCapture.takePhoto(photoSettings)
+                    .then(blob => {
+                        console.log('Photo captured with ImageCapture API:', blob);
+                        stopCamera();
+                        processAttendance();
+                        resolve(blob);
+                    })
+                    .catch(error => {
+                        console.warn('ImageCapture takePhoto failed, trying grabFrame:', error);
+                        
+                        // Try grabFrame as fallback
+                        imageCapture.grabFrame()
+                            .then(imageBitmap => {
+                                console.log('Frame grabbed with ImageCapture API');
+                                
+                                // Convert ImageBitmap to blob
+                                const canvas = document.createElement('canvas');
+                                canvas.width = imageBitmap.width;
+                                canvas.height = imageBitmap.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(imageBitmap, 0, 0);
+                                
+                                canvas.toBlob(blob => {
+                                    console.log('Converted grabbed frame to blob');
+                                    stopCamera();
+                                    processAttendance();
+                                    resolve(blob);
+                                }, 'image/jpeg', 0.9);
+                            })
+                            .catch(grabError => {
+                                console.warn('ImageCapture grabFrame failed, falling back to canvas:', grabError);
+                                captureWithCanvas().then(resolve).catch(reject);
+                            });
+                    });
+            } else {
+                // Fallback to canvas capture
+                captureWithCanvas().then(resolve).catch(reject);
+            }
+        }).catch(error => {
+            console.error('All photo capture methods failed:', error);
+            stopCamera();
+            processAttendance();
+        });
     }
     
     // Canvas capture as fallback method
     function captureWithCanvas() {
-        if (!stream || !hasFeature.canvas) {
-            console.error('Canvas capture not supported');
-            stopCamera();
-            processAttendance();
-            return;
-        }
-        
-        try {
-            const canvas = document.createElement('canvas');
-            const video = document.getElementById('camera-view');
-            
-            // Use actual video dimensions, not element dimensions
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            
-            const ctx = canvas.getContext('2d');
-            
-            // Clear canvas first
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Apply the current filter and mirroring if needed
-            ctx.save();
-            if (cameraFacingMode === 'user') {
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-            }
-            
-            // Draw video frame to canvas
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Restore context
-            ctx.restore();
-            
-            // Apply CSS-like filters programmatically for browsers that don't support canvas filters
-            if (activeFilter !== 'normal' && !ctx.filter) {
-                // Simple filter approximations
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                
-                switch (activeFilter) {
-                    case 'grayscale':
-                        for (let i = 0; i < data.length; i += 4) {
-                            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                            data[i] = avg;
-                            data[i + 1] = avg;
-                            data[i + 2] = avg;
-                        }
-                        break;
-                    case 'sepia':
-                        for (let i = 0; i < data.length; i += 4) {
-                            const r = data[i];
-                            const g = data[i + 1];
-                            const b = data[i + 2];
-                            data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
-                            data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
-                            data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
-                        }
-                        break;
-                }
-                
-                ctx.putImageData(imageData, 0, 0);
-            }
-            
-            // Export as blob
-            canvas.toBlob(blob => {
-                console.log('Photo captured with canvas:', blob);
+        return new Promise((resolve, reject) => {
+            if (!stream || !hasFeature.canvas) {
+                console.error('Canvas capture not supported');
                 stopCamera();
                 processAttendance();
-            }, 'image/jpeg', 0.85);
+                reject(new Error('Canvas capture not supported'));
+                return;
+            }
             
-        } catch (e) {
-            console.error('Canvas capture failed:', e);
-            stopCamera();
-            processAttendance();
+            try {
+                const canvas = document.createElement('canvas');
+                const video = document.getElementById('camera-view');
+                
+                // Use actual video dimensions, not element dimensions
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas first
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Apply the current filter and mirroring if needed
+                ctx.save();
+                if (cameraFacingMode === 'user') {
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                }
+                
+                // Draw video frame to canvas
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Restore context
+                ctx.restore();
+                
+                // Apply active filter if any
+                applyCanvasFilter(ctx, canvas);
+                
+                // Export as blob
+                canvas.toBlob(blob => {
+                    console.log('Photo captured with canvas:', blob);
+                    stopCamera();
+                    processAttendance();
+                    resolve(blob);
+                }, 'image/jpeg', 0.9);
+                
+            } catch (e) {
+                console.error('Canvas capture failed:', e);
+                stopCamera();
+                processAttendance();
+                reject(e);
+            }
+        });
+    }
+    
+    // Helper function to apply filter effects to canvas
+    function applyCanvasFilter(ctx, canvas) {
+        if (activeFilter === 'normal') return;
+        
+        // Get image data
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        switch (activeFilter) {
+            case 'grayscale':
+                for (let i = 0; i < data.length; i += 4) {
+                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    data[i] = avg;
+                    data[i + 1] = avg;
+                    data[i + 2] = avg;
+                }
+                break;
+                
+            case 'sepia':
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                    data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                    data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                }
+                break;
+                
+            case 'warm':
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = Math.min(255, data[i] * 1.1);        // Red
+                    data[i + 2] = Math.max(0, data[i + 2] * 0.9);  // Blue
+                }
+                break;
+                
+            case 'cool':
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = Math.max(0, data[i] * 0.9);          // Red
+                    data[i + 2] = Math.min(255, data[i + 2] * 1.1); // Blue
+                }
+                break;
+                
+            case 'saturate':
+                for (let i = 0; i < data.length; i += 4) {
+                    // Simple saturation increase
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    
+                    // Convert to HSL, increase saturation, convert back to RGB
+                    const avg = (r + g + b) / 3;
+                    data[i] = Math.min(255, avg + (r - avg) * 1.5);
+                    data[i + 1] = Math.min(255, avg + (g - avg) * 1.5);
+                    data[i + 2] = Math.min(255, avg + (b - avg) * 1.5);
+                }
+                break;
         }
+        
+        ctx.putImageData(imageData, 0, 0);
     }
     
     // Location tracking with enhanced error handling and device compatibility
@@ -1706,6 +1888,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 { maximumAge: 60000, timeout: 2000, enableHighAccuracy: false }
             );
+            
             
             // Start watching position with high accuracy
             navigator.geolocation.watchPosition(
