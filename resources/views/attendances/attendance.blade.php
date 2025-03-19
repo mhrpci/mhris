@@ -155,23 +155,23 @@
 </div>
 
 <!-- Camera Modal -->
-<div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content border-0">
-            <div class="modal-body p-0">
-                <div class="camera-container">
+<div class="modal fade fullscreen-modal" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered m-0 h-100 w-100" role="document">
+        <div class="modal-content border-0 h-100 rounded-0">
+            <div class="modal-body p-0 h-100">
+                <div class="camera-container h-100 d-flex flex-column">
                     <!-- Camera Header -->
                     <div class="camera-header d-flex align-items-center justify-content-between p-3">
                         <div class="camera-title">
                             <h5 class="mb-0" id="cameraActionType">Take Photo</h5>
                         </div>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     
                     <!-- Camera Viewfinder & Overlay -->
-                    <div class="camera-viewfinder-container">
+                    <div class="camera-viewfinder-container flex-grow-1">
                         <video id="cameraFeed" autoplay playsinline></video>
                         <canvas id="cameraCanvas" class="d-none"></canvas>
                         <div id="capturedPhoto" class="captured-photo d-none"></div>
@@ -191,14 +191,14 @@
                     </div>
                     
                     <!-- Camera Controls -->
-                    <div class="camera-controls d-flex align-items-center justify-content-center py-3">
-                        <button id="switchCameraBtn" class="btn btn-light mr-3">
+                    <div class="camera-controls d-flex align-items-center justify-content-center py-4">
+                        <button id="switchCameraBtn" class="btn btn-light mr-4">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                         <button id="captureBtn" class="capture-btn">
                             <div class="inner-circle"></div>
                         </button>
-                        <button id="retakeBtn" class="btn btn-light ml-3 d-none">
+                        <button id="retakeBtn" class="btn btn-light ml-4 d-none">
                             <i class="fas fa-redo"></i>
                         </button>
                     </div>
@@ -299,8 +299,17 @@
     }
 
     /* Camera Modal Styles */
+    .fullscreen-modal {
+        padding: 0 !important;
+    }
+    
+    .fullscreen-modal .modal-dialog {
+        max-width: 100% !important;
+        margin: 0;
+    }
+    
     .modal-content {
-        border-radius: 12px;
+        border-radius: 0;
         overflow: hidden;
     }
 
@@ -322,8 +331,7 @@
     .camera-viewfinder-container {
         position: relative;
         width: 100%;
-        height: 0;
-        padding-bottom: 100%;
+        height: 100%;
         overflow: hidden;
         background-color: #000;
     }
@@ -380,10 +388,11 @@
 
     .camera-status {
         position: absolute;
-        bottom: 80px;
+        bottom: 100px;
         left: 0;
         right: 0;
         text-align: center;
+        z-index: 5;
     }
 
     .status-message {
@@ -396,14 +405,14 @@
     }
 
     .camera-controls {
-        background-color: #000;
+        background-color: rgba(0, 0, 0, 0.8);
         position: relative;
         z-index: 5;
     }
 
     .capture-btn {
-        width: 70px;
-        height: 70px;
+        width: 80px;
+        height: 80px;
         border-radius: 50%;
         background-color: rgba(255, 255, 255, 0.2);
         border: none;
@@ -414,8 +423,8 @@
     }
 
     .capture-btn .inner-circle {
-        width: 56px;
-        height: 56px;
+        width: 64px;
+        height: 64px;
         border-radius: 50%;
         background-color: white;
     }
@@ -427,8 +436,8 @@
     .btn-light {
         background-color: rgba(255, 255, 255, 0.15);
         border: none;
-        width: 44px;
-        height: 44px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -442,35 +451,67 @@
     }
 
     .action-button {
-        background-color: #000;
+        background-color: rgba(0, 0, 0, 0.8);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 5;
     }
 
     /* Responsive adjustments */
     @media (max-width: 767px) {
-        .camera-viewfinder-container {
-            padding-bottom: 133%; /* Taller aspect ratio on mobile */
-        }
-        
-        .modal-dialog {
-            margin: 0;
-            max-width: 100%;
-            height: 100%;
-        }
-        
-        .modal-content {
-            height: 100%;
-            border-radius: 0;
-        }
-        
         .face-outline {
             width: 180px;
             height: 180px;
         }
+        
+        .camera-status {
+            bottom: 90px;
+        }
+        
+        .status-message {
+            font-size: 12px;
+        }
+        
+        .capture-btn {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .capture-btn .inner-circle {
+            width: 56px;
+            height: 56px;
+        }
     }
     
-    @media (min-width: 768px) {
-        .camera-viewfinder-container {
-            padding-bottom: 75%;
+    @media (orientation: landscape) {
+        .camera-controls {
+            padding: 12px 0 !important;
+        }
+        
+        .face-outline {
+            width: 140px;
+            height: 140px;
+        }
+        
+        .camera-status {
+            bottom: 70px;
+        }
+        
+        .capture-btn {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .capture-btn .inner-circle {
+            width: 48px;
+            height: 48px;
+        }
+        
+        .btn-light {
+            width: 40px;
+            height: 40px;
         }
     }
 </style>
@@ -734,11 +775,35 @@
             $('#statusText').text('Initializing camera...');
             
             // Show the camera modal
-            cameraModal.modal('show');
+            cameraModal.modal({
+                backdrop: 'static',
+                keyboard: false,
+                show: true
+            });
+            
+            // Handle fullscreen on mobile
+            if (window.innerWidth < 768) {
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+            }
             
             // Start the camera after modal is shown
             cameraModal.on('shown.bs.modal', function() {
                 startCamera();
+                
+                // Try to go fullscreen if supported
+                try {
+                    const elem = document.documentElement;
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen();
+                    } else if (elem.webkitRequestFullscreen) { /* Safari */
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) { /* IE11 */
+                        elem.msRequestFullscreen();
+                    }
+                } catch (err) {
+                    console.log('Fullscreen not supported');
+                }
             });
             
             // Stop the camera when modal is hidden
@@ -746,6 +811,25 @@
                 stopCamera();
                 // Reset the modal state for next use
                 photoTaken = false;
+                
+                // Exit fullscreen if needed
+                try {
+                    if (document.fullscreenElement) {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        } else if (document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        } else if (document.msExitFullscreen) {
+                            document.msExitFullscreen();
+                        }
+                    }
+                } catch (err) {
+                    console.log('Exit fullscreen error');
+                }
+                
+                // Restore body scrolling
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
             });
         }
         
