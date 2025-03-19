@@ -192,7 +192,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'attendance'])->name('attendances.attendance');
     Route::get('/attendance/status', [AttendanceController::class, 'getAttendanceStatus'])->name('attendance.status');
     Route::get('/attendance/preview', [AttendanceController::class, 'capturePreview'])->name('attendance.preview');
-    Route::get('/attendance/camera', [AttendanceController::class, 'attendanceCamera'])->name('attendance.camera');
+
     // Attendance store command route
     Route::post('/attendance/store-command', [AttendanceController::class, 'executeStoreCommand'])
         ->name('attendance.store-command')
