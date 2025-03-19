@@ -409,4 +409,9 @@ class AttendanceController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function attendanceCamera()
+    {
+        return view('attendances.attendance_camera');
+    }
 }
