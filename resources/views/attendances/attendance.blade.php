@@ -220,12 +220,14 @@
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 25px 20px;
+        padding: 25px 20px 35px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         z-index: 10;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
     
     .camera-options {
@@ -235,7 +237,9 @@
         right: 0;
         padding: 15px;
         z-index: 10;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%);
+        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
         display: none;
     }
     
@@ -247,7 +251,7 @@
     
     .camera-option {
         color: white;
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.2);
         border: none;
         font-size: 1.2rem;
         width: 48px;
@@ -255,10 +259,16 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        opacity: 0.85;
+        opacity: 0.9;
         transition: all 0.2s;
         position: relative;
         border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .camera-option:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.25);
     }
     
     .action-banner {
@@ -274,27 +284,36 @@
     .action-text {
         display: inline-block;
         padding: 10px 24px;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.6);
         color: white;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: bold;
         border-radius: 30px;
         letter-spacing: 1px;
         text-transform: uppercase;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .switch-camera-btn {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.2);
         border: none;
         font-size: 1.3rem;
         color: #fff;
         cursor: pointer;
-        padding: 12px;
+        padding: 16px;
         border-radius: 50%;
         opacity: 0.9;
         transition: all 0.25s;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .switch-camera-btn:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.25);
     }
     
     .gallery-btn-wrapper {
@@ -312,14 +331,14 @@
         width: 76px;
         height: 76px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.9);
-        border: 4px solid rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.95);
+        border: 4px solid rgba(255, 255, 255, 0.7);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-        transition: all 0.2s;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.2s ease;
     }
     
     .capture-btn::before {
@@ -332,7 +351,7 @@
     }
     
     .capture-btn:active {
-        transform: scale(0.95);
+        transform: scale(0.92);
         background: rgba(255, 255, 255, 1);
         box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
     }
@@ -346,16 +365,15 @@
         top: 70px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.8);
         border-radius: 14px;
         padding: 8px;
         display: none;
         z-index: 15;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    }
-    
-    .filter-options {
-        display: none;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .timer-countdown {
@@ -367,7 +385,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.7);
         color: white;
         font-size: 8rem;
         font-weight: bold;
@@ -392,7 +410,7 @@
         position: absolute;
         top: 15px;
         right: 15px;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
         border: none;
         color: white;
         font-size: 1.2rem;
@@ -406,6 +424,18 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .close-btn:hover {
+        background: rgba(0, 0, 0, 0.75);
+    }
+    
+    .close-btn:active {
+        transform: scale(0.95);
     }
     
     .camera-transition {
@@ -413,11 +443,105 @@
     }
     
     .clock-in-text {
-        background-color: rgba(25, 135, 84, 0.8);
+        background-color: rgba(25, 135, 84, 0.75);
     }
     
     .clock-out-text {
-        background-color: rgba(220, 53, 69, 0.8);
+        background-color: rgba(220, 53, 69, 0.75);
+    }
+    
+    .camera-quality-indicator {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        z-index: 15;
+        opacity: 0.9;
+        transition: all 0.25s;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .camera-quality-indicator i {
+        color: #4CAF50;
+        margin-right: 5px;
+    }
+    
+    .camera-frame-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 250px;
+        height: 250px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+        z-index: 5;
+        pointer-events: none;
+        animation: pulse-focus 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-focus {
+        0% { border-color: rgba(255, 255, 255, 0.5); }
+        50% { border-color: rgba(255, 255, 255, 0.8); }
+        100% { border-color: rgba(255, 255, 255, 0.5); }
+    }
+    
+    .camera-frame-corners {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+    
+    .camera-frame-corner {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: rgba(255, 255, 255, 0.9);
+        border-style: solid;
+        border-width: 0;
+    }
+    
+    .corner-top-left {
+        top: -2px;
+        left: -2px;
+        border-top-width: 3px;
+        border-left-width: 3px;
+        border-top-left-radius: 8px;
+    }
+    
+    .corner-top-right {
+        top: -2px;
+        right: -2px;
+        border-top-width: 3px;
+        border-right-width: 3px;
+        border-top-right-radius: 8px;
+    }
+    
+    .corner-bottom-left {
+        bottom: -2px;
+        left: -2px;
+        border-bottom-width: 3px;
+        border-left-width: 3px;
+        border-bottom-left-radius: 8px;
+    }
+    
+    .corner-bottom-right {
+        bottom: -2px;
+        right: -2px;
+        border-bottom-width: 3px;
+        border-right-width: 3px;
+        border-bottom-right-radius: 8px;
     }
     
     .info-sidebar {
@@ -433,6 +557,10 @@
             width: 52px;
             height: 52px;
         }
+        .camera-frame-indicator {
+            width: 200px;
+            height: 200px;
+        }
     }
     
     @media (max-width: 400px) {
@@ -446,11 +574,15 @@
         }
         .switch-camera-btn {
             font-size: 1.1rem;
-            padding: 8px;
+            padding: 14px;
         }
         .action-text {
             font-size: 1rem;
             padding: 6px 16px;
+        }
+        .camera-frame-indicator {
+            width: 180px;
+            height: 180px;
         }
     }
 </style>
@@ -556,6 +688,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="action-banner">
                 <div class="action-text" id="action-text">CLOCK IN</div>
             </div>
+            <div class="camera-quality-indicator">
+                <i class="fas fa-check-circle"></i> HD Mode Enabled
+            </div>
             <div class="timer-options" id="timer-options">
                 <button class="timer-option" data-timer="0">Off</button>
                 <button class="timer-option" data-timer="3">3s</button>
@@ -564,6 +699,14 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="camera-body">
                 <video id="camera-view" autoplay playsinline class="filter-normal"></video>
+                <div class="camera-frame-indicator">
+                    <div class="camera-frame-corners">
+                        <div class="camera-frame-corner corner-top-left"></div>
+                        <div class="camera-frame-corner corner-top-right"></div>
+                        <div class="camera-frame-corner corner-bottom-left"></div>
+                        <div class="camera-frame-corner corner-bottom-right"></div>
+                    </div>
+                </div>
                 <div class="timer-countdown" id="timer-countdown">3</div>
                 <div class="flash-animation" id="flash-animation"></div>
             </div>
@@ -929,16 +1072,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show flash animation
         showFlashAnimation();
         
-        // Try ImageCapture API first if available for highest quality
+        // Try ImageCapture API first if available
         if (imageCapture && hasFeature.imageCapture) {
-            // Set photo options for max quality
-            const photoSettings = {
-                imageWidth: 3840,
-                imageHeight: 2160,
-                fillLightMode: hasFlash ? "flash" : "off"
-            };
-            
-            imageCapture.takePhoto(photoSettings)
+            imageCapture.takePhoto()
                 .then(blob => {
                     console.log('Photo captured with ImageCapture API:', blob);
                     stopCamera();
@@ -954,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Canvas capture as fallback method - optimized for quality
+    // Canvas capture as fallback method
     function captureWithCanvas() {
         if (!stream || !hasFeature.canvas) {
             console.error('Canvas capture not supported');
@@ -967,16 +1103,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const canvas = document.createElement('canvas');
             const video = document.getElementById('camera-view');
             
-            // Use actual video dimensions for highest quality
-            canvas.width = video.videoWidth || 1920;
-            canvas.height = video.videoHeight || 1080;
+            // Use actual video dimensions, not element dimensions
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
             
             const ctx = canvas.getContext('2d');
             
             // Clear canvas first
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Apply mirroring if needed
+            // Apply the current filter and mirroring if needed
             ctx.save();
             if (cameraFacingMode === 'user') {
                 ctx.translate(canvas.width, 0);
@@ -989,12 +1125,42 @@ document.addEventListener('DOMContentLoaded', function() {
             // Restore context
             ctx.restore();
             
-            // Export as high quality blob
+            // Apply CSS-like filters programmatically for browsers that don't support canvas filters
+            if (activeFilter !== 'normal' && !ctx.filter) {
+                // Simple filter approximations
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                switch (activeFilter) {
+                    case 'grayscale':
+                        for (let i = 0; i < data.length; i += 4) {
+                            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                            data[i] = avg;
+                            data[i + 1] = avg;
+                            data[i + 2] = avg;
+                        }
+                        break;
+                    case 'sepia':
+                        for (let i = 0; i < data.length; i += 4) {
+                            const r = data[i];
+                            const g = data[i + 1];
+                            const b = data[i + 2];
+                            data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                            data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                            data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                        }
+                        break;
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+            }
+            
+            // Export as blob
             canvas.toBlob(blob => {
                 console.log('Photo captured with canvas:', blob);
                 stopCamera();
                 processAttendance();
-            }, 'image/jpeg', 0.95); // High quality JPEG
+            }, 'image/jpeg', 0.85);
             
         } catch (e) {
             console.error('Canvas capture failed:', e);
@@ -1294,7 +1460,19 @@ document.addEventListener('DOMContentLoaded', function() {
         flashAnimation.style.opacity = '1';
         setTimeout(() => {
             flashAnimation.style.opacity = '0';
-        }, 50);
+        }, 150);
+        
+        // Add a subtle focus animation
+        const frameIndicator = document.querySelector('.camera-frame-indicator');
+        if (frameIndicator) {
+            frameIndicator.style.borderColor = 'rgba(255, 255, 255, 0.95)';
+            frameIndicator.style.boxShadow = '0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3)';
+            
+            setTimeout(() => {
+                frameIndicator.style.borderColor = '';
+                frameIndicator.style.boxShadow = '';
+            }, 300);
+        }
     }
     
     // Start timer and take photo when timer completes
@@ -1355,6 +1533,44 @@ document.addEventListener('DOMContentLoaded', function() {
             actionText.textContent = isClockIn ? 'CLOCK IN' : 'CLOCK OUT';
             actionText.className = 'action-text';
             actionText.classList.add(isClockIn ? 'clock-in-text' : 'clock-out-text');
+        }
+        
+        if (clockStatus) {
+            clockStatus.textContent = isClockIn ? 'Clock In' : 'Clock Out';
+            clockStatus.className = 'clock-status';
+            if (!isClockIn) clockStatus.classList.add('clock-out-status');
+        }
+        
+        if (accentLine) {
+            accentLine.className = 'accent-line';
+            if (!isClockIn) accentLine.classList.add('clock-out');
+        }
+        
+        // Update time in info sidebar
+        const now = new Date();
+        clockTime.textContent = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        dateDisplay.textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+        
+        // Try to get user info from the window object if available
+        if (window.userInfo) {
+            userName.textContent = `Name: ${window.userInfo.name || 'Unknown'}`;
+            userCompany.textContent = `Company: ${window.userInfo.company || 'Unknown'}`;
+            userPosition.textContent = `Position: ${window.userInfo.position || 'Unknown'}`;
+        }
+        
+        // Update location display with current location
+        if (currentLocation) {
+            locationDisplay.textContent = currentLocation.textContent;
         }
         
         // Check if camera is available and initialize
@@ -1547,18 +1763,13 @@ document.addEventListener('DOMContentLoaded', function() {
         lastTap = currentTime;
     });
 
-    // After cameraModal creation, add a quality indicator
-    const qualityIndicator = document.createElement('div');
-    qualityIndicator.className = 'camera-quality-indicator';
-    qualityIndicator.innerHTML = '<i class="fas fa-check-circle"></i> HD Mode Enabled';
-    cameraModal.querySelector('.camera-container').appendChild(qualityIndicator);
-
     // Get reference to HD toggle button
     const hdToggle = document.getElementById('hd-toggle');
 
     // HD toggle functionality
     hdToggle.addEventListener('click', async function() {
         const isActive = hdToggle.classList.contains('active');
+        const qualityIndicator = document.querySelector('.camera-quality-indicator');
         
         if (isActive) {
             // Already in HD mode, switch to standard
