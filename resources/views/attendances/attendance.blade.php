@@ -153,9 +153,6 @@
         </div>
     </div>
 </div>
-
-<!-- Include Camera Capture Component -->
-@include('attendances.camera-capture')
 @endsection
 
 @push('styles')
@@ -373,9 +370,12 @@
             }, 1000);
         });
         
-        // Clock In button - Now opens camera
+        // Clock In functionality
         $('#clockInBtn').click(function() {
-            // Check if we have location first
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            
+            // Check if we have location
             if (!userCoordinates) {
                 Swal.fire({
                     icon: 'warning',
@@ -391,13 +391,41 @@
                 return;
             }
             
-            // Open camera for clock in
-            window.openCameraForAction('clock-in');
+            $('#clockInTime').text(timeString);
+            $('#attendanceStatus').removeClass('alert-light').addClass('alert-success');
+            $('#attendanceStatus').html('<span class="status-indicator bg-success mr-2"></span>You are currently clocked in');
+            
+            // Enable clock out button and disable clock in
+            $(this).prop('disabled', true);
+            $('#clockOutBtn').prop('disabled', false);
+            
+            // Show minimalist success message with location
+            Swal.fire({
+                icon: 'success',
+                title: 'Clocked In',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-1"><strong>Time:</strong> ${timeString}</p>
+                        <p class="mb-0 small text-muted">
+                            <i class="fas fa-map-marker-alt mr-1"></i> 
+                            ${window.currentLocationAddress || 'Location recorded'}
+                        </p>
+                    </div>
+                `,
+                showConfirmButton: false,
+                timer: 2500,
+                customClass: {
+                    popup: 'swal-minimalist'
+                }
+            });
         });
         
-        // Clock Out button - Now opens camera
+        // Clock Out functionality
         $('#clockOutBtn').click(function() {
-            // Check if we have location first
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            
+            // Check if we have location
             if (!userCoordinates) {
                 Swal.fire({
                     icon: 'warning',
@@ -413,65 +441,19 @@
                 return;
             }
             
-            // Open camera for clock out
-            window.openCameraForAction('clock-out');
-        });
-        
-        // Handler for completing clock in (called from camera component)
-        window.completeClockIn = function(timeString, photoData) {
-            $('#clockInTime').text(timeString);
-            $('#attendanceStatus').removeClass('alert-light').addClass('alert-success');
-            $('#attendanceStatus').html('<span class="status-indicator bg-success mr-2"></span>You are currently clocked in');
-            
-            // Enable clock out button and disable clock in
-            $('#clockInBtn').prop('disabled', true);
-            $('#clockOutBtn').prop('disabled', false);
-            
-            // Show success message with photo and location
-            Swal.fire({
-                icon: 'success',
-                title: 'Clocked In',
-                html: `
-                    <div class="text-center mb-3">
-                        <img src="${photoData}" alt="Verification Photo" class="img-fluid rounded" style="max-height: 120px;">
-                    </div>
-                    <div class="text-left">
-                        <p class="mb-1"><strong>Time:</strong> ${timeString}</p>
-                        <p class="mb-0 small text-muted">
-                            <i class="fas fa-map-marker-alt mr-1"></i> 
-                            ${window.currentLocationAddress || 'Location recorded'}
-                        </p>
-                    </div>
-                `,
-                showConfirmButton: false,
-                timer: 3000,
-                customClass: {
-                    popup: 'swal-minimalist'
-                }
-            });
-            
-            // Here you would typically send the data to the server
-            // sendAttendanceData('clock-in', timeString, photoData, userCoordinates);
-        };
-        
-        // Handler for completing clock out (called from camera component)
-        window.completeClockOut = function(timeString, photoData) {
             $('#clockOutTime').text(timeString);
             $('#attendanceStatus').removeClass('alert-success').addClass('alert-light');
             $('#attendanceStatus').html('<span class="status-indicator bg-secondary mr-2"></span>You have completed your shift today');
             
             // Disable clock out button and enable clock in
-            $('#clockOutBtn').prop('disabled', true);
+            $(this).prop('disabled', true);
             $('#clockInBtn').prop('disabled', true);
             
-            // Show success message with photo and location
+            // Show minimalist success message with location
             Swal.fire({
                 icon: 'success',
                 title: 'Clocked Out',
                 html: `
-                    <div class="text-center mb-3">
-                        <img src="${photoData}" alt="Verification Photo" class="img-fluid rounded" style="max-height: 120px;">
-                    </div>
                     <div class="text-left">
                         <p class="mb-1"><strong>Time:</strong> ${timeString}</p>
                         <p class="mb-0 small text-muted">
@@ -481,49 +463,12 @@
                     </div>
                 `,
                 showConfirmButton: false,
-                timer: 3000,
+                timer: 2500,
                 customClass: {
                     popup: 'swal-minimalist'
                 }
             });
-            
-            // Here you would typically send the data to the server
-            // sendAttendanceData('clock-out', timeString, photoData, userCoordinates);
-        };
-        
-        // Function to send attendance data to server (placeholder)
-        function sendAttendanceData(action, time, photo, coordinates) {
-            // This function would handle sending the data to your backend
-            console.log('Sending attendance data:', {
-                action: action,
-                time: time,
-                photo: photo ? 'Photo captured' : 'No photo',
-                coordinates: coordinates
-            });
-            
-            // Example AJAX call (commented out)
-            /*
-            $.ajax({
-                url: '/api/attendance',
-                method: 'POST',
-                data: {
-                    action: action,
-                    time: time,
-                    photo: photo,
-                    latitude: coordinates.lat,
-                    longitude: coordinates.lng,
-                    address: window.currentLocationAddress
-                },
-                success: function(response) {
-                    console.log('Attendance recorded successfully', response);
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error recording attendance:', error);
-                    // Handle error
-                }
-            });
-            */
-        }
+        });
         
         // Add custom style for SweetAlert
         $('<style>.swal-minimalist{width:360px !important; padding:1.5rem !important;}</style>').appendTo('head');
