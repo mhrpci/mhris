@@ -174,7 +174,14 @@
                     <div class="camera-viewfinder-container flex-grow-1">
                         <video id="cameraFeed" autoplay playsinline></video>
                         <canvas id="cameraCanvas" class="d-none"></canvas>
-                        <div id="capturedPhoto" class="captured-photo d-none"></div>
+                        <div id="capturedPhoto" class="captured-photo d-none">
+                            <!-- Preview Retake Button -->
+                            <div class="preview-retake-btn-wrapper">
+                                <button id="previewRetakeBtn" class="preview-retake-btn">
+                                    <i class="fas fa-redo-alt mr-2"></i>Retake Photo
+                                </button>
+                            </div>
+                        </div>
                         
                         <!-- Facial Detection Overlay -->
                         <div class="face-detection-overlay">
@@ -358,6 +365,56 @@
         height: 100%;
         background-size: cover;
         background-position: center;
+    }
+
+    /* Preview Retake Button */
+    .preview-retake-btn-wrapper {
+        position: absolute;
+        bottom: 30px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        z-index: 20;
+    }
+    
+    .preview-retake-btn {
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 30px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .preview-retake-btn:hover, .preview-retake-btn:focus {
+        background-color: rgba(0, 0, 0, 0.8);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        color: white;
+        outline: none;
+    }
+    
+    .preview-retake-btn:active {
+        transform: translateY(1px);
+    }
+    
+    @media (max-width: 576px) {
+        .preview-retake-btn {
+            font-size: 12px;
+            padding: 8px 16px;
+        }
+    }
+    
+    @media (orientation: landscape) {
+        .preview-retake-btn-wrapper {
+            bottom: 60px;
+        }
     }
 
     .face-detection-overlay {
@@ -869,7 +926,7 @@
         });
         
         // Retake photo button
-        $('#retakeBtn').click(function() {
+        $('#retakeBtn, #previewRetakeBtn').click(function() {
             // Reset UI for retaking photo
             $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
             $('#statusText').text('Position your face in the center');
