@@ -177,6 +177,42 @@
     </div>
 </div>
 
+<!-- Add this after the camera-overlay div -->
+<div class="attendance-info-overlay">
+    <div class="attendance-info-content">
+        <div class="attendance-type">
+            <i class="fas fa-user-circle"></i>
+            <span id="attendanceTypeText">Clock In</span>
+        </div>
+        <div class="attendance-details">
+            <div class="detail-item">
+                <i class="fas fa-clock"></i>
+                <span id="attendanceTime">--:--:--</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="attendanceLocation">Fetching location...</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-user"></i>
+                <span id="attendanceName">John Doe</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-building"></i>
+                <span id="attendanceCompany">Company Name</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-sitemap"></i>
+                <span id="attendanceDepartment">Department Name</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-briefcase"></i>
+                <span id="attendancePosition">Position Name</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     /* Full Screen Camera Styles */
     .modal-fullscreen {
@@ -634,6 +670,88 @@
         letter-spacing: 0.5px;
         font-weight: 300;
     }
+    
+    /* Attendance Info Overlay Styles */
+    .attendance-info-overlay {
+        position: absolute;
+        bottom: 120px;
+        left: 20px;
+        z-index: 30;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 12px;
+        padding: 15px;
+        max-width: 300px;
+        color: white;
+        font-size: 13px;
+        pointer-events: none;
+    }
+    
+    .attendance-info-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .attendance-type {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .attendance-type i {
+        font-size: 20px;
+        color: #0d6efd;
+    }
+    
+    .attendance-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .detail-item i {
+        width: 16px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+    }
+    
+    .detail-item span {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Adjust camera footer to not overlap with info overlay */
+    .camera-footer {
+        padding-bottom: 30px;
+    }
+    
+    /* Ensure the info overlay doesn't interfere with camera controls */
+    .camera-top-controls {
+        z-index: 31;
+    }
+    
+    .zoom-control {
+        z-index: 31;
+    }
+    
+    .action-status {
+        z-index: 31;
+    }
 </style>
 
 <script>
@@ -656,6 +774,14 @@
         faceShape: 1,
         eyes: 1,
         skinBrightness: 1
+    };
+    
+    // Add these variables at the top with other variables
+    let attendanceInfo = {
+        name: 'John Doe',
+        company: 'Company Name',
+        department: 'Department Name',
+        position: 'Position Name'
     };
     
     // Initialize the camera when modal is opened
@@ -755,6 +881,12 @@
                 $('#cameraLoading').addClass('d-none');
                 $('#cameraOverlay').removeClass('d-none');
                 $('#captureStatus').text('Position your face clearly in the frame');
+                
+                // Update attendance info
+                updateAttendanceInfo();
+                
+                // Update time every second
+                setInterval(updateAttendanceInfo, 1000);
             };
         } catch (error) {
             console.error('Camera error:', error);
@@ -1059,5 +1191,27 @@
         
         // Reset modal state
         $('.modal-content').removeClass('captured-preview-mode');
+        
+        // Update attendance info immediately
+        updateAttendanceInfo();
     };
+    
+    // Add this function to update attendance info
+    function updateAttendanceInfo() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        $('#attendanceTypeText').text(actionType === 'clock-in' ? 'Clock In' : 'Clock Out');
+        $('#attendanceTime').text(timeString);
+        $('#attendanceLocation').text(window.currentLocationAddress || 'Fetching location...');
+        $('#attendanceName').text(attendanceInfo.name);
+        $('#attendanceCompany').text(attendanceInfo.company);
+        $('#attendanceDepartment').text(attendanceInfo.department);
+        $('#attendancePosition').text(attendanceInfo.position);
+    }
 </script> 
