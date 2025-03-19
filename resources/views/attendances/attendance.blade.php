@@ -153,6 +153,67 @@
         </div>
     </div>
 </div>
+
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content border-0">
+            <div class="modal-body p-0">
+                <div class="camera-container">
+                    <!-- Camera Header -->
+                    <div class="camera-header d-flex align-items-center justify-content-between p-3">
+                        <div class="camera-title">
+                            <h5 class="mb-0" id="cameraActionType">Take Photo</h5>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Camera Viewfinder & Overlay -->
+                    <div class="camera-viewfinder-container">
+                        <video id="cameraFeed" autoplay playsinline></video>
+                        <canvas id="cameraCanvas" class="d-none"></canvas>
+                        <div id="capturedPhoto" class="captured-photo d-none"></div>
+                        
+                        <!-- Facial Detection Overlay -->
+                        <div class="face-detection-overlay">
+                            <div class="face-outline"></div>
+                        </div>
+                        
+                        <!-- Status Message -->
+                        <div id="cameraStatus" class="camera-status">
+                            <div class="status-message">
+                                <i class="fas fa-user-circle mr-2"></i>
+                                <span id="statusText">Position your face in the center</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Camera Controls -->
+                    <div class="camera-controls d-flex align-items-center justify-content-center py-3">
+                        <button id="switchCameraBtn" class="btn btn-light mr-3">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button id="captureBtn" class="capture-btn">
+                            <div class="inner-circle"></div>
+                        </button>
+                        <button id="retakeBtn" class="btn btn-light ml-3 d-none">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Action Button -->
+                    <div class="action-button py-3 px-4 text-center d-none" id="actionButtonContainer">
+                        <button id="confirmAttendanceBtn" class="btn btn-primary btn-block py-2">
+                            <span id="actionButtonText">Confirm Clock In</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -234,6 +295,182 @@
     @media (max-width: 576px) {
         #currentTime {
             font-size: 2.5rem;
+        }
+    }
+
+    /* Camera Modal Styles */
+    .modal-content {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .camera-container {
+        background-color: #000;
+        position: relative;
+    }
+
+    .camera-header {
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+    }
+
+    .camera-viewfinder-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 100%;
+        overflow: hidden;
+        background-color: #000;
+    }
+
+    #cameraFeed {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .captured-photo {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .face-detection-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .face-outline {
+        width: 220px;
+        height: 220px;
+        border: 2px dashed rgba(255, 255, 255, 0.7);
+        border-radius: 50%;
+        position: relative;
+    }
+
+    .face-outline::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+    }
+
+    .camera-status {
+        position: absolute;
+        bottom: 80px;
+        left: 0;
+        right: 0;
+        text-align: center;
+    }
+
+    .status-message {
+        display: inline-block;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 14px;
+    }
+
+    .camera-controls {
+        background-color: #000;
+        position: relative;
+        z-index: 5;
+    }
+
+    .capture-btn {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .capture-btn .inner-circle {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: white;
+    }
+
+    .capture-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-light {
+        background-color: rgba(255, 255, 255, 0.15);
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .btn-light:hover {
+        background-color: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+
+    .action-button {
+        background-color: #000;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 767px) {
+        .camera-viewfinder-container {
+            padding-bottom: 133%; /* Taller aspect ratio on mobile */
+        }
+        
+        .modal-dialog {
+            margin: 0;
+            max-width: 100%;
+            height: 100%;
+        }
+        
+        .modal-content {
+            height: 100%;
+            border-radius: 0;
+        }
+        
+        .face-outline {
+            width: 180px;
+            height: 180px;
+        }
+    }
+    
+    @media (min-width: 768px) {
+        .camera-viewfinder-container {
+            padding-bottom: 75%;
         }
     }
 </style>
@@ -370,10 +607,297 @@
             }, 1000);
         });
         
-        // Clock In functionality
-        $('#clockInBtn').click(function() {
+        // =====================
+        // Camera functionality
+        // =====================
+        let currentAction = ''; // 'clockIn' or 'clockOut'
+        let stream = null;
+        let facingMode = 'user'; // 'user' for front camera, 'environment' for back camera
+        let photoTaken = false;
+        let photoDataUrl = null;
+        
+        // Camera elements
+        const cameraModal = $('#cameraModal');
+        const cameraFeed = document.getElementById('cameraFeed');
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const capturedPhoto = document.getElementById('capturedPhoto');
+        const captureBtn = document.getElementById('captureBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const switchCameraBtn = document.getElementById('switchCameraBtn');
+        const confirmAttendanceBtn = document.getElementById('confirmAttendanceBtn');
+        const actionButtonContainer = document.getElementById('actionButtonContainer');
+        const cameraActionType = document.getElementById('cameraActionType');
+        const statusText = document.getElementById('statusText');
+        
+        // Start the camera stream
+        async function startCamera() {
+            try {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                const constraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+                
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                cameraFeed.srcObject = stream;
+                
+                // Update UI for camera start
+                $(cameraFeed).removeClass('d-none');
+                $(capturedPhoto).addClass('d-none');
+                $('#retakeBtn').addClass('d-none');
+                $('#captureBtn').removeClass('d-none');
+                $('#actionButtonContainer').addClass('d-none');
+                photoTaken = false;
+                
+                // Show "face positioning" message
+                $('#statusText').text('Position your face in the center');
+                
+                // Simulate face detection with setTimeout
+                setTimeout(() => {
+                    $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Face detected');
+                    $('.face-outline').css('border-color', 'rgba(40, 167, 69, 0.7)');
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Camera Error',
+                    text: 'Unable to access camera. Please ensure you have granted camera permissions.',
+                    customClass: {
+                        popup: 'swal-minimalist'
+                    }
+                });
+            }
+        }
+        
+        // Stop camera stream
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+        
+        // Take photo
+        function takePhoto() {
+            const context = cameraCanvas.getContext('2d');
+            
+            // Set canvas dimensions to match video
+            cameraCanvas.width = cameraFeed.videoWidth;
+            cameraCanvas.height = cameraFeed.videoHeight;
+            
+            // Draw video frame to canvas
+            context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+            
+            // Get data URL from canvas
+            photoDataUrl = cameraCanvas.toDataURL('image/jpeg');
+            
+            // Display the captured photo
+            capturedPhoto.style.backgroundImage = `url(${photoDataUrl})`;
+            $(capturedPhoto).removeClass('d-none');
+            $(cameraFeed).addClass('d-none');
+            
+            // Update UI for photo taken
+            $('#captureBtn').addClass('d-none');
+            $('#retakeBtn').removeClass('d-none');
+            $('#actionButtonContainer').removeClass('d-none');
+            
+            // Update status
+            $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Photo captured');
+            
+            photoTaken = true;
+        }
+        
+        // Handle modal open and setup camera
+        function openCameraModal(action) {
+            currentAction = action;
+            
+            // Set the modal title based on the action
+            if (action === 'clockIn') {
+                $('#cameraActionType').text('Clock In Verification');
+                $('#actionButtonText').text('Confirm Clock In');
+            } else {
+                $('#cameraActionType').text('Clock Out Verification');
+                $('#actionButtonText').text('Confirm Clock Out');
+            }
+            
+            // Reset UI elements
+            $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
+            $('#statusText').text('Initializing camera...');
+            
+            // Show the camera modal
+            cameraModal.modal('show');
+            
+            // Start the camera after modal is shown
+            cameraModal.on('shown.bs.modal', function() {
+                startCamera();
+            });
+            
+            // Stop the camera when modal is hidden
+            cameraModal.on('hidden.bs.modal', function() {
+                stopCamera();
+                // Reset the modal state for next use
+                photoTaken = false;
+            });
+        }
+        
+        // Switch between front and back cameras
+        $('#switchCameraBtn').click(function() {
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            startCamera();
+        });
+        
+        // Capture photo button
+        $('#captureBtn').click(function() {
+            takePhoto();
+        });
+        
+        // Retake photo button
+        $('#retakeBtn').click(function() {
+            startCamera();
+        });
+        
+        // Confirm attendance button (after photo capture)
+        $('#confirmAttendanceBtn').click(function() {
+            if (!photoTaken) {
+                $('#statusText').text('Please take a photo first');
+                return;
+            }
+            
+            // Close the camera modal
+            cameraModal.modal('hide');
+            
+            // Get current time
             const now = new Date();
             const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            
+            // Process the action (clock in or clock out)
+            if (currentAction === 'clockIn') {
+                processClockIn(timeString, photoDataUrl);
+            } else {
+                processClockOut(timeString, photoDataUrl);
+            }
+        });
+        
+        // Process Clock In
+        function processClockIn(timeString, photoData) {
+            $('#clockInTime').text(timeString);
+            $('#attendanceStatus').removeClass('alert-light').addClass('alert-success');
+            $('#attendanceStatus').html('<span class="status-indicator bg-success mr-2"></span>You are currently clocked in');
+            
+            // Enable clock out button and disable clock in
+            $('#clockInBtn').prop('disabled', true);
+            $('#clockOutBtn').prop('disabled', false);
+            
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Clocked In Successfully',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-1"><strong>Time:</strong> ${timeString}</p>
+                        <p class="mb-0 small text-muted">
+                            <i class="fas fa-map-marker-alt mr-1"></i> 
+                            ${window.currentLocationAddress || 'Location recorded'}
+                        </p>
+                    </div>
+                    <div class="mt-3">
+                        <img src="${photoData}" class="img-fluid rounded" style="max-height: 150px;">
+                    </div>
+                `,
+                showConfirmButton: false,
+                timer: 3000,
+                customClass: {
+                    popup: 'swal-minimalist'
+                }
+            });
+            
+            // Here you would typically send the data to your server
+            // sendAttendanceData('clockIn', timeString, photoData, userCoordinates);
+        }
+        
+        // Process Clock Out
+        function processClockOut(timeString, photoData) {
+            $('#clockOutTime').text(timeString);
+            $('#attendanceStatus').removeClass('alert-success').addClass('alert-light');
+            $('#attendanceStatus').html('<span class="status-indicator bg-secondary mr-2"></span>You have completed your shift today');
+            
+            // Disable both buttons
+            $('#clockOutBtn').prop('disabled', true);
+            $('#clockInBtn').prop('disabled', true);
+            
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Clocked Out Successfully',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-1"><strong>Time:</strong> ${timeString}</p>
+                        <p class="mb-0 small text-muted">
+                            <i class="fas fa-map-marker-alt mr-1"></i> 
+                            ${window.currentLocationAddress || 'Location recorded'}
+                        </p>
+                    </div>
+                    <div class="mt-3">
+                        <img src="${photoData}" class="img-fluid rounded" style="max-height: 150px;">
+                    </div>
+                `,
+                showConfirmButton: false,
+                timer: 3000,
+                customClass: {
+                    popup: 'swal-minimalist'
+                }
+            });
+            
+            // Here you would typically send the data to your server
+            // sendAttendanceData('clockOut', timeString, photoData, userCoordinates);
+        }
+        
+        // Send attendance data to server (placeholder function)
+        function sendAttendanceData(action, time, photoData, location) {
+            // This would be your AJAX call to submit the data to the server
+            console.log('Sending attendance data to server:', action, time, location);
+            
+            // Example AJAX call (commented out as it's just a demonstration)
+            /*
+            $.ajax({
+                url: '/api/attendance',
+                method: 'POST',
+                data: {
+                    action: action,
+                    time: time,
+                    photo: photoData,
+                    location: location
+                },
+                success: function(response) {
+                    console.log('Attendance recorded successfully', response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error recording attendance:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to record attendance. Please try again.',
+                        customClass: {
+                            popup: 'swal-minimalist'
+                        }
+                    });
+                }
+            });
+            */
+        }
+        
+        // Intercept the original clock in/out buttons
+        $('#clockInBtn').click(function(e) {
+            e.preventDefault();
             
             // Check if we have location
             if (!userCoordinates) {
@@ -391,39 +915,12 @@
                 return;
             }
             
-            $('#clockInTime').text(timeString);
-            $('#attendanceStatus').removeClass('alert-light').addClass('alert-success');
-            $('#attendanceStatus').html('<span class="status-indicator bg-success mr-2"></span>You are currently clocked in');
-            
-            // Enable clock out button and disable clock in
-            $(this).prop('disabled', true);
-            $('#clockOutBtn').prop('disabled', false);
-            
-            // Show minimalist success message with location
-            Swal.fire({
-                icon: 'success',
-                title: 'Clocked In',
-                html: `
-                    <div class="text-left">
-                        <p class="mb-1"><strong>Time:</strong> ${timeString}</p>
-                        <p class="mb-0 small text-muted">
-                            <i class="fas fa-map-marker-alt mr-1"></i> 
-                            ${window.currentLocationAddress || 'Location recorded'}
-                        </p>
-                    </div>
-                `,
-                showConfirmButton: false,
-                timer: 2500,
-                customClass: {
-                    popup: 'swal-minimalist'
-                }
-            });
+            // Open camera for clock in
+            openCameraModal('clockIn');
         });
         
-        // Clock Out functionality
-        $('#clockOutBtn').click(function() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+        $('#clockOutBtn').click(function(e) {
+            e.preventDefault();
             
             // Check if we have location
             if (!userCoordinates) {
@@ -441,33 +938,8 @@
                 return;
             }
             
-            $('#clockOutTime').text(timeString);
-            $('#attendanceStatus').removeClass('alert-success').addClass('alert-light');
-            $('#attendanceStatus').html('<span class="status-indicator bg-secondary mr-2"></span>You have completed your shift today');
-            
-            // Disable clock out button and enable clock in
-            $(this).prop('disabled', true);
-            $('#clockInBtn').prop('disabled', true);
-            
-            // Show minimalist success message with location
-            Swal.fire({
-                icon: 'success',
-                title: 'Clocked Out',
-                html: `
-                    <div class="text-left">
-                        <p class="mb-1"><strong>Time:</strong> ${timeString}</p>
-                        <p class="mb-0 small text-muted">
-                            <i class="fas fa-map-marker-alt mr-1"></i> 
-                            ${window.currentLocationAddress || 'Location recorded'}
-                        </p>
-                    </div>
-                `,
-                showConfirmButton: false,
-                timer: 2500,
-                customClass: {
-                    popup: 'swal-minimalist'
-                }
-            });
+            // Open camera for clock out
+            openCameraModal('clockOut');
         });
         
         // Add custom style for SweetAlert
