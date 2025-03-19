@@ -856,6 +856,8 @@
                     if (cameraInitialized && !modalClosing) {
                         $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Face detected');
                         $('.face-outline').css('border-color', 'rgba(40, 167, 69, 0.7)');
+                        // Ensure capture button is visible - critical for retake flow
+                        $('#captureBtn').removeClass('d-none');
                     }
                 }, 1500);
                 
@@ -1270,29 +1272,36 @@
             // Apply transition effect
             $(capturedPhoto).fadeOut(200, function() {
                 try {
-                    // Clean previous state completely
-                    if (stream) {
-                        stream.getTracks().forEach(track => {
-                            try {
-                                track.stop();
-                            } catch (e) {
-                                console.warn('Error stopping track during retake:', e);
-                            }
-                        });
-                        stream = null;
-                    }
-                    
-                    // Reset camera parameters to default state
-                    cameraInitialized = false;
+                    // Clear photo data
+                    photoDataUrl = null;
                     photoTaken = false;
                     
-                    // Reset UI elements
+                    // Clean previous state completely
+                    stopCamera();
+                    
+                    // Reset UI elements completely for fresh start
                     $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
                     $('#statusText').text('Position your face in the center');
-                    $('#captureBtn').addClass('d-none');
+                    $('#captureBtn').addClass('d-none'); // Will be shown by startCamera
+                    $('#retakeBtn').addClass('d-none');
+                    
+                    // Make camera feed visible again
+                    $(cameraFeed).removeClass('d-none');
                     
                     // Reinitialize the camera with the same process as initial capture
-                    startCamera();
+                    // Use a small delay to ensure clean initialization
+                    setTimeout(() => {
+                        startCamera(0); // Start fresh with retry count 0
+                        
+                        // Force enable capture button after a delay to ensure it's visible
+                        // This is critical for fixing retake loop issues
+                        setTimeout(() => {
+                            if (cameraInitialized && !photoTaken && !modalClosing) {
+                                $('#captureBtn').removeClass('d-none');
+                                $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Camera ready');
+                            }
+                        }, 2000);
+                    }, 300);
                     
                     // Add a brief highlight animation to the outline to draw attention
                     setTimeout(() => {
@@ -1302,7 +1311,7 @@
                                 $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
                             }, 300);
                         }
-                    }, 300);
+                    }, 1000);
                 } catch (error) {
                     console.error('Error during retake setup:', error);
                     
@@ -1313,6 +1322,11 @@
                     setTimeout(() => {
                         try {
                             startCamera();
+                            
+                            // Force enable capture button
+                            setTimeout(() => {
+                                $('#captureBtn').removeClass('d-none');
+                            }, 2000);
                         } catch (retryError) {
                             console.error('Failed retry during retake:', retryError);
                             // Notify user of error
@@ -1328,8 +1342,10 @@
                         }
                     }, 500);
                 } finally {
-                    // Always ensure processingCapture is reset
-                    processingCapture = false;
+                    // Always ensure processingCapture is reset after a delay
+                    setTimeout(() => {
+                        processingCapture = false;
+                    }, 1000);
                 }
             });
         });
