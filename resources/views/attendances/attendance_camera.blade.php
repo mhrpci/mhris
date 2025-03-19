@@ -492,6 +492,7 @@
             let currentStream = null;
             let facingMode = 'environment'; // Start with back camera
             let hasMultipleCameras = false;
+            let currentConstraints = null;
             
             // Check if device has multiple cameras
             async function checkForMultipleCameras() {
@@ -515,6 +516,41 @@
                 }
             }
             
+            // Get optimal camera constraints based on device
+            function getOptimalConstraints() {
+                const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+                const isHighDensityScreen = window.devicePixelRatio > 1.5;
+                const isSmallScreen = window.innerWidth < 768;
+                
+                // Optimal resolution depends on device capabilities
+                let idealWidth, idealHeight;
+                
+                if (isHighDensityScreen) {
+                    // For high-density screens like recent smartphones
+                    idealWidth = isLandscape ? 1920 : 1080;
+                    idealHeight = isLandscape ? 1080 : 1920;
+                } else if (isSmallScreen) {
+                    // For lower-end devices, reduce resolution for better performance
+                    idealWidth = isLandscape ? 1280 : 720;
+                    idealHeight = isLandscape ? 720 : 1280;
+                } else {
+                    // Default for most devices
+                    idealWidth = isLandscape ? 1600 : 900;
+                    idealHeight = isLandscape ? 900 : 1600;
+                }
+                
+                return {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: idealWidth },
+                        height: { ideal: idealHeight },
+                        // Improve image quality with these optional constraints if supported
+                        frameRate: { ideal: 30 },
+                        aspectRatio: isLandscape ? 16/9 : 9/16
+                    }
+                };
+            }
+            
             // Access the camera
             async function startCamera() {
                 if (currentStream) {
@@ -525,34 +561,70 @@
                 
                 loading.style.display = 'flex';
                 
-                // Set constraints based on device orientation and screen size
-                const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-                
-                const constraints = {
-                    video: {
-                        facingMode: facingMode,
-                        width: { ideal: isLandscape ? 1920 : 1080 },
-                        height: { ideal: isLandscape ? 1080 : 1920 }
-                    }
-                };
+                // Get optimal constraints for current device and orientation
+                currentConstraints = getOptimalConstraints();
                 
                 try {
-                    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    currentStream = await navigator.mediaDevices.getUserMedia(currentConstraints);
                     video.srcObject = currentStream;
-                    video.play();
+                    
+                    // Ensure video plays after source is set
+                    try {
+                        await video.play();
+                    } catch (playError) {
+                        console.error('Error playing video:', playError);
+                        // Retry with lower quality if playback fails
+                        if (playError.name === 'NotAllowedError' || playError.name === 'AbortError') {
+                            // Reduce quality and try again
+                            currentConstraints.video.width = { ideal: 640 };
+                            currentConstraints.video.height = { ideal: 480 };
+                            currentStream = await navigator.mediaDevices.getUserMedia(currentConstraints);
+                            video.srcObject = currentStream;
+                            await video.play();
+                        }
+                    }
+                    
                     loading.style.display = 'none';
                     noCamera.style.display = 'none';
                     await checkForMultipleCameras();
+                    
+                    // Update camera info display
+                    updateCameraInfoDisplay();
                 } catch(err) {
                     console.error('Error accessing camera:', err);
                     loading.style.display = 'none';
                     noCamera.style.display = 'flex';
+                    
+                    // Update error message based on specific error
+                    const errorMsg = document.querySelector('.no-camera p');
+                    if (err.name === 'NotAllowedError') {
+                        errorMsg.textContent = 'Camera access was denied. Please enable camera access in your browser settings and reload the page.';
+                    } else if (err.name === 'NotFoundError') {
+                        errorMsg.textContent = 'No camera device found. Please connect a camera and reload the page.';
+                    } else {
+                        errorMsg.textContent = `Error accessing camera: ${err.message}. Please try reloading the page or use a different device.`;
+                    }
+                }
+            }
+            
+            // Update camera info display
+            function updateCameraInfoDisplay() {
+                const cameraOptions = document.querySelector('.camera-options');
+                if (currentStream && currentStream.getVideoTracks().length > 0) {
+                    const videoTrack = currentStream.getVideoTracks()[0];
+                    const settings = videoTrack.getSettings();
+                    
+                    // Display actual resolution being used
+                    if (settings.width && settings.height) {
+                        const quality = settings.width >= 1280 ? 'HD' : 'SD';
+                        cameraOptions.textContent = quality;
+                    }
                 }
             }
             
             // Check if video is ready and playing
             video.addEventListener('loadedmetadata', () => {
-                video.play();
+                video.play().catch(err => console.log('Play after loadedmetadata error:', err));
             });
             
             // Switch between front and back cameras
@@ -580,11 +652,23 @@
                 const context = canvas.getContext('2d');
                 context.drawImage(video, 0, 0, width, height);
                 
+                // Add timestamp to the image (optional)
+                const timestamp = new Date().toLocaleString();
+                context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                context.fillRect(10, height - 40, width - 20, 30);
+                context.fillStyle = 'white';
+                context.font = '16px Arial';
+                context.fillText(`Attendance: ${timestamp}`, 20, height - 20);
+                
                 // Convert canvas to data URL
                 const imgData = canvas.toDataURL('image/jpeg', 0.85);
                 
-                // Store the photo
-                photos.unshift(imgData);
+                // Store the photo with metadata
+                photos.unshift({
+                    data: imgData,
+                    timestamp: new Date().toISOString(),
+                    type: 'attendance'
+                });
                 
                 // Show in preview
                 updatePhotoPreview();
@@ -601,12 +685,222 @@
                 if (navigator.vibrate) {
                     navigator.vibrate(50);
                 }
+                
+                // Show confirmation to submit attendance
+                showAttendanceConfirmation(imgData);
+            }
+            
+            // Show attendance confirmation
+            function showAttendanceConfirmation(imgData) {
+                // Create confirmation modal if it doesn't exist
+                let confirmModal = document.getElementById('confirmModal');
+                if (!confirmModal) {
+                    confirmModal = document.createElement('div');
+                    confirmModal.id = 'confirmModal';
+                    confirmModal.className = 'confirm-modal';
+                    confirmModal.innerHTML = `
+                        <div class="confirm-content">
+                            <h3>Submit Attendance?</h3>
+                            <div class="confirm-image-container">
+                                <img id="confirmImage" src="" alt="Attendance Photo">
+                            </div>
+                            <div class="confirm-actions">
+                                <button id="cancelAttendance" class="confirm-btn cancel">Cancel</button>
+                                <button id="submitAttendance" class="confirm-btn submit">Submit</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(confirmModal);
+                    
+                    // Style the confirmation modal
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        .confirm-modal {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            background: rgba(0, 0, 0, 0.85);
+                            z-index: 40;
+                            display: none;
+                            justify-content: center;
+                            align-items: center;
+                            padding: 20px;
+                        }
+                        .confirm-content {
+                            background: #222;
+                            border-radius: 12px;
+                            padding: 20px;
+                            width: 90%;
+                            max-width: 400px;
+                            text-align: center;
+                        }
+                        .confirm-image-container {
+                            margin: 15px 0;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            max-height: 60vh;
+                        }
+                        .confirm-image-container img {
+                            width: 100%;
+                            max-height: 60vh;
+                            object-fit: contain;
+                        }
+                        .confirm-actions {
+                            display: flex;
+                            justify-content: space-around;
+                            margin-top: 15px;
+                        }
+                        .confirm-btn {
+                            padding: 10px 20px;
+                            border-radius: 20px;
+                            border: none;
+                            font-size: 16px;
+                            font-weight: bold;
+                            cursor: pointer;
+                            width: 45%;
+                        }
+                        .confirm-btn.cancel {
+                            background: #444;
+                            color: white;
+                        }
+                        .confirm-btn.submit {
+                            background: #2196F3;
+                            color: white;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    // Add event listeners
+                    document.getElementById('cancelAttendance').addEventListener('click', () => {
+                        confirmModal.style.display = 'none';
+                    });
+                    
+                    document.getElementById('submitAttendance').addEventListener('click', () => {
+                        submitAttendance();
+                        confirmModal.style.display = 'none';
+                    });
+                }
+                
+                // Update and show the confirmation
+                document.getElementById('confirmImage').src = imgData;
+                confirmModal.style.display = 'flex';
+            }
+            
+            // Submit attendance to server
+            function submitAttendance() {
+                if (photos.length === 0) return;
+                
+                // Show loading indicator
+                loading.style.display = 'flex';
+                
+                // Get the latest photo
+                const photoData = photos[0];
+                
+                // Create form data for submission
+                const formData = new FormData();
+                
+                // Convert data URL to Blob
+                const imageBlob = dataURItoBlob(photoData.data);
+                formData.append('attendance_photo', imageBlob, 'attendance.jpg');
+                formData.append('timestamp', photoData.timestamp);
+                formData.append('_token', '{{ csrf_token() }}');
+                
+                // Send to server
+                fetch('{{ route("attendance.submit") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading indicator
+                    loading.style.display = 'none';
+                    
+                    // Show success message
+                    showMessage('Attendance submitted successfully!', 'success');
+                })
+                .catch(error => {
+                    console.error('Error submitting attendance:', error);
+                    loading.style.display = 'none';
+                    
+                    // Show error message
+                    showMessage('Failed to submit attendance. Please try again.', 'error');
+                });
+            }
+            
+            // Convert data URI to Blob
+            function dataURItoBlob(dataURI) {
+                const byteString = atob(dataURI.split(',')[1]);
+                const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                
+                return new Blob([ab], { type: mimeString });
+            }
+            
+            // Show message to user
+            function showMessage(message, type) {
+                // Create message element if it doesn't exist
+                let msgElement = document.getElementById('statusMessage');
+                if (!msgElement) {
+                    msgElement = document.createElement('div');
+                    msgElement.id = 'statusMessage';
+                    document.body.appendChild(msgElement);
+                    
+                    // Add styles
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        #statusMessage {
+                            position: fixed;
+                            bottom: 20%;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            padding: 12px 24px;
+                            border-radius: 24px;
+                            color: white;
+                            font-weight: bold;
+                            z-index: 100;
+                            opacity: 0;
+                            transition: opacity 0.3s ease;
+                        }
+                        #statusMessage.visible {
+                            opacity: 1;
+                        }
+                        #statusMessage.success {
+                            background: rgba(46, 204, 113, 0.9);
+                        }
+                        #statusMessage.error {
+                            background: rgba(231, 76, 60, 0.9);
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+                
+                // Update message content and display
+                msgElement.textContent = message;
+                msgElement.className = type;
+                msgElement.classList.add('visible');
+                
+                // Hide after delay
+                setTimeout(() => {
+                    msgElement.classList.remove('visible');
+                }, 3000);
             }
             
             // Update the small preview thumbnail
             function updatePhotoPreview() {
                 if (photos.length > 0) {
-                    photoPreview.innerHTML = `<img src="${photos[0]}" alt="Latest photo">`;
+                    photoPreview.innerHTML = `<img src="${photos[0].data}" alt="Latest photo">`;
                     photoPreview.style.display = 'block';
                 } else {
                     photoPreview.style.display = 'none';
@@ -623,10 +917,10 @@
                     photos.forEach((photo, index) => {
                         const item = document.createElement('div');
                         item.className = 'gallery-item';
-                        item.innerHTML = `<img src="${photo}" alt="Photo ${index}">`;
+                        item.innerHTML = `<img src="${photo.data}" alt="Photo ${index}">`;
                         
                         item.addEventListener('click', () => {
-                            showPreview(photo);
+                            showPreview(photo.data);
                         });
                         
                         galleryContent.appendChild(item);
@@ -653,12 +947,10 @@
             captureBtn.addEventListener('touchend', preventZoom);
             
             // Camera switch buttons
-            if (hasMultipleCameras) {
-                switchBtn.addEventListener('click', toggleCamera);
-                switchBtn.addEventListener('touchend', preventZoom);
-                switchCameraBtn.addEventListener('click', toggleCamera);
-                switchCameraBtn.addEventListener('touchend', preventZoom);
-            }
+            switchBtn.addEventListener('click', toggleCamera);
+            switchBtn.addEventListener('touchend', preventZoom);
+            switchCameraBtn.addEventListener('click', toggleCamera);
+            switchCameraBtn.addEventListener('touchend', preventZoom);
             
             galleryBtn.addEventListener('click', showGallery);
             galleryBtn.addEventListener('touchend', preventZoom);
@@ -674,7 +966,7 @@
             
             photoPreview.addEventListener('click', () => {
                 if (photos.length > 0) {
-                    showPreview(photos[0]);
+                    showPreview(photos[0].data);
                 }
             });
             
@@ -728,6 +1020,13 @@
                 }
             }
             
+            // Request fullscreen when user taps capture button
+            captureBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    requestFullscreen();
+                }
+            });
+            
             // Start the camera when page loads
             startCamera();
             
@@ -750,6 +1049,31 @@
             
             // Try to keep screen on when using camera
             requestWakeLock();
+            
+            // Check if browser supports required features
+            function checkBrowserSupport() {
+                const unsupportedFeatures = [];
+                
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    unsupportedFeatures.push('Camera API');
+                }
+                
+                if (!window.indexedDB) {
+                    unsupportedFeatures.push('IndexedDB (for offline support)');
+                }
+                
+                if (!('serviceWorker' in navigator)) {
+                    unsupportedFeatures.push('Service Workers (for offline support)');
+                }
+                
+                if (unsupportedFeatures.length > 0) {
+                    console.warn('Browser missing features:', unsupportedFeatures);
+                    // Still continue, but some features might not work
+                }
+            }
+            
+            // Check browser support on load
+            checkBrowserSupport();
         });
     </script>
 </body>
