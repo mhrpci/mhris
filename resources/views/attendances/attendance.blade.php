@@ -718,6 +718,12 @@
         let facingMode = 'user'; // 'user' for front camera, 'environment' for back camera
         let photoTaken = false;
         let photoDataUrl = null;
+        let cameraInitialized = false;
+        
+        // Check if camera is supported
+        const isCameraSupported = () => {
+            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        };
         
         // Camera elements
         const cameraModal = $('#cameraModal');
@@ -735,10 +741,20 @@
         // Start the camera stream
         async function startCamera() {
             try {
+                // Show initializing message
+                $('#statusText').text('Initializing camera...');
+                
+                // Clean up any existing stream first
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
                 
+                // Check if camera is supported
+                if (!isCameraSupported()) {
+                    throw new Error('Camera not supported on this device or browser');
+                }
+                
+                // Set constraints with fallbacks
                 const constraints = {
                     video: {
                         facingMode: facingMode,
@@ -748,8 +764,17 @@
                     audio: false
                 };
                 
+                // Request camera access
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Set video source
                 cameraFeed.srcObject = stream;
+                
+                // Handle video loaded event
+                $(cameraFeed).one('loadedmetadata', function() {
+                    cameraInitialized = true;
+                    console.log('Camera initialized successfully');
+                });
                 
                 // Mirror the front camera display but not back camera
                 if (facingMode === 'user') {
@@ -771,75 +796,132 @@
                 
                 // Simulate face detection with setTimeout
                 setTimeout(() => {
-                    $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Face detected');
-                    $('.face-outline').css('border-color', 'rgba(40, 167, 69, 0.7)');
+                    if (cameraInitialized) {
+                        $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Face detected');
+                        $('.face-outline').css('border-color', 'rgba(40, 167, 69, 0.7)');
+                    }
                 }, 1500);
                 
             } catch (error) {
                 console.error('Error accessing camera:', error);
+                let errorMessage = 'Unable to access camera';
+                
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    errorMessage = 'No camera device found on this device.';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    errorMessage = 'Camera is already in use by another application.';
+                } else if (error.name === 'OverconstrainedError' || error.name === 'ConstraintNotSatisfiedError') {
+                    errorMessage = 'Camera constraints not satisfied. Try reloading the page.';
+                }
+                
+                $('#statusText').html(`<i class="fas fa-exclamation-circle mr-1"></i> ${errorMessage}`);
+                
                 Swal.fire({
                     icon: 'error',
                     title: 'Camera Error',
-                    text: 'Unable to access camera. Please ensure you have granted camera permissions.',
+                    text: errorMessage,
+                    confirmButtonText: 'Try Again',
                     customClass: {
                         popup: 'swal-minimalist'
                     }
+                }).then(() => {
+                    // Close the modal if camera can't be accessed
+                    cameraModal.modal('hide');
                 });
             }
         }
         
-        // Stop camera stream
+        // Ensure proper camera cleanup
         function stopCamera() {
             if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                });
                 stream = null;
+            }
+            cameraInitialized = false;
+            
+            // Clear video source
+            if (cameraFeed.srcObject) {
+                cameraFeed.srcObject = null;
             }
         }
         
-        // Take photo
+        // Take photo with error handling
         function takePhoto() {
-            const context = cameraCanvas.getContext('2d');
-            
-            // Set canvas dimensions to match video
-            cameraCanvas.width = cameraFeed.videoWidth;
-            cameraCanvas.height = cameraFeed.videoHeight;
-            
-            // Draw video frame to canvas
-            if (facingMode === 'user') {
-                // For front camera, we need to un-mirror the image when saving
-                // First flip the context horizontally
-                context.translate(cameraCanvas.width, 0);
-                context.scale(-1, 1);
-                // Then draw the flipped video
-                context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
-                // Reset transform
-                context.setTransform(1, 0, 0, 1, 0, 0);
-            } else {
-                // For back camera, just draw normally
-                context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+            try {
+                if (!cameraInitialized || !stream) {
+                    throw new Error('Camera not properly initialized');
+                }
+                
+                const context = cameraCanvas.getContext('2d');
+                
+                // Set canvas dimensions to match video
+                cameraCanvas.width = cameraFeed.videoWidth || 640;
+                cameraCanvas.height = cameraFeed.videoHeight || 480;
+                
+                // Draw video frame to canvas with appropriate mirroring
+                if (facingMode === 'user') {
+                    // For front camera, we need to un-mirror the image when saving
+                    // First flip the context horizontally
+                    context.translate(cameraCanvas.width, 0);
+                    context.scale(-1, 1);
+                    // Then draw the flipped video
+                    context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                    // Reset transform
+                    context.setTransform(1, 0, 0, 1, 0, 0);
+                } else {
+                    // For back camera, just draw normally
+                    context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                }
+                
+                // Get data URL from canvas
+                photoDataUrl = cameraCanvas.toDataURL('image/jpeg', 0.8);
+                
+                // Verify that photo was captured
+                if (!photoDataUrl || photoDataUrl === 'data:,') {
+                    throw new Error('Failed to capture photo');
+                }
+                
+                // Display the captured photo (we don't want the display to be mirrored)
+                capturedPhoto.style.backgroundImage = `url(${photoDataUrl})`;
+                $(capturedPhoto).removeClass('d-none').removeClass('mirror');
+                $(cameraFeed).addClass('d-none');
+                
+                // Update UI for photo taken
+                $('#captureBtn').addClass('d-none');
+                $('#retakeBtn').removeClass('d-none');
+                $('#actionButtonContainer').removeClass('d-none');
+                
+                // Update status
+                $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Photo captured');
+                
+                photoTaken = true;
+            } catch (error) {
+                console.error('Error taking photo:', error);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Photo Capture Error',
+                    text: 'Failed to capture photo. Please try again.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal-minimalist'
+                    }
+                });
+                
+                // Retry camera
+                startCamera();
             }
-            
-            // Get data URL from canvas
-            photoDataUrl = cameraCanvas.toDataURL('image/jpeg');
-            
-            // Display the captured photo (we don't want the display to be mirrored)
-            capturedPhoto.style.backgroundImage = `url(${photoDataUrl})`;
-            $(capturedPhoto).removeClass('d-none').removeClass('mirror');
-            $(cameraFeed).addClass('d-none');
-            
-            // Update UI for photo taken
-            $('#captureBtn').addClass('d-none');
-            $('#retakeBtn').removeClass('d-none');
-            $('#actionButtonContainer').removeClass('d-none');
-            
-            // Update status
-            $('#statusText').html('<i class="fas fa-check-circle mr-1"></i> Photo captured');
-            
-            photoTaken = true;
         }
         
         // Handle modal open and setup camera
         function openCameraModal(action) {
+            // Reset state variables
+            photoTaken = false;
+            photoDataUrl = null;
             currentAction = action;
             
             // Set the modal title based on the action
@@ -855,6 +937,13 @@
             $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
             $('#statusText').text('Initializing camera...');
             
+            // Reset UI state
+            $(cameraFeed).addClass('d-none');
+            $(capturedPhoto).addClass('d-none');
+            $('#captureBtn').addClass('d-none');
+            $('#retakeBtn').addClass('d-none');
+            $('#actionButtonContainer').addClass('d-none');
+            
             // Show the camera modal
             cameraModal.modal({
                 backdrop: 'static',
@@ -869,7 +958,8 @@
             }
             
             // Start the camera after modal is shown
-            cameraModal.on('shown.bs.modal', function() {
+            cameraModal.one('shown.bs.modal', function() {
+                // Initialize camera
                 startCamera();
                 
                 // Try to go fullscreen if supported
@@ -888,8 +978,9 @@
             });
             
             // Stop the camera when modal is hidden
-            cameraModal.on('hidden.bs.modal', function() {
+            cameraModal.one('hidden.bs.modal', function() {
                 stopCamera();
+                
                 // Reset the modal state for next use
                 photoTaken = false;
                 
@@ -912,17 +1003,60 @@
                 document.documentElement.style.overflow = '';
                 document.body.style.overflow = '';
             });
+            
+            // Handle orientation changes
+            window.addEventListener('orientationchange', handleOrientationChange);
+        }
+        
+        // Handle device orientation changes
+        function handleOrientationChange() {
+            if (cameraInitialized && stream) {
+                // Give the browser time to adjust layout
+                setTimeout(() => {
+                    // Readjust camera view if needed
+                    if (cameraFeed && !cameraFeed.paused && !cameraFeed.ended) {
+                        cameraFeed.style.height = 'auto';
+                        cameraFeed.style.width = '100%';
+                    }
+                }, 300);
+            }
         }
         
         // Switch between front and back cameras
         $('#switchCameraBtn').click(function() {
+            // Toggle facing mode
             facingMode = facingMode === 'user' ? 'environment' : 'user';
-            startCamera();
+            
+            // Restart camera with new facing mode
+            if (cameraInitialized) {
+                // Add a loading spinner to show that camera is switching
+                $('#statusText').html('<i class="fas fa-sync-alt fa-spin mr-2"></i> Switching camera...');
+                
+                // Reset UI
+                $('.face-outline').css('border-color', 'rgba(255, 255, 255, 0.7)');
+                
+                // Start camera with new facing mode
+                startCamera();
+            }
         });
         
-        // Capture photo button
+        // Capture photo button with error handling
         $('#captureBtn').click(function() {
-            takePhoto();
+            if (!cameraInitialized) {
+                $('#statusText').html('<i class="fas fa-exclamation-circle mr-1"></i> Camera not ready');
+                setTimeout(() => {
+                    startCamera();
+                }, 1000);
+                return;
+            }
+            
+            // Show capturing state
+            $('#statusText').html('<i class="fas fa-camera mr-1"></i> Capturing...');
+            
+            // Slight delay to show the capturing state
+            setTimeout(() => {
+                takePhoto();
+            }, 200);
         });
         
         // Retake photo button
@@ -951,24 +1085,33 @@
         
         // Confirm attendance button (after photo capture)
         $('#confirmAttendanceBtn').click(function() {
-            if (!photoTaken) {
-                $('#statusText').text('Please take a photo first');
+            if (!photoTaken || !photoDataUrl) {
+                $('#statusText').html('<i class="fas fa-exclamation-circle mr-1"></i> Please take a photo first');
                 return;
             }
             
-            // Close the camera modal
-            cameraModal.modal('hide');
+            // Show submitting state
+            $('#confirmAttendanceBtn').prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> Processing...');
             
-            // Get current time
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
-            
-            // Process the action (clock in or clock out)
-            if (currentAction === 'clockIn') {
-                processClockIn(timeString, photoDataUrl);
-            } else {
-                processClockOut(timeString, photoDataUrl);
-            }
+            // Short delay to show processing state
+            setTimeout(() => {
+                // Close the camera modal
+                cameraModal.modal('hide');
+                
+                // Get current time
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+                
+                // Reset button state
+                $('#confirmAttendanceBtn').prop('disabled', false).html(`<span id="actionButtonText">${currentAction === 'clockIn' ? 'Confirm Clock In' : 'Confirm Clock Out'}</span>`);
+                
+                // Process the action (clock in or clock out)
+                if (currentAction === 'clockIn') {
+                    processClockIn(timeString, photoDataUrl);
+                } else {
+                    processClockOut(timeString, photoDataUrl);
+                }
+            }, 500);
         });
         
         // Process Clock In
@@ -1074,7 +1217,6 @@
                             popup: 'swal-minimalist'
                         }
                     });
-                }
             });
             */
         }
