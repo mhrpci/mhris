@@ -197,12 +197,17 @@
         height: 100%;
         background: #000;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .camera-body {
         position: relative;
         width: 100%;
         height: 100%;
+        max-width: 100vw;
+        max-height: 100vh;
     }
     
     #camera-view {
@@ -213,6 +218,7 @@
         top: 0;
         left: 0;
         transition: opacity 0.3s ease;
+        will-change: transform;
     }
     
     .camera-controls {
@@ -225,7 +231,7 @@
         justify-content: space-between;
         align-items: center;
         z-index: 10;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
     }
     
     .camera-options {
@@ -269,24 +275,27 @@
         text-align: center;
         z-index: 10;
         pointer-events: none;
+        transition: transform 0.3s ease, opacity 0.3s ease;
     }
     
     .action-text {
         display: inline-block;
         padding: 10px 24px;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.6);
         color: white;
         font-size: 1.2rem;
         font-weight: bold;
         border-radius: 30px;
         letter-spacing: 1px;
         text-transform: uppercase;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
     
     .switch-camera-btn {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.2);
         border: none;
         font-size: 1.3rem;
         color: #fff;
@@ -295,6 +304,12 @@
         border-radius: 50%;
         opacity: 0.9;
         transition: all 0.25s;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .switch-camera-btn:active {
+        transform: scale(0.92);
+        background: rgba(255, 255, 255, 0.3);
     }
     
     .gallery-btn-wrapper {
@@ -318,8 +333,10 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
         transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
     }
     
     .capture-btn::before {
@@ -329,6 +346,7 @@
         border-radius: 50%;
         background: white;
         border: 2px solid #f0f0f0;
+        transition: all 0.2s ease;
     }
     
     .capture-btn:active {
@@ -386,6 +404,7 @@
         opacity: 0;
         z-index: 15;
         pointer-events: none;
+        transition: opacity 0.1s ease-out;
     }
     
     .close-btn {
@@ -406,6 +425,11 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .close-btn:active {
+        transform: scale(0.92);
     }
     
     .camera-transition {
@@ -452,6 +476,24 @@
             font-size: 1rem;
             padding: 6px 16px;
         }
+    }
+    
+    .camera-quality-indicator {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border-radius: 20px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
 </style>
 @endpush
