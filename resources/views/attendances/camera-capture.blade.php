@@ -19,7 +19,7 @@
             </div>
             
             <div class="camera-body position-relative p-0">
-                <!-- Camera Preview -->
+                <!-- Camera Preview with Mirror Effect for Front Camera -->
                 <div class="camera-container">
                     <video id="cameraPreview" playsinline autoplay></video>
                     
@@ -62,7 +62,7 @@
                     </div>
                 </div>
                 
-                <!-- Captured Image Preview (Hidden initially) -->
+                <!-- Captured Image Preview (Hidden initially) - Clean View without UI Elements -->
                 <div id="capturedImageContainer" class="captured-container d-none">
                     <img id="capturedImage" src="" alt="Captured photo">
                 </div>
@@ -146,6 +146,32 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Beautify Controls Panel (Hidden by default) -->
+                <div id="beautifyPanel" class="filter-panel beautify-panel d-none">
+                    <div class="beautify-controls">
+                        <div class="beautify-control">
+                            <label>Smoothness</label>
+                            <input type="range" id="smoothnessLevel" min="0" max="5" step="0.5" value="2">
+                            <span class="value-display">2</span>
+                        </div>
+                        <div class="beautify-control">
+                            <label>Face Shape</label>
+                            <input type="range" id="faceShapeLevel" min="0" max="5" step="0.5" value="1">
+                            <span class="value-display">1</span>
+                        </div>
+                        <div class="beautify-control">
+                            <label>Eyes Enlarge</label>
+                            <input type="range" id="eyesLevel" min="0" max="5" step="0.5" value="1">
+                            <span class="value-display">1</span>
+                        </div>
+                        <div class="beautify-control">
+                            <label>Brightness</label>
+                            <input type="range" id="skinBrightnessLevel" min="0" max="5" step="0.5" value="1">
+                            <span class="value-display">1</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -201,6 +227,11 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+    
+    /* Mirror effect for front camera */
+    #cameraPreview.mirror {
+        transform: scaleX(-1);
     }
     
     .filter-overlay {
@@ -452,6 +483,63 @@
         overflow: hidden;
     }
     
+    /* Beautify Panel Styles */
+    .beautify-panel {
+        padding: 20px;
+    }
+    
+    .beautify-controls {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .beautify-control {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .beautify-control label {
+        color: white;
+        font-size: 14px;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    
+    .beautify-control input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.3);
+        outline: none;
+        margin-bottom: 5px;
+    }
+    
+    .beautify-control input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+    }
+    
+    .beautify-control input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+    }
+    
+    .beautify-control .value-display {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        text-align: center;
+    }
+    
     .camera-loading, .camera-error, .capture-feedback {
         position: absolute;
         top: 0;
@@ -494,6 +582,7 @@
         width: 100%;
         height: 100%;
         background-color: #000;
+        z-index: 50; /* Higher z-index to be above all UI elements */
     }
     
     #capturedImage {
@@ -515,6 +604,36 @@
         50% { transform: scale(1.2); opacity: 1; }
         100% { transform: scale(1); opacity: 1; }
     }
+    
+    /* Make the captured image container full screen without any UI elements */
+    .captured-preview-mode .camera-controls,
+    .captured-preview-mode .camera-top-controls,
+    .captured-preview-mode .zoom-control,
+    .captured-preview-mode .action-status,
+    .captured-preview-mode .camera-footer > *:not(.camera-actions) {
+        display: none !important;
+    }
+    
+    .captured-preview-mode .camera-footer {
+        background: none;
+    }
+    
+    .captured-preview-mode .camera-actions {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+    }
+    
+    /* Professional polish */
+    .camera-header h5 {
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    
+    .action-status {
+        letter-spacing: 0.5px;
+        font-weight: 300;
+    }
 </style>
 
 <script>
@@ -530,6 +649,14 @@
     let availableCameras = [];
     let currentCameraIndex = 0;
     let videoTrack = null;
+    
+    // Beautify settings (default values)
+    let beautifySettings = {
+        smoothness: 2,
+        faceShape: 1,
+        eyes: 1,
+        skinBrightness: 1
+    };
     
     // Initialize the camera when modal is opened
     $('#cameraCaptureModal').on('shown.bs.modal', function () {
@@ -595,6 +722,13 @@
             cameraStream = stream;
             const video = document.getElementById('cameraPreview');
             video.srcObject = stream;
+            
+            // Apply mirror effect for front camera
+            if (currentCameraFacing === 'user') {
+                $('#cameraPreview').addClass('mirror');
+            } else {
+                $('#cameraPreview').removeClass('mirror');
+            }
             
             // Get video track for capabilities
             videoTrack = stream.getVideoTracks()[0];
@@ -669,7 +803,7 @@
                 .catch(error => console.error('Error applying zoom:', error));
         } else {
             // If zoom is not supported by the API, use CSS scale as fallback
-            $('#cameraPreview').css('transform', `scale(${zoomLevel})`);
+            $('#cameraPreview').css('transform', `scale(${zoomLevel}) ${currentCameraFacing === 'user' ? 'scaleX(-1)' : ''}`);
         }
     }
     
@@ -686,28 +820,78 @@
         }
     });
     
-    // Toggle beautify filter
+    // Toggle beautify filter and panel
     $('#toggleBeautify').click(function() {
         isBeautifyActive = !isBeautifyActive;
         $(this).toggleClass('active', isBeautifyActive);
+        
+        // Hide filter panel if it's open
+        $('#filterPanel').addClass('d-none');
+        
+        // Toggle beautify panel
+        $('#beautifyPanel').toggleClass('d-none', !isBeautifyActive);
+        
         applyBeautify();
     });
     
-    // Apply beautify filter using CSS
+    // Update beautify sliders
+    $('#smoothnessLevel').on('input', function() {
+        beautifySettings.smoothness = parseFloat($(this).val());
+        $(this).siblings('.value-display').text(beautifySettings.smoothness);
+        applyBeautify();
+    });
+    
+    $('#faceShapeLevel').on('input', function() {
+        beautifySettings.faceShape = parseFloat($(this).val());
+        $(this).siblings('.value-display').text(beautifySettings.faceShape);
+        applyBeautify();
+    });
+    
+    $('#eyesLevel').on('input', function() {
+        beautifySettings.eyes = parseFloat($(this).val());
+        $(this).siblings('.value-display').text(beautifySettings.eyes);
+        applyBeautify();
+    });
+    
+    $('#skinBrightnessLevel').on('input', function() {
+        beautifySettings.skinBrightness = parseFloat($(this).val());
+        $(this).siblings('.value-display').text(beautifySettings.skinBrightness);
+        applyBeautify();
+    });
+    
+    // Apply enhanced beautify filter using CSS
     function applyBeautify() {
         if (isBeautifyActive) {
+            // Create a CSS filter string based on beautify settings
+            const smoothnessBlur = beautifySettings.smoothness * 0.25; // 0-1.25px blur
+            const brightness = 1 + (beautifySettings.skinBrightness * 0.04); // 1-1.2 brightness
+            const contrast = 1 - (beautifySettings.faceShape * 0.02); // 0.9-1 contrast
+            const saturation = 1 + (beautifySettings.eyes * 0.05); // 1-1.25 saturation
+            
             $('#cameraPreview').css({
-                'filter': 'brightness(1.1) contrast(0.9) saturate(1.2) blur(0.5px)'
+                'filter': `brightness(${brightness}) contrast(${contrast}) saturate(${saturation}) blur(${smoothnessBlur}px)`
             });
         } else {
             // Remove the beautify filter, but keep any other active filter
+            $('#beautifyPanel').addClass('d-none');
             applyFilter(currentFilter);
         }
     }
     
     // Toggle filter panel
     $('#toggleFilters').click(function() {
+        // Hide beautify panel if it's open
+        $('#beautifyPanel').addClass('d-none');
+        
+        // Toggle filter panel
         $('#filterPanel').toggleClass('d-none');
+        
+        // Update active state
+        if ($('#toggleBeautify').hasClass('active')) {
+            $('#toggleBeautify').removeClass('active');
+            isBeautifyActive = false;
+            applyFilter(currentFilter);
+        }
     });
     
     // Select filter
@@ -762,9 +946,17 @@
         
         const video = document.getElementById('cameraPreview');
         const canvas = document.createElement('canvas');
+        const isMirrored = currentCameraFacing === 'user';
+        
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const context = canvas.getContext('2d');
+        
+        // Handle mirroring for front camera when capturing
+        if (isMirrored) {
+            context.translate(canvas.width, 0);
+            context.scale(-1, 1);
+        }
         
         // Apply the same filters to the canvas as were applied to the video
         if (currentFilter !== 'none' || isBeautifyActive) {
@@ -782,10 +974,14 @@
         setTimeout(() => {
             $('#captureSuccess').addClass('d-none');
             
+            // Hide all camera UI for clean preview
+            $('.modal-content').addClass('captured-preview-mode');
+            
             // Hide video, show captured image
             $('#cameraPreview').addClass('d-none');
             $('#cameraOverlay').addClass('d-none');
             $('#filterPanel').addClass('d-none');
+            $('#beautifyPanel').addClass('d-none');
             $('#capturedImageContainer').removeClass('d-none');
             $('#capturedImage').attr('src', capturedData);
             
@@ -799,6 +995,9 @@
     
     // Retake photo
     $('#retakeBtn').click(function() {
+        // Restore camera UI
+        $('.modal-content').removeClass('captured-preview-mode');
+        
         // Hide captured image, show video again
         $('#capturedImageContainer').addClass('d-none');
         $('#cameraPreview').removeClass('d-none');
@@ -840,7 +1039,25 @@
         actionType = action;
         $('#cameraCaptureModal').modal('show');
         
-        // Set default active filter
+        // Reset any active filters/beautify
+        $('.filter-option').removeClass('active');
         $('.filter-option[data-filter="none"]').addClass('active');
+        currentFilter = 'none';
+        
+        // Reset beautify settings to defaults
+        $('#smoothnessLevel').val(2).siblings('.value-display').text('2');
+        $('#faceShapeLevel').val(1).siblings('.value-display').text('1');
+        $('#eyesLevel').val(1).siblings('.value-display').text('1');
+        $('#skinBrightnessLevel').val(1).siblings('.value-display').text('1');
+        
+        beautifySettings = {
+            smoothness: 2,
+            faceShape: 1,
+            eyes: 1,
+            skinBrightness: 1
+        };
+        
+        // Reset modal state
+        $('.modal-content').removeClass('captured-preview-mode');
     };
 </script> 
