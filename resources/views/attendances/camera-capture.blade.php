@@ -185,11 +185,15 @@
             <span id="attendanceTypeText">Clock In</span>
         </div>
         <div class="attendance-details">
-            <div class="detail-item">
+            <div class="detail-item highlight">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="attendanceDate">--/--/----</span>
+            </div>
+            <div class="detail-item highlight">
                 <i class="fas fa-clock"></i>
                 <span id="attendanceTime">--:--:--</span>
             </div>
-            <div class="detail-item">
+            <div class="detail-item highlight">
                 <i class="fas fa-map-marker-alt"></i>
                 <span id="attendanceLocation">Fetching location...</span>
             </div>
@@ -671,61 +675,65 @@
         font-weight: 300;
     }
     
-    /* Attendance Info Overlay Styles */
+    /* Attendance Info Overlay Styles - Enhanced for visibility and capture */
     .attendance-info-overlay {
         position: absolute;
-        bottom: 120px;
+        bottom: 30px;
         left: 20px;
         z-index: 30;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         border-radius: 12px;
-        padding: 15px;
-        max-width: 300px;
+        padding: 16px;
+        max-width: 350px;
         color: white;
-        font-size: 13px;
+        font-size: 14px;
         pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .attendance-info-content {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
     }
     
     .attendance-type {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 16px;
-        font-weight: 500;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 18px;
+        font-weight: 600;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
     }
     
     .attendance-type i {
-        font-size: 20px;
+        font-size: 22px;
         color: #0d6efd;
     }
     
     .attendance-details {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
     }
     
     .detail-item {
         display: flex;
         align-items: center;
-        gap: 8px;
-        color: rgba(255, 255, 255, 0.9);
+        gap: 10px;
+        color: rgba(255, 255, 255, 1);
+        font-weight: 400;
     }
     
     .detail-item i {
-        width: 16px;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 14px;
+        width: 18px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
     }
     
     .detail-item span {
@@ -733,6 +741,12 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+    
+    /* Highlight date and location */
+    .detail-item.highlight span {
+        font-weight: 500;
+        color: #ffffff;
     }
     
     /* Adjust camera footer to not overlap with info overlay */
@@ -832,12 +846,12 @@
         try {
             availableCameras = await getAvailableCameras();
             
-            // Get camera constraints
+            // Get camera constraints with higher resolution
             const constraints = {
                 video: { 
                     facingMode: currentCameraFacing,
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
+                    width: { ideal: 3840 },
+                    height: { ideal: 2160 },
                     zoom: zoomLevel
                 },
                 audio: false 
@@ -1078,6 +1092,7 @@
         
         const video = document.getElementById('cameraPreview');
         const canvas = document.createElement('canvas');
+        const infoOverlay = document.querySelector('.attendance-info-overlay');
         const isMirrored = currentCameraFacing === 'user';
         
         canvas.width = video.videoWidth;
@@ -1098,8 +1113,90 @@
         // Draw the current video frame on canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
+        // Reset transformation to draw the overlay
+        if (isMirrored) {
+            context.setTransform(1, 0, 0, 1, 0, 0);
+        }
+        
+        // Render the info overlay into the capture
+        // Save current filter state
+        const currentContextFilter = context.filter;
+        context.filter = 'none'; // Clear filters for overlay text
+        
+        // Calculate info overlay position (in same relative position)
+        const overlayScale = canvas.width / window.innerWidth;
+        const overlayX = 20 * overlayScale;
+        const overlayY = canvas.height - (infoOverlay.offsetHeight * overlayScale) - (30 * overlayScale);
+        
+        // Create new overlay directly on canvas for better quality
+        context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        context.roundRect(
+            overlayX, 
+            overlayY, 
+            Math.min(350 * overlayScale, canvas.width - 40 * overlayScale), 
+            infoOverlay.offsetHeight * overlayScale, 
+            12 * overlayScale
+        );
+        context.fill();
+        
+        // Draw text directly
+        context.fillStyle = 'white';
+        context.font = `bold ${20 * overlayScale}px Arial`;
+        
+        // Draw icon placeholder and attendance type
+        context.fillStyle = '#0d6efd';
+        context.fillText('●', overlayX + (10 * overlayScale), overlayY + (30 * overlayScale));
+        context.fillStyle = 'white';
+        context.fillText(
+            actionType === 'clock-in' ? 'Clock In' : 'Clock Out', 
+            overlayX + (40 * overlayScale), 
+            overlayY + (30 * overlayScale)
+        );
+        
+        // Draw separator line
+        context.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        context.beginPath();
+        context.moveTo(overlayX + (10 * overlayScale), overlayY + (40 * overlayScale));
+        context.lineTo(overlayX + (Math.min(340, canvas.width - 50) * overlayScale), overlayY + (40 * overlayScale));
+        context.stroke();
+        
+        // Draw details - first date and time with smaller font
+        context.font = `${16 * overlayScale}px Arial`;
+        let detailY = overlayY + (65 * overlayScale);
+        
+        // Date
+        const now = new Date();
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateString = now.toLocaleDateString('en-US', dateOptions);
+        context.fillText(dateString, overlayX + (40 * overlayScale), detailY);
+        detailY += (25 * overlayScale);
+        
+        // Time
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' 
+        });
+        context.fillText(timeString, overlayX + (40 * overlayScale), detailY);
+        detailY += (25 * overlayScale);
+        
+        // Location
+        const locationText = window.currentLocationAddress || 'Location unavailable';
+        context.fillText(locationText, overlayX + (40 * overlayScale), detailY);
+        detailY += (25 * overlayScale);
+        
+        // Employee info
+        context.fillText(attendanceInfo.name, overlayX + (40 * overlayScale), detailY);
+        detailY += (25 * overlayScale);
+        context.fillText(attendanceInfo.company, overlayX + (40 * overlayScale), detailY);
+        detailY += (25 * overlayScale);
+        context.fillText(attendanceInfo.department, overlayX + (40 * overlayScale), detailY);
+        detailY += (25 * overlayScale);
+        context.fillText(attendanceInfo.position, overlayX + (40 * overlayScale), detailY);
+        
+        // Restore filter
+        context.filter = currentContextFilter;
+        
         // Convert to data URL
-        capturedData = canvas.toDataURL('image/jpeg', 0.9);
+        capturedData = canvas.toDataURL('image/jpeg', 0.95); // Higher quality for better text rendering
         
         // Show success animation
         $('#captureSuccess').removeClass('d-none');
@@ -1199,6 +1296,12 @@
     // Add this function to update attendance info
     function updateAttendanceInfo() {
         const now = new Date();
+        
+        // Format date like in attendance blade (e.g., Monday, January 1, 2023)
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateString = now.toLocaleDateString('en-US', dateOptions);
+        
+        // Format time with hours, minutes, seconds (24-hour format)
         const timeString = now.toLocaleTimeString('en-US', { 
             hour12: false,
             hour: '2-digit',
@@ -1207,6 +1310,7 @@
         });
         
         $('#attendanceTypeText').text(actionType === 'clock-in' ? 'Clock In' : 'Clock Out');
+        $('#attendanceDate').text(dateString);
         $('#attendanceTime').text(timeString);
         $('#attendanceLocation').text(window.currentLocationAddress || 'Fetching location...');
         $('#attendanceName').text(attendanceInfo.name);
