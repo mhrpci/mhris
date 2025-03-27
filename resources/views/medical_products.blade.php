@@ -1066,6 +1066,134 @@
                 color: #e2e8f0;
             }
         }
+
+        .product-gallery {
+            margin: 2rem 0;
+        }
+
+        .gallery-main {
+            position: relative;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 400px;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .gallery-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .gallery-nav:hover {
+            background: white;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .gallery-nav.prev {
+            left: 10px;
+        }
+
+        .gallery-nav.next {
+            right: 10px;
+        }
+
+        .gallery-thumbnails {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            padding: 5px 0;
+        }
+
+        .thumbnail-item {
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+            border: 2px solid transparent;
+        }
+
+        .thumbnail-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail-item:hover {
+            opacity: 0.9;
+        }
+
+        .thumbnail-item.active {
+            opacity: 1;
+            border-color: #2c5282;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-main {
+                height: 300px;
+            }
+            
+            .thumbnail-item {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery-main {
+                height: 250px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .gallery-main {
+                background-color: #1a202c;
+            }
+            
+            .gallery-nav {
+                background: rgba(45, 55, 72, 0.8);
+                color: white;
+            }
+            
+            .gallery-nav:hover {
+                background: #2d3748;
+            }
+        }
     </style>
 
     <script>
@@ -1350,6 +1478,7 @@
                     data-id="{{ $product->id }}"
                     data-name="{{ $product->name }}"
                     data-image="{{ asset('storage/' . $product->image) }}"
+                    data-product-images="{{ json_encode(array_map(function($img) { return asset('storage/' . $img); }, $product->product_images ?? [])) }}"
                     data-description="{{ $product->description }}"
                     data-details="{{ $product->details }}"
                     data-category="{{ $category->name }}">
@@ -1529,8 +1658,25 @@
                 image: button.dataset.image,
                 description: button.dataset.description,
                 details: button.dataset.details,
-                category: button.dataset.category
+                category: button.dataset.category,
+                productImages: button.dataset.productImages ? JSON.parse(button.dataset.productImages) : []
             };
+            
+            // Create gallery images array with main image first, followed by additional images
+            const galleryImages = [product.image];
+            
+            // Add additional product images if they exist
+            if (product.productImages && product.productImages.length > 0) {
+                galleryImages.push(...product.productImages);
+            } 
+            // Fallback to placeholder images if no additional images
+            else if (galleryImages.length === 1) {
+                galleryImages.push(
+                    product.image.replace('.jpg', '-2.jpg').replace('.png', '-2.png'),
+                    product.image.replace('.jpg', '-3.jpg').replace('.png', '-3.png'),
+                    product.image.replace('.jpg', '-4.jpg').replace('.png', '-4.png')
+                );
+            }
 
             currentProduct = { id: product.id, name: product.name };
             const modal = document.getElementById('productModal');
@@ -1545,8 +1691,26 @@
                     <h2 class="product-title">${product.name}</h2>
                 </div>
 
-                <div class="modal-image-container">
-                    <img src="${product.image}" alt="${product.name}" loading="lazy">
+                <div class="product-gallery">
+                    <div class="gallery-main">
+                        <button class="gallery-nav prev" id="galleryPrev">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="main-image-container">
+                            <img src="${galleryImages[0]}" alt="${product.name}" loading="lazy" id="mainGalleryImage">
+                        </div>
+                        <button class="gallery-nav next" id="galleryNext">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="gallery-thumbnails" id="galleryThumbnails">
+                        ${galleryImages.map((img, index) => `
+                            <div class="thumbnail-item ${index === 0 ? 'active' : ''}" data-index="${index}">
+                                <img src="${img}" alt="${product.name} thumbnail ${index + 1}">
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
 
                 <div class="product-info">
@@ -1573,12 +1737,76 @@
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Add zoom effect to modal image
-            const modalImage = modalContent.querySelector('.modal-image-container img');
-            if (modalImage) {
-                modalImage.addEventListener('load', () => {
-                    modalImage.style.opacity = '1';
+            // Initialize gallery functionality
+            const mainImage = document.getElementById('mainGalleryImage');
+            const thumbnails = document.querySelectorAll('.thumbnail-item');
+            const prevBtn = document.getElementById('galleryPrev');
+            const nextBtn = document.getElementById('galleryNext');
+            let currentIndex = 0;
+
+            // Function to update main image
+            function updateMainImage(index) {
+                mainImage.style.opacity = '0';
+                setTimeout(() => {
+                    mainImage.src = galleryImages[index];
+                    mainImage.style.opacity = '1';
+                }, 300);
+                
+                // Update active thumbnail
+                thumbnails.forEach(thumb => thumb.classList.remove('active'));
+                thumbnails[index].classList.add('active');
+                currentIndex = index;
+            }
+
+            // Add click events to thumbnails
+            thumbnails.forEach(thumb => {
+                thumb.addEventListener('click', () => {
+                    const index = parseInt(thumb.dataset.index);
+                    updateMainImage(index);
                 });
+            });
+
+            // Add click events to prev/next buttons
+            prevBtn.addEventListener('click', () => {
+                let newIndex = currentIndex - 1;
+                if (newIndex < 0) newIndex = galleryImages.length - 1;
+                updateMainImage(newIndex);
+            });
+
+            nextBtn.addEventListener('click', () => {
+                let newIndex = currentIndex + 1;
+                if (newIndex >= galleryImages.length) newIndex = 0;
+                updateMainImage(newIndex);
+            });
+
+            // Add keyboard navigation
+            modal.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') prevBtn.click();
+                if (e.key === 'ArrowRight') nextBtn.click();
+            });
+
+            // Add zoom effect to main image
+            mainImage.addEventListener('load', () => {
+                mainImage.style.opacity = '1';
+            });
+            
+            // Add swipe support for mobile
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            const galleryMain = document.querySelector('.gallery-main');
+            galleryMain.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            galleryMain.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                if (touchEndX < touchStartX - 50) nextBtn.click(); // Swipe left
+                if (touchEndX > touchStartX + 50) prevBtn.click(); // Swipe right
             }
         }
 

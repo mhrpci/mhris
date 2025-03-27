@@ -87,6 +87,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-4 mb-md-0">
+                            <h5 class="mb-3">Main Product Image</h5>
                             @if($product->image)
                                 <img src="{{ Storage::url($product->image) }}" 
                                      class="product-image" 
@@ -95,6 +96,41 @@
                                 <div class="product-image d-flex align-items-center justify-content-center" style="height: 300px;">
                                     <i class="fas fa-image text-muted fa-3x"></i>
                                 </div>
+                            @endif
+                            
+                            @if(!empty($product->product_images) && is_array($product->product_images) && count($product->product_images) > 0)
+                                <div class="mt-4">
+                                    <h5 class="mb-3">Additional Product Images</h5>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach($product->product_images as $index => $img)
+                                            <img src="{{ Storage::url($img) }}" 
+                                                 class="img-thumbnail product-thumbnail" 
+                                                 alt="{{ $product->name }} - Additional image {{ $index + 1 }}"
+                                                 style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
+                                                 data-bs-toggle="modal" 
+                                                 data-bs-target="#imageModal{{ $index }}">
+                                        @endforeach
+                                    </div>
+                                </div>
+                                
+                                <!-- Image Modals -->
+                                @foreach($product->product_images as $index => $img)
+                                    <div class="modal fade" id="imageModal{{ $index }}" tabindex="-1" aria-labelledby="imageModalLabel{{ $index }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="imageModalLabel{{ $index }}">{{ $product->name }} - Additional Image {{ $index + 1 }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <img src="{{ Storage::url($img) }}" 
+                                                         class="img-fluid" 
+                                                         alt="{{ $product->name }} - Additional image {{ $index + 1 }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             @endif
                         </div>
                         <div class="col-md-6 product-info">
@@ -209,6 +245,54 @@
                 form.submit();
             }
         });
+    });
+    
+    // Product image gallery functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const thumbnails = document.querySelectorAll('.product-thumbnail');
+        const mainImage = document.querySelector('.product-image');
+        
+        if (thumbnails.length > 0 && mainImage) {
+            // Store the original main image source
+            const originalSrc = mainImage.src;
+            const originalAlt = mainImage.alt;
+            
+            // Add click event to each thumbnail (additional images)
+            thumbnails.forEach(thumbnail => {
+                thumbnail.addEventListener('click', function(e) {
+                    // Prevent modal from opening when clicking on thumbnail
+                    e.stopPropagation();
+                    
+                    // Change main display area to show the clicked additional image
+                    mainImage.src = this.src;
+                    mainImage.alt = this.alt;
+                    
+                    // Add active class to clicked thumbnail
+                    thumbnails.forEach(t => t.classList.remove('border-primary'));
+                    this.classList.add('border-primary');
+                    
+                    // Add a "Return to main image" button if not already present
+                    let returnButton = document.querySelector('.return-to-main');
+                    if (!returnButton) {
+                        returnButton = document.createElement('button');
+                        returnButton.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'return-to-main', 'position-absolute', 'top-0', 'end-0', 'm-2');
+                        returnButton.innerHTML = '<i class="fas fa-home me-1"></i>Main Image';
+                        mainImage.parentElement.style.position = 'relative';
+                        mainImage.parentElement.appendChild(returnButton);
+                        
+                        // Add click event to return button
+                        returnButton.addEventListener('click', function() {
+                            mainImage.src = originalSrc;
+                            mainImage.alt = originalAlt;
+                            thumbnails.forEach(t => t.classList.remove('border-primary'));
+                            this.style.display = 'none';
+                        });
+                    } else {
+                        returnButton.style.display = 'block';
+                    }
+                });
+            });
+        }
     });
 </script>
 @endpush 

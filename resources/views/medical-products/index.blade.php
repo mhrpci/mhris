@@ -51,6 +51,14 @@
                                             <i class="fas fa-image text-muted fa-3x"></i>
                                         </div>
                                     @endif
+                                    
+                                    @if(!empty($product->product_images) && is_array($product->product_images) && count($product->product_images) > 0)
+                                        <div class="position-absolute bottom-0 end-0 p-2">
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-images me-1"></i>+{{ count($product->product_images) }} more
+                                            </span>
+                                        </div>
+                                    @endif
                                     <div class="card-body">
                                         <h5 class="card-title">{{ $product->name }}</h5>
                                         @if($product->is_featured)
@@ -115,6 +123,7 @@
     .product-card {
         height: 100%;
         transition: transform 0.2s ease;
+        position: relative;
     }
 
     .product-card:hover {

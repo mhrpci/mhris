@@ -18,11 +18,19 @@ class Hiring extends Model
         'benefits',
         'location',
         'slug',
+        'department_id',
+        'employment_type',
+        'responsibilities',
     ];
 
     public function career()
     {
         return $this->hasMany(Career::class);
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 
     protected static function boot()

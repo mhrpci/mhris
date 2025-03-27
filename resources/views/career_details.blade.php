@@ -483,7 +483,7 @@
                                     <i class="fas fa-briefcase mr-1"></i> {{ $hiring->employment_type }}
                                 </span>
                                 <span class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm">
-                                    <i class="fas fa-users mr-1"></i> {{ $hiring->department }}
+                                    <i class="fas fa-users mr-1"></i> {{ $hiring->department->name }}
                                 </span>
                                 <span class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm">
                                     <i class="fas fa-clock mr-1"></i> Posted {{ $hiring->created_at->diffForHumans() }}
@@ -679,7 +679,7 @@
                                         </div>
                                         <div class="ml-3 sm:ml-4 job-summary-content">
                                             <p class="job-summary-label">Department</p>
-                                            <p class="job-summary-value">{{ $hiring->department }}</p>
+                                            <p class="job-summary-value">{{ $hiring->department->name }}</p>
                                         </div>
                                     </li>
                                     <li class="job-summary-item">

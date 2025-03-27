@@ -1,60 +1,114 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card mt-4 shadow">
-                <div class="card-header bg-primary text-white">
-                    <h1 class="mb-0 h3">{{ $hiring->position }}</h1>
-                </div>
-                <div class="card-body">
-                    <div class="mb-4">
-                        <h5 class="text-primary"><i class="fas fa-info-circle mr-2"></i>Description</h5>
-                        <p class="lead">{{ $hiring->description }}</p>
-                    </div>
-                    <div class="mb-4">
-                        <h5 class="text-primary"><i class="fas fa-list-ul mr-2"></i>Requirements</h5>
-                        <ul class="list-group">
-                            @foreach(explode("\n", $hiring->requirements) as $requirement)
-                                <li class="list-group-item"><i class="fas fa-check-circle text-success mr-2"></i>{{ $requirement }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <div class="mb-4">
-                        <h5 class="text-primary"><i class="fas fa-gift mr-2"></i>Benefits</h5>
-                        <ul class="list-group">
-                            @foreach(explode("\n", $hiring->benefits) as $benefit)
-                                <li class="list-group-item"><i class="fas fa-star text-warning mr-2"></i>{{ $benefit }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <div class="mb-4">
-                        <h5 class="text-primary"><i class="fas fa-map-marker-alt mr-2"></i>Location</h5>
-                        <p class="lead">{{ $hiring->location }}</p>
-                    </div>
-                </div>
-                <div class="card-footer bg-light">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap">
-                        <div>
-                            <a href="{{ route('hirings.edit', $hiring) }}" class="btn btn-warning mr-2">
-                                <i class="fas fa-edit mr-1"></i> Edit
-                            </a>
-                            <a href="{{ route('hirings.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left mr-1"></i> Back to List
-                            </a>
-                        </div>
-                        <form action="{{ route('hirings.destroy', $hiring) }}" method="POST" class="mt-2 mt-sm-0">
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="fas fa-briefcase mr-2"></i>{{ $hiring->position }}</h2>
+                    <div>
+                        <a href="{{ route('hirings.edit', $hiring->id) }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form action="{{ route('hirings.destroy', $hiring->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this hiring?')">
-                                <i class="fas fa-trash-alt mr-1"></i> Delete
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this position?')">
+                                <i class="fas fa-trash-alt"></i> Delete
                             </button>
                         </form>
                     </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-map-marker-alt mr-2 text-primary"></i>Location</h4>
+                            <p class="lead">{{ $hiring->location }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-building mr-2 text-primary"></i>Department</h4>
+                            <p class="lead">{{ $hiring->department->name ?? 'Not Assigned' }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-user-clock mr-2 text-primary"></i>Employment Type</h4>
+                            <p class="lead">{{ $hiring->employment_type ?? 'Not Specified' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-link mr-2 text-primary"></i>Job URL</h4>
+                            <p class="lead">
+                                <a href="{{ url('careers/jobs/' . $hiring->slug) }}" target="_blank">
+                                    {{ url('careers/jobs/' . $hiring->slug) }}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="section mb-4">
+                        <h4><i class="fas fa-align-left mr-2 text-primary"></i>Description</h4>
+                        <div class="p-3 bg-light rounded">
+                            {!! nl2br(e($hiring->description)) !!}
+                        </div>
+                    </div>
+                    <div class="section mb-4">
+                        <h4><i class="fas fa-tasks mr-2 text-primary"></i>Responsibilities</h4>
+                        <div class="p-3 bg-light rounded">
+                            {!! nl2br(e($hiring->responsibilities)) !!}
+                        </div>
+                    </div>
+                    <div class="section mb-4">
+                        <h4><i class="fas fa-list-ul mr-2 text-primary"></i>Requirements</h4>
+                        <div class="p-3 bg-light rounded">
+                            {!! nl2br(e($hiring->requirements)) !!}
+                        </div>
+                    </div>
+                    <div class="section">
+                        <h4><i class="fas fa-gift mr-2 text-primary"></i>Benefits</h4>
+                        <div class="p-3 bg-light rounded">
+                            {!! nl2br(e($hiring->benefits)) !!}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ route('hirings.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Positions
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('styles')
+<style>
+    .card-header {
+        border-bottom: 0;
+    }
+    .bg-light {
+        background-color: #f8f9fc !important;
+    }
+    .text-primary {
+        color: #4e73df !important;
+    }
+    h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .lead {
+        font-size: 1.1rem;
+    }
+    .section {
+        margin-bottom: 1.5rem;
+    }
+    .btn-light {
+        background-color: white;
+        border-color: #d1d3e2;
+    }
+    .btn-light:hover {
+        background-color: #f8f9fc;
+        border-color: #d1d3e2;
+    }
+</style>
 @endsection

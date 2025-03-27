@@ -38,13 +38,26 @@ class MedicalProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'details' => 'required|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:10240', // Main product image
+            'product_images' => 'nullable|array|max:3', // Additional product images (up to 3)
+            'product_images.*' => 'image|max:10240',
             'is_featured' => 'nullable|boolean'
         ]);
 
+        // Handle main product image upload
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');
             $validated['image'] = $path;
+        }
+        
+        // Handle additional product images upload (max 3)
+        if ($request->hasFile('product_images')) {
+            $productImages = [];
+            foreach ($request->file('product_images') as $image) {
+                $path = $image->store('product-images', 'public');
+                $productImages[] = $path;
+            }
+            $validated['product_images'] = $productImages;
         }
 
         $validated['is_featured'] = $request->has('is_featured');
@@ -68,16 +81,37 @@ class MedicalProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'details' => 'required|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:10240', // Main product image
+            'product_images' => 'nullable|array|max:3', // Additional product images (up to 3)
+            'product_images.*' => 'image|max:10240',
             'is_featured' => 'nullable|boolean'
         ]);
 
+        // Handle main product image upload
         if ($request->hasFile('image')) {
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
             $path = $request->file('image')->store('products', 'public');
             $validated['image'] = $path;
+        }
+        
+        // Handle additional product images upload (max 3)
+        if ($request->hasFile('product_images')) {
+            // Delete existing product images if there are any
+            if (!empty($product->product_images) && is_array($product->product_images)) {
+                foreach ($product->product_images as $oldImage) {
+                    Storage::disk('public')->delete($oldImage);
+                }
+            }
+            
+            // Store new additional product images
+            $productImages = [];
+            foreach ($request->file('product_images') as $image) {
+                $path = $image->store('product-images', 'public');
+                $productImages[] = $path;
+            }
+            $validated['product_images'] = $productImages;
         }
 
         $validated['is_featured'] = $request->has('is_featured');
@@ -90,8 +124,16 @@ class MedicalProductController extends Controller
 
     public function destroy(MedicalProduct $product)
     {
+        // Delete main product image if exists
         if ($product->image) {
             Storage::disk('public')->delete($product->image);
+        }
+        
+        // Delete all additional product images if there are any
+        if (!empty($product->product_images) && is_array($product->product_images)) {
+            foreach ($product->product_images as $productImage) {
+                Storage::disk('public')->delete($productImage);
+            }
         }
         
         $product->delete();

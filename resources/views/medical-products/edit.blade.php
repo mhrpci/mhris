@@ -154,12 +154,13 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="image" class="form-label">Product Image</label>
+                                <label for="image" class="form-label">Main Product Image</label>
                                 @if($product->image)
                                     <div class="mb-2">
                                         <img src="{{ Storage::url($product->image) }}" 
                                              alt="{{ $product->name }}" 
                                              class="current-image">
+                                        <div class="form-text mt-1">Current main product image</div>
                                     </div>
                                 @endif
                                 <input type="file" 
@@ -167,9 +168,43 @@
                                        id="image" 
                                        class="form-control @error('image') is-invalid @enderror"
                                        accept="image/*"
-                                       placeholder="Choose new product image">
-                                <div class="form-text">Maximum file size: 10MB. Supported formats: JPG, PNG, GIF</div>
+                                       placeholder="Choose new main product image">
+                                <div class="form-text">This will be the primary image displayed for your product. Maximum file size: 10MB.</div>
                                 @error('image')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="product_images" class="form-label">Additional Product Images (Max 3)</label>
+                                @if(!empty($product->product_images) && is_array($product->product_images))
+                                    <div class="mb-2 d-flex flex-wrap gap-2">
+                                        @foreach($product->product_images as $index => $img)
+                                        <div class="position-relative current-additional-image">
+                                            <img src="{{ Storage::url($img) }}" 
+                                                alt="Additional image {{ $index + 1 }}" 
+                                                class="current-image" 
+                                                style="width: 100px; height: 100px; object-fit: cover;">
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="form-text mb-2">
+                                        <small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Uploading new images will replace all existing additional images</small>
+                                    </div>
+                                @endif
+                                <input type="file" 
+                                       name="product_images[]" 
+                                       id="product_images" 
+                                       class="form-control @error('product_images') is-invalid @enderror"
+                                       accept="image/*"
+                                       multiple
+                                       placeholder="Choose additional product images">
+                                <div class="form-text">These secondary images will appear in the product gallery. Select up to 3 additional images. Maximum file size per image: 10MB.</div>
+                                <div id="preview_images" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                @error('product_images')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                @error('product_images.*')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -216,13 +251,13 @@
                 })
         })()
 
-        // Image preview
+        // Main product image preview
         document.getElementById('image').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                if (file.size > 2 * 1024 * 1024) {
+                if (file.size > 10 * 1024 * 1024) {
                     this.value = '';
-                    alert('File size must be less than 2MB');
+                    alert('File size must be less than 10MB');
                     return;
                 }
                 
@@ -238,6 +273,57 @@
                         container.removeChild(oldPreview);
                     }
                     container.appendChild(preview);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Additional product images preview
+        document.getElementById('product_images').addEventListener('change', function(e) {
+            const files = this.files;
+            const previewContainer = document.getElementById('preview_images');
+            
+            // Clear previous previews
+            previewContainer.innerHTML = '';
+            
+            // Validate number of files
+            if (files.length > 3) {
+                alert('You can only select up to 3 additional images');
+                this.value = '';
+                return;
+            }
+            
+            // Process each file
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Validate file size
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`Image "${file.name}" exceeds the 10MB size limit`);
+                    this.value = '';
+                    previewContainer.innerHTML = '';
+                    return;
+                }
+                
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewWrapper = document.createElement('div');
+                    previewWrapper.classList.add('position-relative');
+                    
+                    const preview = document.createElement('img');
+                    preview.src = e.target.result;
+                    preview.classList.add('preview-image');
+                    preview.style.width = '100px';
+                    preview.style.height = '100px';
+                    preview.style.objectFit = 'cover';
+                    preview.style.borderRadius = '0.5rem';
+                    
+                    // Add filename as a tooltip
+                    preview.title = file.name;
+                    
+                    previewWrapper.appendChild(preview);
+                    previewContainer.appendChild(previewWrapper);
                 }
                 reader.readAsDataURL(file);
             }

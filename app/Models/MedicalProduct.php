@@ -16,11 +16,13 @@ class MedicalProduct extends Model
         'image',
         'description',
         'details',
-        'is_featured'
+        'is_featured',
+        'product_images'
     ];
 
     protected $casts = [
-        'is_featured' => 'boolean'
+        'is_featured' => 'boolean',
+        'product_images' => 'array'
     ];
 
     public function category()

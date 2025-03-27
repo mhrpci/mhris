@@ -360,7 +360,7 @@
                     <div class="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
                         <i class="fas fa-hospital text-indigo-600 text-lg xs:text-xl sm:text-2xl"></i>
                     </div>
-                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">Healthcare</h3>
+                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">MHRHCI</h3>
                     <p class="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base flex-grow">
                         Through MHRHCI, we provide high-quality medical supplies, equipment, and healthcare solutions to hospitals and clinics across the Philippines.
                     </p>
@@ -373,10 +373,6 @@
                             <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
                             <span>Hospital Equipment</span>
                         </li>
-                        <li class="flex items-start space-x-2">
-                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
-                            <span>Healthcare Consulting</span>
-                        </li>
                     </ul>
                     <a href="{{ route('mhrhci') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center p-1 text-sm sm:text-base">
                         Learn More <i class="fas fa-arrow-right ml-2"></i>
@@ -388,7 +384,7 @@
                     <div class="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
                         <i class="fas fa-gas-pump text-indigo-600 text-lg xs:text-xl sm:text-2xl"></i>
                     </div>
-                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">Fuel Distribution</h3>
+                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">BGPDI</h3>
                     <p class="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base flex-grow">
                         We deliver efficient and reliable fuel distribution services across the Philippines through our Bay Gas Petroleum Distributors Inc.
                     </p>
@@ -399,11 +395,7 @@
                         </li>
                         <li class="flex items-start space-x-2">
                             <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
-                            <span>LPG Supply Chain</span>
-                        </li>
-                        <li class="flex items-start space-x-2">
-                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
-                            <span>Fuel Management Services</span>
+                            <span>Convenience Store</span>
                         </li>
                     </ul>
                     <a href="{{ route('bgpdi') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center p-1 text-sm sm:text-base">
@@ -411,27 +403,23 @@
                     </a>
                 </div>
 
-                <!-- Construction Service -->
+                <!-- Hospitality Service -->
                 <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 service-card" data-aos="fade-up" data-aos-delay="300">
                     <div class="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-                        <i class="fas fa-hard-hat text-indigo-600 text-lg xs:text-xl sm:text-2xl"></i>
+                        <i class="fas fa-hotel text-indigo-600 text-lg xs:text-xl sm:text-2xl"></i>
                     </div>
-                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">Construction</h3>
+                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">VHI</h3>
                     <p class="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base flex-grow">
-                        Our construction division delivers quality construction and development projects with a focus on sustainability and excellence.
+                        Our hospitality division offers quality hotel services with a focus on comfort and satisfaction.
                     </p>
                     <ul class="text-gray-600 space-y-1 sm:space-y-2 mb-3 sm:mb-4 text-sm sm:text-base">
                         <li class="flex items-start space-x-2">
                             <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
-                            <span>Commercial Construction</span>
+                            <span>Comfortable Accommodation</span>
                         </li>
                         <li class="flex items-start space-x-2">
                             <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
-                            <span>Residential Development</span>
-                        </li>
-                        <li class="flex items-start space-x-2">
-                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
-                            <span>Project Management</span>
+                            <span>Satisfying Services</span>
                         </li>
                     </ul>
                     <a href="{{ route('cio') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center p-1 text-sm sm:text-base">
@@ -482,13 +470,8 @@
                                     MHR Property Conglomerate Inc. began in 2000 with the establishment of Cebic Trading, starting with just a 20,000-peso capital in hospital and office medical supplies.
                                 </p>
                                 <p class="text-gray-600 text-sm sm:text-base mb-4">
-                                    Founded by visionary entrepreneur Mr. Harold Ramas, the company initially focused on distributing essential medical supplies to local clinics and hospitals in Cebu City.
+                                    Founded by visionary entrepreneur Mr. Michael Amus H. Refugio, the company initially focused on distributing essential medical supplies to local clinics and hospitals in Cebu City.
                                 </p>
-                                <div class="flex sm:justify-end mb-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                        <i class="fas fa-users mr-1"></i> 5 Employees
-                                    </span>
-                                </div>
                             </div>
                             <div class="sm:pl-12 order-1 sm:order-2">
                                 <div class="relative rounded-lg shadow-lg overflow-hidden">
@@ -529,14 +512,6 @@
                                 <p class="text-gray-600 text-sm sm:text-base mb-4">
                                     This pivotal expansion allowed us to secure exclusive distribution rights for several international medical brands, cementing our position as a trusted healthcare solutions provider in the region.
                                 </p>
-                                <div class="flex items-center mb-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
-                                        <i class="fas fa-users mr-1"></i> 25 Employees
-                                    </span>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-chart-line mr-1"></i> 120% Growth
-                                    </span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -559,14 +534,6 @@
                                 <p class="text-gray-600 text-sm sm:text-base mb-4">
                                     This strategic diversification allowed us to tap into multiple high-growth sectors and establish a more resilient business model across the Philippines.
                                 </p>
-                                <div class="flex sm:justify-end mb-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
-                                        <i class="fas fa-users mr-1"></i> 120+ Employees
-                                    </span>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-building mr-1"></i> 4 Companies
-                                    </span>
-                                </div>
                             </div>
                             <div class="sm:pl-12 order-1 sm:order-2">
                                 <div class="relative rounded-lg shadow-lg overflow-hidden">
@@ -607,39 +574,9 @@
                                 <p class="text-gray-600 text-sm sm:text-base mb-4">
                                     With a focus on sustainability, innovation, and community development, we continue to expand our reach and impact across the Philippines.
                                 </p>
-                                <div class="flex items-center mb-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
-                                        <i class="fas fa-users mr-1"></i> 800+ Employees
-                                    </span>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-building mr-1"></i> 10 Companies
-                                    </span>
-                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Interactive Timeline Navigation -->
-            <div class="mt-12 flex justify-center">
-                <div class="inline-flex space-x-1 sm:space-x-2">
-                    <a href="#" class="history-nav-dot active flex flex-col items-center">
-                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-600 mb-1"></span>
-                        <span class="text-xs text-indigo-600 font-medium">2000</span>
-                    </a>
-                    <a href="#" class="history-nav-dot flex flex-col items-center">
-                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-200 mb-1"></span>
-                        <span class="text-xs text-gray-500 font-medium">2003</span>
-                    </a>
-                    <a href="#" class="history-nav-dot flex flex-col items-center">
-                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-200 mb-1"></span>
-                        <span class="text-xs text-gray-500 font-medium">2010</span>
-                    </a>
-                    <a href="#" class="history-nav-dot flex flex-col items-center">
-                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-200 mb-1"></span>
-                        <span class="text-xs text-gray-500 font-medium">Present</span>
-                    </a>
                 </div>
             </div>
         </div>
@@ -762,106 +699,75 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-8 md:gap-10 lg:gap-12">
-                <div data-aos="fade-right" data-aos-duration="1000">
-                    <div class="bg-gray-50 p-5 sm:p-6 md:p-8 rounded-xl shadow-md">
-                        <h3 class="text-lg xs:text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-indigo-700">Send us a message</h3>
-                        
-                        <form>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                                <div>
-                                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Your Name</label>
-                                    <input type="text" id="name" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
-                                </div>
-                                <div>
-                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Email Address</label>
-                                    <input type="email" id="email" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
-                                </div>
-                            </div>
-                            <div class="mb-4 sm:mb-6">
-                                <label for="subject" class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Subject</label>
-                                <input type="text" id="subject" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
-                            </div>
-                            <div class="mb-4 sm:mb-6">
-                                <label for="message" class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Message</label>
-                                <textarea id="message" rows="4" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"></textarea>
-                            </div>
-                            <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white px-5 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:bg-indigo-700 transition duration-300 text-sm sm:text-base">Send Message</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div data-aos="fade-left" data-aos-duration="1000">
-                    <div class="bg-gray-50 p-8 rounded-xl shadow-md h-full">
-                        <h3 class="text-2xl font-semibold mb-6 text-indigo-700">Our Information</h3>
-                        
-                        <div class="space-y-6">
-                            <div class="flex items-start space-x-4">
-                                <div class="flex-shrink-0">
-                                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-                                        <i class="fas fa-map-marker-alt text-xl"></i>
+            <div class="grid" data-aos="fade-up" data-aos-duration="1000">
+                <div class="bg-gray-50 p-8 rounded-xl shadow-md">
+                    <div class="flex flex-col md:flex-row md:items-start gap-8">
+                        <div class="md:w-1/3">
+                            <h3 class="text-2xl font-semibold mb-6 text-indigo-700">Our Information</h3>
+                            
+                            <div class="space-y-6">
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                            <i class="fas fa-map-marker-alt text-xl"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-medium mb-1">Office Address</h4>
+                                        <p class="text-gray-600">
+                                            MHR Health Care, Co., Cebu City, Philippines<br>
+                                            6000
+                                        </p>
                                     </div>
                                 </div>
-                                <div>
-                                    <h4 class="text-lg font-medium mb-1">Office Address</h4>
-                                    <p class="text-gray-600">
-                                        MHR Building, Cebu City, Philippines<br>
-                                        6000
-                                    </p>
+
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                            <i class="fas fa-phone-alt text-xl"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-medium mb-1">Phone Number</h4>
+                                        <p class="text-gray-600">+63 (32) 123 4567</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                            <i class="fas fa-envelope text-xl"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-medium mb-1">Email Address</h4>
+                                        <p class="text-gray-600">mhrpci@mhrpci.ph</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="flex items-start space-x-4">
-                                <div class="flex-shrink-0">
-                                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-                                        <i class="fas fa-phone-alt text-xl"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-medium mb-1">Phone Number</h4>
-                                    <p class="text-gray-600">+63 (32) 123 4567</p>
-                                </div>
-                            </div>
-
-                            <div class="flex items-start space-x-4">
-                                <div class="flex-shrink-0">
-                                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-                                        <i class="fas fa-envelope text-xl"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-medium mb-1">Email Address</h4>
-                                    <p class="text-gray-600">info@mhrpci.site</p>
+                            <!-- Social Media -->
+                            <div class="mt-8">
+                                <h4 class="text-lg font-medium mb-4">Connect With Us</h4>
+                                <div class="flex space-x-4">
+                                    <a href="https://www.facebook.com/mhrpciofficial/" target="_blank" class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition duration-300">
+                                        <i class="fab fa-facebook-f"></i>
+                                    </a>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Map Embed -->
-                        <div class="mt-8 rounded-lg overflow-hidden shadow-md">
+                        <!-- Larger Map Embed -->
+                        <div class="md:w-2/3 rounded-lg overflow-hidden shadow-md">
                             <iframe 
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.548838499838!2d123.88810111744384!3d10.297145070566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33a9994ff893430f%3A0x89d023abb6ff3793!2sCebu%20City%2C%20Cebu!5e0!3m2!1sen!2sph!4v1653647029565!5m2!1sen!2sph"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1962.6353286901582!2d123.91458637698216!3d10.307817489878422!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33a9996ee62ab953%3A0x940c202ffc675cc3!2sMHR%20Health%20Care%2C%20Co.!5e0!3m2!1sen!2sph!4v1683647029565!5m2!1sen!2sph"
                                 width="100%" 
-                                height="250" 
+                                height="100%" 
                                 style="border:0;" 
                                 allowfullscreen="" 
-                                loading="lazy">
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
                             </iframe>
-                        </div>
-
-                        <!-- Social Media -->
-                        <div class="mt-8">
-                            <h4 class="text-lg font-medium mb-4">Connect With Us</h4>
-                            <div class="flex space-x-4">
-                                <a href="https://www.facebook.com/mhrpciofficial/" target="_blank" class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition duration-300">
-                                    <i class="fab fa-facebook-f"></i>
-                                </a>
-                                <a href="#" class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition duration-300">
-                                    <i class="fab fa-linkedin-in"></i>
-                                </a>
-                                <a href="#" class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition duration-300">
-                                    <i class="fab fa-instagram"></i>
-                                </a>
-                            </div>
                         </div>
                     </div>
                 </div>

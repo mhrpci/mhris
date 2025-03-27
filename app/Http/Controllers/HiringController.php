@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hiring;
+use App\Models\Department;
 use Illuminate\Http\Request;
 
 class HiringController extends Controller
@@ -35,7 +36,8 @@ class HiringController extends Controller
      */
     public function create()
     {
-        return view('hirings.create');
+        $departments = Department::all();
+        return view('hirings.create', compact('departments'));
     }
 
     /**
@@ -47,8 +49,11 @@ class HiringController extends Controller
             'position' => 'required|max:255',
             'description' => 'required',
             'requirements' => 'required',
+            'responsibilities' => 'required',
             'benefits' => 'required',
-            'location' => 'required|max:255', // Add this line
+            'location' => 'required|max:255',
+            'department_id' => 'required|exists:departments,id',
+            'employment_type' => 'required|max:255',
         ]);
 
         Hiring::create($validated);
@@ -69,7 +74,8 @@ class HiringController extends Controller
      */
     public function edit(Hiring $hiring)
     {
-        return view('hirings.edit', compact('hiring'));
+        $departments = Department::all();
+        return view('hirings.edit', compact('hiring', 'departments'));
     }
 
     /**
@@ -81,8 +87,11 @@ class HiringController extends Controller
             'position' => 'required|max:255',
             'description' => 'required',
             'requirements' => 'required',
+            'responsibilities' => 'required',
             'benefits' => 'required',
             'location' => 'required|max:255',
+            'department_id' => 'required|exists:departments,id',
+            'employment_type' => 'required|max:255',
         ]);
 
         $hiring->update($validated);

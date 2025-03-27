@@ -27,10 +27,41 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="department_id"><i class="fas fa-building mr-2"></i>Department</label>
+                                    <select class="form-control" id="department_id" name="department_id" required>
+                                        <option value="">Select Department</option>
+                                        @foreach($departments as $department)
+                                            <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="employment_type"><i class="fas fa-user-clock mr-2"></i>Employment Type</label>
+                                    <select class="form-control" id="employment_type" name="employment_type" required>
+                                        <option value="">Select Employment Type</option>
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Temporary">Temporary</option>
+                                        <option value="Internship">Internship</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label for="description"><i class="fas fa-align-left mr-2"></i>Description</label>
                             <textarea class="form-control" id="description" name="description" rows="4" 
-                                placeholder="Describe the role, responsibilities, and what a typical day looks like..." required></textarea>
+                                placeholder="Describe the role and what a typical day looks like..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="responsibilities"><i class="fas fa-tasks mr-2"></i>Responsibilities</label>
+                            <textarea class="form-control" id="responsibilities" name="responsibilities" rows="4" 
+                                placeholder="List the key responsibilities for this position..." required></textarea>
                         </div>
                         <div class="form-group">
                             <label for="requirements"><i class="fas fa-list-ul mr-2"></i>Requirements</label>
@@ -55,7 +86,7 @@
 </div>
 @endsection
 
-@push('css')
+@section('styles')
 <style>
     .card-header {
         border-bottom: 0;
@@ -76,4 +107,4 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 </style>
-@endpush
+@endsection
