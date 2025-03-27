@@ -450,105 +450,196 @@
     </section>
 
     <!-- Our History Section -->
-    <section id="history" class="py-20 bg-white">
+    <section id="history" class="py-12 xs:py-16 sm:py-20 bg-white">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4" data-aos="fade-up">Our History</h2>
-                <div class="w-20 h-1 bg-indigo-600 mx-auto mb-6"></div>
-                <p class="text-gray-600 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+            <div class="text-center mb-10 sm:mb-12 md:mb-16">
+                <h2 class="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4" data-aos="fade-up">Our History</h2>
+                <div class="w-16 sm:w-20 h-1 bg-indigo-600 mx-auto mb-4 sm:mb-6"></div>
+                <p class="text-gray-600 max-w-3xl mx-auto text-sm sm:text-base" data-aos="fade-up" data-aos-delay="200">
                     From humble beginnings to a thriving conglomerate, explore the journey that shaped MHRPCI into what it is today.
                 </p>
             </div>
 
             <div class="relative">
                 <!-- Timeline Line -->
-                <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-indigo-100"></div>
+                <div class="absolute left-0 md:left-1/2 transform md:-translate-x-1/2 h-full w-1 bg-indigo-100 hidden sm:block"></div>
                 
                 <!-- Timeline Items -->
-                <div class="space-y-16">
+                <div class="space-y-8 sm:space-y-16">
                     <!-- 2000: Foundation -->
                     <div class="relative" data-aos="fade-up">
-                        <div class="absolute left-1/2 transform -translate-x-1/2 -mt-3">
-                            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
+                        <div class="hidden sm:block absolute left-1/2 transform -translate-x-1/2 -mt-3">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
                                 <i class="fas fa-star"></i>
                             </div>
                         </div>
                         
-                        <div class="grid md:grid-cols-2 gap-8 items-center">
-                            <div class="md:text-right md:pr-12 order-2 md:order-1">
-                                <h3 class="text-2xl font-semibold text-indigo-600 mb-2">2000: Our Beginning</h3>
-                                <p class="text-gray-600">
+                        <div class="sm:grid sm:grid-cols-2 gap-4 sm:gap-8 items-center">
+                            <div class="text-left sm:text-right sm:pr-12 mb-6 sm:mb-0 order-2 sm:order-1">
+                                <span class="text-xs font-semibold text-indigo-500 mb-1 block">THE BEGINNING</span>
+                                <h3 class="text-xl sm:text-2xl font-semibold text-indigo-600 mb-2">2000: Our Beginning</h3>
+                                <p class="text-gray-600 text-sm sm:text-base mb-4">
                                     MHR Property Conglomerate Inc. began in 2000 with the establishment of Cebic Trading, starting with just a 20,000-peso capital in hospital and office medical supplies.
                                 </p>
+                                <p class="text-gray-600 text-sm sm:text-base mb-4">
+                                    Founded by visionary entrepreneur Mr. Harold Ramas, the company initially focused on distributing essential medical supplies to local clinics and hospitals in Cebu City.
+                                </p>
+                                <div class="flex sm:justify-end mb-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                        <i class="fas fa-users mr-1"></i> 5 Employees
+                                    </span>
+                                </div>
                             </div>
-                            <div class="md:pl-12 order-1 md:order-2">
-                                <img src="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}" alt="Founding of MHRPCI" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                            <div class="sm:pl-12 order-1 sm:order-2">
+                                <div class="relative rounded-lg shadow-lg overflow-hidden">
+                                    <img src="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}" alt="Founding of MHRPCI" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                                    <div class="absolute top-0 right-0 p-1 m-2 bg-gray-800 bg-opacity-70 text-white text-xs rounded">
+                                        <i class="fas fa-calendar-alt mr-1"></i> 2000
+                                    </div>
+                                </div>
+                                <p class="text-gray-500 italic text-xs mt-2 text-center">The first MHRPCI office in Cebu City</p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- 2003: Expansion -->
                     <div class="relative" data-aos="fade-up" data-aos-delay="100">
-                        <div class="absolute left-1/2 transform -translate-x-1/2 -mt-3">
-                            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
+                        <div class="hidden sm:block absolute left-1/2 transform -translate-x-1/2 -mt-3">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
                                 <i class="fas fa-building"></i>
                             </div>
                         </div>
                         
-                        <div class="grid md:grid-cols-2 gap-8 items-center">
-                            <div class="md:pl-12 order-2">
-                                <img src="{{ asset('vendor/adminlte/dist/img/companies.png') }}" alt="MHRHCI Formation" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                        <div class="sm:grid sm:grid-cols-2 gap-4 sm:gap-8 items-center">
+                            <div class="sm:pl-12 mb-6 sm:mb-0 order-1">
+                                <div class="relative rounded-lg shadow-lg overflow-hidden">
+                                    <img src="{{ asset('vendor/adminlte/dist/img/companies.png') }}" alt="MHRHCI Formation" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                                    <div class="absolute top-0 left-0 p-1 m-2 bg-gray-800 bg-opacity-70 text-white text-xs rounded">
+                                        <i class="fas fa-calendar-alt mr-1"></i> 2003
+                                    </div>
+                                </div>
+                                <p class="text-gray-500 italic text-xs mt-2 text-center">MHRHCI headquarters inauguration</p>
                             </div>
-                            <div class="md:pr-12 order-1">
-                                <h3 class="text-2xl font-semibold text-indigo-600 mb-2">2003: Healthcare Expansion</h3>
-                                <p class="text-gray-600">
+                            <div class="sm:pr-12 order-2">
+                                <span class="text-xs font-semibold text-indigo-500 mb-1 block">HEALTHCARE FOCUS</span>
+                                <h3 class="text-xl sm:text-2xl font-semibold text-indigo-600 mb-2">2003: Healthcare Expansion</h3>
+                                <p class="text-gray-600 text-sm sm:text-base mb-4">
                                     In 2003, we expanded operations in Cebu by forming Medical & Hospital Resources Health Care, Inc. (MHRHCI) to focus on medical supplies and forge international partnerships.
                                 </p>
+                                <p class="text-gray-600 text-sm sm:text-base mb-4">
+                                    This pivotal expansion allowed us to secure exclusive distribution rights for several international medical brands, cementing our position as a trusted healthcare solutions provider in the region.
+                                </p>
+                                <div class="flex items-center mb-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
+                                        <i class="fas fa-users mr-1"></i> 25 Employees
+                                    </span>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-chart-line mr-1"></i> 120% Growth
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- 2010: Diversification -->
                     <div class="relative" data-aos="fade-up" data-aos-delay="200">
-                        <div class="absolute left-1/2 transform -translate-x-1/2 -mt-3">
-                            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
+                        <div class="hidden sm:block absolute left-1/2 transform -translate-x-1/2 -mt-3">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
                                 <i class="fas fa-chart-line"></i>
                             </div>
                         </div>
                         
-                        <div class="grid md:grid-cols-2 gap-8 items-center">
-                            <div class="md:text-right md:pr-12 order-2 md:order-1">
-                                <h3 class="text-2xl font-semibold text-indigo-600 mb-2">2010: Industry Diversification</h3>
-                                <p class="text-gray-600">
+                        <div class="sm:grid sm:grid-cols-2 gap-4 sm:gap-8 items-center">
+                            <div class="text-left sm:text-right sm:pr-12 mb-6 sm:mb-0 order-2 sm:order-1">
+                                <span class="text-xs font-semibold text-indigo-500 mb-1 block">INDUSTRY EXPANSION</span>
+                                <h3 class="text-xl sm:text-2xl font-semibold text-indigo-600 mb-2">2010: Industry Diversification</h3>
+                                <p class="text-gray-600 text-sm sm:text-base mb-4">
                                     By 2010, MHRPCI had diversified its portfolio by entering the fuel distribution industry with Bay Gas Petroleum Distributors Inc. and expanded into construction and development projects.
                                 </p>
+                                <p class="text-gray-600 text-sm sm:text-base mb-4">
+                                    This strategic diversification allowed us to tap into multiple high-growth sectors and establish a more resilient business model across the Philippines.
+                                </p>
+                                <div class="flex sm:justify-end mb-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
+                                        <i class="fas fa-users mr-1"></i> 120+ Employees
+                                    </span>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-building mr-1"></i> 4 Companies
+                                    </span>
+                                </div>
                             </div>
-                            <div class="md:pl-12 order-1 md:order-2">
-                                <img src="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}" alt="MHRPCI Diversification" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                            <div class="sm:pl-12 order-1 sm:order-2">
+                                <div class="relative rounded-lg shadow-lg overflow-hidden">
+                                    <img src="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}" alt="MHRPCI Diversification" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                                    <div class="absolute top-0 right-0 p-1 m-2 bg-gray-800 bg-opacity-70 text-white text-xs rounded">
+                                        <i class="fas fa-calendar-alt mr-1"></i> 2010
+                                    </div>
+                                </div>
+                                <p class="text-gray-500 italic text-xs mt-2 text-center">Launch of Bay Gas Petroleum</p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Present: Conglomerate -->
                     <div class="relative" data-aos="fade-up" data-aos-delay="300">
-                        <div class="absolute left-1/2 transform -translate-x-1/2 -mt-3">
-                            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
+                        <div class="hidden sm:block absolute left-1/2 transform -translate-x-1/2 -mt-3">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
                                 <i class="fas fa-flag"></i>
                             </div>
                         </div>
                         
-                        <div class="grid md:grid-cols-2 gap-8 items-center">
-                            <div class="md:pl-12 order-2">
-                                <img src="{{ asset('vendor/adminlte/dist/img/companies.png') }}" alt="MHRPCI Today" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                        <div class="sm:grid sm:grid-cols-2 gap-4 sm:gap-8 items-center">
+                            <div class="sm:pl-12 mb-6 sm:mb-0 order-1 sm:order-2">
+                                <div class="relative rounded-lg shadow-lg overflow-hidden">
+                                    <img src="{{ asset('vendor/adminlte/dist/img/companies.png') }}" alt="MHRPCI Today" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                                    <div class="absolute top-0 left-0 p-1 m-2 bg-indigo-500 text-white text-xs rounded-full">
+                                        <i class="fas fa-calendar-alt mr-1"></i> Present
+                                    </div>
+                                </div>
+                                <p class="text-gray-500 italic text-xs mt-2 text-center">MHRPCI's current headquarters</p>
                             </div>
-                            <div class="md:pr-12 order-1">
-                                <h3 class="text-2xl font-semibold text-indigo-600 mb-2">Today: A Thriving Conglomerate</h3>
-                                <p class="text-gray-600">
+                            <div class="sm:pr-12 order-2 sm:order-1">
+                                <span class="text-xs font-semibold text-indigo-500 mb-1 block">TODAY'S SUCCESS</span>
+                                <h3 class="text-xl sm:text-2xl font-semibold text-indigo-600 mb-2">Today: A Thriving Conglomerate</h3>
+                                <p class="text-gray-600 text-sm sm:text-base mb-4">
                                     Today, MHRPCI has grown into a conglomerate with 10 companies working in synergy across various industries including healthcare, fuel distribution, construction, and hospitality.
                                 </p>
+                                <p class="text-gray-600 text-sm sm:text-base mb-4">
+                                    With a focus on sustainability, innovation, and community development, we continue to expand our reach and impact across the Philippines.
+                                </p>
+                                <div class="flex items-center mb-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
+                                        <i class="fas fa-users mr-1"></i> 800+ Employees
+                                    </span>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-building mr-1"></i> 10 Companies
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Interactive Timeline Navigation -->
+            <div class="mt-12 flex justify-center">
+                <div class="inline-flex space-x-1 sm:space-x-2">
+                    <a href="#" class="history-nav-dot active flex flex-col items-center">
+                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-600 mb-1"></span>
+                        <span class="text-xs text-indigo-600 font-medium">2000</span>
+                    </a>
+                    <a href="#" class="history-nav-dot flex flex-col items-center">
+                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-200 mb-1"></span>
+                        <span class="text-xs text-gray-500 font-medium">2003</span>
+                    </a>
+                    <a href="#" class="history-nav-dot flex flex-col items-center">
+                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-200 mb-1"></span>
+                        <span class="text-xs text-gray-500 font-medium">2010</span>
+                    </a>
+                    <a href="#" class="history-nav-dot flex flex-col items-center">
+                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-200 mb-1"></span>
+                        <span class="text-xs text-gray-500 font-medium">Present</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -870,13 +961,73 @@
                 });
             }
             
-            // Navigation active state
-            const navLinks = document.querySelectorAll('.nav-link');
-            const sections = document.querySelectorAll('section');
+            // History Timeline Navigation
+            const historyNavDots = document.querySelectorAll('.history-nav-dot');
+            const years = ['2000', '2003', '2010', 'Present'];
             
+            function showHistoryYear(year) {
+                const timelineItems = document.querySelectorAll('.timeline-item');
+                
+                // Find the index of the year
+                const yearIndex = years.indexOf(year);
+                
+                // Hide all timeline items
+                timelineItems.forEach((item, index) => {
+                    item.style.display = 'none';
+                });
+                
+                // Show the selected item
+                if (yearIndex >= 0 && yearIndex < timelineItems.length) {
+                    timelineItems[yearIndex].style.display = 'block';
+                }
+                
+                // Update active state on dots
+                historyNavDots.forEach((dot, index) => {
+                    const dotSpan = dot.querySelector('span:first-child');
+                    const textSpan = dot.querySelector('span:last-child');
+                    
+                    if (index === yearIndex) {
+                        dotSpan.classList.remove('bg-indigo-200');
+                        dotSpan.classList.add('bg-indigo-600');
+                        textSpan.classList.remove('text-gray-500');
+                        textSpan.classList.add('text-indigo-600');
+                        dot.classList.add('active');
+                    } else {
+                        dotSpan.classList.remove('bg-indigo-600');
+                        dotSpan.classList.add('bg-indigo-200');
+                        textSpan.classList.remove('text-indigo-600');
+                        textSpan.classList.add('text-gray-500');
+                        dot.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Add click event to history navigation dots
+            historyNavDots.forEach((dot, index) => {
+                dot.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showHistoryYear(years[index]);
+                });
+            });
+            
+            // Show first year by default (if history section exists)
+            if (historyNavDots.length > 0) {
+                const timelineItems = document.querySelectorAll('.timeline-item');
+                
+                // Hide all items except the first one
+                timelineItems.forEach((item, index) => {
+                    if (index !== 0) {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Navigation active state
             const setActiveNavLink = () => {
                 let current = '';
                 const scrollPosition = window.pageYOffset;
+                const sections = document.querySelectorAll('section');
+                const navLinks = document.querySelectorAll('.nav-link');
                 
                 sections.forEach(section => {
                     const sectionTop = section.offsetTop;
