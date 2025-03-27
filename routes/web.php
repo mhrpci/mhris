@@ -344,8 +344,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/controller-analysis/excel', [ControllerAnalysisController::class, 'downloadExcel'])->name('controller.analysis.excel');
         Route::get('/controller-analysis/word', [ControllerAnalysisController::class, 'downloadWord'])->name('controller.analysis.word');
 
-    Route::post('/notifications/mark-as-read/{id}', [NotificationsController::class, 'markAsRead']);
-    Route::post('/notifications/mark-all-read', [NotificationsController::class, 'markAllAsRead']);
+    // Route::post('/notifications/mark-as-read/{id}', [NotificationsController::class, 'markAsRead']);
+    // Route::post('/notifications/mark-all-read', [NotificationsController::class, 'markAllAsRead']);
 
     Route::post('/employees/create-bulk-users', [EmployeeController::class, 'createBulkUsers'])
         ->name('employees.createBulkUsers');
