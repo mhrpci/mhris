@@ -8,6 +8,7 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class SssController extends Controller
 {
@@ -98,4 +99,71 @@ class SssController extends Controller
             ->exists();
     }
 
+    public function notifyEmployees(Request $request)
+    {
+        $request->validate([
+            'notification_date' => 'required|date_format:Y-m',
+        ]);
+
+        $notificationDate = $request->notification_date . '-01'; // Add day to make it a valid date
+        $year = date('Y', strtotime($notificationDate));
+        $month = date('m', strtotime($notificationDate));
+        $monthName = date('F', strtotime($notificationDate));
+
+        // Find all SSS contributions for the specified month and year
+        $contributions = Sss::with('employee')
+            ->whereYear('contribution_date', '=', $year)
+            ->whereMonth('contribution_date', '=', $month)
+            ->get();
+
+        if ($contributions->isEmpty()) {
+            return redirect()->route('sss.index')->with('error', "No SSS contributions found for {$monthName} {$year}.");
+        }
+
+        $notificationCount = 0;
+        $errorMessages = [];
+
+        foreach ($contributions as $contribution) {
+            if (!$contribution->employee) {
+                $errorMessages[] = "Employee record not found for contribution ID: {$contribution->id}";
+                continue;
+            }
+
+            if (empty($contribution->employee->email_address)) {
+                $errorMessages[] = "No email address found for employee: {$contribution->employee->last_name}, {$contribution->employee->first_name}";
+                continue;
+            }
+
+            try {
+                // Here you would implement the actual email sending logic
+                // For example using Laravel's Mail facade:
+                Mail::send('emails.sss_contribution', [
+                    'employee' => $contribution->employee,
+                    'contribution' => $contribution,
+                    'month' => $monthName,
+                    'year' => $year
+                ], function ($message) use ($contribution) {
+                    $message->to($contribution->employee->email_address)
+                        ->subject('SSS Contribution Notification for ' . date('F Y', strtotime($contribution->contribution_date)));
+                });
+                
+                // For now, just increment the counter (implement actual mailing in production)
+                $notificationCount++;
+            } catch (\Exception $e) {
+                $errorMessages[] = "Failed to send notification to {$contribution->employee->email_address}: {$e->getMessage()}";
+            }
+        }
+
+        if ($notificationCount > 0) {
+            $message = "{$notificationCount} SSS contribution notifications sent successfully for {$monthName} {$year}.";
+            
+            if (!empty($errorMessages)) {
+                $message .= " However, some notifications could not be sent.";
+            }
+            
+            return redirect()->route('sss.index')->with('success', $message);
+        }
+
+        return redirect()->route('sss.index')->with('error', "Failed to send SSS contribution notifications: " . implode("; ", $errorMessages));
+    }
 }

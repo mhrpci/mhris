@@ -43,6 +43,9 @@ class User extends Authenticatable
         'device_token',
         'signature',
         'department_id',
+        'push_endpoint',
+        'push_p256dh',
+        'push_auth',
     ];
 
     /**
@@ -152,5 +155,24 @@ class User extends Authenticatable
     public function systemUpdates()
     {
         return $this->hasMany(SystemUpdate::class);
+    }
+
+    /**
+     * Update the user's push notification subscription.
+     *
+     * @param string $endpoint
+     * @param string $p256dh
+     * @param string $auth
+     * @return $this
+     */
+    public function updatePushSubscription($endpoint, $p256dh, $auth)
+    {
+        $this->update([
+            'push_endpoint' => $endpoint,
+            'push_p256dh' => $p256dh,
+            'push_auth' => $auth,
+        ]);
+
+        return $this;
     }
 }

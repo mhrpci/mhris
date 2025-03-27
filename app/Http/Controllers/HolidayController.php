@@ -179,7 +179,48 @@ class HolidayController extends Controller
     public function holidayCalendar()
     {
         $holidays = Holiday::all();
-        return view('holidays.calendar', compact('holidays'));
+        
+        // Generate pay days (15th and last day of each month)
+        $payDays = [];
+        $currentYear = Carbon::now()->year;
+        
+        // Add pay days for all months in the current year
+        for ($month = 1; $month <= 12; $month++) {
+            // 15th of the month
+            $midMonth = Carbon::createFromDate($currentYear, $month, 15)->toDateString();
+            $payDays[] = [
+                'title' => 'Pay Day (Mid Month)',
+                'date' => $midMonth,
+                'type' => 'pay-day'
+            ];
+            
+            // Last day of the month
+            $lastDay = Carbon::createFromDate($currentYear, $month, 1)->endOfMonth()->toDateString();
+            $payDays[] = [
+                'title' => 'Pay Day (Month End)',
+                'date' => $lastDay,
+                'type' => 'pay-day'
+            ];
+        }
+        
+        // Add quarterly sales events
+        $quarterlyDates = [
+            Carbon::createFromDate($currentYear, 3, 31)->toDateString(),
+            Carbon::createFromDate($currentYear, 6, 30)->toDateString(),
+            Carbon::createFromDate($currentYear, 9, 30)->toDateString(),
+            Carbon::createFromDate($currentYear, 12, 31)->toDateString()
+        ];
+        
+        $quarterlySales = [];
+        foreach ($quarterlyDates as $index => $date) {
+            $quarterlySales[] = [
+                'title' => 'Q' . ($index + 1) . ' Sales Review',
+                'date' => $date,
+                'type' => 'quarterly-sales'
+            ];
+        }
+        
+        return view('holidays.calendar', compact('holidays', 'payDays', 'quarterlySales'));
     }
 
     public function import(Request $request)

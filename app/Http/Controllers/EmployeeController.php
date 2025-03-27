@@ -471,18 +471,27 @@ public function update(Request $request, $slug): RedirectResponse
     }
     public function disable(Request $request, Employee $employee)
     {
-        // Validate the status
+        // Validate the status and date
         $request->validate([
-            'status' => 'required|in:Resigned,Terminated'
+            'status' => 'required|in:Resigned,Terminated',
+            'action_date' => 'required|date'
         ]);
 
         try {
             DB::beginTransaction();
 
-            // Update the employee's status
-            $employee->update([
+            // Update the employee's status and appropriate date field
+            $updateData = [
                 'employee_status' => $request->status
-            ]);
+            ];
+
+            if ($request->status === 'Resigned') {
+                $updateData['resigned_date'] = $request->action_date;
+            } else {
+                $updateData['terminated_date'] = $request->action_date;
+            }
+
+            $employee->update($updateData);
 
             // Find the user associated with the employee
             $user = User::where('email', $employee->email_address)->first();
@@ -503,7 +512,7 @@ public function update(Request $request, $slug): RedirectResponse
             DB::commit();
 
             return redirect()->route('employees.index')
-                ->with('success', "Employee marked as {$request->status} successfully.");
+                ->with('success', "Employee marked as {$request->status} successfully with " . ($request->status === 'Resigned' ? 'resignation' : 'termination') . " date " . $request->action_date);
 
         } catch (\Exception $e) {
             DB::rollBack();

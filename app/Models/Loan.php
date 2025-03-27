@@ -17,6 +17,7 @@ class Loan extends Model
         'sss_loan',
         'pagibig_loan',
         'cash_advance',
+        'notes',
     ];
 
     protected $casts = [

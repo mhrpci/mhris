@@ -54,6 +54,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\RouteManagementController;
+use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -123,6 +124,16 @@ Route::get('/privacy', function () {
     return view('privacy');
 })->name('privacy');
 
+Route::get('/test-mail', function () {
+    Mail::raw('This is a test email from Laravel.', function ($message) {
+        $message->to('mhrpciofficial@gmail.com')
+                ->subject('SMTP Test');
+    });
+
+    return 'Test email sent!';
+});
+
+
 
 // Public Profile routes
 Route::get('/employees-public/{slug}', [EmployeeController::class, 'publicProfile'])->name('employees.public');
@@ -149,6 +160,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('types', TypeController::class);
     Route::resource('inventory', ItInventoryController::class);
     Route::resource('overtime', OverTimePayController::class);
+    Route::put('overtime/{overtime}/approve', [OverTimePayController::class, 'approve'])->name('overtime.approve');
+    Route::put('overtime/{overtime}/reject', [OverTimePayController::class, 'reject'])->name('overtime.reject');
     Route::resource('posts', PostController::class);
     Route::resource('holidays', HolidayController::class);
     Route::resource('tasks', TaskController::class);
@@ -164,7 +177,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('philhealth', PhilhealthController::class)->except(['edit', 'update']);
     Route::resource('system-updates', SystemUpdateController::class);
 
-
+    // Contribution Notify routes
+    Route::post('/sss/notify', [SssController::class, 'notifyEmployees'])->name('sss.notify');
+    Route::post('/pagibig/notify', [PagibigController::class, 'notifyEmployees'])->name('pagibig.notify');
+    Route::post('/philhealth/notify', [PhilhealthController::class, 'notifyEmployees'])->name('philhealth.notify');
+    Route::post('/contributions/notify-all', [ContributionController::class, 'sendAllNotifications'])->name('contributions.notify-all');
     // Employees routes
     Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
     Route::post('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
@@ -401,4 +418,16 @@ Route::middleware(['auth', 'super.admin'])->prefix('route-management')->name('ro
 });
 
 Auth::routes();
+
+// Notification Routes
+Route::get('/notifications/get', [App\Http\Controllers\NotificationsController::class, 'getNotificationsData'])->name('notifications.get');
+Route::post('/notifications/mark-read', [App\Http\Controllers\NotificationsController::class, 'markAsRead'])->name('notifications.mark-read');
+Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+Route::get('/notifications/check-updates', [App\Http\Controllers\NotificationsController::class, 'checkForUpdates'])->name('notifications.check-updates');
+Route::get('/notifications/all', [App\Http\Controllers\NotificationsController::class, 'showAllNotifications'])->name('notifications.all');
+
+// Web Push Notification Routes
+Route::get('/notifications/vapid-public-key', [App\Http\Controllers\NotificationsController::class, 'getVapidPublicKey'])->name('notifications.vapid-public-key');
+Route::get('/notifications/status', [App\Http\Controllers\NotificationsController::class, 'checkNotificationStatus'])->name('notifications.status');
+Route::post('/notifications/test', [App\Http\Controllers\NotificationsController::class, 'testPushNotification'])->name('notifications.test');
 

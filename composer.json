@@ -16,6 +16,7 @@
         "laravel-notification-channels/webpush": "^9.0",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
+        "laravel/scout": "^10.14",
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.5",

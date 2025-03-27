@@ -12,6 +12,9 @@ use App\Models\PagibigContribution;
 use App\Models\Philhealth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\SssController;
+use App\Http\Controllers\PagibigController;
+use App\Http\Controllers\PhilhealthController;
 
 class ContributionController extends Controller
 {
@@ -225,5 +228,83 @@ public function employeeContributions(Request $request, $employee_id)
         }
 
         return redirect()->route('sss.index')->with('error', 'Unauthorized access.');
+    }
+
+    public function sendAllNotifications(Request $request)
+    {
+        $request->validate([
+            'notification_date' => 'required|date_format:Y-m',
+            'contribution_types' => 'required|array',
+            'contribution_types.*' => 'in:sss,pagibig,philhealth',
+        ]);
+
+        $date = $request->notification_date;
+        $types = $request->contribution_types;
+        $results = [];
+        $successCount = 0;
+        $errorCount = 0;
+        
+        // Use appropriate controllers to send notifications
+        if (in_array('sss', $types)) {
+            $sssController = new SssController();
+            $sssRequest = new Request(['notification_date' => $date]);
+            $sssResponse = $sssController->notifyEmployees($sssRequest);
+            $results['sss'] = $this->extractSessionMessage($sssResponse);
+            if (str_contains($results['sss'], 'success')) {
+                $successCount++;
+            } else {
+                $errorCount++;
+            }
+        }
+        
+        if (in_array('pagibig', $types)) {
+            $pagibigController = new PagibigController();
+            $pagibigRequest = new Request(['notification_date' => $date]);
+            $pagibigResponse = $pagibigController->notifyEmployees($pagibigRequest);
+            $results['pagibig'] = $this->extractSessionMessage($pagibigResponse);
+            if (str_contains($results['pagibig'], 'success')) {
+                $successCount++;
+            } else {
+                $errorCount++;
+            }
+        }
+        
+        if (in_array('philhealth', $types)) {
+            $philhealthController = new PhilhealthController();
+            $philhealthRequest = new Request(['notification_date' => $date]);
+            $philhealthResponse = $philhealthController->notifyEmployees($philhealthRequest);
+            $results['philhealth'] = $this->extractSessionMessage($philhealthResponse);
+            if (str_contains($results['philhealth'], 'success')) {
+                $successCount++;
+            } else {
+                $errorCount++;
+            }
+        }
+        
+        // Determine overall status and create message
+        if ($successCount > 0 && $errorCount == 0) {
+            $message = "All selected contribution notifications sent successfully.";
+            return redirect()->route('home')->with('success', $message);
+        } elseif ($successCount > 0 && $errorCount > 0) {
+            $message = "Some contribution notifications were sent, but others failed. Check individual contribution pages for details.";
+            return redirect()->route('home')->with('warning', $message);
+        } else {
+            $message = "Failed to send contribution notifications. Check individual contribution pages for details.";
+            return redirect()->route('home')->with('error', $message);
+        }
+    }
+    
+    private function extractSessionMessage($response)
+    {
+        // Get the session data from the redirect response
+        $session = $response->getSession();
+        
+        if ($session->has('success')) {
+            return $session->get('success');
+        } elseif ($session->has('error')) {
+            return $session->get('error');
+        } else {
+            return 'No message returned';
+        }
     }
 }

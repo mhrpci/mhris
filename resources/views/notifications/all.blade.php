@@ -1,548 +1,743 @@
 @extends('layouts.app')
 
+@section('styles')
+<style>
+    .notification-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        background: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .notification-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #ddd;
+        transition: all 0.3s ease;
+    }
+    
+    .notification-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .notification-card.unread::before {
+        background: #007bff;
+    }
+    
+    .notification-card.leave::before {
+        background: #28a745;
+    }
+    
+    .notification-card.cash_advance::before {
+        background: #ffc107;
+    }
+    
+    .notification-card.pending::before {
+        background: #17a2b8;
+    }
+    
+    .notification-card.approved::before {
+        background: #28a745;
+    }
+    
+    .notification-card.rejected::before,
+    .notification-card.declined::before {
+        background: #dc3545;
+    }
+    
+    .notification-date-divider {
+        position: relative;
+        margin: 2rem 0 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .notification-date-divider-label {
+        background: #f8f9fa;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #495057;
+        z-index: 1;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .dark-mode .notification-date-divider-label {
+        background: #343a40;
+        color: #adb5bd;
+        border-color: rgba(255,255,255,0.1);
+    }
+    
+    .notification-date-divider hr {
+        position: absolute;
+        width: 100%;
+        margin: 0;
+        border-top: 1px solid rgba(0,0,0,0.08);
+    }
+    
+    .dark-mode .notification-date-divider hr {
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .notification-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 1rem;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .notification-time {
+        font-size: 0.8rem;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .notification-filter {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .dark-mode .notification-filter {
+        background: #343a40;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .notification-details {
+        display: none;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0,0,0,0.08);
+    }
+    
+    .dark-mode .notification-details {
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .notification-details.show {
+        display: block;
+    }
+    
+    .notification-details-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .notification-details-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    
+    .dark-mode .notification-details-table td {
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .notification-details-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .notification-details-table td:first-child {
+        font-weight: 600;
+        width: 35%;
+        color: #495057;
+    }
+    
+    .dark-mode .notification-details-table td:first-child {
+        color: #adb5bd;
+    }
+    
+    .loading-spinner-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 200px;
+    }
+    
+    .badge {
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+        border-radius: 6px;
+    }
+    
+    .btn-link {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-link:hover {
+        color: #0056b3;
+        text-decoration: none;
+    }
+    
+    .dark-mode .btn-link {
+        color: #66b0ff;
+    }
+    
+    .dark-mode .btn-link:hover {
+        color: #99c9ff;
+    }
+    
+    @media (max-width: 767.98px) {
+        .notification-filter {
+            padding: 1rem;
+        }
+        
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+        
+        .notification-details-table td:first-child {
+            width: 40%;
+        }
+        
+        .notification-time {
+            font-size: 0.75rem;
+        }
+    }
+
+    /* Enhanced Toast Styles */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 350px;
+        width: 100%;
+    }
+
+    .toast {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        margin-bottom: 10px;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .toast-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 0.75rem 1rem;
+    }
+
+    .toast-body {
+        padding: 1rem;
+        color: #495057;
+    }
+
+    .toast.success .toast-header {
+        color: #28a745;
+    }
+
+    .toast.error .toast-header {
+        color: #dc3545;
+    }
+
+    .toast.warning .toast-header {
+        color: #ffc107;
+    }
+
+    .toast.info .toast-header {
+        color: #17a2b8;
+    }
+
+    .dark-mode .toast {
+        background: #343a40;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .toast-header {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .dark-mode .toast-body {
+        color: #adb5bd;
+    }
+
+    /* Fix for Mark All As Read button alignment */
+    .notification-filter .form-group {
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .notification-filter .form-group label {
+        margin-bottom: 0.5rem;
+    }
+
+    .notification-filter .form-group .form-control {
+        flex: 1;
+    }
+
+    .notification-filter .form-group:last-child {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .notification-filter .form-group:last-child .btn {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .notification-filter .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .notification-filter .form-group:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    /* Button and filter alignment fixes */
+    .notification-filter .form-control,
+    .notification-filter .btn {
+        height: 38px;
+        border-radius: 4px;
+    }
+    
+    .notification-filter .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .notification-filter .form-group {
+        margin-bottom: 0;
+    }
+    
+    .notification-filter label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    
+    /* Ensure consistent heights across all devices */
+    @media (max-width: 767.98px) {
+        .notification-filter .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .notification-filter .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .notification-filter .btn,
+        .notification-filter .form-control {
+            height: 38px;
+        }
+    }
+</style>
+@endsection
+
 @section('content')
-<div class="container-fluid px-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h5 class="mb-0 d-flex align-items-center">
-                                <i class="fas fa-bell me-2 text-primary"></i>&nbsp;All Notifications&nbsp;
-                                <span class="badge bg-primary rounded-pill ms-2" id="notification-count">
-                                    {{ $allNotifications->flatten()->count() }}
-                                </span>
-                            </h5>
-                        </div>
-                        <div class="col-auto">
-                            <div class="btn-group">
-                                <button class="btn btn-outline-primary btn-sm" id="mark-all-read">
-                                    <i class="fas fa-check-double me-1"></i>Mark All Read
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" id="clear-all">
-                                    <i class="fas fa-trash-alt me-1"></i>Clear All
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-body">
-                    <!-- Filters -->
-                    <div class="row mb-4">
-                        <div class="col-md-3 mb-3 mb-md-0">
-                            <div class="form-floating">
-                                <select class="form-select" id="type-filter">
-                                    <option value="all">All Types</option>
-                                    <option value="leave">Leave Requests</option>
-                                    <option value="cash_advance">Cash Advances</option>
-                                </select>
-                                <label>Filter by Type</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3 mb-md-0">
-                            <div class="form-floating">
-                                <select class="form-select" id="status-filter">
-                                    <option value="all">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                </select>
-                                <label>Filter by Status</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3 mb-md-0">
-                            <div class="form-floating">
-                                <select class="form-select" id="read-filter">
-                                    <option value="all">All</option>
-                                    <option value="unread">Unread</option>
-                                    <option value="read">Read</option>
-                                </select>
-                                <label>Filter by Read Status</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="search-filter" placeholder="Search...">
-                                <label><i class="fas fa-search me-2"></i>Search Notifications</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Active Filters Display -->
-                    <div class="active-filters mb-3" id="active-filters"></div>
-
-                    <!-- Notifications List -->
-                    <div class="notifications-container">
-                        @forelse($allNotifications as $date => $notifications)
-                            <div class="date-group mb-4">
-                                <h6 class="date-header text-muted mb-3">
-                                    {{ \Carbon\Carbon::parse($date)->format('F d, Y') }}
-                                </h6>
-                                
-                                @foreach($notifications as $notification)
-                                    <div class="notification-item card mb-3 notification-{{ $notification['type'] }} status-{{ $notification['status'] }} {{ $notification['is_read'] ? 'read' : 'unread' }}"
-                                         data-type="{{ $notification['type'] }}"
-                                         data-status="{{ $notification['status'] }}"
-                                         data-read="{{ $notification['is_read'] ? 'read' : 'unread' }}"
-                                         data-id="{{ $notification['id'] ?? '' }}">
-                                        <div class="card-body">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto">
-                                                    <div class="notification-icon rounded-circle p-2 {{ $notification['type'] === 'leave' ? 'bg-info' : 'bg-warning' }}">
-                                                        <i class="{{ $notification['icon'] }} text-white"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="col">
-                                                    <h6 class="mb-1 notification-title">{{ $notification['title'] }}</h6>
-                                                    <p class="mb-1 text-muted notification-text">{{ $notification['text'] }}</p>
-                                                    <div class="notification-meta">
-                                                        <small class="text-muted me-3">
-                                                            <i class="far fa-clock me-1"></i>{{ $notification['time_human'] }}
-                                                        </small>
-                                                        <span class="badge {{ $notification['status'] === 'pending' ? 'bg-warning' : ($notification['status'] === 'approved' ? 'bg-success' : 'bg-danger') }}">
-                                                            {{ ucfirst($notification['status']) }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
-                                                            <i class="fas fa-ellipsis-v"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu">
-                                                            <li>
-                                                                <a class="dropdown-item toggle-details" href="#" data-bs-toggle="collapse" 
-                                                                   data-bs-target="#details-{{ $loop->parent->index }}-{{ $loop->index }}">
-                                                                    <i class="fas fa-info-circle me-2"></i>View Details
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item mark-read" href="#">
-                                                                    <i class="fas fa-check me-2"></i>Mark as Read
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item text-danger delete-notification" href="#">
-                                                                    <i class="fas fa-trash-alt me-2"></i>Delete
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Collapsible Details -->
-                                            <div class="collapse mt-3" id="details-{{ $loop->parent->index }}-{{ $loop->index }}">
-                                                <div class="card card-body bg-light border-0">
-                                                    <div class="row">
-                                                        @foreach($notification['details'] as $key => $value)
-                                                            <div class="col-md-6 mb-2">
-                                                                <strong class="text-primary">{{ ucfirst($key) }}:</strong> 
-                                                                <span class="ms-2">{{ $value }}</span>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @empty
-                            <div class="text-center py-5">
-                                <div class="empty-state">
-                                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
-                                    <h5 class="text-muted">No notifications found</h5>
-                                    <p class="text-muted">When you receive notifications, they will appear here.</p>
-                                </div>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Notifications</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">All Notifications</li>
+                </ol>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Toast Notification
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="notification-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <i class="fas fa-info-circle me-2"></i>
-            <strong class="me-auto">Notification</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+<div class="container-fluid">
+    <div class="card card-outline card-primary">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-bell mr-1"></i> All Notifications
+            </h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
         </div>
-        <div class="toast-body"></div>
-    </div>
-</div> -->
+        <div class="card-body">
+            <div class="row notification-filter">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="type-filter" class="form-label">Notification Type</label>
+                        <select class="form-control filter-control" id="type-filter">
+                            <option value="all">All Types</option>
+                            <option value="leave">Leave Requests</option>
+                            <option value="cash_advance">Cash Advances</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="status-filter" class="form-label">Status</label>
+                        <select class="form-control filter-control" id="status-filter">
+                            <option value="all">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="active">Active</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="declined">Declined</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="read-filter" class="form-label">Read Status</label>
+                        <select class="form-control filter-control" id="read-filter">
+                            <option value="all">All</option>
+                            <option value="unread">Unread Only</option>
+                            <option value="read">Read Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Mark Status</label>
+                        <button id="mark-all-read" class="btn btn-primary btn-block">
+                            <i class="fas fa-check mr-1"></i> Mark All as Read
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-<style>
-    .notification-icon {
-        width: 45px;
-        height: 45px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        transition: transform 0.2s ease;
-    }
-    
-    .notification-item {
-        transition: all 0.3s ease;
-        border-left: 4px solid transparent;
-        cursor: pointer;
-    }
-    
-    .notification-item:hover .notification-icon {
-        transform: scale(1.1);
-    }
-    
-    .notification-item.unread {
-        border-left-color: #0d6efd;
-        background-color: rgba(13, 110, 253, 0.02);
-    }
-    
-    .notification-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-    
-    .date-header {
-        position: relative;
-        display: inline-block;
-        padding-right: 15px;
-        font-weight: 600;
-        color: #6c757d;
-    }
-    
-    .date-header:after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        right: -50px;
-        width: 50px;
-        height: 2px;
-        background: linear-gradient(90deg, #dee2e6 0%, transparent 100%);
-    }
-    
-    .notification-leave .notification-icon {
-        background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
-    }
-    
-    .notification-cash_advance .notification-icon {
-        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-    }
-    
-    .notification-meta {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .empty-state {
-        animation: fadeIn 0.5s ease;
-    }
-    
-    .active-filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-    
-    .filter-badge {
-        background-color: #e9ecef;
-        padding: 0.25rem 0.75rem;
-        border-radius: 1rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .filter-badge .remove-filter {
-        cursor: pointer;
-        color: #dc3545;
-    }
-    
-    /* Animations */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    /* Status indicators */
-    .status-pending .card-body {
-        border-right: 4px solid #ffc107;
-    }
-    
-    .status-approved .card-body {
-        border-right: 4px solid #198754;
-    }
-    
-    .status-rejected .card-body {
-        border-right: 4px solid #dc3545;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .notification-item .row {
-            gap: 1rem;
-        }
-        
-        .notification-item .col-auto:last-child {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-        }
-        
-        .notification-meta {
-            flex-wrap: wrap;
-        }
-        
-        .form-floating {
-            z-index: 1;
-        }
-    }
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap components
-    const toastEl = document.getElementById('notification-toast');
-    const toast = new bootstrap.Toast(toastEl);
-    
-    // Filter functionality
-    const typeFilter = document.getElementById('type-filter');
-    const statusFilter = document.getElementById('status-filter');
-    const readFilter = document.getElementById('read-filter');
-    const searchFilter = document.getElementById('search-filter');
-    const notificationItems = document.querySelectorAll('.notification-item');
-    const notificationCount = document.getElementById('notification-count');
-    const activeFiltersContainer = document.getElementById('active-filters');
-    
-    function showToast(message, type = 'success') {
-        const toastBody = document.querySelector('.toast-body');
-        toastBody.textContent = message;
-        toastEl.classList.remove('bg-success', 'bg-danger');
-        toastEl.classList.add(`bg-${type}`);
-        toast.show();
-    }
-    
-    function updateActiveFilters() {
-        activeFiltersContainer.innerHTML = '';
-        const filters = [];
-        
-        if (typeFilter.value !== 'all') {
-            filters.push({
-                type: 'Type',
-                value: typeFilter.options[typeFilter.selectedIndex].text
-            });
-        }
-        
-        if (statusFilter.value !== 'all') {
-            filters.push({
-                type: 'Status',
-                value: statusFilter.options[statusFilter.selectedIndex].text
-            });
-        }
-        
-        if (readFilter.value !== 'all') {
-            filters.push({
-                type: 'Read Status',
-                value: readFilter.options[readFilter.selectedIndex].text
-            });
-        }
-        
-        if (searchFilter.value) {
-            filters.push({
-                type: 'Search',
-                value: searchFilter.value
-            });
-        }
-        
-        filters.forEach(filter => {
-            const badge = document.createElement('div');
-            badge.className = 'filter-badge';
-            badge.innerHTML = `
-                <span>${filter.type}: ${filter.value}</span>
-                <i class="fas fa-times remove-filter" data-filter-type="${filter.type.toLowerCase()}"></i>
-            `;
-            activeFiltersContainer.appendChild(badge);
-        });
-    }
-    
-    function applyFilters() {
-        let visibleCount = 0;
-        const searchTerm = searchFilter.value.toLowerCase();
-        
-        notificationItems.forEach(item => {
-            const type = item.dataset.type;
-            const status = item.dataset.status;
-            const read = item.dataset.read;
-            const title = item.querySelector('.notification-title').textContent.toLowerCase();
-            const text = item.querySelector('.notification-text').textContent.toLowerCase();
-            
-            const typeMatch = typeFilter.value === 'all' || type === typeFilter.value;
-            const statusMatch = statusFilter.value === 'all' || status === statusFilter.value;
-            const readMatch = readFilter.value === 'all' || read === readFilter.value;
-            const searchMatch = searchTerm === '' || 
-                              title.includes(searchTerm) || 
-                              text.includes(searchTerm);
-            
-            if (typeMatch && statusMatch && readMatch && searchMatch) {
-                item.style.display = '';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-        
-        notificationCount.textContent = visibleCount;
-        updateActiveFilters();
-        
-        // Show/hide date headers
-        document.querySelectorAll('.date-group').forEach(group => {
-            const hasVisibleNotifications = Array.from(group.querySelectorAll('.notification-item'))
-                .some(item => item.style.display !== 'none');
-            group.style.display = hasVisibleNotifications ? '' : 'none';
-        });
-    }
-    
-    // Event Listeners
-    [typeFilter, statusFilter, readFilter].forEach(filter => {
-        filter.addEventListener('change', applyFilters);
-    });
-    
-    searchFilter.addEventListener('input', applyFilters);
-    
-    activeFiltersContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-filter')) {
-            const filterType = e.target.dataset.filterType;
-            switch(filterType) {
-                case 'type':
-                    typeFilter.value = 'all';
-                    break;
-                case 'status':
-                    statusFilter.value = 'all';
-                    break;
-                case 'read status':
-                    readFilter.value = 'all';
-                    break;
-                case 'search':
-                    searchFilter.value = '';
-                    break;
-            }
-            applyFilters();
-        }
-    });
-    
-    // Mark as read functionality
-    document.querySelectorAll('.mark-read').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const item = this.closest('.notification-item');
-            if (!item.classList.contains('read')) {
-                item.classList.remove('unread');
-                item.classList.add('read');
-                item.dataset.read = 'read';
-                
-                // Update backend
-                const notificationId = item.dataset.id;
-                fetch(`/notifications/mark-as-read/${notificationId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                }).then(response => {
-                    if (response.ok) {
-                        showToast('Notification marked as read');
-                    }
-                });
-            }
-        });
-    });
-    
-    // Delete notification
-    document.querySelectorAll('.delete-notification').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const item = this.closest('.notification-item');
-            const notificationId = item.dataset.id;
-            
-            if (confirm('Are you sure you want to delete this notification?')) {
-                fetch(`/notifications/delete/${notificationId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                }).then(response => {
-                    if (response.ok) {
-                        item.style.opacity = '0';
-                        setTimeout(() => {
-                            item.remove();
-                            applyFilters();
-                        }, 300);
-                        showToast('Notification deleted successfully');
-                    }
-                });
-            }
-        });
-    });
-    
-    // Bulk actions
-    document.getElementById('mark-all-read').addEventListener('click', function() {
-        fetch('/notifications/mark-all-read', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        }).then(response => {
-            if (response.ok) {
-                document.querySelectorAll('.notification-item.unread').forEach(item => {
-                    item.classList.remove('unread');
-                    item.classList.add('read');
-                    item.dataset.read = 'read';
-                });
-                showToast('All notifications marked as read');
-            }
-        });
-    });
-    
-    document.getElementById('clear-all').addEventListener('click', function() {
-        if (confirm('Are you sure you want to clear all notifications?')) {
-            fetch('/notifications/clear-all', {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            }).then(response => {
-                if (response.ok) {
-                    document.querySelectorAll('.notification-item').forEach(item => {
-                        item.style.opacity = '0';
-                    });
-                    setTimeout(() => {
-                        document.querySelector('.notifications-container').innerHTML = `
-                            <div class="text-center py-5">
-                                <div class="empty-state">
-                                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
-                                    <h5 class="text-muted">No notifications found</h5>
-                                    <p class="text-muted">When you receive notifications, they will appear here.</p>
+            <div id="notifications-container">
+                @if(count($allNotifications) === 0)
+                    <div class="text-center py-5">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No notifications found</h5>
+                        <p class="text-muted">You don't have any notifications at the moment.</p>
+                    </div>
+                @else
+                    @foreach($allNotifications as $date => $notifications)
+                        <div class="notification-date-divider">
+                            <hr>
+                            <div class="notification-date-divider-label">
+                                @if(\Carbon\Carbon::parse($date)->isToday())
+                                    Today
+                                @elseif(\Carbon\Carbon::parse($date)->isYesterday())
+                                    Yesterday
+                                @else
+                                    {{ \Carbon\Carbon::parse($date)->format('F d, Y') }}
+                                @endif
+                            </div>
+                        </div>
+                        
+                        @foreach($notifications as $notification)
+                            <div class="notification-card {{ !$notification['is_read'] ? 'unread' : '' }} {{ $notification['type'] }} {{ $notification['status'] }}" 
+                                 data-type="{{ $notification['type'] }}" 
+                                 data-status="{{ $notification['status'] }}" 
+                                 data-read="{{ $notification['is_read'] ? 'read' : 'unread' }}">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="notification-icon bg-{{ $notification['type'] == 'leave' ? 'success' : 'warning' }} text-white">
+                                            <i class="{{ $notification['icon'] }}"></i>
+                                        </div>
+                                        <div class="w-100">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <h5 class="mb-1">{{ $notification['title'] }}</h5>
+                                                <span class="notification-time">
+                                                    <i class="far fa-clock"></i>
+                                                    {{ $notification['time_human'] }}
+                                                </span>
+                                            </div>
+                                            <p class="mb-2 text-muted">{{ $notification['text'] }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="badge badge-{{ $notification['status'] == 'pending' ? 'info' : ($notification['status'] == 'approved' || $notification['status'] == 'active' ? 'success' : 'danger') }}">
+                                                        {{ ucfirst($notification['status']) }}
+                                                    </span>
+                                                    @if(!$notification['is_read'])
+                                                        <span class="badge badge-primary ml-1">New</span>
+                                                    @endif
+                                                </div>
+                                                <button class="btn btn-link toggle-details" data-id="{{ $notification['id'] }}">
+                                                    <i class="fas fa-chevron-down"></i> View Details
+                                                </button>
+                                            </div>
+                                            <div class="notification-details" id="details-{{ $notification['id'] }}">
+                                                <table class="notification-details-table">
+                                                    <tbody>
+                                                        @foreach($notification['details'] as $key => $value)
+                                                            <tr>
+                                                                <td>{{ $key }}</td>
+                                                                <td>{{ $value }}</td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        `;
-                    }, 300);
-                    showToast('All notifications cleared');
+                        @endforeach
+                    @endforeach
+                @endif
+            </div>
+
+            <div id="loading-indicator" class="loading-spinner-container d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        // Toggle notification details with smooth animation
+        $('.toggle-details').on('click', function() {
+            const id = $(this).data('id');
+            const $details = $(`#details-${id}`);
+            const $icon = $(this).find('i');
+            
+            $details.slideToggle(200);
+            
+            if ($details.is(':visible')) {
+                $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                $(this).text('Hide Details');
+            } else {
+                $icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                $(this).text('View Details');
+            }
+            
+            // Mark as read when expanded
+            if (!$details.is(':visible')) {
+                const $card = $(this).closest('.notification-card');
+                if ($card.hasClass('unread')) {
+                    const notificationId = id.split('_');
+                    if (notificationId.length > 1) {
+                        markAsRead(notificationId[0], notificationId[1]);
+                    }
+                }
+            }
+        });
+        
+        // Apply filters with debounce
+        let filterTimeout;
+        $('.filter-control').on('change', function() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(applyFilters, 300);
+        });
+        
+        // Mark all as read with loading state
+        $('#mark-all-read').on('click', function() {
+            const $btn = $(this);
+            const originalText = $btn.html();
+            
+            $btn.prop('disabled', true)
+                .html('<i class="fas fa-spinner fa-spin mr-1"></i> Processing...');
+            
+            $.ajax({
+                url: '{{ route("notifications.mark-all-read") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                beforeSend: function() {
+                    $('#loading-indicator').removeClass('d-none');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update UI with animation
+                        $('.notification-card.unread').each(function(index) {
+                            $(this).delay(index * 100).queue(function(next) {
+                                $(this).removeClass('unread');
+                                $(this).find('.badge.badge-primary').fadeOut(200, function() {
+                                    $(this).remove();
+                                });
+                            });
+                        });
+                        
+                        window.showToast('All notifications marked as read', 'success');
+                    } else {
+                        window.showToast('Failed to mark notifications as read', 'error');
+                    }
+                },
+                error: function() {
+                    window.showToast('An error occurred while processing your request', 'error');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html(originalText);
+                    $('#loading-indicator').addClass('d-none');
+                }
+            });
+        });
+        
+        function applyFilters() {
+            const typeFilter = $('#type-filter').val();
+            const statusFilter = $('#status-filter').val();
+            const readFilter = $('#read-filter').val();
+            
+            $('.notification-card').each(function() {
+                const $card = $(this);
+                const type = $card.data('type');
+                const status = $card.data('status');
+                const readStatus = $card.data('read');
+                
+                const typeMatch = typeFilter === 'all' || type === typeFilter;
+                const statusMatch = statusFilter === 'all' || status === statusFilter;
+                const readMatch = readFilter === 'all' || readStatus === readFilter;
+                
+                if (typeMatch && statusMatch && readMatch) {
+                    $card.slideDown(200);
+                } else {
+                    $card.slideUp(200);
+                }
+            });
+            
+            // Show/hide date dividers based on visible notifications
+            $('.notification-date-divider').each(function() {
+                const $divider = $(this);
+                const $nextDivider = $divider.nextUntil('.notification-date-divider', '.notification-card:visible');
+                
+                if ($nextDivider.length === 0) {
+                    $divider.slideUp(200);
+                } else {
+                    $divider.slideDown(200);
+                }
+            });
+            
+            // Show no results message if all filtered out
+            const visibleNotifications = $('.notification-card:visible').length;
+            if (visibleNotifications === 0) {
+                if ($('#no-results-message').length === 0) {
+                    const noResultsHTML = `
+                        <div id="no-results-message" class="text-center py-5">
+                            <i class="fas fa-filter fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No matching notifications</h5>
+                            <p class="text-muted">Try changing your filter criteria</p>
+                        </div>
+                    `;
+                    $('#notifications-container').append(noResultsHTML);
+                }
+            } else {
+                $('#no-results-message').fadeOut(200, function() {
+                    $(this).remove();
+                });
+            }
+        }
+        
+        function markAsRead(type, id) {
+            $.ajax({
+                url: '{{ route("notifications.mark-read") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    notification_type: type,
+                    notification_id: id
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const $card = $(`#details-${type}_${id}`).closest('.notification-card');
+                        $card.removeClass('unread');
+                        $card.find('.badge.badge-primary').fadeOut(200, function() {
+                            $(this).remove();
+                        });
+                    }
                 }
             });
         }
+
+        // Enhanced toast function
+        window.showToast = function(message, type = 'info', duration = 3000) {
+            const toastContainer = $('#toast-container');
+            if (toastContainer.length === 0) {
+                $('body').append('<div id="toast-container"></div>');
+                toastContainer = $('#toast-container');
+            }
+
+            const toast = $(`
+                <div class="toast ${type}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header">
+                        <i class="fas ${getToastIcon(type)} mr-2"></i>
+                        <strong class="mr-auto">${getToastTitle(type)}</strong>
+                        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `);
+
+            toastContainer.append(toast);
+            toast.toast({ delay: duration }).toast('show');
+
+            toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        };
+
+        function getToastIcon(type) {
+            switch(type) {
+                case 'success':
+                    return 'fa-check-circle';
+                case 'error':
+                    return 'fa-exclamation-circle';
+                case 'warning':
+                    return 'fa-exclamation-triangle';
+                default:
+                    return 'fa-info-circle';
+            }
+        }
+
+        function getToastTitle(type) {
+            switch(type) {
+                case 'success':
+                    return 'Success';
+                case 'error':
+                    return 'Error';
+                case 'warning':
+                    return 'Warning';
+                default:
+                    return 'Information';
+            }
+        }
     });
-    
-    // Initialize filters
-    applyFilters();
-});
 </script>
 @endsection

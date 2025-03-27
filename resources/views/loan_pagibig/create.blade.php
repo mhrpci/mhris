@@ -12,12 +12,12 @@
                 <form action="{{ route('loan_pagibig.store') }}" method="POST">
                     @csrf
                     <div class="form-group">
-                        <label for="employee_id">Employee</label>
-                        <select name="employee_id" id="employee_id" class="form-control" required>
+                        <label for="employee_id">Employee<span class="text-danger">*</span></label>
+                        <select name="employee_id" id="pagibig_employee_id" class="form-control select2-employee" required data-placeholder="Search for an employee...">
                             <option value="" selected disabled>Select Employee</option>
                             @if(!$employees->isEmpty())
                                 @foreach ($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->last_name }} {{ $employee->first_name }}</option>
+                                    <option value="{{ $employee->id }}">{{ $employee->last_name }}, {{ $employee->first_name }}{{ !empty($employee->middle_name) ? ' '.$employee->middle_name : '' }}</option>
                                 @endforeach
                             @else
                                 <option value="" disabled>No eligible employees found</option>
@@ -25,15 +25,15 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="loan_type">Loan Type</label>
-                        <select name="loan_type" id="loan_type" class="form-control" required>
+                        <label for="loan_type">Loan Type<span class="text-danger">*</span></label>
+                        <select name="loan_type" id="loan_type" class="form-control select2-employee" required>
                             @foreach ($loanTypes as $loanType)
                                 <option value="{{ $loanType->value }}">{{ ucfirst($loanType->value) }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="loan_amount">Loan Amount</label>
+                        <label for="loan_amount">Loan Amount<span class="text-danger">*</span></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">₱</span>
@@ -46,7 +46,7 @@
                         <input type="number" name="interest_rate" id="interest_rate" class="form-control" step="0.01">
                     </div> --}}
                     <div class="form-group">
-                        <label for="loan_term_months">Loan Term (months)</label>
+                        <label for="loan_term_months">Loan Term (months)<span class="text-danger">*</span></label>
                         <input type="number" name="loan_term_months" id="loan_term_months" class="form-control" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Create Loan</button>
@@ -56,8 +56,27 @@
     </div>
 </div>
 
+@push('css')
+<style>
+    /* Simple Select2 styling for modal */
+    .select2-container {
+        z-index: 1060;
+    }
+</style>
+@endpush
+
+@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
+    // Initialize select2 for the loan modal
+    $('#loanModal').on('shown.bs.modal', function () {
+        $('.select2-employee').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            dropdownParent: $('#loanModal .modal-content')
+        });
+    });
+    
     const loanTypeSelect = document.getElementById('loan_type');
     const interestRateInput = document.getElementById('interest_rate');
     const loanAmountInput = document.getElementById('loan_amount');
@@ -89,3 +108,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@endpush

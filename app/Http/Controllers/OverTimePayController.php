@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\OvertimePay;
 use App\Models\Attendance;
+use Illuminate\Support\Facades\Auth;
 
 class OverTimePayController extends Controller
 {
@@ -13,10 +14,11 @@ class OverTimePayController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('permission:overtime-list|overtime-create|overtime-edit|overtime-delete', ['only' => ['index','show']]);
+        $this->middleware('permission:overtime-list|overtime-create|overtime-edit|overtime-delete', ['only' => ['index']]);
         $this->middleware('permission:overtime-create', ['only' => ['create','store']]);
         $this->middleware('permission:overtime-edit', ['only' => ['edit','update']]);
         $this->middleware('permission:overtime-delete', ['only' => ['destroy']]);
+        $this->middleware('role_or_permission:Employee|overtime-list|overtime-create|overtime-edit|overtime-delete', ['only' => ['show']]);
     }
     /**
      * Display a listing of the resource.
@@ -116,6 +118,35 @@ public function store(Request $request)
     //     $overtime->update($request->all());
     //     return redirect()->route('overtime.index');
     // }
+
+    /**
+     * Approve the overtime pay
+     */
+    public function approve(OvertimePay $overtime)
+    {
+        if($overtime->approval_status !== 'pending') {
+            return redirect()->back()->with('error', 'This overtime record has already been processed.');
+        }
+
+        $overtime->approve(Auth::id());
+        
+        return redirect()->route('overtime.index')->with('success', 'Overtime approved successfully.');
+    }
+
+    /**
+     * Reject the overtime pay
+     */
+    public function reject(Request $request, OvertimePay $overtime)
+    {
+        if($overtime->approval_status !== 'pending') {
+            return redirect()->back()->with('error', 'This overtime record has already been processed.');
+        }
+
+        $overtime->rejection_reason = $request->rejection_reason;
+        $overtime->reject(Auth::id());
+        
+        return redirect()->route('overtime.index')->with('success', 'Overtime rejected successfully.');
+    }
 
     /**
      * Remove the specified resource from storage.

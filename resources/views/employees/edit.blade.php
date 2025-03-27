@@ -611,8 +611,9 @@
 
                     <div class="row mt-4">
                         <div class="col-12 text-left">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save mr-2"></i>Update Employee
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                <span class="btn-text">Update Employee</span>
                             </button>
                             <a href="{{ route('employees.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left mr-2"></i>Cancel
@@ -913,6 +914,18 @@ input:not([type="file"]) {
                 })
                 .appendTo('form');
         }
+
+        // Form submission handler
+        $('form').on('submit', function() {
+            const submitBtn = $('#submitBtn');
+            const spinner = submitBtn.find('.spinner-border');
+            const btnText = submitBtn.find('.btn-text');
+            
+            // Disable the button and show spinner
+            submitBtn.prop('disabled', true);
+            spinner.removeClass('d-none');
+            btnText.text('Updating...');
+        });
     });
 </script>
 @stop

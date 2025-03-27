@@ -59,6 +59,9 @@
             <button type="button" class="btn btn-info btn-sm rounded-pill" data-toggle="modal" data-target="#createAllModal">
                 Create for All Active ({{ $activeEmployeesCount }}) <i class="fas fa-users"></i>
             </button>
+            <button type="button" class="btn btn-warning btn-sm rounded-pill mr-2" data-toggle="modal" data-target="#notifyModal">
+                <i class="fas fa-bell"></i> Notify Employees
+            </button>
         </div>
     </div>
     <div class="card-body">
@@ -128,6 +131,39 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Create Contributions</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Notify Modal -->
+<div class="modal fade" id="notifyModal" tabindex="-1" role="dialog" aria-labelledby="notifyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notifyModalLabel">Send Pag-IBIG Contribution Notifications</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('pagibig.notify') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="notification_date">Select Month and Year</label>
+                        <input type="month" class="form-control" id="notification_date" name="notification_date" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-warning" id="notify-submit-btn">
+                        <span class="normal-state">Send Notifications</span>
+                        <span class="loading-state d-none">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Processing...
+                        </span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -269,6 +305,26 @@
             });
         });
 
+        // Handle notify form submission with loading state
+        $('#notifyModal form').on('submit', function(e) {
+            // Get the submit button
+            const submitBtn = $('#notify-submit-btn');
+            
+            // Disable the button and show loading state
+            submitBtn.prop('disabled', true)
+                    .addClass('is-loading');
+        });
+        
+        // Add this to ensure the modal works correctly for the notify modal
+        $('#notifyModal').on('shown.bs.modal', function () {
+            $('#notification_date').trigger('focus');
+        });
+        
+        // Reset button state if modal is closed
+        $('#notifyModal').on('hidden.bs.modal', function () {
+            $('#notify-submit-btn').prop('disabled', false).removeClass('is-loading');
+        });
+
         var table = $('#pagibig-table').DataTable({
             "pageLength": 10,
             "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
@@ -372,6 +428,20 @@
     }
     .colored-toast.swal2-icon-error {
         box-shadow: 0 0 12px rgba(220, 53, 69, 0.4) !important;
+    }
+    /* Spinner button styles */
+    .btn .loading-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn.is-loading .normal-state {
+        display: none;
+    }
+    
+    .btn.is-loading .loading-state {
+        display: inline-flex !important;
     }
 </style>
 @endsection

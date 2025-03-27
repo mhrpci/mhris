@@ -172,7 +172,7 @@
     </div>
 </div>
 
-@push('styles')
+@section('styles')
 <style>
     .table td {
         vertical-align: middle;
@@ -266,9 +266,9 @@
         margin: 1rem 0;
     }
 </style>
-@endpush
+@endsection
 
-@push('scripts')
+@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
@@ -462,5 +462,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endpush
-@endsection 
+@endsection
+@endsection

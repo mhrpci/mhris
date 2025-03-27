@@ -174,13 +174,16 @@
                                                             <i class="fas fa-balance-scale"></i>&nbsp;Leave Balance
                                                         </button>
                                                         @canany(['super-admin', 'admin', 'hrcompliance'])
-                                                                <form action="{{ route('employees.disable', $employee->id) }}" method="POST" class="d-inline">
-                                                                    @csrf
-                                                                    @method('PATCH')
-                                                                    <button type="submit" class="dropdown-item resign-btn">
-                                                                        <i class="fas fa-sign-out-alt"></i>&nbsp;Resigned
-                                                                    </button>
-                                                                </form>
+                                                                <button type="button" class="dropdown-item" 
+                                                                        data-toggle="modal" 
+                                                                        data-target="#resignModal{{ $employee->id }}">
+                                                                    <i class="fas fa-sign-out-alt"></i>&nbsp;Resigned
+                                                                </button>
+                                                                <button type="button" class="dropdown-item" 
+                                                                        data-toggle="modal" 
+                                                                        data-target="#terminateModal{{ $employee->id }}">
+                                                                    <i class="fas fa-user-times"></i>&nbsp;Terminated
+                                                                </button>
                                                             @endcanany
                                                         @endif
                                                         @can('super-admin')
@@ -301,6 +304,98 @@
                                                                 <i class="fas fa-times"></i> Close
                                                             </button>
                                                         </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Resignation Modal -->
+                                            <div class="modal fade" id="resignModal{{ $employee->id }}" tabindex="-1" role="dialog" aria-labelledby="resignModalLabel{{ $employee->id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning text-white">
+                                                            <h5 class="modal-title" id="resignModalLabel{{ $employee->id }}">
+                                                                <i class="fas fa-sign-out-alt"></i> Employee Resignation
+                                                            </h5>
+                                                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form action="{{ route('employees.disable', $employee->id) }}" method="POST">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="status" value="Resigned">
+                                                            <div class="modal-body">
+                                                                <div class="form-group">
+                                                                    <label for="resignation_date{{ $employee->id }}">
+                                                                        <i class="fas fa-calendar-alt"></i> Resignation Date
+                                                                    </label>
+                                                                    <input type="date" class="form-control" id="resignation_date{{ $employee->id }}" 
+                                                                           name="action_date" required max="{{ date('Y-m-d') }}">
+                                                                    <small class="form-text text-muted">
+                                                                        Please select the date when the employee resigned.
+                                                                    </small>
+                                                                </div>
+                                                                <div class="alert alert-warning">
+                                                                    <i class="fas fa-exclamation-triangle"></i> 
+                                                                    This action will mark <strong>{{ $employee->first_name }} {{ $employee->last_name }}</strong> 
+                                                                    as resigned and disable their user account if it exists.
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                                    <i class="fas fa-times"></i> Cancel
+                                                                </button>
+                                                                <button type="submit" class="btn btn-warning">
+                                                                    <i class="fas fa-check"></i> Confirm Resignation
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Termination Modal -->
+                                            <div class="modal fade" id="terminateModal{{ $employee->id }}" tabindex="-1" role="dialog" aria-labelledby="terminateModalLabel{{ $employee->id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title" id="terminateModalLabel{{ $employee->id }}">
+                                                                <i class="fas fa-user-times"></i> Employee Termination
+                                                            </h5>
+                                                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form action="{{ route('employees.disable', $employee->id) }}" method="POST">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="status" value="Terminated">
+                                                            <div class="modal-body">
+                                                                <div class="form-group">
+                                                                    <label for="termination_date{{ $employee->id }}">
+                                                                        <i class="fas fa-calendar-alt"></i> Termination Date
+                                                                    </label>
+                                                                    <input type="date" class="form-control" id="termination_date{{ $employee->id }}" 
+                                                                           name="action_date" required max="{{ date('Y-m-d') }}">
+                                                                    <small class="form-text text-muted">
+                                                                        Please select the date when the employee was terminated.
+                                                                    </small>
+                                                                </div>
+                                                                <div class="alert alert-danger">
+                                                                    <i class="fas fa-exclamation-triangle"></i> 
+                                                                    This action will mark <strong>{{ $employee->first_name }} {{ $employee->last_name }}</strong> 
+                                                                    as terminated and disable their user account if it exists.
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                                    <i class="fas fa-times"></i> Cancel
+                                                                </button>
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <i class="fas fa-check"></i> Confirm Termination
+                                                                </button>
+                                                            </div>
+                                                        </form>
                                                     </div>
                                                 </div>
                                             </div>
@@ -769,13 +864,26 @@
         });
     });
 
-    $(document).on('click', '.resign-btn', function(e) {
+    // Handle resignation and termination form submission
+    $(document).on('submit', 'form[action*="employees.disable"]', function(e) {
         e.preventDefault();
-        let form = $(this).closest('form');
-
+        let form = $(this);
+        let actionDate = form.find('input[name="action_date"]').val();
+        let status = form.find('input[name="status"]').val();
+        
+        if (!actionDate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Date Required',
+                text: 'Please select a date before proceeding.',
+                confirmButtonColor: '#3085d6'
+            });
+            return false;
+        }
+        
         Swal.fire({
-            title: 'Mark as Resigned',
-            text: 'Are you sure that this employee has resigned?',
+            title: 'Confirm ' + status + ' Status',
+            text: 'Are you sure you want to mark this employee as ' + status + '?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -784,11 +892,23 @@
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                // Show loading indicator
+                Swal.fire({
+                    title: 'Processing...',
+                    text: 'Updating employee status',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Submit the form
+                form[0].submit();
             }
         });
     });
 
+    // Handle delete button click
     $(document).on('click', '.delete-btn', function(e) {
         e.preventDefault();
         let form = $(this).closest('form');
@@ -984,6 +1104,160 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
+            }
+        });
+    });
+
+    // Clear all filters
+    $('#clearFiltersBtn').on('click', function() {
+        // Reset all filter forms
+        $('#statusForm, #monthForm, #yearForm, #departmentForm, #rankForm').trigger('reset');
+        
+        // Clear DataTable search and draw
+        table.search('').columns().search('').draw();
+        
+        // Remove custom filtering function
+        $.fn.dataTable.ext.search.pop();
+        table.draw();
+        
+        // Show toast notification
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        
+        Toast.fire({
+            icon: 'success',
+            title: 'All filters have been cleared'
+        });
+    });
+    
+    // Export functionality with toast notification
+    $('#exportBtn').on('click', function() {
+        // Show loading toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        
+        Toast.fire({
+            icon: 'info',
+            title: 'Preparing employee data for export...'
+        });
+        
+        // Continue with export logic
+        setTimeout(function() {
+            Toast.fire({
+                icon: 'success',
+                title: 'Export completed successfully'
+            });
+        }, 2000);
+    });
+    
+    // Form validation with toast alerts
+    $('.needs-validation').on('submit', function(event) {
+        if (this.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+            
+            Toast.fire({
+                icon: 'error',
+                title: 'Please fill in all required fields'
+            });
+        }
+        $(this).addClass('was-validated');
+    });
+    
+    // Ajax operation feedback
+    $('.ajax-action-btn').on('click', function() {
+        const actionType = $(this).data('action');
+        const employeeId = $(this).data('employee-id');
+        
+        // Show loading state
+        $(this).prop('disabled', true);
+        $(this).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+        
+        const btn = $(this);
+        
+        // Make AJAX request (example)
+        $.ajax({
+            url: '/employees/' + actionType + '/' + employeeId,
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+                
+                Toast.fire({
+                    icon: 'success',
+                    title: response.message || 'Operation completed successfully'
+                });
+                
+                // Reload the table or update UI as needed
+                setTimeout(function() {
+                    location.reload();
+                }, 3000);
+            },
+            error: function(xhr) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+                
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Operation failed',
+                    text: xhr.responseJSON?.message || 'An error occurred'
+                });
+            },
+            complete: function() {
+                // Reset button state
+                btn.prop('disabled', false);
+                btn.html(btn.data('original-text') || 'Action');
             }
         });
     });

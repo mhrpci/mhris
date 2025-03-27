@@ -50,10 +50,14 @@ class Employee extends Model
         'signature',
         'profile_updated_at',
         'rank',
+        'resigned_date',
+        'terminated_date',
     ];
 
     protected $dates = [
         'profile_updated_at',
+        'resigned_date',
+        'terminated_date',
     ];
 
     public function saveEmploymentStatus()

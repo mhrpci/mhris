@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Events\NewNotification;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Spatie\Permission\Models\Role;
+use App\Models\OvertimePay;
+use App\Models\User;
 
 class NotificationsController extends Controller
 {
@@ -20,6 +23,9 @@ class NotificationsController extends Controller
         'leave_rejected' => [],
         'cash_advance_active' => [],
         'cash_advance_declined' => [],
+        'overtime_pay_pending' => [],
+        'overtime_pay_approved' => [],
+        'overtime_pay_rejected' => [],
     ];
 
     // Method to fetch notifications data
@@ -60,6 +66,19 @@ class NotificationsController extends Controller
                             'approved_by' => $details['approved_by'] ?? null,
                             'approved_at' => $details['approved_at'] ?? null
                         ];
+                    } elseif (strpos($type, 'overtime') !== false) {
+                        $formattedDetails = [
+                            'type' => 'overtime',
+                            'employee_name' => $details['employee_name'] ?? '',
+                            'date' => $details['date'] ?? '',
+                            'overtime_hours' => $details['overtime_hours'] ?? 0,
+                            'overtime_rate' => $details['overtime_rate'] ?? 0,
+                            'overtime_pay' => $details['overtime_pay'] ?? 0,
+                            'status' => ucfirst($details['status'] ?? 'pending'),
+                            'approved_by' => $details['approved_by'] ?? null,
+                            'approved_at' => $details['approved_at'] ?? null,
+                            'department' => $details['department'] ?? ''
+                        ];
                     }
 
                     return [
@@ -97,12 +116,16 @@ class NotificationsController extends Controller
         $this->generateLeaveRejectedNotification();
         $this->generateCashAdvanceActiveNotification();
         $this->generateCashAdvanceDeclinedNotification();
+        $this->generateOvertimePayPendingNotification();
+        $this->generateOvertimePayApprovedNotification();
+        $this->generateOvertimePayRejectedNotification();
     }
 
     private function generateLeaveRequestNotifications()
     {
         $user = Auth::user();
-        if ($user && $user->hasAnyRole(['Super Admin', 'Admin'])) {
+        // Check if user has Super Admin or Admin role
+        if ($user && ($user->hasRole('Super Admin') || $user->hasRole('Admin'))) {
             $leaves = Leave::with('employee')
                 ->where('status', 'pending')
                 ->where('is_read', false)
@@ -122,7 +145,8 @@ class NotificationsController extends Controller
                         'employee_name' => $leave->employee->first_name . ' ' . $leave->employee->last_name,
                         'start_date' => $leave->start_date,
                         'end_date' => $leave->end_date,
-                        'reason' => $leave->reason
+                        'reason' => $leave->reason,
+                        'status' => 'pending'
                     ]
                 ];
             }
@@ -151,7 +175,8 @@ class NotificationsController extends Controller
                         'employee_name' => $leave->employee->first_name . ' ' . $leave->employee->last_name,
                         'start_date' => $leave->start_date,
                         'end_date' => $leave->end_date,
-                        'reason' => $leave->reason
+                        'reason' => $leave->reason,
+                        'status' => 'pending'
                     ]
                 ];
             }
@@ -161,7 +186,7 @@ class NotificationsController extends Controller
     private function generateCashAdvanceRequestNotifications()
     {
         $user = Auth::user();
-        if ($user && $user->hasAnyRole(['Super Admin', 'Admin'])) {
+        if ($user && ($user->hasRole('Super Admin') || $user->hasRole('Admin'))) {
             $advances = CashAdvance::with('employee')
                 ->where('status', 'pending')
                 ->where('is_read', false)
@@ -180,7 +205,11 @@ class NotificationsController extends Controller
                         'type' => 'cash_advance',
                         'employee_name' => $advance->employee->first_name . ' ' . $advance->employee->last_name,
                         'amount' => $advance->amount,
-                        'reason' => $advance->reason
+                        'reason' => $advance->reason,
+                        'department' => $advance->employee->department->name ?? 'N/A',
+                        'date_requested' => $advance->created_at->format('M d, Y'),
+                        'reference_number' => $advance->reference_number ?? 'N/A',
+                        'status' => 'pending'
                     ]
                 ];
             }
@@ -191,7 +220,7 @@ class NotificationsController extends Controller
     private function generateLeaveApprovedNotification()
     {
         $user = Auth::user();
-        if ($user && $user->hasAnyRole(['HR ComBen', 'Admin', 'Super Admin'])) {
+        if ($user && ($user->hasRole('HR ComBen') || $user->hasRole('Admin') || $user->hasRole('Super Admin'))) {
             $leaves = Leave::with(['employee', 'approvedByUser'])
                 ->where('status', 'approved')
                 ->where('validated_by_signature', null)
@@ -296,7 +325,8 @@ class NotificationsController extends Controller
                         'duration' => $leave->diffdays . ' day(s) ' . $leave->diffhours['hours'] . ' hour(s)',
                         'payment_status' => $leave->payment_status,
                         'department' => $leave->employee->department->name,
-                        'reason' => $leave->reason
+                        'reason' => $leave->reason,
+                        'status' => 'rejected'
                     ]
                 ];
             }
@@ -318,6 +348,24 @@ class NotificationsController extends Controller
 
             foreach ($advances as $advance) {
                 if (isset($advance->approvedByUser)) {
+                    // Calculate payment information
+                    $totalPaid = $advance->payments->sum('amount') ?? 0;
+                    $remainingBalance = $advance->amount - $totalPaid;
+                    
+                    // Use the remainingBalance method if it exists, otherwise calculate manually
+                    if (method_exists($advance, 'remainingBalance')) {
+                        try {
+                            $remainingBalance = $advance->remainingBalance();
+                        } catch (\Exception $e) {
+                            Log::error('Error calculating remaining balance: ' . $e->getMessage());
+                        }
+                    }
+                    
+                    $paymentsCount = $advance->payments->count();
+                    $lastPaymentDate = $paymentsCount > 0 ? 
+                        Carbon::parse($advance->payments->sortByDesc('payment_date')->first()->payment_date)->format('M d, Y') : 
+                        'No payments yet';
+
                     $this->notifications['cash_advance_active'][] = [
                         'id' => 'cash_advance_active_' . $advance->id,
                         'icon' => 'fas fa-check-circle',
@@ -331,7 +379,16 @@ class NotificationsController extends Controller
                             'amount' => $advance->amount,
                             'approved_by' => $advance->approvedByUser->name,
                             'approved_at' => $advance->updated_at->format('M d, Y h:i A'),
-                            'reason' => $advance->reason
+                            'reason' => $advance->reason,
+                            'department' => $advance->employee->department->name ?? 'N/A',
+                            'reference_number' => $advance->reference_number ?? 'N/A',
+                            'status' => 'active',
+                            'total_paid' => $totalPaid,
+                            'remaining_balance' => $remainingBalance,
+                            'payments_count' => $paymentsCount,
+                            'last_payment_date' => $lastPaymentDate,
+                            'repayment_term' => $advance->repayment_term ?? 'N/A',
+                            'monthly_amortization' => $advance->monthly_amortization ?? 0
                         ]
                     ];
                 }
@@ -367,7 +424,12 @@ class NotificationsController extends Controller
                             'amount' => $advance->amount,
                             'rejected_by' => $advance->rejectedByUser->name,
                             'rejected_at' => $advance->updated_at->format('M d, Y h:i A'),
-                            'reason' => $advance->reason
+                            'reason' => $advance->reason,
+                            'rejection_reason' => $advance->rejection_reason ?? 'No reason provided',
+                            'department' => $advance->employee->department->name ?? 'N/A',
+                            'reference_number' => $advance->reference_number ?? 'N/A',
+                            'status' => 'declined',
+                            'date_requested' => $advance->created_at->format('M d, Y')
                         ]
                     ];
                 }
@@ -425,6 +487,10 @@ class NotificationsController extends Controller
             if (in_array($notification['data']['type'], ['cash_advance', 'cash_advance_approved', 'cash_advance_declined'])) {
                 return url("/cash_advances/{$notification['data']['id']}");
             }
+
+            if (in_array($notification['data']['type'], ['overtime_pending', 'overtime_approved', 'overtime_rejected'])) {
+                return url("/overtime");
+            }
         }
         
         return '#';
@@ -437,6 +503,9 @@ class NotificationsController extends Controller
         }
         if (strpos($notification['text'], 'requested cash advance') !== false) {
             return 'cash-advance';
+        }
+        if (strpos($notification['text'], 'requested overtime pay') !== false) {
+            return 'overtime';
         }
         return 'default';
     }
@@ -460,6 +529,15 @@ class NotificationsController extends Controller
         }
         if (strpos($notification['text'], 'cash advance request has been rejected') !== false) {
             return 'Cash Advance Rejected';
+        }
+        if (strpos($notification['text'], 'requested overtime pay') !== false) {
+            return 'Overtime Pay Request';
+        }
+        if (strpos($notification['text'], 'overtime pay request has been approved') !== false) {
+            return 'Overtime Pay Approved';
+        }
+        if (strpos($notification['text'], 'overtime pay request has been rejected') !== false) {
+            return 'Overtime Pay Rejected';
         }
         return 'Notification';
     }
@@ -528,6 +606,18 @@ class NotificationsController extends Controller
                     }
                     $advance->save();
                 }
+            } elseif (strpos($notificationType, 'overtime') !== false) {
+                $overtime = OvertimePay::find($id);
+                if ($overtime) {
+                    $overtime->is_read = true;
+                    $overtime->read_at = now();
+                    if (strpos($notificationType, 'approved') !== false || 
+                        strpos($notificationType, 'rejected') !== false) {
+                        $overtime->is_view = true;
+                        $overtime->view_at = now();
+                    }
+                    $overtime->save();
+                }
             }
             
             return response()->json(['success' => true]);
@@ -586,42 +676,61 @@ class NotificationsController extends Controller
                 
             $advancesQuery = CashAdvance::with(['employee', 'employee.department', 'payments'])
                 ->where('created_at', '>=', $sevenDaysAgo);
+                
+            $overtimeQuery = OvertimePay::with(['employee', 'employee.department', 'approver'])
+                ->where('created_at', '>=', $sevenDaysAgo);
 
             // Apply role-based restrictions
-            if ($user && $user->hasAnyRole(['Super Admin', 'Admin'])) {
-                // Super Admin and Admin can see all leave notifications and cash advances
+            if ($user && ($user->hasRole('Super Admin') || $user->hasRole('Admin'))) {
+                // Super Admin and Admin can see all notifications
                 // No additional restrictions needed
             } elseif ($user && $user->hasRole('Supervisor')) {
-                // Supervisors can only see leave notifications from their department
+                // Supervisors can only see notifications from their department
                 $supervisorDepartmentId = $user->department_id;
                 
                 $leavesQuery->whereHas('employee', function($query) use ($supervisorDepartmentId) {
                     $query->where('department_id', $supervisorDepartmentId);
                 });
                 
-                // Set advances query to return no results for supervisors
+                // Set other queries to return no results for supervisors
                 $advancesQuery->where('id', 0);
+                $overtimeQuery->where('id', 0);
             } elseif ($user && $user->hasRole('HR ComBen')) {
-                // HR ComBen can only see approved leaves that need validation
+                // HR ComBen can see approved leaves that need validation and pending overtime requests
                 $leavesQuery->where('status', 'approved')
                            ->whereNull('validated_by_signature');
                 
+                $overtimeQuery->where('approval_status', 'pending');
+                
                 // HR ComBen cannot see cash advances
                 $advancesQuery->where('id', 0);
+            } elseif ($user && $user->hasRole('Finance')) {
+                // Finance can see pending overtime requests
+                $overtimeQuery->where('approval_status', 'pending');
+                
+                // Finance cannot see leaves or cash advances
+                $leavesQuery->where('id', 0);
+                $advancesQuery->where('id', 0);
             } elseif ($user && $user->hasRole('Employee')) {
-                // Regular employees can only see their own validated leave notifications
+                // Regular employees can only see their own notifications
                 $leavesQuery->where('status', 'approved')
                            ->whereNotNull('validated_by_signature')
                            ->whereHas('employee', function($query) use ($user) {
                                $query->where('email_address', $user->email);
                            });
                 
-                // Employees cannot see cash advances
+                $overtimeQuery->whereIn('approval_status', ['approved', 'rejected'])
+                           ->whereHas('employee', function($query) use ($user) {
+                               $query->where('email_address', $user->email);
+                           });
+                
+                // Employees cannot see cash advances in this view
                 $advancesQuery->where('id', 0);
             } else {
                 // Any other role sees nothing
                 $leavesQuery->where('id', 0);
                 $advancesQuery->where('id', 0);
+                $overtimeQuery->where('id', 0);
             }
 
             // Execute queries with ordering
@@ -697,9 +806,59 @@ class NotificationsController extends Controller
                         ]
                     ];
                 });
+                
+            $overtimes = $overtimeQuery->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($overtime) {
+                    $createdAt = $overtime->created_at ? Carbon::parse($overtime->created_at) : now();
+                    $updatedAt = $overtime->updated_at ? Carbon::parse($overtime->updated_at) : now();
+                    $overtimeDate = $overtime->date ? Carbon::parse($overtime->date) : null;
+                    
+                    $status = $overtime->approval_status ?? 'pending';
+                    $statusClass = $status === 'approved' ? 'text-success' : 
+                                   ($status === 'rejected' ? 'text-danger' : 'text-warning');
+                                   
+                    $title = $status === 'pending' ? 'Overtime Pay Request' : 
+                             ($status === 'approved' ? 'Overtime Pay Approved' : 'Overtime Pay Rejected');
+                             
+                    $text = $status === 'pending' ? 
+                        "{$overtime->employee->first_name} {$overtime->employee->last_name} requested overtime pay" : 
+                        ($status === 'approved' ? 
+                            "Overtime pay for {$overtime->employee->first_name} {$overtime->employee->last_name} has been approved" : 
+                            "Overtime pay for {$overtime->employee->first_name} {$overtime->employee->last_name} has been rejected");
+
+                    return [
+                        'id' => 'overtime_' . $overtime->id,
+                        'type' => 'overtime',
+                        'icon' => $status === 'approved' ? 'fas fa-check-circle' : 
+                                 ($status === 'rejected' ? 'fas fa-times-circle' : 'fas fa-clock'),
+                        'title' => $title,
+                        'text' => $text,
+                        'time' => $createdAt,
+                        'time_human' => $createdAt->diffForHumans(),
+                        'timestamp' => $createdAt->timestamp,
+                        'status' => $status,
+                        'status_class' => $statusClass,
+                        'is_read' => $overtime->is_read ?? false,
+                        'details' => [
+                            'Employee' => $overtime->employee->first_name . ' ' . $overtime->employee->last_name,
+                            'Department' => $overtime->employee->department->name ?? 'N/A',
+                            'Overtime Date' => $overtimeDate ? $overtimeDate->format('M d, Y') : 'N/A',
+                            'Overtime Hours' => $overtime->overtime_hours . ' hour(s)',
+                            'Overtime Rate' => $overtime->overtime_rate . 'x',
+                            'Overtime Pay' => '₱ ' . number_format($overtime->overtime_pay, 2),
+                            'Status' => ucfirst($status),
+                            'Applied On' => $createdAt->format('M d, Y h:i A'),
+                            'Approved/Rejected By' => $overtime->approver ? $overtime->approver->name : 'Not yet reviewed',
+                            'Approved/Rejected At' => $overtime->approved_at ? Carbon::parse($overtime->approved_at)->format('M d, Y h:i A') : 'Pending',
+                            'Reference Number' => $overtime->id ?? 'N/A',
+                            'Rejection Reason' => $status === 'rejected' ? ($overtime->rejection_reason ?? 'No reason provided') : 'N/A'
+                        ]
+                    ];
+                });
 
             // Merge and sort notifications
-            $allNotifications = $leaves->concat($advances)
+            $allNotifications = $leaves->concat($advances)->concat($overtimes)
                 ->filter(function ($notification) {
                     return !is_null($notification['time']);
                 })
@@ -721,11 +880,137 @@ class NotificationsController extends Controller
         try {
             Leave::where('is_read', false)->update(['is_read' => true]);
             CashAdvance::where('is_read', false)->update(['is_read' => true]);
+            OvertimePay::where('is_read', false)->update([
+                'is_read' => true,
+                'read_at' => now()
+            ]);
 
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             Log::error('Error marking all notifications as read: ' . $e->getMessage());
             return response()->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Generate notifications for pending overtime pay requests
+     * Visible to users with Finance and HR ComBen roles
+     */
+    private function generateOvertimePayPendingNotification()
+    {
+        $user = Auth::user();
+        if ($user && ($user->hasRole('Finance') || $user->hasRole('HR ComBen') || $user->hasRole('Super Admin'))) {
+            $overtimePays = OvertimePay::with('employee')
+                ->where('approval_status', 'pending')
+                ->where('is_read', false)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            foreach ($overtimePays as $overtime) {
+                $this->notifications['overtime_pay_pending'][] = [
+                    'id' => 'overtime_pending_' . $overtime->id,
+                    'icon' => 'fas fa-clock',
+                    'text' => "{$overtime->employee->first_name} {$overtime->employee->last_name} requested overtime pay",
+                    'time' => $overtime->created_at->diffForHumans(),
+                    'timestamp' => $overtime->created_at->timestamp,
+                    'data' => [
+                        'id' => $overtime->id,
+                        'type' => 'overtime_pending',
+                        'employee_name' => $overtime->employee->first_name . ' ' . $overtime->employee->last_name,
+                        'date' => $overtime->date->format('Y-m-d'),
+                        'overtime_hours' => $overtime->overtime_hours,
+                        'overtime_rate' => $overtime->overtime_rate,
+                        'overtime_pay' => $overtime->overtime_pay,
+                        'status' => 'pending',
+                        'department' => $overtime->employee->department->name ?? 'N/A'
+                    ]
+                ];
+            }
+        }
+    }
+
+    /**
+     * Generate notifications for approved overtime pay
+     * Visible to Employees who requested the overtime
+     */
+    private function generateOvertimePayApprovedNotification()
+    {
+        $user = Auth::user();
+        if ($user && $user->hasRole('Employee')) {
+            $overtimePays = OvertimePay::with(['employee', 'approver'])
+                ->where('approval_status', 'approved')
+                ->where('is_view', false)
+                ->whereHas('employee', function($query) use ($user) {
+                    $query->where('email_address', $user->email);
+                })
+                ->orderBy('updated_at', 'desc')
+                ->get();
+
+            foreach ($overtimePays as $overtime) {
+                $this->notifications['overtime_pay_approved'][] = [
+                    'id' => 'overtime_approved_' . $overtime->id,
+                    'icon' => 'fas fa-check-circle',
+                    'text' => "Your overtime pay request has been approved",
+                    'time' => $overtime->updated_at->diffForHumans(),
+                    'timestamp' => $overtime->updated_at->timestamp,
+                    'data' => [
+                        'id' => $overtime->id,
+                        'type' => 'overtime_approved',
+                        'employee_name' => $overtime->employee->first_name . ' ' . $overtime->employee->last_name,
+                        'date' => $overtime->date->format('Y-m-d'),
+                        'overtime_hours' => $overtime->overtime_hours,
+                        'overtime_rate' => $overtime->overtime_rate,
+                        'overtime_pay' => $overtime->overtime_pay,
+                        'approved_by' => $overtime->approver->name ?? 'System',
+                        'approved_at' => $overtime->approved_at->format('M d, Y h:i A'),
+                        'status' => 'approved',
+                        'department' => $overtime->employee->department->name ?? 'N/A'
+                    ]
+                ];
+            }
+        }
+    }
+
+    /**
+     * Generate notifications for rejected overtime pay
+     * Visible to Employees who requested the overtime
+     */
+    private function generateOvertimePayRejectedNotification()
+    {
+        $user = Auth::user();
+        if ($user && $user->hasRole('Employee')) {
+            $overtimePays = OvertimePay::with(['employee', 'approver'])
+                ->where('approval_status', 'rejected')
+                ->where('is_view', false)
+                ->whereHas('employee', function($query) use ($user) {
+                    $query->where('email_address', $user->email);
+                })
+                ->orderBy('updated_at', 'desc')
+                ->get();
+
+            foreach ($overtimePays as $overtime) {
+                $this->notifications['overtime_pay_rejected'][] = [
+                    'id' => 'overtime_rejected_' . $overtime->id,
+                    'icon' => 'fas fa-times-circle',
+                    'text' => "Your overtime pay request has been rejected",
+                    'time' => $overtime->updated_at->diffForHumans(),
+                    'timestamp' => $overtime->updated_at->timestamp,
+                    'data' => [
+                        'id' => $overtime->id,
+                        'type' => 'overtime_rejected',
+                        'employee_name' => $overtime->employee->first_name . ' ' . $overtime->employee->last_name,
+                        'date' => $overtime->date->format('Y-m-d'),
+                        'overtime_hours' => $overtime->overtime_hours,
+                        'overtime_rate' => $overtime->overtime_rate,
+                        'overtime_pay' => $overtime->overtime_pay,
+                        'rejected_by' => $overtime->approver->name ?? 'System',
+                        'rejected_at' => $overtime->approved_at->format('M d, Y h:i A'),
+                        'status' => 'rejected',
+                        'department' => $overtime->employee->department->name ?? 'N/A',
+                        'rejection_reason' => $overtime->rejection_reason ?? 'No reason provided'
+                    ]
+                ];
+            }
         }
     }
 }

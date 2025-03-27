@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('content')
+@section('styles')
 <style>
     .welcome-container {
         display: flex;
@@ -2837,2841 +2837,6 @@
 
     /* Add System Updates Modal Styles */
     .system-update-modal .modal-content {
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-
-    .system-update-modal .modal-header {
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-        color: white;
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-        padding: 1.5rem;
-        border-bottom: none;
-    }
-
-    .system-update-modal .modal-title {
-        font-weight: 600;
-        font-size: 1.35rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .system-update-modal .modal-title i {
-        font-size: 1.5rem;
-        animation: spin 20s linear infinite;
-    }
-
-    .system-update-modal .modal-body {
-        padding: 2rem;
-        max-height: 70vh;
-        overflow-y: auto;
-    }
-
-    .system-update-modal .update-item {
-        border-left: 4px solid #2563eb;
-        margin-bottom: 1.5rem;
-        padding: 1.25rem;
-        background-color: #f8fafc;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        animation: slideIn 0.5s ease-out;
-    }
-
-    .system-update-modal .update-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .system-update-modal .update-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        background-color: #fff;
-    }
-
-    .system-update-modal .update-title {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.75rem;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .system-update-modal .update-title::before {
-        content: '';
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background-color: #2563eb;
-        border-radius: 50%;
-    }
-
-    .system-update-modal .update-description {
-        color: #475569;
-        font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-        padding-left: 1rem;
-        border-left: 2px solid #e2e8f0;
-    }
-
-    .system-update-modal .update-date {
-        font-size: 0.85rem;
-        color: #64748b;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    .system-update-modal .update-date i {
-        color: #2563eb;
-    }
-
-    .system-update-modal .modal-footer {
-        border-top: 1px solid #e2e8f0;
-        padding: 1.25rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .system-update-badge {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .system-update-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    }
-
-    .system-update-badge[data-badge]:after {
-        content: attr(data-badge);
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        background: #ef4444;
-        color: white;
-        width: 20px;
-        height: 20px;
-        text-align: center;
-        line-height: 20px;
-        border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        animation: pulse 2s infinite;
-    }
-
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .custom-control-label {
-        color: #475569;
-        font-size: 0.9rem;
-    }
-
-    .confirmation-message {
-        font-size: 0.875rem;
-        color: #059669;
-        margin-top: 0.5rem;
-        display: none;
-    }
-
-    /* Animations */
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        }
-        50% {
-            transform: scale(1.1);
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
-        }
-        100% {
-            transform: scale(1);
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        }
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .system-update-modal .modal-body {
-            padding: 1.25rem;
-        }
-        
-        .system-update-modal .update-item {
-            padding: 1rem;
-        }
-
-        .system-update-modal .update-title {
-            font-size: 1rem;
-        }
-
-        .system-update-modal .update-description {
-            font-size: 0.9rem;
-        }
-    }
-
-    /* Add these styles for balloon canvas positioning */
-    #balloon-canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1040; /* Just below modal backdrop (1050) */
-        pointer-events: none; /* Initially no pointer events */
-    }
-
-    /* Adjust modal styles to work with balloon backdrop */
-    #birthdayModal .modal-dialog {
-        position: relative;
-        z-index: 1060; /* Above the balloon canvas */
-    }
-
-    #birthdayModal .modal-content {
-        background: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
-        backdrop-filter: blur(5px); /* Blur effect for background */
-    }
-
-    /* Dark mode adjustment */
-    @media (prefers-color-scheme: dark) {
-        #birthdayModal .modal-content {
-            background: rgba(45, 55, 72, 0.95);
-        }
-    }
-
-    /* Add these styles */
-    .celebrant-profile-card {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 15px;
-        padding: 2rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
-
-    .celebrant-avatar-large {
-        width: 150px;
-        height: 150px;
-        margin: 0 auto;
-        position: relative;
-    }
-
-    .celebrant-avatar-large img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border: 4px solid #fff;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .default-avatar {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 4rem;
-        color: white;
-    }
-
-    .celebrant-details {
-        padding: 1rem;
-    }
-
-    .celebrant-name {
-        font-size: 1.8rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .info-grid {
-        display: grid;
-        gap: 1rem;
-    }
-
-    .info-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 1rem;
-    }
-
-    .info-item i {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
-        color: white;
-        border-radius: 50%;
-        font-size: 0.8rem;
-    }
-
-    .birthday-message-section {
-        margin-top: 2rem;
-        padding: 1.5rem;
-        background: linear-gradient(45deg, rgba(78, 205, 196, 0.1), rgba(69, 183, 209, 0.1));
-        border-radius: 10px;
-    }
-
-    .birthday-wish {
-        font-size: 1.1rem;
-        color: #4a5568;
-        line-height: 1.6;
-    }
-
-    .celebrant-divider {
-        border-color: rgba(0, 0, 0, 0.1);
-        margin: 2rem 0;
-    }
-
-    .birthday-cake-animation {
-        margin-top: 1rem;
-        font-size: 2.5rem;
-    }
-
-    /* Dark mode styles */
-    @media (prefers-color-scheme: dark) {
-        .celebrant-profile-card {
-            background: rgba(45, 55, 72, 0.95);
-        }
-
-        .celebrant-name {
-            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-            -webkit-background-clip: text;
-        }
-
-        .info-item {
-            color: #e2e8f0;
-        }
-
-        .birthday-wish {
-            color: #e2e8f0;
-        }
-
-        .birthday-message-section {
-            background: linear-gradient(45deg, rgba(78, 205, 196, 0.05), rgba(69, 183, 209, 0.05));
-        }
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .celebrant-profile-card {
-            padding: 1rem;
-        }
-
-        .celebrant-avatar-large {
-            width: 120px;
-            height: 120px;
-        }
-
-        .celebrant-name {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .info-item {
-            font-size: 0.9rem;
-        }
-
-        .birthday-wish {
-            font-size: 1rem;
-        }
-    }
-
-    /* Add styles for the MHR Family message */
-    .mhr-family-message {
-        margin-top: 1rem;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #FF6B6B;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        animation: glowText 2s ease-in-out infinite;
-    }
-
-    @keyframes glowText {
-        0%, 100% {
-            text-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
-        }
-        50% {
-            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
-        }
-    }
-
-    /* Add some CSS for the checkbox styling */
-    .dont-show-again {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-
-    .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-        background-color: #6c757d;
-        border-color: #6c757d;
-    }
-
-    .modal-footer {
-        border-top: 1px solid #dee2e6;
-        padding: 1rem;
-    }
-
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-        .dont-show-again {
-            color: #adb5bd;
-        }
-        
-        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-            background-color: #adb5bd;
-            border-color: #adb5bd;
-        }
-    }
-
-    /* Add styles for the confirmation message */
-    .alert-info {
-        background-color: #cce5ff;
-        border-color: #b8daff;
-        color: #004085;
-        padding: 0.5rem 1rem;
-        margin-top: 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .custom-control-input:checked ~ .custom-control-label::before {
-        border-color: #007bff;
-        background-color: #007bff;
-    }
-
-    .custom-checkbox .custom-control-label {
-        cursor: pointer;
-    }
-
-    .custom-checkbox .custom-control-label:hover {
-        color: #007bff;
-    }
-
-    /* Add these styles for the floating action card */
-    .floating-actions-card {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        width: 300px;
-        z-index: 1000;
-        animation: float 3s ease-in-out infinite;
-        transition: all 0.3s ease;
-    }
-
-    .floating-actions-card.minimized {
-        width: 60px;
-        height: 60px;
-        overflow: hidden;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    .floating-actions-card .card-header {
-        cursor: move;
-        user-select: none;
-    }
-
-    .minimize-btn {
-        position: absolute;
-        right: 40px;
-        top: 15px;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    }
-
-    .close-float-btn {
-        position: absolute;
-        right: 15px;
-        top: 15px;
-        cursor: pointer;
-    }
-
-    .floating-action-btn {
-        transition: all 0.3s ease;
-        border: none;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .floating-action-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.2),
-            transparent
-        );
-        transition: 0.5s;
-    }
-
-    .floating-action-btn:hover::before {
-        left: 100%;
-    }
-
-    .floating-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        padding: 5px 8px;
-        border-radius: 50%;
-        font-size: 12px;
-        background: #dc3545;
-        color: white;
-        display: none;
-    }
-
-    @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .floating-actions-card {
-            bottom: 20px;
-            right: 20px;
-            width: 280px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .floating-actions-card {
-            bottom: 15px;
-            right: 15px;
-            width: 260px;
-        }
-    }
-
-    .floating-actions-card {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 280px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        background: #fff;
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-
-    .floating-actions-card.minimized {
-        width: 56px;
-        height: 56px;
-        overflow: hidden;
-        border-radius: 28px;
-    }
-
-    .card-header {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        background: #4a90e2;
-        color: white;
-        border-radius: 12px 12px 0 0;
-        cursor: move;
-    }
-
-    .header-controls {
-        margin-left: auto;
-        display: flex;
-        gap: 8px;
-    }
-
-    .control-btn {
-        background: none;
-        border: none;
-        color: white;
-        padding: 4px;
-        cursor: pointer;
-        opacity: 0.8;
-        transition: opacity 0.2s;
-    }
-
-    .control-btn:hover {
-        opacity: 1;
-    }
-
-    .quick-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .action-btn {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 8px;
-        color: white;
-        text-decoration: none;
-        transition: transform 0.2s;
-    }
-
-    .action-btn:hover {
-        transform: translateX(4px);
-        color: white;
-    }
-
-    .leave-btn {
-        background: #4a90e2;
-    }
-
-    .loan-btn {
-        background: #2ecc71;
-    }
-
-    @media (max-width: 768px) {
-        .floating-actions-card {
-            width: 240px;
-            bottom: 16px;
-            right: 16px;
-        }
-
-        .action-btn {
-            padding: 10px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .floating-actions-card {
-            width: 200px;
-        }
-    }
-
-    .holiday-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        transition: transform 0.2s;
-    }
-
-    .holiday-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .today-holiday {
-        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
-        color: white;
-    }
-
-    .holiday-icon {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .today-holiday .holiday-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .holiday-details {
-        flex: 1;
-    }
-
-    .holiday-details h4 {
-        margin: 0 0 0.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    .holiday-description {
-        font-size: 0.9rem;
-        color: #666;
-        margin: 0;
-    }
-
-    .today-holiday .holiday-description {
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .holiday-list {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-
-    .holiday-list::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .holiday-list::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .holiday-list::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-    /* Enhanced Modal Styles */
-    .modal-content {
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .modal-header {
-        border-radius: 15px 15px 0 0;
-        padding: 1.5rem;
-    }
-
-    .animated-icon {
-        animation: bounce 2s infinite;
-    }
-
-    .close-button {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        transition: all 0.3s ease;
-    }
-
-    .close-button:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: rotate(90deg);
-    }
-
-    /* Holiday Card Styles */
-    .holiday-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        display: flex;
-        align-items: flex-start;
-        gap: 1.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .holiday-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .today-holiday {
-        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
-        color: white;
-    }
-
-    .holiday-icon {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .holiday-icon.pulse {
-        animation: pulse 2s infinite;
-    }
-
-    /* Post Card Styles */
-    .post-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-    }
-
-    .post-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .post-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .post-icon {
-        width: 56px;
-        height: 56px;
-        background: linear-gradient(135deg, #20BF55 0%, #01BAEF 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-    }
-
-    .post-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin: 0;
-        color: #2d3748;
-    }
-
-    .post-body {
-        font-size: 1rem;
-        color: #4a5568;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
-
-    .post-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.9rem;
-        color: #718096;
-    }
-
-    /* Custom Scrollbar */
-    .custom-scrollbar {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 3px;
-    }
-
-    /* Don't Show Again Styles */
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .confirmation-message {
-        font-size: 0.875rem;
-        color: #48bb78;
-        margin-top: 0.5rem;
-        display: none;
-    }
-
-    /* Animations */
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .modal-dialog {
-            margin: 1rem;
-        }
-
-        .holiday-card, .post-card {
-            padding: 1rem;
-        }
-
-        .holiday-icon, .post-icon {
-            width: 48px;
-            height: 48px;
-        }
-
-        .post-title {
-            font-size: 1.1rem;
-        }
-
-        .post-body {
-            font-size: 0.95rem;
-        }
-
-        .post-meta {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-    }
-
-    /* Add System Updates Modal Styles */
-    .system-update-modal .modal-content {
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-
-    .system-update-modal .modal-header {
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-        color: white;
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-        padding: 1.5rem;
-        border-bottom: none;
-    }
-
-    .system-update-modal .modal-title {
-        font-weight: 600;
-        font-size: 1.35rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .system-update-modal .modal-title i {
-        font-size: 1.5rem;
-        animation: spin 20s linear infinite;
-    }
-
-    .system-update-modal .modal-body {
-        padding: 2rem;
-        max-height: 70vh;
-        overflow-y: auto;
-    }
-
-    .system-update-modal .update-item {
-        border-left: 4px solid #2563eb;
-        margin-bottom: 1.5rem;
-        padding: 1.25rem;
-        background-color: #f8fafc;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        animation: slideIn 0.5s ease-out;
-    }
-
-    .system-update-modal .update-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .system-update-modal .update-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        background-color: #fff;
-    }
-
-    .system-update-modal .update-title {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.75rem;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .system-update-modal .update-title::before {
-        content: '';
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background-color: #2563eb;
-        border-radius: 50%;
-    }
-
-    .system-update-modal .update-description {
-        color: #475569;
-        font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-        padding-left: 1rem;
-        border-left: 2px solid #e2e8f0;
-    }
-
-    .system-update-modal .update-date {
-        font-size: 0.85rem;
-        color: #64748b;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    .system-update-modal .update-date i {
-        color: #2563eb;
-    }
-
-    .system-update-modal .modal-footer {
-        border-top: 1px solid #e2e8f0;
-        padding: 1.25rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .system-update-badge {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .system-update-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    }
-
-    .system-update-badge[data-badge]:after {
-        content: attr(data-badge);
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        background: #ef4444;
-        color: white;
-        width: 20px;
-        height: 20px;
-        text-align: center;
-        line-height: 20px;
-        border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        animation: pulse 2s infinite;
-    }
-
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .custom-control-label {
-        color: #475569;
-        font-size: 0.9rem;
-    }
-
-    .confirmation-message {
-        font-size: 0.875rem;
-        color: #059669;
-        margin-top: 0.5rem;
-        display: none;
-    }
-
-    /* Animations */
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        }
-        50% {
-            transform: scale(1.1);
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
-        }
-        100% {
-            transform: scale(1);
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        }
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .system-update-modal .modal-body {
-            padding: 1.25rem;
-        }
-        
-        .system-update-modal .update-item {
-            padding: 1rem;
-        }
-
-        .system-update-modal .update-title {
-            font-size: 1rem;
-        }
-
-        .system-update-modal .update-description {
-            font-size: 0.9rem;
-        }
-    }
-
-    /* Add these styles for balloon canvas positioning */
-    #balloon-canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1040; /* Just below modal backdrop (1050) */
-        pointer-events: none; /* Initially no pointer events */
-    }
-
-    /* Adjust modal styles to work with balloon backdrop */
-    #birthdayModal .modal-dialog {
-        position: relative;
-        z-index: 1060; /* Above the balloon canvas */
-    }
-
-    #birthdayModal .modal-content {
-        background: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
-        backdrop-filter: blur(5px); /* Blur effect for background */
-    }
-
-    /* Dark mode adjustment */
-    @media (prefers-color-scheme: dark) {
-        #birthdayModal .modal-content {
-            background: rgba(45, 55, 72, 0.95);
-        }
-    }
-
-    /* Add these styles */
-    .celebrant-profile-card {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 15px;
-        padding: 2rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
-
-    .celebrant-avatar-large {
-        width: 150px;
-        height: 150px;
-        margin: 0 auto;
-        position: relative;
-    }
-
-    .celebrant-avatar-large img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border: 4px solid #fff;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .default-avatar {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 4rem;
-        color: white;
-    }
-
-    .celebrant-details {
-        padding: 1rem;
-    }
-
-    .celebrant-name {
-        font-size: 1.8rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .info-grid {
-        display: grid;
-        gap: 1rem;
-    }
-
-    .info-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 1rem;
-    }
-
-    .info-item i {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
-        color: white;
-        border-radius: 50%;
-        font-size: 0.8rem;
-    }
-
-    .birthday-message-section {
-        margin-top: 2rem;
-        padding: 1.5rem;
-        background: linear-gradient(45deg, rgba(78, 205, 196, 0.1), rgba(69, 183, 209, 0.1));
-        border-radius: 10px;
-    }
-
-    .birthday-wish {
-        font-size: 1.1rem;
-        color: #4a5568;
-        line-height: 1.6;
-    }
-
-    .celebrant-divider {
-        border-color: rgba(0, 0, 0, 0.1);
-        margin: 2rem 0;
-    }
-
-    .birthday-cake-animation {
-        margin-top: 1rem;
-        font-size: 2.5rem;
-    }
-
-    /* Dark mode styles */
-    @media (prefers-color-scheme: dark) {
-        .celebrant-profile-card {
-            background: rgba(45, 55, 72, 0.95);
-        }
-
-        .celebrant-name {
-            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-            -webkit-background-clip: text;
-        }
-
-        .info-item {
-            color: #e2e8f0;
-        }
-
-        .birthday-wish {
-            color: #e2e8f0;
-        }
-
-        .birthday-message-section {
-            background: linear-gradient(45deg, rgba(78, 205, 196, 0.05), rgba(69, 183, 209, 0.05));
-        }
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .celebrant-profile-card {
-            padding: 1rem;
-        }
-
-        .celebrant-avatar-large {
-            width: 120px;
-            height: 120px;
-        }
-
-        .celebrant-name {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .info-item {
-            font-size: 0.9rem;
-        }
-
-        .birthday-wish {
-            font-size: 1rem;
-        }
-    }
-
-    /* Add styles for the MHR Family message */
-    .mhr-family-message {
-        margin-top: 1rem;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #FF6B6B;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        animation: glowText 2s ease-in-out infinite;
-    }
-
-    @keyframes glowText {
-        0%, 100% {
-            text-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
-        }
-        50% {
-            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
-        }
-    }
-
-    /* Add some CSS for the checkbox styling */
-    .dont-show-again {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-
-    .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-        background-color: #6c757d;
-        border-color: #6c757d;
-    }
-
-    .modal-footer {
-        border-top: 1px solid #dee2e6;
-        padding: 1rem;
-    }
-
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-        .dont-show-again {
-            color: #adb5bd;
-        }
-        
-        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-            background-color: #adb5bd;
-            border-color: #adb5bd;
-        }
-    }
-
-    /* Add styles for the confirmation message */
-    .alert-info {
-        background-color: #cce5ff;
-        border-color: #b8daff;
-        color: #004085;
-        padding: 0.5rem 1rem;
-        margin-top: 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .custom-control-input:checked ~ .custom-control-label::before {
-        border-color: #007bff;
-        background-color: #007bff;
-    }
-
-    .custom-checkbox .custom-control-label {
-        cursor: pointer;
-    }
-
-    .custom-checkbox .custom-control-label:hover {
-        color: #007bff;
-    }
-
-    /* Add these styles for the floating action card */
-    .floating-actions-card {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        width: 300px;
-        z-index: 1000;
-        animation: float 3s ease-in-out infinite;
-        transition: all 0.3s ease;
-    }
-
-    .floating-actions-card.minimized {
-        width: 60px;
-        height: 60px;
-        overflow: hidden;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    .floating-actions-card .card-header {
-        cursor: move;
-        user-select: none;
-    }
-
-    .minimize-btn {
-        position: absolute;
-        right: 40px;
-        top: 15px;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    }
-
-    .close-float-btn {
-        position: absolute;
-        right: 15px;
-        top: 15px;
-        cursor: pointer;
-    }
-
-    .floating-action-btn {
-        transition: all 0.3s ease;
-        border: none;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .floating-action-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.2),
-            transparent
-        );
-        transition: 0.5s;
-    }
-
-    .floating-action-btn:hover::before {
-        left: 100%;
-    }
-
-    .floating-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        padding: 5px 8px;
-        border-radius: 50%;
-        font-size: 12px;
-        background: #dc3545;
-        color: white;
-        display: none;
-    }
-
-    @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .floating-actions-card {
-            bottom: 20px;
-            right: 20px;
-            width: 280px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .floating-actions-card {
-            bottom: 15px;
-            right: 15px;
-            width: 260px;
-        }
-    }
-
-    .floating-actions-card {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 280px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        background: #fff;
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-
-    .floating-actions-card.minimized {
-        width: 56px;
-        height: 56px;
-        overflow: hidden;
-        border-radius: 28px;
-    }
-
-    .card-header {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        background: #4a90e2;
-        color: white;
-        border-radius: 12px 12px 0 0;
-        cursor: move;
-    }
-
-    .header-controls {
-        margin-left: auto;
-        display: flex;
-        gap: 8px;
-    }
-
-    .control-btn {
-        background: none;
-        border: none;
-        color: white;
-        padding: 4px;
-        cursor: pointer;
-        opacity: 0.8;
-        transition: opacity 0.2s;
-    }
-
-    .control-btn:hover {
-        opacity: 1;
-    }
-
-    .quick-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .action-btn {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 8px;
-        color: white;
-        text-decoration: none;
-        transition: transform 0.2s;
-    }
-
-    .action-btn:hover {
-        transform: translateX(4px);
-        color: white;
-    }
-
-    .leave-btn {
-        background: #4a90e2;
-    }
-
-    .loan-btn {
-        background: #2ecc71;
-    }
-
-    @media (max-width: 768px) {
-        .floating-actions-card {
-            width: 240px;
-            bottom: 16px;
-            right: 16px;
-        }
-
-        .action-btn {
-            padding: 10px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .floating-actions-card {
-            width: 200px;
-        }
-    }
-
-    .holiday-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        transition: transform 0.2s;
-    }
-
-    .holiday-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .today-holiday {
-        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
-        color: white;
-    }
-
-    .holiday-icon {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .today-holiday .holiday-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .holiday-details {
-        flex: 1;
-    }
-
-    .holiday-details h4 {
-        margin: 0 0 0.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    .holiday-description {
-        font-size: 0.9rem;
-        color: #666;
-        margin: 0;
-    }
-
-    .today-holiday .holiday-description {
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .holiday-list {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-
-    .holiday-list::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .holiday-list::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .holiday-list::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-    /* Enhanced Modal Styles */
-    .modal-content {
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .modal-header {
-        border-radius: 15px 15px 0 0;
-        padding: 1.5rem;
-    }
-
-    .animated-icon {
-        animation: bounce 2s infinite;
-    }
-
-    .close-button {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        transition: all 0.3s ease;
-    }
-
-    .close-button:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: rotate(90deg);
-    }
-
-    /* Holiday Card Styles */
-    .holiday-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        display: flex;
-        align-items: flex-start;
-        gap: 1.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .holiday-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .today-holiday {
-        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
-        color: white;
-    }
-
-    .holiday-icon {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .holiday-icon.pulse {
-        animation: pulse 2s infinite;
-    }
-
-    /* Post Card Styles */
-    .post-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-    }
-
-    .post-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .post-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .post-icon {
-        width: 56px;
-        height: 56px;
-        background: linear-gradient(135deg, #20BF55 0%, #01BAEF 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-    }
-
-    .post-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin: 0;
-        color: #2d3748;
-    }
-
-    .post-body {
-        font-size: 1rem;
-        color: #4a5568;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
-
-    .post-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.9rem;
-        color: #718096;
-    }
-
-    /* Custom Scrollbar */
-    .custom-scrollbar {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 3px;
-    }
-
-    /* Don't Show Again Styles */
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .confirmation-message {
-        font-size: 0.875rem;
-        color: #48bb78;
-        margin-top: 0.5rem;
-        display: none;
-    }
-
-    /* Animations */
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .modal-dialog {
-            margin: 1rem;
-        }
-
-        .holiday-card, .post-card {
-            padding: 1rem;
-        }
-
-        .holiday-icon, .post-icon {
-            width: 48px;
-            height: 48px;
-        }
-
-        .post-title {
-            font-size: 1.1rem;
-        }
-
-        .post-body {
-            font-size: 0.95rem;
-        }
-
-        .post-meta {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-    }
-
-    /* Add System Updates Modal Styles */
-    .system-update-modal .modal-content {
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-
-    .system-update-modal .modal-header {
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-        color: white;
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-        padding: 1.5rem;
-        border-bottom: none;
-    }
-
-    .system-update-modal .modal-title {
-        font-weight: 600;
-        font-size: 1.35rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .system-update-modal .modal-title i {
-        font-size: 1.5rem;
-        animation: spin 20s linear infinite;
-    }
-
-    .system-update-modal .modal-body {
-        padding: 2rem;
-        max-height: 70vh;
-        overflow-y: auto;
-    }
-
-    .system-update-modal .update-item {
-        border-left: 4px solid #2563eb;
-        margin-bottom: 1.5rem;
-        padding: 1.25rem;
-        background-color: #f8fafc;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        animation: slideIn 0.5s ease-out;
-    }
-
-    .system-update-modal .update-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .system-update-modal .update-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        background-color: #fff;
-    }
-
-    .system-update-modal .update-title {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.75rem;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .system-update-modal .update-title::before {
-        content: '';
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background-color: #2563eb;
-        border-radius: 50%;
-    }
-
-    .system-update-modal .update-description {
-        color: #475569;
-        font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-        padding-left: 1rem;
-        border-left: 2px solid #e2e8f0;
-    }
-
-    .system-update-modal .update-date {
-        font-size: 0.85rem;
-        color: #64748b;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    .system-update-modal .update-date i {
-        color: #2563eb;
-    }
-
-    .system-update-modal .modal-footer {
-        border-top: 1px solid #e2e8f0;
-        padding: 1.25rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .system-update-badge {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .system-update-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    }
-
-    .system-update-badge[data-badge]:after {
-        content: attr(data-badge);
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        background: #ef4444;
-        color: white;
-        width: 20px;
-        height: 20px;
-        text-align: center;
-        line-height: 20px;
-        border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        animation: pulse 2s infinite;
-    }
-
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .custom-control-label {
-        color: #475569;
-        font-size: 0.9rem;
-    }
-
-    .confirmation-message {
-        font-size: 0.875rem;
-        color: #059669;
-        margin-top: 0.5rem;
-        display: none;
-    }
-
-    /* Animations */
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        }
-        50% {
-            transform: scale(1.1);
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
-        }
-        100% {
-            transform: scale(1);
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        }
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .system-update-modal .modal-body {
-            padding: 1.25rem;
-        }
-        
-        .system-update-modal .update-item {
-            padding: 1rem;
-        }
-
-        .system-update-modal .update-title {
-            font-size: 1rem;
-        }
-
-        .system-update-modal .update-description {
-            font-size: 0.9rem;
-        }
-    }
-
-    /* Add these styles for balloon canvas positioning */
-    #balloon-canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1040; /* Just below modal backdrop (1050) */
-        pointer-events: none; /* Initially no pointer events */
-    }
-
-    /* Adjust modal styles to work with balloon backdrop */
-    #birthdayModal .modal-dialog {
-        position: relative;
-        z-index: 1060; /* Above the balloon canvas */
-    }
-
-    #birthdayModal .modal-content {
-        background: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
-        backdrop-filter: blur(5px); /* Blur effect for background */
-    }
-
-    /* Dark mode adjustment */
-    @media (prefers-color-scheme: dark) {
-        #birthdayModal .modal-content {
-            background: rgba(45, 55, 72, 0.95);
-        }
-    }
-
-    /* Add these styles */
-    .celebrant-profile-card {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 15px;
-        padding: 2rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
-
-    .celebrant-avatar-large {
-        width: 150px;
-        height: 150px;
-        margin: 0 auto;
-        position: relative;
-    }
-
-    .celebrant-avatar-large img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border: 4px solid #fff;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .default-avatar {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 4rem;
-        color: white;
-    }
-
-    .celebrant-details {
-        padding: 1rem;
-    }
-
-    .celebrant-name {
-        font-size: 1.8rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .info-grid {
-        display: grid;
-        gap: 1rem;
-    }
-
-    .info-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 1rem;
-    }
-
-    .info-item i {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(45deg, #4ECDC4, #45B7D1);
-        color: white;
-        border-radius: 50%;
-        font-size: 0.8rem;
-    }
-
-    .birthday-message-section {
-        margin-top: 2rem;
-        padding: 1.5rem;
-        background: linear-gradient(45deg, rgba(78, 205, 196, 0.1), rgba(69, 183, 209, 0.1));
-        border-radius: 10px;
-    }
-
-    .birthday-wish {
-        font-size: 1.1rem;
-        color: #4a5568;
-        line-height: 1.6;
-    }
-
-    .celebrant-divider {
-        border-color: rgba(0, 0, 0, 0.1);
-        margin: 2rem 0;
-    }
-
-    .birthday-cake-animation {
-        margin-top: 1rem;
-        font-size: 2.5rem;
-    }
-
-    /* Dark mode styles */
-    @media (prefers-color-scheme: dark) {
-        .celebrant-profile-card {
-            background: rgba(45, 55, 72, 0.95);
-        }
-
-        .celebrant-name {
-            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-            -webkit-background-clip: text;
-        }
-
-        .info-item {
-            color: #e2e8f0;
-        }
-
-        .birthday-wish {
-            color: #e2e8f0;
-        }
-
-        .birthday-message-section {
-            background: linear-gradient(45deg, rgba(78, 205, 196, 0.05), rgba(69, 183, 209, 0.05));
-        }
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .celebrant-profile-card {
-            padding: 1rem;
-        }
-
-        .celebrant-avatar-large {
-            width: 120px;
-            height: 120px;
-        }
-
-        .celebrant-name {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .info-item {
-            font-size: 0.9rem;
-        }
-
-        .birthday-wish {
-            font-size: 1rem;
-        }
-    }
-
-    /* Add styles for the MHR Family message */
-    .mhr-family-message {
-        margin-top: 1rem;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #FF6B6B;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        animation: glowText 2s ease-in-out infinite;
-    }
-
-    @keyframes glowText {
-        0%, 100% {
-            text-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
-        }
-        50% {
-            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
-        }
-    }
-
-    /* Add some CSS for the checkbox styling */
-    .dont-show-again {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-
-    .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-        background-color: #6c757d;
-        border-color: #6c757d;
-    }
-
-    .modal-footer {
-        border-top: 1px solid #dee2e6;
-        padding: 1rem;
-    }
-
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-        .dont-show-again {
-            color: #adb5bd;
-        }
-        
-        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-            background-color: #adb5bd;
-            border-color: #adb5bd;
-        }
-    }
-
-    /* Add styles for the confirmation message */
-    .alert-info {
-        background-color: #cce5ff;
-        border-color: #b8daff;
-        color: #004085;
-        padding: 0.5rem 1rem;
-        margin-top: 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .custom-control-input:checked ~ .custom-control-label::before {
-        border-color: #007bff;
-        background-color: #007bff;
-    }
-
-    .custom-checkbox .custom-control-label {
-        cursor: pointer;
-    }
-
-    .custom-checkbox .custom-control-label:hover {
-        color: #007bff;
-    }
-
-    /* Add these styles for the floating action card */
-    .floating-actions-card {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        width: 300px;
-        z-index: 1000;
-        animation: float 3s ease-in-out infinite;
-        transition: all 0.3s ease;
-    }
-
-    .floating-actions-card.minimized {
-        width: 60px;
-        height: 60px;
-        overflow: hidden;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    .floating-actions-card .card-header {
-        cursor: move;
-        user-select: none;
-    }
-
-    .minimize-btn {
-        position: absolute;
-        right: 40px;
-        top: 15px;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    }
-
-    .close-float-btn {
-        position: absolute;
-        right: 15px;
-        top: 15px;
-        cursor: pointer;
-    }
-
-    .floating-action-btn {
-        transition: all 0.3s ease;
-        border: none;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .floating-action-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.2),
-            transparent
-        );
-        transition: 0.5s;
-    }
-
-    .floating-action-btn:hover::before {
-        left: 100%;
-    }
-
-    .floating-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        padding: 5px 8px;
-        border-radius: 50%;
-        font-size: 12px;
-        background: #dc3545;
-        color: white;
-        display: none;
-    }
-
-    @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .floating-actions-card {
-            bottom: 20px;
-            right: 20px;
-            width: 280px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .floating-actions-card {
-            bottom: 15px;
-            right: 15px;
-            width: 260px;
-        }
-    }
-
-    .floating-actions-card {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 280px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        background: #fff;
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-
-    .floating-actions-card.minimized {
-        width: 56px;
-        height: 56px;
-        overflow: hidden;
-        border-radius: 28px;
-    }
-
-    .card-header {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        background: #4a90e2;
-        color: white;
-        border-radius: 12px 12px 0 0;
-        cursor: move;
-    }
-
-    .header-controls {
-        margin-left: auto;
-        display: flex;
-        gap: 8px;
-    }
-
-    .control-btn {
-        background: none;
-        border: none;
-        color: white;
-        padding: 4px;
-        cursor: pointer;
-        opacity: 0.8;
-        transition: opacity 0.2s;
-    }
-
-    .control-btn:hover {
-        opacity: 1;
-    }
-
-    .quick-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .action-btn {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 8px;
-        color: white;
-        text-decoration: none;
-        transition: transform 0.2s;
-    }
-
-    .action-btn:hover {
-        transform: translateX(4px);
-        color: white;
-    }
-
-    .leave-btn {
-        background: #4a90e2;
-    }
-
-    .loan-btn {
-        background: #2ecc71;
-    }
-
-    @media (max-width: 768px) {
-        .floating-actions-card {
-            width: 240px;
-            bottom: 16px;
-            right: 16px;
-        }
-
-        .action-btn {
-            padding: 10px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .floating-actions-card {
-            width: 200px;
-        }
-    }
-
-    .holiday-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        transition: transform 0.2s;
-    }
-
-    .holiday-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .today-holiday {
-        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
-        color: white;
-    }
-
-    .holiday-icon {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .today-holiday .holiday-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .holiday-details {
-        flex: 1;
-    }
-
-    .holiday-details h4 {
-        margin: 0 0 0.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    .holiday-description {
-        font-size: 0.9rem;
-        color: #666;
-        margin: 0;
-    }
-
-    .today-holiday .holiday-description {
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .holiday-list {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-
-    .holiday-list::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .holiday-list::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .holiday-list::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-    /* Enhanced Modal Styles */
-    .modal-content {
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .modal-header {
-        border-radius: 15px 15px 0 0;
-        padding: 1.5rem;
-    }
-
-    .animated-icon {
-        animation: bounce 2s infinite;
-    }
-
-    .close-button {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        transition: all 0.3s ease;
-    }
-
-    .close-button:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: rotate(90deg);
-    }
-
-    /* Holiday Card Styles */
-    .holiday-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        display: flex;
-        align-items: flex-start;
-        gap: 1.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .holiday-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .today-holiday {
-        background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
-        color: white;
-    }
-
-    .holiday-icon {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .holiday-icon.pulse {
-        animation: pulse 2s infinite;
-    }
-
-    /* Post Card Styles */
-    .post-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-    }
-
-    .post-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .post-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .post-icon {
-        width: 56px;
-        height: 56px;
-        background: linear-gradient(135deg, #20BF55 0%, #01BAEF 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-    }
-
-    .post-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin: 0;
-        color: #2d3748;
-    }
-
-    .post-body {
-        font-size: 1rem;
-        color: #4a5568;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
-
-    .post-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.9rem;
-        color: #718096;
-    }
-
-    /* Custom Scrollbar */
-    .custom-scrollbar {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 3px;
-    }
-
-    /* Don't Show Again Styles */
-    .dont-show-again {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .confirmation-message {
-        font-size: 0.875rem;
-        color: #48bb78;
-        margin-top: 0.5rem;
-        display: none;
-    }
-
-    /* Animations */
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .modal-dialog {
-            margin: 1rem;
-        }
-
-        .holiday-card, .post-card {
-            padding: 1rem;
-        }
-
-        .holiday-icon, .post-icon {
-            width: 48px;
-            height: 48px;
-        }
-
-        .post-title {
-            font-size: 1.1rem;
-        }
-
-        .post-body {
-            font-size: 0.95rem;
-        }
-
-        .post-meta {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-    }
-
-    /* Add System Updates Modal Styles */
-    .system-update-modal .modal-content {
         border-radius: 10px;
         border: none;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
@@ -5756,7 +2921,1034 @@
             padding: 0.75rem;
         }
     }
+
+    /* Analytics Title Styles with Dark Mode Support */
+    .analytics-title {
+        font-size: 1.75rem;
+        color: var(--bs-body-color);
+        transition: color 0.3s ease;
+        letter-spacing: 0.5px;
+    }
+
+    .analytics-title .position-relative {
+        display: inline-block;
+        padding-bottom: 0.5rem;
+    }
+
+    .analytics-underline {
+        height: 3px;
+        width: 60%;
+        border-bottom: 3px solid var(--bs-primary);
+        border-top: none;
+        border-left: none;
+        border-right: none;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .analytics-title {
+            color: #e2e8f0;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .analytics-title {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .analytics-title {
+            font-size: 1.35rem;
+        }
+        
+        .analytics-underline {
+            height: 2px;
+            border-bottom-width: 2px;
+        }
+    }
+
+    /* Add these styles to your CSS section */
+    .holiday-notification {
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        color: var(--bs-body-color);
+    }
+
+    .holiday-title {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .holiday-notification {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .holiday-title {
+            color: #f77;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .holiday-notification {
+            font-size: 0.95rem;
+        }
+    }
+
+    /* Update styles for the Birthday Modal */
+    #birthdayModal .modal-dialog {
+        max-width: 700px;
+        position: relative;
+        z-index: 1060;
+    }
+
+    #birthdayModal .modal-content {
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        backdrop-filter: blur(5px);
+    }
+
+    #birthdayModal .modal-header {
+        padding: 1.5rem 1.5rem 0.5rem;
+        border-bottom: none;
+    }
+
+    .birthday-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.5px;
+    }
+
+    .animated-cake {
+        animation: cake-bounce 2s infinite;
+        color: #FF9F1C;
+    }
+
+    @keyframes cake-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    .close-button {
+        background: transparent;
+        border: none;
+        color: #718096;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .close-button:hover {
+        color: #2d3748;
+        transform: rotate(90deg);
+    }
+
+    .celebrant-profile-card {
+        display: flex;
+        flex-direction: row;
+        gap: 2rem;
+        padding: 1.5rem;
+        margin-bottom: 0;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .celebrant-left-section {
+        flex: 0 0 220px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .celebrant-right-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .celebrant-avatar-large {
+        width: 180px;
+        height: 180px;
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .celebrant-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .default-avatar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #5E60CE, #64DFDF);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: white;
+    }
+
+    .birthday-cake-animation {
+        margin-top: 1rem;
+    }
+
+    .mhr-family-message {
+        font-size: 0.9rem;
+        color: #718096;
+        font-style: italic;
+    }
+
+    .celebrant-details {
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        height: 100%;
+    }
+
+    .celebrant-name {
+        font-size: 2.2rem;
+        font-weight: 600;
+        margin-bottom: 1.75rem;
+        color: #2d3748;
+        position: relative;
+        padding-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    .celebrant-name::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 3px;
+        background: linear-gradient(45deg, #5E60CE, #64DFDF);
+        border-radius: 3px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+    }
+
+    .info-item:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateX(5px);
+        border-left-color: #5E60CE;
+    }
+
+    .info-item i {
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
+
+    .info-item span {
+        font-size: 0.95rem;
+        color: #4a5568;
+    }
+
+    .birthday-message-section {
+        margin-top: 1rem;
+        padding: 1.25rem;
+        background: linear-gradient(45deg, rgba(94, 96, 206, 0.05), rgba(100, 223, 223, 0.05));
+        border-radius: 12px;
+        border-left: 4px solid #5E60CE;
+    }
+
+    .birthday-message-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .birthday-message-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .birthday-wish {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: #4a5568;
+        margin-bottom: 0;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1rem 1.5rem;
+    }
+
+    .dont-show-again {
+        font-size: 0.9rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        #birthdayModal .modal-dialog {
+            max-width: 95%;
+            margin: 1rem auto;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .celebrant-profile-card {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .celebrant-left-section {
+            flex: 0 0 auto;
+            flex-direction: row;
+            justify-content: space-around;
+            width: 100%;
+        }
+        
+        .celebrant-avatar-large {
+            width: 120px;
+            height: 120px;
+            margin: 0;
+        }
+        
+        .birthday-cake-animation {
+            margin-top: 0;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .celebrant-name {
+            font-size: 1.8rem;
+        }
+        
+        .birthday-title {
+            font-size: 1.5rem;
+        }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        #birthdayModal .modal-content {
+            background: linear-gradient(145deg, #2d3748, #1a202c);
+        }
+        
+        .celebrant-profile-card {
+            background: rgba(45, 55, 72, 0.7);
+        }
+        
+        .celebrant-details {
+            background: linear-gradient(145deg, #2d3748, #1a202c);
+        }
+        
+        .info-item {
+            background: rgba(45, 55, 72, 0.7);
+        }
+        
+        .info-item:hover {
+            background: rgba(45, 55, 72, 0.9);
+        }
+        
+        .celebrant-name {
+            color: #e2e8f0;
+        }
+        
+        .info-item span {
+            color: #cbd5e0;
+        }
+        
+        .birthday-message-section {
+            background: linear-gradient(45deg, rgba(94, 96, 206, 0.1), rgba(100, 223, 223, 0.1));
+        }
+        
+        .birthday-message-title {
+            color: #e2e8f0;
+        }
+        
+        .birthday-wish {
+            color: #cbd5e0;
+        }
+        
+        .mhr-family-message {
+            color: #a0aec0;
+        }
+        
+        .close-button {
+            color: #a0aec0;
+        }
+        
+        .close-button:hover {
+            color: #e2e8f0;
+        }
+    }
+
+    /* Birthday decorations */
+    .birthday-decorations {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .balloon {
+        position: absolute;
+        width: 60px;
+        height: 70px;
+        border-radius: 50%;
+        opacity: 0.7;
+        z-index: 0;
+    }
+
+    .balloon::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .balloon-left {
+        top: 20px;
+        left: 20px;
+        background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+        animation: floatBalloon 6s ease-in-out infinite;
+    }
+
+    .balloon-right {
+        top: 40px;
+        right: 20px;
+        background: linear-gradient(135deg, #4ECDC4, #45B7D1);
+        animation: floatBalloon 7s ease-in-out infinite;
+    }
+
+    @keyframes floatBalloon {
+        0%, 100% { transform: translateY(0) rotate(3deg); }
+        50% { transform: translateY(-10px) rotate(-3deg); }
+    }
+
+    .confetti-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .celebrant-profile-card {
+        display: flex;
+        flex-direction: row;
+        gap: 2rem;
+        padding: 1.5rem;
+        margin-bottom: 0;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        position: relative;
+        z-index: 1;
+    }
+
+    .celebrant-left-section {
+        flex: 0 0 220px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .celebrant-right-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .celebrant-avatar-large {
+        width: 180px;
+        height: 180px;
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        border: 5px solid white;
+    }
+
+    .celebrant-avatar-large::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: linear-gradient(45deg, #FF6B6B, transparent, #4ECDC4, transparent, #FFD166, transparent);
+        background-size: 400% 400%;
+        z-index: -1;
+        border-radius: 20px;
+        animation: borderGlow 3s ease infinite;
+    }
+
+    @keyframes borderGlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .celebrant-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .default-avatar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #5E60CE, #64DFDF);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: white;
+    }
+
+    .birthday-cake-animation {
+        margin-top: 1rem;
+        position: relative;
+    }
+
+    .birthday-candles {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: -15px;
+        z-index: 2;
+        position: relative;
+    }
+
+    .candle {
+        width: 3px;
+        height: 15px;
+        background: linear-gradient(to bottom, #FFD166, #FF9F1C);
+        position: relative;
+    }
+
+    .candle::after {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 5px;
+        height: 5px;
+        background: #FF6B6B;
+        border-radius: 50%;
+        filter: blur(2px);
+        animation: flicker 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        50% { opacity: 0.8; transform: translateX(-50%) scale(0.95); }
+    }
+
+    .mhr-family-message {
+        font-size: 0.9rem;
+        color: #718096;
+        font-style: italic;
+        margin-top: 1rem;
+        position: relative;
+        display: inline-block;
+    }
+
+    .mhr-family-message::before,
+    .mhr-family-message::after {
+        content: '★';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-style: normal;
+        color: #FFD166;
+    }
+
+    .mhr-family-message::before {
+        left: -15px;
+    }
+
+    .mhr-family-message::after {
+        right: -15px;
+    }
+
+    .celebrant-details {
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        height: 100%;
+        position: relative;
+    }
+
+    .birthday-banner {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .banner-decoration {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+    }
+
+    .banner-decoration.left {
+        left: 0;
+    }
+
+    .banner-decoration.right {
+        right: 0;
+    }
+
+    .banner-decoration::before, 
+    .banner-decoration::after {
+        content: '✦';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #FFD166;
+        font-size: 14px;
+    }
+
+    .banner-decoration.left::before {
+        left: -15px;
+    }
+
+    .banner-decoration.left::after {
+        right: -15px;
+    }
+
+    .banner-decoration.right::before {
+        left: -15px;
+    }
+
+    .banner-decoration.right::after {
+        right: -15px;
+    }
+
+    .celebrant-name {
+        font-size: 2.2rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        color: #2d3748;
+        position: relative;
+        text-align: center;
+        background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        padding: 0 30px;
+    }
+
+    .birthday-message-section {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: linear-gradient(45deg, rgba(255, 107, 107, 0.05), rgba(255, 142, 83, 0.05));
+        border-radius: 12px;
+        border-left: 4px solid #FF6B6B;
+        position: relative;
+    }
+
+    .birthday-message-section::after {
+        content: '';
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 50px;
+        height: 50px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23FFD166' opacity='0.2' d='M256 0c-11.75 0-21.33 9.581-21.33 21.33s9.581 21.33 21.33 21.33c11.75 0 21.33-9.581 21.33-21.33s-9.581-21.33-21.33-21.33zm-96 32c-11.75 0-21.33 9.581-21.33 21.33s9.581 21.33 21.33 21.33c11.75 0 21.33-9.581 21.33-21.33s-9.581-21.33-21.33-21.33zm192 0c-11.75 0-21.33 9.581-21.33 21.33s9.581 21.33 21.33 21.33c11.75 0 21.33-9.581 21.33-21.33s-9.581-21.33-21.33-21.33zm-277.7 68.27c-5.393 0-10.78 2.054-14.9 6.172-8.247 8.243-8.247 21.57 0 29.81 8.243 8.247 21.57 8.247 29.81 0 8.247-8.243 8.247-21.57 0-29.81-4.123-4.118-9.51-6.172-14.9-6.172zm363.4 0c-5.393 0-10.78 2.054-14.9 6.172-8.247 8.243-8.247 21.57 0 29.81 8.243 8.247 21.57 8.247 29.81 0 8.247-8.243 8.247-21.57 0-29.81-4.123-4.118-9.51-6.172-14.9-6.172zm-309.7 82.4c-11.75 0-21.33 9.581-21.33 21.33 0 11.75 9.581 21.33 21.33 21.33 11.75 0 21.33-9.581 21.33-21.33 0-11.75-9.581-21.33-21.33-21.33zm256 0c-11.75 0-21.33 9.581-21.33 21.33 0 11.75 9.581 21.33 21.33 21.33 11.75 0 21.33-9.581 21.33-21.33 0-11.75-9.581-21.33-21.33-21.33zm-128 42.67c-23.47 0-42.67 19.2-42.67 42.67 0 23.47 19.2 42.67 42.67 42.67 23.47 0 42.67-19.2 42.67-42.67 0-23.47-19.2-42.67-42.67-42.67zm-181.7 39.73c-5.393 0-10.78 2.054-14.9 6.172-8.247 8.243-8.247 21.57 0 29.81 8.243 8.247 21.57 8.247 29.81 0 8.247-8.243 8.247-21.57 0-29.81-4.123-4.118-9.51-6.172-14.9-6.172zm363.4 0c-5.393 0-10.78 2.054-14.9 6.172-8.247 8.243-8.247 21.57 0 29.81 8.243 8.247 21.57 8.247 29.81 0 8.247-8.243 8.247-21.57 0-29.81-4.123-4.118-9.51-6.172-14.9-6.172zM128 330.7c-11.75 0-21.33 9.581-21.33 21.33 0 11.75 9.581 21.33 21.33 21.33 11.75 0 21.33-9.581 21.33-21.33 0-11.75-9.581-21.33-21.33-21.33zm256 0c-11.75 0-21.33 9.581-21.33 21.33 0 11.75 9.581 21.33 21.33 21.33 11.75 0 21.33-9.581 21.33-21.33 0-11.75-9.581-21.33-21.33-21.33zm-346.7 90.67c-5.393 0-10.78 2.054-14.9 6.172-8.247 8.243-8.247 21.57 0 29.81 8.243 8.247 21.57 8.247 29.81 0 8.247-8.243 8.247-21.57 0-29.81-4.123-4.118-9.51-6.172-14.9-6.172zm363.4 0c-5.393 0-10.78 2.054-14.9 6.172-8.247 8.243-8.247 21.57 0 29.81 8.243 8.247 21.57 8.247 29.81 0 8.247-8.243 8.247-21.57 0-29.81-4.123-4.118-9.51-6.172-14.9-6.172zm-278.7 68.26c-11.75 0-21.33 9.581-21.33 21.33 0 11.75 9.581 21.33 21.33 21.33 11.75 0 21.33-9.581 21.33-21.33 0-11.75-9.581-21.33-21.33-21.33zm192 0c-11.75 0-21.33 9.581-21.33 21.33 0 11.75 9.581 21.33 21.33 21.33 11.75 0 21.33-9.581 21.33-21.33 0-11.75-9.581-21.33-21.33-21.33zm-96 32c-11.75 0-21.33 9.581-21.33 21.33 0 11.75 9.581 21.33 21.33 21.33 11.75 0 21.33-9.581 21.33-21.33 0-11.75-9.581-21.33-21.33-21.33z'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.5;
+    }
+
+    .birthday-message-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .birthday-message-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .birthday-wish {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: #4a5568;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .gift-box-container {
+        display: flex;
+        justify-content: center;
+        margin-top: -20px;
+        position: relative;
+        z-index: 0;
+    }
+
+    .gift-box {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        perspective: 800px;
+    }
+
+    .gift-body {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 75%;
+        background: linear-gradient(to bottom, #FF6B6B, #FF8E53);
+        border-radius: 4px;
+        z-index: 1;
+    }
+
+    .gift-lid {
+        position: absolute;
+        top: 0;
+        width: 120%;
+        height: 30%;
+        left: -10%;
+        background: linear-gradient(to right, #4ECDC4, #5E60CE);
+        border-radius: 4px;
+        z-index: 2;
+        transform-origin: bottom;
+        animation: openLid 7s ease-in-out infinite;
+    }
+
+    .gift-ribbon {
+        position: absolute;
+        width: 20%;
+        height: 100%;
+        background: #FFD166;
+        left: 40%;
+        z-index: 3;
+    }
+
+    .gift-ribbon::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 20%;
+        background: #FFD166;
+        top: 40%;
+        left: -150%;
+        width: 400%;
+        z-index: 3;
+    }
+
+    @keyframes openLid {
+        0%, 10%, 90%, 100% { transform: rotateX(0); }
+        50% { transform: rotateX(-60deg); }
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1rem 1.5rem;
+    }
+
+    .dont-show-again {
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+        border: none;
+        box-shadow: 0 4px 8px rgba(255, 107, 107, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(255, 107, 107, 0.3);
+        background: linear-gradient(45deg, #FF8E53, #FF6B6B);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        #birthdayModal .modal-dialog {
+            max-width: 95%;
+            margin: 1rem auto;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .celebrant-profile-card {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .celebrant-left-section {
+            flex: 0 0 auto;
+            flex-direction: row;
+            justify-content: space-around;
+            width: 100%;
+        }
+        
+        .celebrant-avatar-large {
+            width: 120px;
+            height: 120px;
+            margin: 0;
+        }
+        
+        .birthday-cake-animation {
+            margin-top: 0;
+        }
+        
+        .celebrant-name {
+            font-size: 1.8rem;
+        }
+        
+        .birthday-title {
+            font-size: 1.5rem;
+        }
+        
+        .gift-box-container {
+            display: none;
+        }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        #birthdayModal .modal-content {
+            background: linear-gradient(145deg, #2d3748, #1a202c);
+        }
+        
+        .celebrant-profile-card {
+            background: rgba(45, 55, 72, 0.7);
+        }
+        
+        .celebrant-details {
+            background: linear-gradient(145deg, #2d3748, #1a202c);
+        }
+        
+        .celebrant-name {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            -webkit-background-clip: text;
+        }
+        
+        .birthday-message-section {
+            background: linear-gradient(45deg, rgba(255, 107, 107, 0.05), rgba(255, 142, 83, 0.05));
+        }
+        
+        .birthday-message-title {
+            color: #e2e8f0;
+        }
+        
+        .birthday-wish {
+            color: #cbd5e0;
+        }
+        
+        .mhr-family-message {
+            color: #a0aec0;
+        }
+        
+        .close-button {
+            color: #a0aec0;
+        }
+        
+        .close-button:hover {
+            color: #e2e8f0;
+        }
+    }
+
+    /* Add confetti animation */
+    @keyframes confetti-fall {
+        0% { transform: translateY(0) rotate(0); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Initialize confetti on modal shown */
+    document.addEventListener('DOMContentLoaded', function() {
+        $(document).on('shown.bs.modal', '[id^=birthdayModal]', function() {
+            createConfetti($(this).find('.confetti-container'));
+        });
+    });
+
+    function createConfetti(container) {
+        const colors = ['#FF6B6B', '#FFD166', '#4ECDC4', '#5E60CE', '#FF8E53'];
+        const confettiCount = 100;
+        
+        // Clear previous confetti
+        container.empty();
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const size = Math.random() * 10 + 5;
+            const left = Math.random() * 100;
+            const delay = Math.random() * 5;
+            const duration = Math.random() * 5 + 5;
+            
+            confetti.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                background-color: ${color};
+                top: -20px;
+                left: ${left}%;
+                opacity: 0.7;
+                border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                animation: confetti-fall ${duration}s ease-in ${delay}s infinite;
+            `;
+            
+            container.append(confetti);
+        }
+    }
+
+    /* Holiday section responsive styling with light/dark mode support */
+    .holiday-notification {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 1rem;
+        font-weight: 400;
+        border-left: 4px solid #dc3545;
+        background-color: rgba(220, 53, 69, 0.1);
+        transition: all 0.3s ease;
+        color: #212529; /* Always keep the base text black */
+    }
+
+    .holiday-notification strong,
+    .holiday-notification .holiday-title,
+    .holiday-notification .date-text,
+    .holiday-notification .today-text {
+        color: #212529 !important; /* Force black text for "Today is" and date */
+    }
+
+    .holiday-notification .today-text {
+        font-weight: 500;
+        letter-spacing: 0.2px;
+    }
+
+    .holiday-title {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .custom-list {
+        list-style: none;
+        padding-left: 5px;
+    }
+
+    .custom-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .custom-list li:last-child {
+        border-bottom: none;
+    }
+
+    .custom-list li::before {
+        content: "•";
+        color: #dc3545;
+        font-weight: bold;
+        display: inline-block;
+        width: 1em;
+        margin-left: -1em;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .holiday-notification {
+            background-color: rgba(220, 53, 69, 0.15);
+            color: #f8f9fa;
+        }
+        
+        .holiday-notification strong:not(.holiday-title),
+        .holiday-notification .date-text {
+            color: #212529 !important; /* Keep "Today is" and date black in dark mode */
+        }
+        
+        .custom-list li {
+            border-bottom-color: rgba(255, 255, 255, 0.08);
+            color: #f8f9fa;
+        }
+        
+        .text-muted {
+            color: #adb5bd !important;
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .holiday-notification {
+            padding: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .custom-list {
+            margin-bottom: 0;
+        }
+        
+        .custom-list li {
+            padding: 6px 0;
+            font-size: 0.9rem;
+        }
+    }
 </style>
+@endsection
+
+@section('content')
 <div class="container-fluid">
     <!-- Signature Reminder Alert - Moved to top and enhanced styling -->
     @if(Auth::user()->hasRole('Employee') || Auth::user()->hasRole('Supervisor'))
@@ -5786,35 +3978,45 @@
         <!-- Birthday Modal -->
         @foreach($todaysBirthdays->where('employee_status', 'Active') as $index => $employee)
         <div class="modal fade" id="birthdayModal{{ $index }}" tabindex="-1" role="dialog" aria-labelledby="birthdayModalLabel{{ $index }}" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-                    <div class="modal-header border-0">
+                    <div class="modal-header border-0 pb-0">
                         <h4 class="modal-title w-100 text-center" id="birthdayModalLabel{{ $index }}">
                             <span class="birthday-title">
                                 <i class="fas fa-birthday-cake animated-cake mr-2"></i>
-                                Today's Birthday Celebration!
+                                Today's Birthday Celebration
                             </span>
                         </h4>
                         <button type="button" class="close-button" data-dismiss="modal" aria-label="Close">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body pt-2">
+                        <div class="birthday-decorations">
+                            <div class="balloon balloon-left"></div>
+                            <div class="balloon balloon-right"></div>
+                            <div class="confetti-container"></div>
+                        </div>
                         <div class="celebrant-profile-card">
                             <div class="celebrant-left-section">
                                 <div class="celebrant-avatar-large">
                                     @if($employee->profile)
                                         <img src="{{ asset('storage/' . $employee->profile) }}" 
                                              alt="{{ $employee->first_name }}" 
-                                             class="img-fluid rounded">
+                                             class="img-fluid">
                                     @else
                                         <div class="default-avatar">
-                                            <i class="fas fa-user-circle fa-5x"></i>
+                                            <i class="fas fa-user"></i>
                                         </div>
                                     @endif
                                 </div>
-                                <div class="birthday-cake-animation">
+                                <div class="birthday-cake-animation mt-4">
                                     <i class="fas fa-birthday-cake animated-cake fa-3x"></i>
+                                    <div class="birthday-candles">
+                                        <div class="candle"></div>
+                                        <div class="candle"></div>
+                                        <div class="candle"></div>
+                                    </div>
                                     <div class="mhr-family-message mt-3">
                                         From MHR Family
                                     </div>
@@ -5823,26 +4025,19 @@
                             
                             <div class="celebrant-right-section">
                                 <div class="celebrant-details">
-                                    <h3 class="celebrant-name mb-3">
-                                        {{ $employee->first_name }} {{ $employee->last_name }}
-                                    </h3>
-                                    
-                                    <div class="info-grid">
-                                        <div class="info-item">
-                                            <i class="fas fa-building"></i>
-                                            <span>{{ $employee->department->name ?? 'N/A' }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-user-tie"></i>
-                                            <span>{{ $employee->position->name ?? 'N/A' }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-calendar-day"></i>
-                                            <span>{{ \Carbon\Carbon::parse($employee->birth_date)->format('F d') }}</span>
-                                        </div>
+                                    <div class="birthday-banner">
+                                        <div class="banner-decoration left"></div>
+                                        <h2 class="celebrant-name">
+                                            {{ $employee->first_name }} {{ $employee->last_name }}
+                                        </h2>
+                                        <div class="banner-decoration right"></div>
                                     </div>
                                     
                                     <div class="birthday-message-section">
+                                        <div class="birthday-message-header">
+                                            <i class="fas fa-quote-left text-muted mr-2"></i>
+                                            <span class="birthday-message-title">Birthday Message</span>
+                                        </div>
                                         <p class="birthday-wish">
                                             Wishing you a fantastic birthday filled with joy, success, and wonderful moments! 
                                             May this special day bring you everything you wish for and more. 
@@ -5850,6 +4045,13 @@
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="gift-box-container">
+                            <div class="gift-box">
+                                <div class="gift-lid"></div>
+                                <div class="gift-body"></div>
+                                <div class="gift-ribbon"></div>
                             </div>
                         </div>
                     </div>
@@ -5962,15 +4164,15 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <h6 class="text-muted">Sick Leave</h6>
-                            <h2 class="mb-0">7 <small>days</small></h2>
+                            <h2 class="mb-0 text-body">7 <small class="text-body-secondary">days</small></h2>
                         </div>
                         <div class="col-md-4 mb-3">
                             <h6 class="text-muted">Vacation Leave</h6>
-                            <h2 class="mb-0">5 <small>days</small></h2>
+                            <h2 class="mb-0 text-body">5 <small class="text-body-secondary">days</small></h2>
                         </div>
                         <div class="col-md-4 mb-3">
                             <h6 class="text-muted">Emergency Leave</h6>
-                            <h2 class="mb-0">3 <small>days</small></h2>
+                            <h2 class="mb-0 text-body">3 <small class="text-body-secondary">days</small></h2>
                         </div>
                     </div>
                     <p class="text-muted mt-3 mb-0">
@@ -6054,7 +4256,7 @@
                 </div>
                 <div class="card-body">
                     @if ($todayHoliday)
-                        <p>Today is <strong class="text-danger">{{ $todayHoliday->title }}</strong> - {{ \Carbon\Carbon::parse($todayHoliday->date)->format('F j, Y') }}</p>
+                        <p class="holiday-notification"><span class="today-text">Today is</span> <strong class="holiday-title">{{ $todayHoliday->title }}</strong> - <span class="date-text">{{ \Carbon\Carbon::parse($todayHoliday->date)->format('F j, Y') }}</span></p>
                     @endif
                     @if ($upcomingHolidays->isEmpty())
                         <p class="text-muted">No upcoming holidays this month</p>
@@ -6063,7 +4265,7 @@
                             @foreach ($upcomingHolidays as $holiday)
                                 <li>
                                     <strong class="text-danger">{{ $holiday->title }}</strong> -
-                                    {{ \Carbon\Carbon::parse($holiday->date)->format('F j, Y') }}
+                                    <span class="date-text">{{ \Carbon\Carbon::parse($holiday->date)->format('F j, Y') }}</span>
                                 </li>
                             @endforeach
                         </ul>
@@ -6225,7 +4427,12 @@
 <!-- Analytics Dashboard -->
 @canany(['super-admin', 'admin'])
 <div class="analytics-dashboard mt-4">
-    <h4 class="text-center mb-4">Analytics Overview</h4>
+    <h4 class="text-center mb-4 fw-bold analytics-title">
+        <span class="position-relative">
+            Analytics Overview
+            <span class="position-absolute bottom-0 start-50 translate-middle-x border-2 border-primary analytics-underline"></span>
+        </span>
+    </h4>
 
     <!-- Contributions Section -->
     <div class="analytics-section">
@@ -7240,7 +5447,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-@push('scripts')
+@section('scripts')
 <script>
     $(document).ready(function() {
         // Check if we should show the updates modal
@@ -7266,5 +5473,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 </script>
-@endpush
+@endsection
 @endsection

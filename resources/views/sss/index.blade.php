@@ -49,14 +49,17 @@
         <h3 class="card-title">Sss Contributions List</h3>
         <div class="card-tools">
             <a href="{{ route('sss.create') }}" class="btn btn-success btn-sm rounded-pill">
-                Add Sss Contribution <i class="fas fa-plus-circle"></i>
+            <i class="fas fa-plus-circle"></i> Add Sss Contribution
             </a>
             <button id="export-excel" class="btn btn-primary btn-sm rounded-pill mr-2">
-                Export to Excel <i class="fas fa-file-excel"></i>
+            <i class="fas fa-file-excel"></i> Export to Excel
             </button>
             <!-- Add the new button here -->
             <button type="button" class="btn btn-info btn-sm rounded-pill" data-toggle="modal" data-target="#createAllModal">
-                Create for All Active ({{ $activeEmployeesCount }}) <i class="fas fa-users"></i>
+            <i class="fas fa-users"></i> Create for All Active ({{ $activeEmployeesCount }})
+            </button>
+            <button type="button" class="btn btn-warning btn-sm rounded-pill mr-2" data-toggle="modal" data-target="#notifyModal">
+            <i class="fas fa-bell"></i> Notify Employees
             </button>
         </div>
     </div>
@@ -134,6 +137,39 @@
     </div>
 </div>
 
+<!-- Notify Modal -->
+<div class="modal fade" id="notifyModal" tabindex="-1" role="dialog" aria-labelledby="notifyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notifyModalLabel">Send SSS Contribution Notifications</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('sss.notify') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="notification_date">Select Month and Year</label>
+                        <input type="month" class="form-control" id="notification_date" name="notification_date" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-warning" id="notify-submit-btn">
+                        <span class="normal-state">Send Notifications</span>
+                        <span class="loading-state d-none">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Processing...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @stop
 
 @section('css')
@@ -203,6 +239,20 @@
     }
     .colored-toast.swal2-icon-error {
         box-shadow: 0 0 12px rgba(220, 53, 69, 0.4) !important;
+    }
+    /* Spinner button styles */
+    .btn .loading-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn.is-loading .normal-state {
+        display: none;
+    }
+    
+    .btn.is-loading .loading-state {
+        display: inline-flex !important;
     }
 </style>
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css">
@@ -376,6 +426,68 @@
                 color: '#fff'
             });
         @endif
+
+        // Handle notify form submission with loading state
+        $('#notifyModal form').on('submit', function(e) {
+            // Get the submit button
+            const submitBtn = $('#notify-submit-btn');
+            
+            // Disable the button and show loading state
+            submitBtn.prop('disabled', true)
+                     .addClass('is-loading');
+            
+            // The form will submit normally after this
+            // The button will stay in loading state until page reloads
+            
+            // If you have AJAX submission instead, you would add:
+            // 
+            // e.preventDefault();
+            // 
+            // $.ajax({
+            //     url: $(this).attr('action'),
+            //     method: $(this).attr('method'),
+            //     data: $(this).serialize(),
+            //     success: function(response) {
+            //         // Handle success
+            //         Swal.fire({
+            //             ...toastConfig,
+            //             icon: 'success',
+            //             title: 'Success',
+            //             text: response.message,
+            //             background: '#28a745',
+            //             color: '#fff'
+            //         });
+            //         
+            //         // Reset button state and close modal
+            //         submitBtn.prop('disabled', false).removeClass('is-loading');
+            //         $('#notifyModal').modal('hide');
+            //     },
+            //     error: function(xhr) {
+            //         // Handle error
+            //         Swal.fire({
+            //             ...toastConfig,
+            //             icon: 'error',
+            //             title: 'Error',
+            //             text: xhr.responseJSON.message || 'An error occurred',
+            //             background: '#dc3545',
+            //             color: '#fff'
+            //         });
+            //         
+            //         // Reset button state
+            //         submitBtn.prop('disabled', false).removeClass('is-loading');
+            //     }
+            // });
+        });
+        
+        // Add this to ensure the modal works correctly for the notify modal too
+        $('#notifyModal').on('shown.bs.modal', function () {
+            $('#notification_date').trigger('focus');
+        });
+        
+        // Reset button state if modal is closed
+        $('#notifyModal').on('hidden.bs.modal', function () {
+            $('#notify-submit-btn').prop('disabled', false).removeClass('is-loading');
+        });
     });
 </script>
 @endsection

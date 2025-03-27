@@ -9,6 +9,7 @@ use App\Models\OvertimePay;
 use App\Models\Payroll;
 use App\Models\Employee;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class PayrollService
 {
@@ -48,21 +49,12 @@ class PayrollService
                     ->first();
             }
 
+            // Get all loans for the pay period for BGPDI employees too
             $loans = Loan::where('employee_id', $employee_id)
                 ->where(function ($query) use ($start, $end) {
-                    $query->whereBetween('date', [$start, $end])
-                        ->orWhereMonth('date', $start->month)
-                        ->orWhereMonth('date', $end->month);
+                    $query->whereBetween('date', [$start, $end]);
                 })
-                ->orderBy('date', 'desc')
-                ->first();
-
-            if (!$loans) {
-                // If no loans found for current period, get the most recent one
-                $loans = Loan::where('employee_id', $employee_id)
-                    ->orderBy('date', 'desc')
-                    ->first();
-            }
+                ->get();
         } else {
             // Original bi-monthly calculation for non-BGPDI employees
             if ($start->day == 26 && $start->daysInMonth == 31) {
@@ -90,21 +82,12 @@ class PayrollService
                     ->first();
             }
 
+            // Instead of fetching a single loan record, get all loans for the pay period
             $loans = Loan::where('employee_id', $employee_id)
                 ->where(function ($query) use ($start, $end) {
-                    $query->whereBetween('date', [$start, $end])
-                        ->orWhereMonth('date', $start->month)
-                        ->orWhereMonth('date', $end->month);
+                    $query->whereBetween('date', [$start, $end]);
                 })
-                ->orderBy('date', 'desc')
-                ->first();
-
-            if (!$loans) {
-                // If no loans found for current period, get the most recent one
-                $loans = Loan::where('employee_id', $employee_id)
-                    ->orderBy('date', 'desc')
-                    ->first();
-            }
+                ->get();
         }
 
         // Fetch attendance records within the date range
@@ -176,10 +159,35 @@ class PayrollService
 
         // Deduct Loans (if within payroll period)
         $loan_deductions = 0;
+        $sss_loan = 0;
+        $pagibig_loan = 0;
+        $cash_advance = 0;
+        
         if ($loans) {
-            $loan_deductions += $loans->sss_loan ?? 0;
-            $loan_deductions += $loans->pagibig_loan ?? 0;
-            $loan_deductions += $loans->cash_advance ?? 0;
+            // If loans is a collection (for the updated code path)
+            if ($loans instanceof \Illuminate\Database\Eloquent\Collection) {
+                // Cash advances are split into bi-monthly payments
+                // First half: 26th of previous month to 10th of current month
+                // Second half: 11th to 25th of current month
+                // We collect all loan records within the pay period to ensure we capture all payments
+                foreach ($loans as $loan) {
+                    $sss_loan += $loan->sss_loan ?? 0;
+                    $pagibig_loan += $loan->pagibig_loan ?? 0;
+                    $cash_advance += $loan->cash_advance ?? 0;
+                    
+                    // If this loan includes detailed notes about the covered period, log it for reference
+                    if ($loan->notes && str_contains($loan->notes, 'half')) {
+                        \Illuminate\Support\Facades\Log::info('Processing cash advance payment for period: ' . $loan->notes);
+                    }
+                }
+            } else {
+                // For the old code path (should not happen with updated system)
+                $sss_loan = $loans->sss_loan ?? 0;
+                $pagibig_loan = $loans->pagibig_loan ?? 0;
+                $cash_advance = $loans->cash_advance ?? 0;
+            }
+            
+            $loan_deductions = $sss_loan + $pagibig_loan + $cash_advance;
         }
 
         // Calculate Net Salary
@@ -203,9 +211,9 @@ class PayrollService
             'pagibig_contribution' => $contributions->pagibig_contribution ?? 0,
             'philhealth_contribution' => $contributions->philhealth_contribution ?? 0,
             'tin_contribution' => $contributions->tin_contribution ?? 0,
-            'sss_loan' => $loans->sss_loan ?? 0,
-            'pagibig_loan' => $loans->pagibig_loan ?? 0,
-            'cash_advance' => $loans->cash_advance ?? 0,
+            'sss_loan' => $sss_loan,
+            'pagibig_loan' => $pagibig_loan,
+            'cash_advance' => $cash_advance,
             'overtime_pay' => $overtime_pay,
             'total_earnings' => $total_earnings
         ]);

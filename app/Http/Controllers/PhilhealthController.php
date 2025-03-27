@@ -6,6 +6,7 @@ use App\Models\Philhealth;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class PhilhealthController extends Controller
 {
@@ -104,4 +105,68 @@ class PhilhealthController extends Controller
             ->exists();
     }
 
+    public function notifyEmployees(Request $request)
+    {
+        $request->validate([
+            'notification_date' => 'required|date_format:Y-m',
+        ]);
+
+        $notificationDate = $request->notification_date . '-01'; // Add day to make it a valid date
+        $year = date('Y', strtotime($notificationDate));
+        $month = date('m', strtotime($notificationDate));
+        $monthName = date('F', strtotime($notificationDate));
+
+        // Find all PhilHealth contributions for the specified month and year
+        $contributions = Philhealth::with('employee')
+            ->whereYear('contribution_date', '=', $year)
+            ->whereMonth('contribution_date', '=', $month)
+            ->get();
+
+        if ($contributions->isEmpty()) {
+            return redirect()->route('philhealth.index')->with('error', "No PhilHealth contributions found for {$monthName} {$year}.");
+        }
+
+        $notificationCount = 0;
+        $errorMessages = [];
+
+        foreach ($contributions as $contribution) {
+            if (!$contribution->employee) {
+                $errorMessages[] = "Employee record not found for contribution ID: {$contribution->id}";
+                continue;
+            }
+
+            if (empty($contribution->employee->email_address)) {
+                $errorMessages[] = "No email address found for employee: {$contribution->employee->last_name}, {$contribution->employee->first_name}";
+                continue;
+            }
+
+            try {
+                Mail::send('emails.philhealth_contribution', [
+                    'employee' => $contribution->employee,
+                    'contribution' => $contribution,
+                    'month' => $monthName,
+                    'year' => $year
+                ], function ($message) use ($contribution) {
+                    $message->to($contribution->employee->email_address)
+                        ->subject('PhilHealth Contribution Notification for ' . date('F Y', strtotime($contribution->contribution_date)));
+                });
+                
+                $notificationCount++;
+            } catch (\Exception $e) {
+                $errorMessages[] = "Failed to send notification to {$contribution->employee->email_address}: {$e->getMessage()}";
+            }
+        }
+
+        if ($notificationCount > 0) {
+            $message = "{$notificationCount} PhilHealth contribution notifications sent successfully for {$monthName} {$year}.";
+            
+            if (!empty($errorMessages)) {
+                $message .= " However, some notifications could not be sent.";
+            }
+            
+            return redirect()->route('philhealth.index')->with('success', $message);
+        }
+
+        return redirect()->route('philhealth.index')->with('error', "Failed to send PhilHealth contribution notifications: " . implode("; ", $errorMessages));
+    }
 }

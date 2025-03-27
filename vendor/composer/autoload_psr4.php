@@ -90,6 +90,7 @@ return array(
     'Laravel\\Tinker\\' => array($vendorDir . '/laravel/tinker/src'),
     'Laravel\\Socialite\\' => array($vendorDir . '/laravel/socialite/src'),
     'Laravel\\SerializableClosure\\' => array($vendorDir . '/laravel/serializable-closure/src'),
+    'Laravel\\Scout\\' => array($vendorDir . '/laravel/scout/src'),
     'Laravel\\Sanctum\\' => array($vendorDir . '/laravel/sanctum/src'),
     'Laravel\\Prompts\\' => array($vendorDir . '/laravel/prompts/src'),
     'Kreait\\Laravel\\Firebase\\' => array($vendorDir . '/kreait/laravel-firebase/src'),

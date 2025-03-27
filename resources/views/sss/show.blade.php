@@ -51,6 +51,12 @@
                                     <span class="detail-value">₱{{ number_format($sss->ec_contribution, 2) }}</span>
                                 </div>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="detail-item">
+                                    <span class="detail-label">Total Contribution With EC</span>
+                                    <span class="detail-value font-weight-bold">₱{{ number_format($sss->total_contribution + $sss->ec_contribution, 2) }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

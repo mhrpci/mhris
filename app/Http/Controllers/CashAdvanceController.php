@@ -249,29 +249,76 @@ class CashAdvanceController extends Controller
                     ->exists();
 
                 if (!$existingPayment) {
+                    // Calculate covered periods
+                    $month = $currentMonth->month;
+                    $year = $currentMonth->year;
+                    
+                    // For the current month, get the previous month's 26th to current month's 10th
+                    $prevMonth = Carbon::create($year, $month)->subMonth();
+                    $firstHalfStart = Carbon::create($prevMonth->year, $prevMonth->month, 26)->startOfDay();
+                    $firstHalfEnd = Carbon::create($year, $month, 10)->endOfDay();
+                    
+                    // For the current month's 11th to 25th
+                    $secondHalfStart = Carbon::create($year, $month, 11)->startOfDay();
+                    $secondHalfEnd = Carbon::create($year, $month, 25)->endOfDay();
+                    
+                    // Create the main payment record
                     $payment = CashAdvancePayment::create([
                         'cash_advance_id' => $cashAdvance->id,
                         'amount' => $cashAdvance->monthly_amortization,
                         'payment_date' => Carbon::now(),
                         'notes' => 'Auto-generated payment',
+                        'covered_period_start' => $firstHalfStart,
+                        'covered_period_end' => $secondHalfEnd,
                     ]);
                     $paymentsGenerated++;
 
                     // Calculate half of the payment amount
                     $halfAmount = $payment->amount / 2;
 
-                    // Get the payment month and year
-                    $paymentDate = Carbon::parse($payment->payment_date);
-                    $paymentYear = $paymentDate->year;
-                    $paymentMonth = $paymentDate->month;
+                    // Create two payment details with covered periods
+                    $paymentDetails = [
+                        [
+                            'day' => 10,
+                            'period_start' => $firstHalfStart,
+                            'period_end' => $firstHalfEnd,
+                            'note' => "First half ({$firstHalfStart->format('M d')} - {$firstHalfEnd->format('M d')})",
+                            'period' => 'first_half'
+                        ],
+                        [
+                            'day' => 25,
+                            'period_start' => $secondHalfStart,
+                            'period_end' => $secondHalfEnd,
+                            'note' => "Second half ({$secondHalfStart->format('M d')} - {$secondHalfEnd->format('M d')})",
+                            'period' => 'second_half'
+                        ]
+                    ];
 
-                    // Create two Loan entries for the 10th and 25th of the payment month
-                    foreach ([10, 25] as $day) {
-                        Loan::create([
+                    foreach ($paymentDetails as $paymentInfo) {
+                        // Create the loan record first
+                        $loan = Loan::create([
                             'employee_id' => $cashAdvance->employee_id,
                             'cash_advance' => $halfAmount,
-                            'date' => Carbon::create($paymentYear, $paymentMonth, $day),
+                            'date' => Carbon::create($year, $month, $paymentInfo['day']),
+                            'notes' => $paymentInfo['note'],
                         ]);
+
+                        // Create the payment detail and link it to the loan
+                        $detail = $payment->paymentDetails()->create([
+                            'amount' => $halfAmount,
+                            'payment_date' => Carbon::create($year, $month, $paymentInfo['day']),
+                            'covered_period_start' => $paymentInfo['period_start'],
+                            'covered_period_end' => $paymentInfo['period_end'],
+                            'notes' => $paymentInfo['note'],
+                            'payment_period' => $paymentInfo['period'],
+                            'loan_id' => $loan->id,
+                        ]);
+                    }
+
+                    // Check if all payments are made to mark the cash advance as complete
+                    $totalPaid = $cashAdvance->payments->sum('amount');
+                    if ($totalPaid >= $cashAdvance->total_repayment) {
+                        $cashAdvance->update(['status' => 'complete']);
                     }
                 }
             }
@@ -304,29 +351,76 @@ class CashAdvanceController extends Controller
                     ->exists();
 
                 if (!$existingPayment) {
+                    // Calculate covered periods
+                    $month = $currentMonth->month;
+                    $year = $currentMonth->year;
+                    
+                    // For the current month, get the previous month's 26th to current month's 10th
+                    $prevMonth = Carbon::create($year, $month)->subMonth();
+                    $firstHalfStart = Carbon::create($prevMonth->year, $prevMonth->month, 26)->startOfDay();
+                    $firstHalfEnd = Carbon::create($year, $month, 10)->endOfDay();
+                    
+                    // For the current month's 11th to 25th
+                    $secondHalfStart = Carbon::create($year, $month, 11)->startOfDay();
+                    $secondHalfEnd = Carbon::create($year, $month, 25)->endOfDay();
+                    
+                    // Create the main payment record
                     $payment = CashAdvancePayment::create([
                         'cash_advance_id' => $cashAdvance->id,
                         'amount' => $cashAdvance->monthly_amortization,
                         'payment_date' => Carbon::now(),
                         'notes' => 'Auto-generated payment for specific employee',
+                        'covered_period_start' => $firstHalfStart,
+                        'covered_period_end' => $secondHalfEnd,
                     ]);
                     $paymentsGenerated++;
 
                     // Calculate half of the payment amount
                     $halfAmount = $payment->amount / 2;
 
-                    // Get the payment month and year
-                    $paymentDate = Carbon::parse($payment->payment_date);
-                    $paymentYear = $paymentDate->year;
-                    $paymentMonth = $paymentDate->month;
+                    // Create two payment details with covered periods
+                    $paymentDetails = [
+                        [
+                            'day' => 10,
+                            'period_start' => $firstHalfStart,
+                            'period_end' => $firstHalfEnd,
+                            'note' => "First half ({$firstHalfStart->format('M d')} - {$firstHalfEnd->format('M d')})",
+                            'period' => 'first_half'
+                        ],
+                        [
+                            'day' => 25,
+                            'period_start' => $secondHalfStart,
+                            'period_end' => $secondHalfEnd,
+                            'note' => "Second half ({$secondHalfStart->format('M d')} - {$secondHalfEnd->format('M d')})",
+                            'period' => 'second_half'
+                        ]
+                    ];
 
-                    // Create two Loan entries for the 10th and 25th of the payment month
-                    foreach ([10, 25] as $day) {
-                        Loan::create([
+                    foreach ($paymentDetails as $paymentInfo) {
+                        // Create the loan record first
+                        $loan = Loan::create([
                             'employee_id' => $cashAdvance->employee_id,
                             'cash_advance' => $halfAmount,
-                            'date' => Carbon::create($paymentYear, $paymentMonth, $day),
+                            'date' => Carbon::create($year, $month, $paymentInfo['day']),
+                            'notes' => $paymentInfo['note'],
                         ]);
+
+                        // Create the payment detail and link it to the loan
+                        $detail = $payment->paymentDetails()->create([
+                            'amount' => $halfAmount,
+                            'payment_date' => Carbon::create($year, $month, $paymentInfo['day']),
+                            'covered_period_start' => $paymentInfo['period_start'],
+                            'covered_period_end' => $paymentInfo['period_end'],
+                            'notes' => $paymentInfo['note'],
+                            'payment_period' => $paymentInfo['period'],
+                            'loan_id' => $loan->id,
+                        ]);
+                    }
+
+                    // Check if all payments are made to mark the cash advance as complete
+                    $totalPaid = $cashAdvance->payments->sum('amount');
+                    if ($totalPaid >= $cashAdvance->total_repayment) {
+                        $cashAdvance->update(['status' => 'complete']);
                     }
                 }
             }

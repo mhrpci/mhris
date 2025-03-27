@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Haruncpi\LaravelUserActivity\Traits\Loggable;
+use App\Models\User;
 
 class OvertimePay extends Model
 {
@@ -17,11 +18,34 @@ class OvertimePay extends Model
         'overtime_hours',
         'overtime_rate',
         'overtime_pay',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'is_read',
+        'read_at',
+        'is_view',
+        'view_at',
+        'rejection_reason',
+    ];
+
+    protected $casts = [
+        'date' => 'datetime',
+        'approved_at' => 'datetime',
+        'read_at' => 'datetime',
+        'view_at' => 'datetime',
     ];
 
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    /**
+     * Get the user who approved this overtime pay
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
 /**
@@ -52,6 +76,34 @@ public function calculateOvertimePay(): float
 }
 
 /**
+ * Approve the overtime pay record
+ *
+ * @param int $userId The ID of the user who is approving the overtime
+ * @return bool
+ */
+public function approve(int $userId): bool
+{
+    $this->approval_status = 'approved';
+    $this->approved_by = $userId;
+    $this->approved_at = now();
+    return $this->save();
+}
+
+/**
+ * Reject the overtime pay record
+ *
+ * @param int $userId The ID of the user who is rejecting the overtime
+ * @return bool
+ */
+public function reject(int $userId): bool
+{
+    $this->approval_status = 'rejected';
+    $this->approved_by = $userId;
+    $this->approved_at = now();
+    return $this->save();
+}
+
+/**
  * Get total overtime pay for a specific employee within a date range
  *
  * @param int $employeeId
@@ -62,7 +114,8 @@ public function calculateOvertimePay(): float
 public static function getTotalOvertimePay(int $employeeId, string $startDate, string $endDate): float
 {
     return self::where('employee_id', $employeeId)
-        ->whereBetween('date', [$startDate, $endDate])
+        ->whereBetween('approved_at', [$startDate, $endDate])
+        ->where('approval_status', 'approved')
         ->get()
         ->sum(function ($record) {
             return $record->calculateOvertimePay();

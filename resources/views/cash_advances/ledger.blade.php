@@ -56,7 +56,13 @@
                         <dt class="col-sm-6 text-muted">Repayment Progress:</dt>
                         <dd class="col-sm-6">
                             <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ ($cashAdvance->payments->sum('amount') / $cashAdvance->total_repayment) * 100 }}%"></div>
+                                <div class="progress-bar bg-success" 
+                                    role="progressbar" 
+                                    style="width: {{ ($cashAdvance->payments->sum('amount') / $cashAdvance->total_repayment) * 100 }}%;" 
+                                    aria-valuenow="{{ ($cashAdvance->payments->sum('amount') / $cashAdvance->total_repayment) * 100 }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                </div>
                             </div>
                             <small class="text-muted">{{ number_format(($cashAdvance->payments->sum('amount') / $cashAdvance->total_repayment) * 100, 1) }}% complete</small>
                         </dd>
@@ -66,7 +72,7 @@
         </div>
 
         <div class="col-lg-8">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                     <h2 class="h5 mb-0"><i class="fas fa-history mr-2"></i>Payment History</h2>
                     <button class="btn btn-sm btn-outline-light" id="exportBtn">
@@ -80,6 +86,7 @@
                                 <tr>
                                     <th>Payment Date</th>
                                     <th>Amount</th>
+                                    <th>Covered Period</th>
                                     <th>Running Balance</th>
                                     <th>Notes</th>
                                 </tr>
@@ -91,13 +98,79 @@
                                     <tr>
                                         <td>{{ $payment->payment_date instanceof \DateTime ? $payment->payment_date->format('F d, Y') : date('F d, Y', strtotime($payment->payment_date)) }}</td>
                                         <td>₱{{ number_format($payment->amount, 2) }}</td>
+                                        <td>
+                                            @if($payment->covered_period_start && $payment->covered_period_end)
+                                                {{ date('M d', strtotime($payment->covered_period_start)) }} - {{ date('M d, Y', strtotime($payment->covered_period_end)) }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
                                         <td>₱{{ number_format($runningBalance, 2) }}</td>
                                         <td>{{ $payment->notes ?: 'N/A' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-center text-muted">
+                                        <td colspan="5" class="text-center text-muted">
                                             <i class="fas fa-info-circle mr-2"></i>No payments recorded yet.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0"><i class="fas fa-calendar-alt mr-2"></i>Bi-Monthly Payment Details</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="bimonthlyTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Payment Date</th>
+                                    <th>Amount</th>
+                                    <th>Covered Period</th>
+                                    <th>Type</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php 
+                                    $allDetails = collect();
+                                    foreach ($cashAdvance->payments as $payment) {
+                                        if (method_exists($payment, 'paymentDetails')) {
+                                            $allDetails = $allDetails->merge($payment->paymentDetails);
+                                        }
+                                    }
+                                @endphp
+                                
+                                @forelse ($allDetails->sortBy('payment_date') as $detail)
+                                    <tr>
+                                        <td>{{ $detail->payment_date instanceof \DateTime ? $detail->payment_date->format('F d, Y') : date('F d, Y', strtotime($detail->payment_date)) }}</td>
+                                        <td>₱{{ number_format($detail->amount, 2) }}</td>
+                                        <td>
+                                            @if($detail->covered_period_start && $detail->covered_period_end)
+                                                {{ date('M d', strtotime($detail->covered_period_start)) }} - {{ date('M d, Y', strtotime($detail->covered_period_end)) }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($detail->payment_period == 'first_half')
+                                                <span class="badge badge-info">First Half</span>
+                                            @else
+                                                <span class="badge badge-secondary">Second Half</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $detail->notes ?: 'N/A' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">
+                                            <i class="fas fa-info-circle mr-2"></i>No bi-monthly payment details available.
                                         </td>
                                     </tr>
                                 @endforelse

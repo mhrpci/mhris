@@ -60,6 +60,8 @@
                                 <th>Overtime Hour</th>
                                 <th>Overtime Rate</th>
                                 <th>Overtime Pay</th>
+                                <th>Status</th>
+                                <th>Approved By</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -72,12 +74,44 @@
                                     <td>{{ $overtime->overtime_rate }}</td>
                                     <td>{{ number_format($overtime->overtime_pay, 2) }}</td>
                                     <td>
-                                        @can('super-admin')
+                                        @if($overtime->approval_status == 'pending')
+                                            <span class="badge badge-warning">Pending</span>
+                                        @elseif($overtime->approval_status == 'approved')
+                                            <span class="badge badge-success">Approved</span>
+                                            <small>{{ $overtime->approved_at ? \Carbon\Carbon::parse($overtime->approved_at)->format('M j, Y g:i A') : '' }}</small>
+                                        @else
+                                            <span class="badge badge-danger">Rejected</span>
+                                            <small>{{ $overtime->approved_at ? \Carbon\Carbon::parse($overtime->approved_at)->format('M j, Y g:i A') : '' }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($overtime->approver)
+                                            {{ $overtime->approver->first_name }} {{ $overtime->approver->last_name }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Finance') || Auth::user()->hasRole('HR ComBen'))
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <i class="fas fa-ellipsis-v"></i>
                                             </button>
                                             <div class="dropdown-menu">
+                                            @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Finance') || Auth::user()->hasRole('HR ComBen'))
+                                                    @if($overtime->approval_status == 'pending')
+                                                        <form action="{{ route('overtime.approve', $overtime->id) }}" method="POST">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <button type="submit" class="dropdown-item"><i class="fas fa-check"></i>&nbsp;Approve</button>
+                                                        </form>
+                                                        <form action="{{ route('overtime.reject', $overtime->id) }}" method="POST">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <button type="submit" class="dropdown-item"><i class="fas fa-times"></i>&nbsp;Reject</button>
+                                                        </form>
+                                                    @endif
+                                                @endif
                                                 @can('overtime-delete')
                                                     <form action="{{ route('overtime.destroy', $overtime->id) }}" method="POST">
                                                         @csrf
@@ -87,7 +121,7 @@
                                                 @endcan
                                             </div>
                                         </div>
-                                        @endcan
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -156,15 +190,35 @@
         $(document).on('click', '.dropdown-item[type="submit"]', function(e) {
             e.preventDefault();
             let form = $(this).closest('form');
+            let action = form.attr('action');
+            let confirmTitle, confirmText, confirmButtonText, confirmIcon;
+            
+            // Set appropriate messages based on the action
+            if (action.includes('approve')) {
+                confirmTitle = 'Approve Overtime?';
+                confirmText = "Are you sure you want to approve this overtime request?";
+                confirmButtonText = 'Yes, approve it!';
+                confirmIcon = 'question';
+            } else if (action.includes('reject')) {
+                confirmTitle = 'Reject Overtime?';
+                confirmText = "Are you sure you want to reject this overtime request?";
+                confirmButtonText = 'Yes, reject it!';
+                confirmIcon = 'question';
+            } else {
+                confirmTitle = 'Delete Overtime?';
+                confirmText = "You won't be able to revert this!";
+                confirmButtonText = 'Yes, delete it!';
+                confirmIcon = 'warning';
+            }
 
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
+                title: confirmTitle,
+                text: confirmText,
+                icon: confirmIcon,
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!',
+                confirmButtonText: confirmButtonText,
                 cancelButtonText: 'Cancel',
                 reverseButtons: true
             }).then((result) => {

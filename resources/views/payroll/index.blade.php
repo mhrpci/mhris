@@ -58,8 +58,11 @@
                                 <input type="date" name="end_date" id="end_date" class="form-control" required readonly>
                             </div>
                             <input type="hidden" name="download" value="1">
-                            <button type="submit" class="btn btn-primary btn-sm">
+                            <button type="submit" class="btn btn-primary btn-sm mr-2">
                                 <i class="fas fa-download"></i> Download Payrolls
+                            </button>
+                            <button type="button" class="btn btn-info btn-sm">
+                                <i class="fas fa-print"></i> Print
                             </button>
                         </form>
                     </div>

@@ -123,10 +123,10 @@
                         </div>
                         <div class="form-group">
                             <label for="employee_id">Select Employee<span class="text-danger">*</span></label>
-                            <select name="employee_id" id="employee_id" class="form-control" required>
+                            <select name="employee_id" id="employee_id" class="form-control" required data-placeholder="Search for an employee...">
                                 <option value="">Select an employee</option>
                                 @foreach($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->last_name }} {{ $employee->first_name }}, {{ $employee->middle_name ?? ' ' }} {{ $employee->suffix ?? ' ' }}</option>
+                                    <option value="{{ $employee->id }}">{{ $employee->last_name }}, {{ $employee->first_name }}{{ !empty($employee->middle_name) ? ' '.$employee->middle_name : '' }}{{ !empty($employee->suffix) ? ' '.$employee->suffix : '' }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -152,17 +152,80 @@
 @section('css')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+    <style>
+        /* Enhanced Select2 styling */
+        .select2-container--bootstrap4 .select2-selection {
+            height: calc(1.5em + 0.75rem + 2px);
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+        
+        .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+            line-height: calc(1.5em + 0.25rem);
+        }
+        
+        .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+            height: calc(1.5em + 0.75rem);
+        }
+        
+        /* Ensure dropdowns are visible in modal */
+        .select2-container--bootstrap4 {
+            z-index: 1060;
+        }
+
+        /* Highlight selected item */
+        .select2-results__option--highlighted {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+    </style>
 @stop
 
 @section('js')
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Select2
+            // Initialize Select2 for all selects
             $('select').select2({
                 theme: 'bootstrap4',
                 width: '100%'
             });
+
+            // Special handling for modal selects
+            $('#specificEmployeeModal').on('shown.bs.modal', function () {
+                // Reinitialize Select2 elements within the modal to ensure proper rendering
+                $('#modal_payroll_type').select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    dropdownParent: $('#specificEmployeeModal .modal-content')
+                });
+                
+                // Enhanced employee select with search capabilities
+                $('#employee_id').select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    dropdownParent: $('#specificEmployeeModal .modal-content'),
+                    placeholder: 'Search for an employee...',
+                    allowClear: true,
+                    minimumInputLength: 1,
+                    templateResult: formatEmployeeOption,
+                    templateSelection: formatEmployeeSelection
+                });
+            });
+            
+            // Format employee dropdown options
+            function formatEmployeeOption(employee) {
+                if (!employee.id) return employee.text;
+                return $('<span style="padding: 6px 0; display: block;">' + employee.text + '</span>');
+            }
+            
+            // Format the selected employee display
+            function formatEmployeeSelection(employee) {
+                if (!employee.id) return employee.text;
+                return employee.text;
+            }
 
             function setEndDate(startDateInput, endDateInput, payrollType) {
                 var startDate = new Date(startDateInput.val());

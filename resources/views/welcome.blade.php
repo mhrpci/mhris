@@ -1,1037 +1,925 @@
-@extends('layouts.main')
-
-@section('meta')
-<meta name="description" content="Industry-leading solutions for business growth. Explore our comprehensive services and global network of subsidiaries.">
-<meta name="keywords" content="business solutions, global services, professional consulting">
-@endsection
-
-@section('title', 'Enterprise Solutions | Professional Services & Global Network')
-
-@section('styles')
-<style>
-    :root {
-        --purple-primary: #6b21a8;
-        --purple-secondary: #7c3aed;
-        --purple-light: #8b5cf6;
-        --purple-dark: #4c1d95;
-        --purple-gradient: linear-gradient(45deg, #6b21a8, #7c3aed);
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: system-ui, -apple-system, sans-serif;
-        line-height: 1.6;
-        color: #333;
-    }
-
-    .nav {
-        background: rgba(255, 255, 255, 0.98);
-        padding: 0.75rem 0;
-        box-shadow: 0 2px 4px rgba(107, 33, 168, 0.1);
-        position: fixed;
-        width: 100%;
-        top: 0;
-        z-index: 1000;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
-
-    .nav.scrolled {
-        padding: 0.5rem 0;
-        background: rgba(255, 255, 255, 0.95);
-        box-shadow: 0 4px 6px rgba(107, 33, 168, 0.1);
-    }
-
-    .nav-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-        position: relative;
-    }
-
-    .brand {
-        display: flex;
-        align-items: center;
-        text-decoration: none;
-        color: var(--purple-dark);
-        padding: 0.5rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .brand:hover {
-        background: rgba(107, 33, 168, 0.05);
-    }
-
-    .brand-logo {
-        display: flex;
-        align-items: center;
-        font-weight: 700;
-        font-size: 1.5rem;
-        color: var(--purple-primary);
-        gap: 0.5rem;
-    }
-
-    .nav-content {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-    }
-
-    .nav-list {
-        display: flex;
-        align-items: center;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        gap: 1rem;
-    }
-
-    .nav-item {
-        position: relative;
-    }
-
-    .nav-link {
-        text-decoration: none;
-        color: #333;
-        font-weight: 500;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .nav-link:hover {
-        color: var(--purple-primary);
-        background: rgba(107, 33, 168, 0.05);
-    }
-
-    .nav-link.active {
-        color: var(--purple-primary);
-        background: rgba(107, 33, 168, 0.08);
-    }
-
-    .google-login {
-        display: flex;
-        align-items: center;
-        background: #fff;
-        border: 2px solid var(--purple-light);
-        border-radius: 8px;
-        padding: 0.5rem 1.25rem;
-        font-size: 0.95rem;
-        color: var(--purple-primary);
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        gap: 0.5rem;
-    }
-
-    .google-login:hover {
-        background: var(--purple-primary);
-        color: white;
-        border-color: var(--purple-primary);
-    }
-
-    .google-login:hover svg path {
-        fill: white;
-    }
-
-    /* Mobile Menu Button */
-    .mobile-menu-btn {
-        display: none;
-        background: none;
-        border: none;
-        padding: 0.5rem;
-        cursor: pointer;
-        position: relative;
-        z-index: 1001;
-    }
-
-    .menu-icon {
-        display: block;
-        width: 24px;
-        height: 2px;
-        background: var(--purple-primary);
-        position: relative;
-        transition: all 0.3s ease;
-    }
-
-    .menu-icon::before,
-    .menu-icon::after {
-        content: '';
-        position: absolute;
-        width: 24px;
-        height: 2px;
-        background: var(--purple-primary);
-        transition: all 0.3s ease;
-    }
-
-    .menu-icon::before {
-        top: -6px;
-    }
-
-    .menu-icon::after {
-        bottom: -6px;
-    }
-
-    /* Mobile Menu Open State */
-    .mobile-menu-btn.active .menu-icon {
-        background: transparent;
-    }
-
-    .mobile-menu-btn.active .menu-icon::before {
-        top: 0;
-        transform: rotate(45deg);
-    }
-
-    .mobile-menu-btn.active .menu-icon::after {
-        bottom: 0;
-        transform: rotate(-45deg);
-    }
-
-    @media (max-width: 768px) {
-        .mobile-menu-btn {
-            display: block;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MHR Property Conglomerate Inc. | Leading Business Conglomerate</title>
+    <meta name="description" content="MHR Property Conglomerate Inc. (MHRPCI) - A diverse business conglomerate operating across healthcare, fuel distribution, construction, and hospitality sectors in the Philippines.">
+    <meta name="keywords" content="MHRPCI, MHR Property Conglomerate, healthcare, fuel distribution, construction, hospitality, Cebu business, medical supplies">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --primary-dark: #4338CA;
+            --primary-light: #EEF2FF;
+            --text-dark: #1F2937;
+            --text-light: #F9FAFB;
         }
-
-        .nav-content {
-            position: fixed;
-            top: 0;
-            right: -100%;
-            width: 80%;
-            max-width: 400px;
-            height: 100vh;
-            background: white;
-            flex-direction: column;
-            padding: 5rem 2rem 2rem;
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            font-size: 100%;
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        @media (max-width: 320px) {
+            html { font-size: 85%; }
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+            min-width: 320px; /* Set minimum width for very small devices */
+            overflow-x: hidden;
+        }
+        
+        /* Container for smaller screens */
+        .container {
+            width: 100%;
+            max-width: 100%;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        @media (min-width: 640px) {
+            .container {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .container {
+                max-width: 1280px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(90deg, #4F46E5, #7C3AED);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .service-card {
             transition: all 0.3s ease;
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-
-        .nav-content.active {
-            right: 0;
-        }
-
-        .nav-list {
-            flex-direction: column;
-            width: 100%;
-            gap: 0.75rem;
-        }
-
-        .nav-item {
-            width: 100%;
-        }
-
-        .nav-link {
-            padding: 0.75rem 1rem;
-            width: 100%;
-            justify-content: flex-start;
-            font-size: 1.1rem;
-        }
-
-        .google-login {
-            width: 100%;
-            justify-content: center;
-            margin-top: 1rem;
-            padding: 0.75rem;
-        }
-
-        /* Overlay for mobile menu */
-        .nav-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .nav-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-    }
-
-    /* Small screen adjustments */
-    @media (max-width: 480px) {
-        .nav-container {
-            padding: 0 1rem;
-        }
-
-        .brand-logo {
-            font-size: 1.25rem;
-        }
-
-        .nav-content {
-            width: 100%;
-            padding: 4rem 1.5rem 2rem;
-        }
-    }
-
-    .hero {
-        background: var(--purple-gradient);
-        color: white;
-        padding: 6rem 1rem 3rem;
-        text-align: center;
-    }
-
-    .hero h1 {
-        font-size: clamp(2rem, 5vw, 3.5rem);
-        line-height: 1.2;
-        margin-bottom: 1rem;
-    }
-
-    .hero p {
-        font-size: clamp(2.5rem, 3vw, 1.25rem);
-    }
-
-    .section {
-        padding: 5rem 2rem;
-    }
-
-    .section-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-        width: 100%;
-    }
-
-    .section-title {
-        text-align: center;
-        margin-bottom: 3rem;
-        font-size: 2.5rem;
-        color: var(--purple-dark);
-    }
-
-    .section-subtitle {
-        text-align: center;
-        margin-bottom: 4rem;
-        color: #666;
-        font-size: 1.2rem;
-    }
-
-    .services-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin: 0 auto;
-        max-width: 1200px;
-    }
-
-    .service-card {
-        background: #fff;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(107, 33, 168, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .service-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(107, 33, 168, 0.15);
-    }
-
-    .service-icon {
-        color: var(--purple-secondary);
-        margin-bottom: 1rem;
-    }
-
-    .service-title {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        color: var(--purple-dark);
-    }
-
-    .about-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4rem;
-        align-items: center;
-    }
-
-    .about-text {
-        font-size: 1.1rem;
-        color: #444;
-    }
-
-    .contact-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .contact-card {
-        text-align: center;
-        padding: 2rem;
-        transition: all 0.3s ease;
-    }
-
-    .contact-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(107, 33, 168, 0.15);
-    }
-
-    .contact-icon {
-        color: var(--purple-secondary);
-        margin-bottom: 1rem;
-    }
-
-    .footer {
-        background: var(--purple-dark);
-        color: white;
-        padding: 4rem 2rem 2rem;
-    }
-
-    .footer-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
-        padding: 0 1.5rem;
-    }
-
-    .footer-section h3 {
-        margin-bottom: 1.5rem;
-        font-size: 1.2rem;
-    }
-
-    .footer-links {
-        list-style: none;
-    }
-
-    .footer-links li {
-        margin-bottom: 0.8rem;
-    }
-
-    .footer-links a {
-        color: #e2e8f0;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    .footer-links a:hover {
-        color: var(--purple-light);
-    }
-
-    .footer-bottom {
-        text-align: center;
-        padding-top: 2rem;
-        margin-top: 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    @media (max-width: 768px) {
-        .footer-content {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .footer-content {
-            grid-template-columns: 1fr;
-            text-align: center;
-        }
-
-        .footer-links {
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
-    }
-
-    @media (max-width: 1280px) {
-        .section-container {
-            max-width: 100%;
-        }
-    }
-
-    @keyframes fadeIn {
-        from { 
-            opacity: 0; 
-            transform: translateY(20px); 
-        }
-        to { 
-            opacity: 1; 
-            transform: translateY(0); 
-        }
-    }
-
-    @keyframes slideIn {
-        from { 
-            transform: translateX(-50px); 
-            opacity: 0; 
-        }
-        to { 
-            transform: translateX(0); 
-            opacity: 1; 
-        }
-    }
-
-    @keyframes scaleIn {
-        from { 
-            transform: scale(0.95); 
-            opacity: 0; 
-        }
-        to { 
-            transform: scale(1); 
-            opacity: 1; 
-        }
-    }
-
-    .animate-fade-in {
-        animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        opacity: 0;
-    }
-
-    .animate-slide-in {
-        animation: slideIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        opacity: 0;
-    }
-
-    .animate-scale-in {
-        animation: scaleIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        opacity: 0;
-    }
-
-    .delay-1 { animation-delay: 0.2s; }
-    .delay-2 { animation-delay: 0.4s; }
-    .delay-3 { animation-delay: 0.6s; }
-
-    .subsidiaries-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .subsidiary-card {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(107, 33, 168, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .subsidiary-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(107, 33, 168, 0.15);
-    }
-
-    .subsidiary-image {
-        width: 100%;
-        height: clamp(150px, 30vw, 200px);
-        object-fit: cover;
-    }
-
-    .subsidiary-content {
-        padding: 1.5rem;
-    }
-
-    .subsidiary-title {
-        font-size: 1.25rem;
-        color: var(--purple-dark);
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-    }
-
-    .subsidiary-location {
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .subsidiary-description {
-        color: #444;
-        line-height: 1.6;
-    }
-
-    /* Base responsive typography */
-    html {
-        font-size: 16px;
-    }
-
-    @media (max-width: 768px) {
-        html {
-            font-size: 14px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        html {
-            font-size: 12px;
-        }
-    }
-
-    /* Responsive section spacing */
-    @media (max-width: 768px) {
-        .section {
-            padding: 3rem 1rem;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .section-subtitle {
-            font-size: 1rem;
-            margin-bottom: 2rem;
-        }
-    }
-
-    /* Touch-friendly interactions */
-    @media (hover: none) {
-        .service-card:hover,
-        .subsidiary-card:hover,
-        .contact-card:hover {
-            transform: none;
-        }
-
-        .nav-link,
-        .footer-links a {
-            padding: 0.5rem;
-        }
-    }
-
-    /* Improved card responsiveness */
-    .service-card,
-    .subsidiary-card,
-    .contact-card {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .subsidiary-content,
-    .service-card > div {
-        flex: 1;
-    }
-
-    /* Ensure images are responsive */
-    img {
-        max-width: 100%;
-        height: auto;
-    }
-
-    /* Animation optimizations for mobile */
-    @media (prefers-reduced-motion: reduce) {
-        .animate-fade-in,
-        .animate-slide-in,
-        .animate-scale-in {
-            animation: none;
-            opacity: 1;
-        }
-    }
-
-    /* Enhanced scroll animations */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translate3d(0, 40px, 0);
-        }
-        to {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-        }
-    }
-
-    @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translate3d(50px, 0, 0);
-        }
-        to {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-        }
-    }
-
-    @keyframes scaleInCenter {
-        from {
-            opacity: 0;
-            transform: scale3d(0.8, 0.8, 0.8);
-        }
-        to {
-            opacity: 1;
-            transform: scale3d(1, 1, 1);
-        }
-    }
-
-    .scroll-fade-up {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .scroll-slide-right {
-        opacity: 0;
-        transform: translateX(50px);
-        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .scroll-scale-in {
-        opacity: 0;
-        transform: scale(0.8);
-        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .scroll-animate {
-        opacity: 1;
-        transform: translate(0) scale(1);
-    }
-
-    .delay-100 { transition-delay: 100ms; }
-    .delay-200 { transition-delay: 200ms; }
-    .delay-300 { transition-delay: 300ms; }
-    .delay-400 { transition-delay: 400ms; }
-
-    .subsidiary-link {
-        margin-top: 1rem;
-    }
-
-    .learn-more {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--purple-primary);
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .learn-more:hover {
-        gap: 0.75rem;
-        color: var(--purple-secondary);
-    }
-
-    .learn-more svg {
-        transition: transform 0.3s ease;
-    }
-
-    .learn-more:hover svg {
-        transform: translateX(4px);
-    }
-
-    .see-all-container {
-        text-align: center;
-        margin-top: 3rem;
-    }
-
-    .see-all-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--purple-primary);
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 1.1rem;
-        padding: 0.75rem 1.5rem;
-        border: 2px solid var(--purple-primary);
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .see-all-link:hover {
-        background: var(--purple-primary);
-        color: white;
-        gap: 0.75rem;
-    }
-
-    .see-all-link:hover svg {
-        transform: translateX(4px);
-    }
-
-    .see-all-link svg {
-        transition: transform 0.3s ease;
-    }
-</style>
-@endsection
-
-@section('content')
-<header class="hero">
-    <h1>Welcome to MHR Property Conglomerates, Inc.</h1>
-    <p>Good Success!</p>
-</header>
-
-<section id="about" class="section" style="background: #f8fafc;">
-    <div class="section-container">
-        <h2 class="section-title" style="text-align: left;">About Us</h2>
-        <div class="about-content">
-            <div class="about-text">
-                <p>MHR Property Conglomerate Inc. (MHRPCI) began in the year 2000 with the establishment of Cebic Trading, a single proprietorship that started with just a 20,000-peso capital, primarily dealing in hospital and office medical supplies.</p>
-                <br>
-                <p>In 2003, MHRPCI expanded its operations in Cebu by forming Medical & Hospital Resources Health Care, Inc. (MHRHCI) to focus on medical supplies and forge international partnerships. Over the years, MHRPCI has continued to grow, spreading its wings to various regions and industries, acquiring businesses in hospitality, pharmaceuticals, hauling, and more, eventually becoming a conglomerate with 10 companies working in synergy.</p>
-            </div>
-            <div class="about-image">
-                <img src="/vendor/adminlte/dist/img/LOGO4.png" alt="Team collaboration" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            </div>
-        </div>
-    </div>
-</section>
-
-<section id="services" class="section">
-    <div class="section-container">
-        <h2 class="section-title">Our Services</h2>
-        <p class="section-subtitle">Comprehensive solutions tailored to your business needs</p>
         
-        <div class="services-grid">
-            <div class="service-card">
-                <div class="service-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-                </div>
-                <h3 class="service-title">Digital Transformation</h3>
-                <p>Modernize your business with cutting-edge digital solutions and strategies.</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                </div>
-                <h3 class="service-title">Process Optimization</h3>
-                <p>Streamline operations and maximize efficiency with our expert solutions.</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                </div>
-                <h3 class="service-title">Enterprise Solutions</h3>
-                <p>Custom enterprise software and solutions for complex business needs.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section id="subsidiaries" class="section" style="background: #f8fafc;">
-    <div class="section-container">
-        <h2 class="section-title animate-fade-in">Our Subsidiaries</h2>
-        <p class="section-subtitle animate-fade-in delay-1">Discover the diverse portfolio of companies that make up MHR Property Conglomerates, Inc.</p>
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
         
-        <div class="subsidiaries-grid">
-            <div class="subsidiary-card animate-slide-in delay-1">
-                <img src="/vendor/adminlte/dist/img/cebic.png" alt="Cebic Industries" class="subsidiary-image">
-                <div class="subsidiary-content">
-                    <h3 class="subsidiary-title">Cebic Industries OPC</h3>
-                    <div class="subsidiary-location">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        Cebu, Philippines
-                    </div>
-                    <p class="subsidiary-description">Cebic Trading is the original business that laid the foundation for MHRPCI. Initially focused on hospital and medical supplies.</p>
-                </div>
-            </div>
-
-            <div class="subsidiary-card animate-slide-in delay-2">
-                <img src="/vendor/adminlte/dist/img/mhrhci.png" alt="MHRHCI" class="subsidiary-image">
-                <div class="subsidiary-content">
-                    <h3 class="subsidiary-title">MHRHCI</h3>
-                    <div class="subsidiary-location">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        Cebu, Philippines
-                    </div>
-                    <p class="subsidiary-description">Medical & Hospital Resources Health Care, Inc. specializes in the importation and distribution of medical supplies.</p>
-                </div>
-            </div>
-
-            <div class="subsidiary-card animate-slide-in delay-3">
-                <img src="/vendor/adminlte/dist/img/bgpdi.png" alt="BGPDI" class="subsidiary-image">
-                <div class="subsidiary-content">
-                    <h3 class="subsidiary-title">BGPDI</h3>
-                    <div class="subsidiary-location">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        Philippines
-                    </div>
-                    <p class="subsidiary-description">Bay Gas Petroleum Distribution Inc. Founded in 2015, BGPDI started as a small fuel distribution company.</p>
-                </div>
-            </div>
-        </div>
-        <div class="see-all-container">
-            <a href="{{ route('all_subsidiaries') }}" class="see-all-link">
-                See All Subsidiaries
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </a>
-        </div>
-    </div>
-</section>
-
-<section id="contact" class="section">
-    <div class="section-container">
-        <h2 class="section-title">Contact Us</h2>
-        <p class="section-subtitle">Get in touch with us</p>
+        .nav-link.active {
+            color: #6D28D9;
+            border-bottom: 2px solid #6D28D9;
+        }
         
-        <div class="contact-grid">
-            <div class="contact-card">
-                <div class="contact-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                </div>
-                <h3>Email Us</h3>
-                <p>info@mhrpci.com</p>
-            </div>
-            <div class="contact-card">
-                <div class="contact-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                </div>
-                <h3>Call Us</h3>
-                <p>(032) 238-1887</p>
-            </div>
-            <div class="contact-card">
-                <div class="contact-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                </div>
-                <h3>Visit Us</h3>
-                <p>MHR Building<br>Jose L. Briones St., North Reclamation Area<br>Cebu City, Cebu, Philippines 6000</p>
-            </div>
-        </div>
-    </div>
-</section>
-@endsection
-
-@section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const animatedElements = document.querySelectorAll('.animate-fade-in, .animate-slide-in, .animate-scale-in');
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.animationPlayState = 'running';
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, {
-            threshold: 0.1
-        });
-
-        animatedElements.forEach(element => {
-            element.style.animationPlayState = 'paused';
-            observer.observe(element);
-        });
-
-        // Navbar scroll effect
-        const nav = document.querySelector('.nav');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        /* Responsive improvements */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 640px) {
+            .grid {
+                grid-template-columns: repeat(auto-fit, minmax(275px, 1fr));
             }
-        });
-
-        // Mobile menu functionality
-        const menuBtn = document.querySelector('.mobile-menu-btn');
-        const navContent = document.querySelector('.nav-content');
-        const overlay = document.querySelector('.nav-overlay');
-        const navLinks = document.querySelectorAll('.nav-link');
-
-        function toggleMenu() {
-            menuBtn.classList.toggle('active');
-            navContent.classList.toggle('active');
-            overlay.classList.toggle('active');
-            document.body.style.overflow = navContent.classList.contains('active') ? 'hidden' : '';
         }
-
-        menuBtn.addEventListener('click', toggleMenu);
-        overlay.addEventListener('click', toggleMenu);
-
-        // Close menu when clicking nav links
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                if (navContent.classList.contains('active')) {
-                    toggleMenu();
-                }
-            });
-        });
-
-        // Active link highlighting
-        const sections = document.querySelectorAll('section');
-        window.addEventListener('scroll', () => {
-            let current = '';
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (window.scrollY >= sectionTop - 100) {
-                    current = section.getAttribute('id');
-                }
-            });
-
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href').slice(1) === current) {
-                    link.classList.add('active');
-                }
-            });
-        });
-
-        // Enhanced scroll animations
-        const scrollElements = document.querySelectorAll('.scroll-fade-up, .scroll-slide-right, .scroll-scale-in');
         
-        const elementInView = (el, offset = 0) => {
-            const elementTop = el.getBoundingClientRect().top;
-            return (
-                elementTop <= (window.innerHeight || document.documentElement.clientHeight) * (1 - offset)
-            );
-        };
-
-        const displayScrollElement = (element) => {
-            element.classList.add('scroll-animate');
-        };
-
-        const hideScrollElement = (element) => {
-            element.classList.remove('scroll-animate');
-        };
-
-        const handleScrollAnimation = () => {
-            scrollElements.forEach((el) => {
-                if (elementInView(el, 0.25)) {
-                    displayScrollElement(el);
-                } else {
-                    hideScrollElement(el);
-                }
-            });
-        };
-
-        // Initialize scroll animations
-        handleScrollAnimation();
-
-        // Throttle scroll events
-        let throttleTimer;
-        window.addEventListener('scroll', () => {
-            if (throttleTimer) return;
+        /* Improve touch target sizes on mobile */
+        @media (max-width: 768px) {
+            .nav-link, button, a.bg-indigo-600, .service-card a {
+                padding: 0.625rem 1rem;
+                min-height: 48px;
+            }
             
-            throttleTimer = setTimeout(() => {
-                handleScrollAnimation();
-                throttleTimer = null;
-            }, 50);
-        });
+            button, a.bg-indigo-600 {
+                min-height: 48px;
+                min-width: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            input, textarea, select {
+                font-size: 16px; /* Prevents iOS zoom on focus */
+                padding: 0.75rem;
+            }
+            
+            .service-card {
+                padding: 1.25rem;
+            }
+        }
+        
+        /* Fix for very small screens */
+        @media (max-width: 359px) {
+            .flex-wrap {
+                justify-content: center;
+            }
+            
+            .grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Ensure all images scale properly */
+        img, iframe, video, object {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        
+        /* Typography improvements */
+        h1, h2, h3, h4, h5, h6 {
+            line-height: 1.2;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+        
+        p {
+            max-width: 100%;
+            overflow-wrap: break-word;
+        }
+        
+        /* Accessibility improvements */
+        a:focus, button:focus, input:focus, textarea:focus, select:focus {
+            outline: 2px solid #4F46E5;
+            outline-offset: 2px;
+        }
+        
+        /* Flex utility for service cards */
+        .flex-grow {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header & Navigation -->
+    <header class="bg-white shadow-md fixed w-full z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 md:h-20">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <img src="{{ asset('vendor/adminlte/dist/img/LOGO_ICON.png') }}" alt="MHRPCI Logo" class="h-8 sm:h-10 md:h-12 w-auto">
+                    <div>
+                        <h1 class="text-base sm:text-lg md:text-xl font-bold text-indigo-700">MHRPCI</h1>
+                        <p class="text-xs text-gray-500 hidden xs:block">Property Conglomerate Inc.</p>
+                    </div>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex space-x-3 lg:space-x-8">
+                    <a href="#home" class="nav-link text-gray-700 hover:text-indigo-600 font-medium transition duration-300 px-2 py-1">Home</a>
+                    <a href="#about" class="nav-link text-gray-700 hover:text-indigo-600 font-medium transition duration-300 px-2 py-1">About Us</a>
+                    <a href="#services" class="nav-link text-gray-700 hover:text-indigo-600 font-medium transition duration-300 px-2 py-1">Our Services</a>
+                    <a href="#history" class="nav-link text-gray-700 hover:text-indigo-600 font-medium transition duration-300 px-2 py-1">Our History</a>
+                    <a href="#careers" class="nav-link text-gray-700 hover:text-indigo-600 font-medium transition duration-300 px-2 py-1">MHR Careers</a>
+                </nav>
+                
+                <!-- Contact Button -->
+                <div class="hidden md:block">
+                    <a href="#contact" class="bg-indigo-600 text-white px-4 lg:px-5 py-2 rounded-lg hover:bg-indigo-700 transition duration-300 text-sm lg:text-base">Contact Us</a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-700 hover:text-indigo-600 focus:outline-none p-2" aria-label="Toggle menu">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation -->
+            <div id="mobile-menu" class="md:hidden hidden border-t border-gray-200 py-2 animate-fadeIn">
+                <a href="#home" class="block py-3 px-4 text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Home</a>
+                <a href="#about" class="block py-3 px-4 text-gray-700 hover:text-indigo-600 hover:bg-gray-50">About Us</a>
+                <a href="#services" class="block py-3 px-4 text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Our Services</a>
+                <a href="#history" class="block py-3 px-4 text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Our History</a>
+                <a href="#careers" class="block py-3 px-4 text-gray-700 hover:text-indigo-600 hover:bg-gray-50">MHR Careers</a>
+                <a href="#contact" class="block py-3 px-4 text-indigo-600 font-medium">Contact Us</a>
+            </div>
+        </div>
+    </header>
 
-        // Add smooth scroll behavior for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+    <!-- Hero Section -->
+    <section id="home" class="hero-gradient pt-24 sm:pt-28 md:pt-36 lg:pt-40 pb-12 sm:pb-16 md:pb-24 lg:pb-32">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-6 md:gap-8 items-center">
+                <div data-aos="fade-right" data-aos-duration="1000" class="text-center md:text-left">
+                    <h2 class="text-white text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 sm:mb-6">Transforming Industries, Empowering Growth</h2>
+                    <p class="text-indigo-100 text-sm xs:text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto md:mx-0">MHR Property Conglomerate Inc. is a diverse business group operating across healthcare, fuel distribution, construction, and hospitality sectors in the Philippines.</p>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4">
+                        <a href="#about" class="bg-white text-indigo-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:bg-gray-100 transition duration-300 text-sm sm:text-base">Discover More</a>
+                        <a href="#contact" class="border-2 border-white text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:bg-white hover:text-indigo-600 transition duration-300 text-sm sm:text-base">Contact Us</a>
+                    </div>
+                </div>
+                <div class="hidden md:block" data-aos="fade-left" data-aos-duration="1000">
+                    <img src="{{ asset('vendor/adminlte/dist/img/whiteLOGO4.png') }}" alt="MHRPCI Logo" class="w-full max-w-md mx-auto">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section id="about" class="py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4" data-aos="fade-up">About Us</h2>
+                <div class="w-20 h-1 bg-indigo-600 mx-auto mb-6"></div>
+                <p class="text-gray-600 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+                    Learn more about MHR Property Conglomerate Inc., our mission, vision, and the values that drive our success across multiple industries.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div data-aos="fade-right" data-aos-duration="1000">
+                    <h3 class="text-2xl font-semibold mb-4 text-indigo-700">Who We Are</h3>
+                    <p class="text-gray-600 mb-4">
+                        MHR Property Conglomerate Inc. (MHRPCI) is a dynamic business group with a diverse portfolio spanning healthcare, fuel distribution, construction, and hospitality. Beginning in 2000 with the establishment of Cebic Trading, MHRPCI has grown into a leading conglomerate with multiple companies working in synergy across various industries.
+                    </p>
+                    <p class="text-gray-600 mb-6">
+                        Today, we're proud to have expanded our operations across the Philippines, delivering excellent products and services while creating value for our stakeholders and contributing to community development.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <h4 class="font-semibold text-indigo-600 mb-2">Our Mission</h4>
+                            <p class="text-gray-600 text-sm">To deliver excellence across industries through innovative solutions and sustainable practices.</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <h4 class="font-semibold text-indigo-600 mb-2">Our Vision</h4>
+                            <p class="text-gray-600 text-sm">To be a leading conglomerate that transforms industries and empowers growth across the Philippines and beyond.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span class="text-gray-700">Integrity & Excellence</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span class="text-gray-700">Innovation & Growth</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span class="text-gray-700">Social Responsibility</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4" data-aos="fade-left" data-aos-duration="1000">
+                    <div class="space-y-4">
+                        <img src="{{ asset('vendor/adminlte/dist/img/companies.png') }}" alt="MHRPCI Companies" class="rounded-lg shadow-md">
+                        <img src="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}" alt="MHRPCI Logo" class="rounded-lg shadow-md h-40 w-full object-contain bg-gray-100 p-4">
+                    </div>
+                    <div class="relative w-full h-full rounded-lg overflow-hidden shadow-md">
+                        <iframe 
+                            class="absolute top-0 left-0 w-full h-full"
+                            src="https://www.youtube.com/embed/4DRktuQ5tno"
+                            title="About MHRPCI"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Services Section -->
+    <section id="services" class="py-12 xs:py-16 sm:py-20 bg-gray-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10 sm:mb-12 md:mb-16">
+                <h2 class="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4" data-aos="fade-up">Our Services</h2>
+                <div class="w-16 sm:w-20 h-1 bg-indigo-600 mx-auto mb-4 sm:mb-6"></div>
+                <p class="text-gray-600 max-w-3xl mx-auto text-sm sm:text-base" data-aos="fade-up" data-aos-delay="200">
+                    MHRPCI delivers exceptional services across multiple industries, driven by innovation and commitment to excellence.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
+                <!-- Healthcare Service -->
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 service-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+                        <i class="fas fa-hospital text-indigo-600 text-lg xs:text-xl sm:text-2xl"></i>
+                    </div>
+                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">Healthcare</h3>
+                    <p class="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base flex-grow">
+                        Through MHRHCI, we provide high-quality medical supplies, equipment, and healthcare solutions to hospitals and clinics across the Philippines.
+                    </p>
+                    <ul class="text-gray-600 space-y-1 sm:space-y-2 mb-3 sm:mb-4 text-sm sm:text-base">
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>Medical Supplies Distribution</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>Hospital Equipment</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>Healthcare Consulting</span>
+                        </li>
+                    </ul>
+                    <a href="{{ route('mhrhci') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center p-1 text-sm sm:text-base">
+                        Learn More <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+
+                <!-- Fuel Distribution Service -->
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 service-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+                        <i class="fas fa-gas-pump text-indigo-600 text-lg xs:text-xl sm:text-2xl"></i>
+                    </div>
+                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">Fuel Distribution</h3>
+                    <p class="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base flex-grow">
+                        We deliver efficient and reliable fuel distribution services across the Philippines through our Bay Gas Petroleum Distributors Inc.
+                    </p>
+                    <ul class="text-gray-600 space-y-1 sm:space-y-2 mb-3 sm:mb-4 text-sm sm:text-base">
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>Petroleum Distribution</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>LPG Supply Chain</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>Fuel Management Services</span>
+                        </li>
+                    </ul>
+                    <a href="{{ route('bgpdi') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center p-1 text-sm sm:text-base">
+                        Learn More <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+
+                <!-- Construction Service -->
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 service-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+                        <i class="fas fa-hard-hat text-indigo-600 text-lg xs:text-xl sm:text-2xl"></i>
+                    </div>
+                    <h3 class="text-base xs:text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">Construction</h3>
+                    <p class="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base flex-grow">
+                        Our construction division delivers quality construction and development projects with a focus on sustainability and excellence.
+                    </p>
+                    <ul class="text-gray-600 space-y-1 sm:space-y-2 mb-3 sm:mb-4 text-sm sm:text-base">
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>Commercial Construction</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>Residential Development</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-circle-check text-indigo-600 mt-1 text-xs sm:text-sm"></i>
+                            <span>Project Management</span>
+                        </li>
+                    </ul>
+                    <a href="{{ route('cio') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center p-1 text-sm sm:text-base">
+                        Learn More <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- View All Services Button -->
+            <div class="text-center mt-8 sm:mt-10 md:mt-12" data-aos="fade-up" data-aos-delay="500">
+                <a href="{{ route('all_subsidiaries') }}" class="bg-indigo-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-lg font-medium hover:bg-indigo-700 transition duration-300 inline-flex items-center text-sm sm:text-base">
+                    View All Services <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our History Section -->
+    <section id="history" class="py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4" data-aos="fade-up">Our History</h2>
+                <div class="w-20 h-1 bg-indigo-600 mx-auto mb-6"></div>
+                <p class="text-gray-600 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+                    From humble beginnings to a thriving conglomerate, explore the journey that shaped MHRPCI into what it is today.
+                </p>
+            </div>
+
+            <div class="relative">
+                <!-- Timeline Line -->
+                <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-indigo-100"></div>
+                
+                <!-- Timeline Items -->
+                <div class="space-y-16">
+                    <!-- 2000: Foundation -->
+                    <div class="relative" data-aos="fade-up">
+                        <div class="absolute left-1/2 transform -translate-x-1/2 -mt-3">
+                            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-8 items-center">
+                            <div class="md:text-right md:pr-12 order-2 md:order-1">
+                                <h3 class="text-2xl font-semibold text-indigo-600 mb-2">2000: Our Beginning</h3>
+                                <p class="text-gray-600">
+                                    MHR Property Conglomerate Inc. began in 2000 with the establishment of Cebic Trading, starting with just a 20,000-peso capital in hospital and office medical supplies.
+                                </p>
+                            </div>
+                            <div class="md:pl-12 order-1 md:order-2">
+                                <img src="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}" alt="Founding of MHRPCI" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2003: Expansion -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="100">
+                        <div class="absolute left-1/2 transform -translate-x-1/2 -mt-3">
+                            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
+                                <i class="fas fa-building"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-8 items-center">
+                            <div class="md:pl-12 order-2">
+                                <img src="{{ asset('vendor/adminlte/dist/img/companies.png') }}" alt="MHRHCI Formation" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                            </div>
+                            <div class="md:pr-12 order-1">
+                                <h3 class="text-2xl font-semibold text-indigo-600 mb-2">2003: Healthcare Expansion</h3>
+                                <p class="text-gray-600">
+                                    In 2003, we expanded operations in Cebu by forming Medical & Hospital Resources Health Care, Inc. (MHRHCI) to focus on medical supplies and forge international partnerships.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2010: Diversification -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="200">
+                        <div class="absolute left-1/2 transform -translate-x-1/2 -mt-3">
+                            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-8 items-center">
+                            <div class="md:text-right md:pr-12 order-2 md:order-1">
+                                <h3 class="text-2xl font-semibold text-indigo-600 mb-2">2010: Industry Diversification</h3>
+                                <p class="text-gray-600">
+                                    By 2010, MHRPCI had diversified its portfolio by entering the fuel distribution industry with Bay Gas Petroleum Distributors Inc. and expanded into construction and development projects.
+                                </p>
+                            </div>
+                            <div class="md:pl-12 order-1 md:order-2">
+                                <img src="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}" alt="MHRPCI Diversification" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Present: Conglomerate -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="300">
+                        <div class="absolute left-1/2 transform -translate-x-1/2 -mt-3">
+                            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg">
+                                <i class="fas fa-flag"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-8 items-center">
+                            <div class="md:pl-12 order-2">
+                                <img src="{{ asset('vendor/adminlte/dist/img/companies.png') }}" alt="MHRPCI Today" class="rounded-lg shadow-md w-full max-w-xs mx-auto">
+                            </div>
+                            <div class="md:pr-12 order-1">
+                                <h3 class="text-2xl font-semibold text-indigo-600 mb-2">Today: A Thriving Conglomerate</h3>
+                                <p class="text-gray-600">
+                                    Today, MHRPCI has grown into a conglomerate with 10 companies working in synergy across various industries including healthcare, fuel distribution, construction, and hospitality.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MHR Careers Section -->
+    <section id="careers" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4" data-aos="fade-up">MHR Careers</h2>
+                <div class="w-20 h-1 bg-indigo-600 mx-auto mb-6"></div>
+                <p class="text-gray-600 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+                    Join our dynamic team and grow your career with MHRPCI. We offer exciting opportunities across multiple industries.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div data-aos="fade-right" data-aos-duration="1000">
+                    <h3 class="text-2xl font-semibold mb-6 text-indigo-700">Why Join Our Team?</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                    <i class="fas fa-rocket text-xl"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-medium mb-2">Growth Opportunities</h4>
+                                <p class="text-gray-600">
+                                    We offer continuous learning and development programs to help our employees grow professionally in a dynamic environment.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                    <i class="fas fa-users text-xl"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-medium mb-2">Collaborative Culture</h4>
+                                <p class="text-gray-600">
+                                    Work with talented professionals in a collaborative environment that values teamwork and innovation.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                    <i class="fas fa-medal text-xl"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-medium mb-2">Competitive Benefits</h4>
+                                <p class="text-gray-600">
+                                    We offer competitive compensation packages and comprehensive benefits to support our employees' wellbeing.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <a href="{{ route('careers') }}" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition duration-300">View Open Positions</a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6" data-aos="fade-left" data-aos-duration="1000">
+                    <!-- Featured Job Positions -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <div class="text-indigo-600 mb-4">
+                            <i class="fas fa-briefcase-medical text-3xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold mb-2">Healthcare Professionals</h4>
+                        <p class="text-gray-600 text-sm mb-4">Join our healthcare division and make a difference in the lives of patients.</p>
+                        <span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded">Full-time</span>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <div class="text-indigo-600 mb-4">
+                            <i class="fas fa-code text-3xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold mb-2">IT Specialists</h4>
+                        <p class="text-gray-600 text-sm mb-4">Drive technological innovation across our various business units.</p>
+                        <span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded">Full-time</span>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <div class="text-indigo-600 mb-4">
+                            <i class="fas fa-chart-bar text-3xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold mb-2">Business Analysts</h4>
+                        <p class="text-gray-600 text-sm mb-4">Help shape our business strategy with data-driven insights.</p>
+                        <span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded">Full-time</span>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <div class="text-indigo-600 mb-4">
+                            <i class="fas fa-truck text-3xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold mb-2">Logistics Specialists</h4>
+                        <p class="text-gray-600 text-sm mb-4">Optimize our supply chain operations across multiple industries.</p>
+                        <span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded">Full-time</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-12 xs:py-16 sm:py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10 sm:mb-12 md:mb-16">
+                <h2 class="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4" data-aos="fade-up">Contact Us</h2>
+                <div class="w-16 sm:w-20 h-1 bg-indigo-600 mx-auto mb-4 sm:mb-6"></div>
+                <p class="text-gray-600 max-w-3xl mx-auto text-sm sm:text-base" data-aos="fade-up" data-aos-delay="200">
+                    Get in touch with our team. We're here to answer your questions and provide the information you need.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 md:gap-10 lg:gap-12">
+                <div data-aos="fade-right" data-aos-duration="1000">
+                    <div class="bg-gray-50 p-5 sm:p-6 md:p-8 rounded-xl shadow-md">
+                        <h3 class="text-lg xs:text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-indigo-700">Send us a message</h3>
+                        
+                        <form>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Your Name</label>
+                                    <input type="text" id="name" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Email Address</label>
+                                    <input type="email" id="email" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
+                                </div>
+                            </div>
+                            <div class="mb-4 sm:mb-6">
+                                <label for="subject" class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Subject</label>
+                                <input type="text" id="subject" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
+                            </div>
+                            <div class="mb-4 sm:mb-6">
+                                <label for="message" class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Message</label>
+                                <textarea id="message" rows="4" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"></textarea>
+                            </div>
+                            <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white px-5 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:bg-indigo-700 transition duration-300 text-sm sm:text-base">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div data-aos="fade-left" data-aos-duration="1000">
+                    <div class="bg-gray-50 p-8 rounded-xl shadow-md h-full">
+                        <h3 class="text-2xl font-semibold mb-6 text-indigo-700">Our Information</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                        <i class="fas fa-map-marker-alt text-xl"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-medium mb-1">Office Address</h4>
+                                    <p class="text-gray-600">
+                                        MHR Building, Cebu City, Philippines<br>
+                                        6000
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                        <i class="fas fa-phone-alt text-xl"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-medium mb-1">Phone Number</h4>
+                                    <p class="text-gray-600">+63 (32) 123 4567</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                        <i class="fas fa-envelope text-xl"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-medium mb-1">Email Address</h4>
+                                    <p class="text-gray-600">info@mhrpci.site</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Map Embed -->
+                        <div class="mt-8 rounded-lg overflow-hidden shadow-md">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.548838499838!2d123.88810111744384!3d10.297145070566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33a9994ff893430f%3A0x89d023abb6ff3793!2sCebu%20City%2C%20Cebu!5e0!3m2!1sen!2sph!4v1653647029565!5m2!1sen!2sph"
+                                width="100%" 
+                                height="250" 
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+
+                        <!-- Social Media -->
+                        <div class="mt-8">
+                            <h4 class="text-lg font-medium mb-4">Connect With Us</h4>
+                            <div class="flex space-x-4">
+                                <a href="https://www.facebook.com/mhrpciofficial/" target="_blank" class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition duration-300">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="#" class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition duration-300">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="#" class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition duration-300">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <img src="{{ asset('vendor/adminlte/dist/img/whiteLOGO_ICON.png') }}" alt="MHRPCI Logo" class="h-10 w-auto">
+                        <div>
+                            <h3 class="text-lg font-bold">MHRPCI</h3>
+                            <p class="text-gray-400 text-xs">Property Conglomerate Inc.</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        A diverse business conglomerate operating across healthcare, fuel distribution, construction, and hospitality sectors.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#about" class="hover:text-indigo-400 transition duration-300">About Us</a></li>
+                        <li><a href="#services" class="hover:text-indigo-400 transition duration-300">Our Services</a></li>
+                        <li><a href="#history" class="hover:text-indigo-400 transition duration-300">Our History</a></li>
+                        <li><a href="#careers" class="hover:text-indigo-400 transition duration-300">MHR Careers</a></li>
+                        <li><a href="#contact" class="hover:text-indigo-400 transition duration-300">Contact Us</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Our Companies</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="{{ route('mhrhci') }}" class="hover:text-indigo-400 transition duration-300">MHRHCI</a></li>
+                        <li><a href="{{ route('bgpdi') }}" class="hover:text-indigo-400 transition duration-300">Bay Gas</a></li>
+                        <li><a href="{{ route('cio') }}" class="hover:text-indigo-400 transition duration-300">Cebic Industries</a></li>
+                        <li><a href="{{ route('rcg') }}" class="hover:text-indigo-400 transition duration-300">RCG Construction</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="{{ route('terms') }}" class="hover:text-indigo-400 transition duration-300">Terms of Service</a></li>
+                        <li><a href="{{ route('privacy') }}" class="hover:text-indigo-400 transition duration-300">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-10 pt-6 text-center text-gray-400">
+                <p>&copy; {{ date('Y') }} MHR Property Conglomerate Inc. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AOS Animation Script -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Initialize AOS animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add 'xs' class to body if viewport is less than 400px for extra-small device detection
+            if (window.innerWidth < 400) {
+                document.body.classList.add('xs');
+            }
+            
+            AOS.init({
+                once: true,
+                disable: window.innerWidth < 768 ? true : false,
+                duration: 700,
+                easing: 'ease-out-cubic',
+                delay: 100,
+                offset: 120
+            });
+            
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+                
+                // Close mobile menu when clicking on a link
+                const mobileLinks = document.querySelectorAll('#mobile-menu a');
+                mobileLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileMenu.classList.add('hidden');
                     });
+                });
+            }
+            
+            // Navigation active state
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+            
+            const setActiveNavLink = () => {
+                let current = '';
+                const scrollPosition = window.pageYOffset;
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    
+                    if (scrollPosition >= (sectionTop - sectionHeight / 3)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+            
+            // Set active link on scroll with throttling for performance
+            let isScrolling = false;
+            window.addEventListener('scroll', function() {
+                if (!isScrolling) {
+                    window.requestAnimationFrame(function() {
+                        setActiveNavLink();
+                        isScrolling = false;
+                    });
+                    isScrolling = true;
+                }
+            });
+            
+            // Set active link on page load
+            setActiveNavLink();
+            
+            // Handle resize events
+            window.addEventListener('resize', function() {
+                const isXS = window.innerWidth < 400;
+                if (isXS) {
+                    document.body.classList.add('xs');
+                } else {
+                    document.body.classList.remove('xs');
                 }
             });
         });
-    });
-</script>
-@endsection
+    </script>
+</body>
+</html>

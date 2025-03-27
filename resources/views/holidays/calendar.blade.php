@@ -37,7 +37,7 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0">Holiday Types Legend</h6>
+                    <h6 class="mb-0">Calendar Legend</h6>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-column gap-3">
@@ -57,6 +57,18 @@
                             <span class="badge bg-info me-2" style="width: 30px;">&nbsp;</span>&nbsp;&nbsp;
                             <div>
                                 <strong>Special Working Holiday</strong>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2" style="width: 30px;">&nbsp;</span>&nbsp;&nbsp;
+                            <div>
+                                <strong>Pay Day</strong>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-2" style="width: 30px;">&nbsp;</span>&nbsp;&nbsp;
+                            <div>
+                                <strong>Quarterly Sales Review</strong>
                             </div>
                         </div>
                     </div>
@@ -139,6 +151,16 @@
         border-color: #0dcaf0 !important;
         color: #000 !important;
     }
+    .pay-day {
+        background-color: #198754 !important; /* Bootstrap success green */
+        border-color: #198754 !important;
+        color: #fff !important;
+    }
+    .quarterly-sales {
+        background-color: #0d6efd !important; /* Bootstrap primary blue */
+        border-color: #0d6efd !important;
+        color: #fff !important;
+    }
     
     /* Tooltip Styles */
     .holiday-tooltip-inner {
@@ -178,6 +200,41 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const holidays = @json($holidays);
+        const payDays = @json($payDays ?? []);
+        const quarterlySales = @json($quarterlySales ?? []);
+        
+        // Combine all events
+        const allEvents = [
+            ...holidays.map(holiday => ({
+                title: holiday.title,
+                start: holiday.date,
+                className: getHolidayClass(holiday.type),
+                allDay: true,
+                description: holiday.type
+            }))
+        ];
+        
+        // Add pay days if they exist
+        if (payDays.length > 0) {
+            allEvents.push(...payDays.map(payDay => ({
+                title: payDay.title,
+                start: payDay.date,
+                className: 'pay-day',
+                allDay: true,
+                description: 'Pay Day'
+            })));
+        }
+        
+        // Add quarterly sales if they exist
+        if (quarterlySales.length > 0) {
+            allEvents.push(...quarterlySales.map(quarter => ({
+                title: quarter.title,
+                start: quarter.date,
+                className: 'quarterly-sales',
+                allDay: true,
+                description: 'Quarterly Sales Review'
+            })));
+        }
         
         const calendar = $('#calendar').fullCalendar({
             header: {
@@ -185,13 +242,7 @@
                 center: 'title',
                 right: 'month,listMonth'
             },
-            events: holidays.map(holiday => ({
-                title: holiday.title,
-                start: holiday.date,
-                className: getHolidayClass(holiday.type),
-                allDay: true,
-                description: holiday.type
-            })),
+            events: allEvents,
             eventRender: function(event, element) {
                 // Create a more detailed tooltip content
                 const tooltipContent = `
@@ -249,6 +300,10 @@
                     return 'holiday-special';
                 case 'Special Working Holiday':
                     return 'holiday-special-working';
+                case 'pay-day':
+                    return 'pay-day';
+                case 'quarterly-sales':
+                    return 'quarterly-sales';
                 default:
                     return 'holiday-regular';
             }

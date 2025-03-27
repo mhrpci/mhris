@@ -41,7 +41,7 @@
                                     <th>Employee Name</th>
                                     <th>Department</th>
                                     <th>Position</th>
-                                    <th>Last Working Year/Month</th>
+                                    <th>Resignation Date</th>
                                     <th>Rank</th>
                                     <th>Action</th>
                                 </tr>
@@ -53,7 +53,7 @@
                                         <td>{{ $employee->last_name }} {{ $employee->first_name }}, {{ $employee->middle_name }} {{ $employee->suffix }}</td>
                                         <td>{{ $employee->department->name }}</td>
                                         <td>{{ $employee->position->name }}</td>
-                                        <td>{{ $employee->resignation_date ? \Carbon\Carbon::parse($employee->resignation_date)->format('F j, Y') : 'N/A' }}</td>
+                                        <td>{{ $employee->resigned_date ? \Carbon\Carbon::parse($employee->resigned_date)->format('F j, Y') : 'N/A' }}</td>
                                         <td align="center" style="color: {{ $employee->rank === 'Rank File' ? 'green' : 'blue' }}; font-weight: bold;">
                                             {{ $employee->rank }}
                                         </td>
@@ -93,13 +93,67 @@
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Include the same JavaScript as in index.blade.php, but update the table ID
         $(document).ready(function () {
             let table = $('#resigned-employees-table').DataTable({
-                // ... same DataTable configuration
+                columnDefs: [
+                    {
+                        targets: 4, // Targeting the "Resignation Date" column (0-based index)
+                        type: 'date'
+                    }
+                ],
+                order: [
+                    [4, 'desc'], // Sort by resignation date in descending order (newest first)
+                    [1, 'asc']   // Then sort by name as secondary sort
+                ]
             });
             
-            // ... rest of the JavaScript code
+            // Handle delete button click
+            $(document).on('click', '.delete-btn', function(e) {
+                e.preventDefault();
+                let form = $(this).closest('form');
+
+                Swal.fire({
+                    title: 'Delete Employee',
+                    text: 'Are you sure you want to delete this employee? This action cannot be undone.',
+                    icon: 'error',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+            
+            // Replace session alerts with SweetAlert2
+            @if(Session::has('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: "{{ Session::get('success') }}",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            @endif
+
+            @if(Session::has('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: "{{ Session::get('error') }}",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            @endif
         });
     </script>
 @endsection 

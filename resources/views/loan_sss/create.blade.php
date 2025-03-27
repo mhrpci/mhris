@@ -12,12 +12,12 @@
                 <form action="{{ route('loan_sss.store') }}" method="POST">
                     @csrf
                     <div class="form-group">
-                        <label for="employee_id">Employee</label>
-                        <select name="employee_id" id="employee_id" class="form-control" required>
+                        <label for="employee_id">Employee<span class="text-danger">*</span></label>
+                        <select name="employee_id" id="loan_employee_id" class="form-control select2-employee" required data-placeholder="Search for an employee...">
                             <option value="" selected disabled>Select Employee</option>
                             @if(!$employees->isEmpty())
                                 @foreach ($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->last_name }} {{ $employee->first_name }}</option>
+                                    <option value="{{ $employee->id }}">{{ $employee->last_name }}, {{ $employee->first_name }}{{ !empty($employee->middle_name) ? ' '.$employee->middle_name : '' }}</option>
                                 @endforeach
                             @else
                                 <option value="" disabled>No eligible employees found</option>
@@ -26,12 +26,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="loan_amount">Loan Amount (PHP)</label>
+                        <label for="loan_amount">Loan Amount (PHP)<span class="text-danger">*</span></label>
                         <input type="number" name="loan_amount" id="loan_amount" class="form-control" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="repayment_term">Repayment Term (Months)</label>
+                        <label for="repayment_term">Repayment Term (Months)<span class="text-danger">*</span></label>
                         <input type="number" name="repayment_term" id="repayment_term" class="form-control" min="1" max="24" required>
                     </div>
 
@@ -44,3 +44,27 @@
         </div>
     </div>
 </div>
+
+@push('css')
+<style>
+    /* Simple Select2 styling for modal */
+    .select2-container {
+        z-index: 1060;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        // Initialize select2 for the loan modal
+        $('#loanModal').on('shown.bs.modal', function () {
+            $('.select2-employee').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                dropdownParent: $('#loanModal .modal-content')
+            });
+        });
+    });
+</script>
+@endpush
