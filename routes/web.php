@@ -344,8 +344,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/controller-analysis/excel', [ControllerAnalysisController::class, 'downloadExcel'])->name('controller.analysis.excel');
         Route::get('/controller-analysis/word', [ControllerAnalysisController::class, 'downloadWord'])->name('controller.analysis.word');
 
-    // Route::post('/notifications/mark-as-read/{id}', [NotificationsController::class, 'markAsRead']);
-    // Route::post('/notifications/mark-all-read', [NotificationsController::class, 'markAllAsRead']);
+    // Notification Routes
+    Route::get('/notifications/get', [App\Http\Controllers\NotificationsController::class, 'getNotificationsData'])->name('notifications.get');
+    Route::post('/notifications/mark-read', [App\Http\Controllers\NotificationsController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications/check-updates', [App\Http\Controllers\NotificationsController::class, 'checkForUpdates'])->name('notifications.check-updates');
+    Route::get('/notifications/all', [App\Http\Controllers\NotificationsController::class, 'showAllNotifications'])->name('notifications.all');
+
+    // Web Push Notification Routes
+    Route::get('/notifications/vapid-public-key', [App\Http\Controllers\NotificationsController::class, 'getVapidPublicKey'])->name('notifications.vapid-public-key');
+    Route::get('/notifications/status', [App\Http\Controllers\NotificationsController::class, 'checkNotificationStatus'])->name('notifications.status');
+    Route::post('/notifications/test', [App\Http\Controllers\NotificationsController::class, 'testPushNotification'])->name('notifications.test');
+    Route::post('/notifications/mark-as-read/{id}', [NotificationsController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [NotificationsController::class, 'markAllAsRead']);
 
     Route::post('/employees/create-bulk-users', [EmployeeController::class, 'createBulkUsers'])
         ->name('employees.createBulkUsers');
@@ -418,16 +429,4 @@ Route::middleware(['auth', 'super.admin'])->prefix('route-management')->name('ro
 });
 
 Auth::routes();
-
-// Notification Routes
-Route::get('/notifications/get', [App\Http\Controllers\NotificationsController::class, 'getNotificationsData'])->name('notifications.get');
-Route::post('/notifications/mark-read', [App\Http\Controllers\NotificationsController::class, 'markAsRead'])->name('notifications.mark-read');
-Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-Route::get('/notifications/check-updates', [App\Http\Controllers\NotificationsController::class, 'checkForUpdates'])->name('notifications.check-updates');
-Route::get('/notifications/all', [App\Http\Controllers\NotificationsController::class, 'showAllNotifications'])->name('notifications.all');
-
-// Web Push Notification Routes
-Route::get('/notifications/vapid-public-key', [App\Http\Controllers\NotificationsController::class, 'getVapidPublicKey'])->name('notifications.vapid-public-key');
-Route::get('/notifications/status', [App\Http\Controllers\NotificationsController::class, 'checkNotificationStatus'])->name('notifications.status');
-Route::post('/notifications/test', [App\Http\Controllers\NotificationsController::class, 'testPushNotification'])->name('notifications.test');
 
