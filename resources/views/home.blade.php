@@ -4288,7 +4288,7 @@
             @endphp
 
             @foreach($dashboardItems as $item)
-            @canany(['super-admin', 'admin', 'hrcomben', 'hrcompliance'])
+            @canany(['super-admin', 'admin', 'hrcomben', 'hrcompliance','vpfinance-admin'])
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="card dashboard-card {{ $item['bg'] }} text-white">
                         <div class="card-body">
@@ -4318,7 +4318,7 @@
             @endphp
 
             @foreach($leaveItems as $item)
-            @canany(['super-admin', 'admin', 'hrcomben', 'hrcompliance', 'supervisor'])
+            @canany(['super-admin', 'admin', 'hrcomben', 'hrcompliance', 'supervisor','vpfinance-admin'])
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="card {{ $item['bg'] }} text-white">
                         <div class="card-body">
@@ -4334,11 +4334,11 @@
                 </div>
             @endcanany
             @endforeach
-            @can('hrhiring')
+            @canany(['super-admin', 'admin', 'hrhiring','vpfinance-admin'])
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="card bg-info text-white">
                         <div class="card-body">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center"> 
                                 <i class="fas fa-user-tie card-icon"></i>
                                 <div>
                                     <h6 class="card-title mb-0">Applicant</h6>
@@ -4348,7 +4348,7 @@
                         </div>
                     </div>
                 </div>
-            @endcan
+            @endcanany
         </div>
 </div>
 <script>
@@ -4425,7 +4425,7 @@
 </script>
 
 <!-- Analytics Dashboard -->
-@canany(['super-admin', 'admin'])
+@canany(['super-admin', 'admin', 'vpfinance-admin', 'hrcomben', 'finance'])
 <div class="analytics-dashboard mt-4">
     <h4 class="text-center mb-4 fw-bold analytics-title">
         <span class="position-relative">

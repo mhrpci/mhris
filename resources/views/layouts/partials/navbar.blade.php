@@ -15,7 +15,7 @@
             <!-- Right navbar links --> 
             <ul class="navbar-nav ml-auto">
                 <!-- Add the tour guide button before notifications -->
-                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
+                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('VP Finance'))
                 <li class="nav-item">
                     <button id="startTour" class="nav-link btn btn-link" data-tooltip="Start App Tour">
                         <i class="fas fa-route"></i>
@@ -23,7 +23,7 @@
                     </button>
                 </li>
                 @endif
-                @if(auth()->user()->hasRole('HR Comben') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR Compliance'))
+                @if(auth()->user()->hasRole('HR Comben') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('VP Finance'))
                 <!-- Search Icon and Popup -->
                 <li class="nav-item">
                     <a class="nav-link" href="#" id="search-toggle" data-tooltip="Search">
@@ -786,7 +786,7 @@
                 @endif
 
 
-                @canany(['admin', 'super-admin', 'hrcomben', 'hrcompliance', 'hrpolicy'])
+                @canany(['admin', 'super-admin', 'hrcomben', 'hrcompliance', 'hrpolicy','vpfinance-admin'])
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#" data-tooltip="Announcements and Holidays">
                         <i class="fas fa-bullhorn"></i>
@@ -797,16 +797,16 @@
                             <i class="fas fa-folder mr-2"></i> Leave Type
                         </a>
                         @endcanany
-                        @canany(['admin', 'super-admin', 'hrcompliance', 'hrpolicy'])
+                        @canany(['admin', 'super-admin', 'hrcompliance', 'hrpolicy','vpfinance-admin'])
                         <a href="{{ url('posts') }}" class="dropdown-item">
                             <i class="fas fa-bullhorn mr-2"></i> Announcement
                         </a>
                         @endcanany
-                        @can('admin')
+                        @canany(['admin', 'super-admin', 'supervisor','vpfinance-admin'])
                         <a href="{{ url('tasks') }}" class="dropdown-item">
                             <i class="fas fa-tasks mr-2"></i> Send Task
                         </a>
-                        @endcan
+                        @endcanany
                         @canany(['admin', 'super-admin', 'hrcomben'])
                         <a href="{{ url('holidays') }}" class="dropdown-item">
                             <i class="fas fa-calendar-alt mr-2"></i> Holiday
@@ -836,7 +836,7 @@
                         <i class="fas fa-users"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        @canany(['admin', 'super-admin'])
+                        @canany(['admin', 'super-admin', 'vpfinance-admin'])
                         <a href="{{ url('users') }}" class="dropdown-item">
                             <i class="fas fa-user-cog mr-2"></i> User Management
                         </a>
@@ -846,11 +846,11 @@
                             <i class="fas fa-history mr-2"></i> Departmental User Activity
                         </a>
                         @endif
-                        @can('super-admin')
+                        @canany(['admin', 'super-admin', 'vpfinance-admin'])
                         <a href="{{ url('/user-activity') }}" class="dropdown-item">
                             <i class="fas fa-history mr-2"></i> User General Logs
                         </a>
-                        @endcan
+                        @endcanany
                         
                     </div>
                 </li>

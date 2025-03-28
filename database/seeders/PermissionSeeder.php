@@ -122,6 +122,7 @@ class PermissionSeeder extends Seeder
             'category-create',
             'category-edit',
             'category-delete',
+            'vpfinance-admin',
          ];
 
           // Looping and Inserting Array's Permissions into Permission Table

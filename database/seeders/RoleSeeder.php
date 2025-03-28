@@ -15,6 +15,7 @@ class RoleSeeder extends Seeder
     {
         Role::create(['name' => 'Super Admin']);
         $admin = Role::create(['name' => 'Admin']);
+        $financeAdmin = Role::create(['name' => 'VP Finance']);
         $hrcompliance = Role::create(['name' => 'HR  Compliance']);
         $hrcomben = Role::create(['name' => 'HR ComBen']);
         $employee = Role::create(['name' => 'Employee']);
@@ -45,6 +46,23 @@ class RoleSeeder extends Seeder
             'contribution-list',
             'loan-list',
             'admin',
+            'post-show',
+            'payroll-list',
+
+        ]);
+        $financeAdmin->givePermissionTo([
+            'user-list',
+            'position-list',
+            'department-list',
+            'employee-list',
+            'post-list',
+            'post-create',
+            'post-edit',
+            'attendance-list',
+            'leave-list',
+            'contribution-list',
+            'loan-list',
+            'vpfinance-admin',
             'post-show',
             'payroll-list',
 
