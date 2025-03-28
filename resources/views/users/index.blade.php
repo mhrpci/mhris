@@ -50,6 +50,17 @@
                 </div>
             </a>
             @endcan
+            @can('super-admin')
+            <a href="{{ route('provinces.index') }}" class="contribution-link {{ request()->routeIs('provinces.index') ? 'active' : '' }}">
+                <div class="icon-wrapper">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="text-wrapper">
+                    <span class="title">Addresses</span>
+                    <small class="description">Address List</small>
+                </div>
+            </a>
+            @endcan
         </div>
     </div>
     <div class="row">

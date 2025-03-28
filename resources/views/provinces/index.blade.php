@@ -3,6 +3,44 @@
 @section('content')
 <br>
 <div class="container-fluid">
+    <!-- Enhanced professional-looking link buttons -->
+    <div class="mb-4">
+        <div class="contribution-nav" role="navigation" aria-label="Contribution Types">
+            @can('super-admin')
+            <a href="{{ route('provinces.index') }}" class="contribution-link {{ request()->routeIs('provinces.index') ? 'active' : '' }}">
+                <div class="icon-wrapper">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="text-wrapper">
+                    <span class="title">Provinces</span>
+                    <small class="description">Province List</small>
+                </div>
+            </a>
+            @endcan
+            @can('super-admin')
+            <a href="{{ route('city.index') }}" class="contribution-link {{ request()->routeIs('city.index') ? 'active' : '' }}">
+                <div class="icon-wrapper">
+                    <i class="fas fa-city"></i> 
+                </div>
+                <div class="text-wrapper">
+                    <span class="title">Cities</span>
+                    <small class="description">City List</small>
+                </div>
+            </a>
+            @endcan
+            @can('super-admin')
+            <a href="{{ route('barangay.index') }}" class="contribution-link {{ request()->routeIs('barangay.index') ? 'active' : '' }}">
+                <div class="icon-wrapper">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="text-wrapper">
+                    <span class="title">Barangays</span>
+                    <small class="description">Barangay List</small>
+                </div>
+            </a>
+            @endcan
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-12">
             <div class="card">
