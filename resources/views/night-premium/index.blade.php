@@ -6,6 +6,7 @@
         <!-- Enhanced professional-looking link buttons -->
 <div class="mb-4">
     <div class="contribution-nav" role="navigation" aria-label="Contribution Types">
+    @canany(['hrcomben', 'admin', 'super-admin', 'supervisor'])
     <a href="{{ route('attendances.index') }}" class="contribution-link {{ request()->routeIs('attendances.index') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-clock"></i>
@@ -15,6 +16,7 @@
                 <small class="description">Attendance List</small>
             </div>
         </a>
+        @endcanany
         @canany(['hrcomben', 'admin', 'super-admin'])
         <a href="{{ route('attendances.create') }}" class="contribution-link {{ request()->routeIs('attendances.create') ? 'active' : '' }}">
             <div class="icon-wrapper">
@@ -37,7 +39,7 @@
             </div>
         </a>
         @endcanany
-        @canany(['hrcomben', 'admin', 'super-admin', 'finance'])
+        @canany(['hrcomben', 'admin', 'super-admin', 'finance', 'supervisor'])
         <a href="{{ route('overtime.index') }}" class="contribution-link {{ request()->routeIs('overtime.index') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-clock"></i>
@@ -48,7 +50,7 @@
             </div>
         </a>
         @endcanany
-        @canany(['hrcomben', 'admin', 'super-admin', 'finance'])
+        @canany(['hrcomben', 'admin', 'super-admin', 'finance', 'supervisor'])
         <a href="{{ route('night-premium.index') }}" class="contribution-link {{ request()->routeIs('night-premium.index') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-moon"></i>
@@ -165,21 +167,22 @@
                                             </button>
                                             <div class="dropdown-menu">
                                             @if(Auth::user()->hasRole('Supervisor') || Auth::user()->hasRole('Super Admin'))
-                                            @if($nightPremium->approval_status == 'pending')
-                                                        <form action="{{ route('night-premium.approvedBySupervisor', $nightPremium->id) }}" method="POST">
-                                                            @csrf
-                                                            @method('PUT')
-                                                            <button type="submit" class="dropdown-item"><i class="fas fa-check"></i>&nbsp;Approve</button>
-                                                        </form>
-                                                        <form action="{{ route('night-premium.rejectedBySupervisor', $nightPremium->id) }}" method="POST">
-                                                            @csrf
-                                                            @method('PUT')
-                                                            <button type="submit" class="dropdown-item"><i class="fas fa-times"></i>&nbsp;Reject</button>
-                                                        </form>
-                                                    @endif
+                                                @if($nightPremium->approval_status == 'pending' && $nightPremium->employee->rank == 'Rank File')
+                                                            <form action="{{ route('night-premium.approvedBySupervisor', $nightPremium->id) }}" method="POST">
+                                                                @csrf
+                                                                @method('PUT')
+                                                                <button type="submit" class="dropdown-item"><i class="fas fa-check"></i>&nbsp;Approve</button>
+                                                            </form>
+                                                            <form action="{{ route('night-premium.rejectedBySupervisor', $nightPremium->id) }}" method="POST">
+                                                                @csrf
+                                                                @method('PUT')
+                                                                <button type="submit" class="dropdown-item"><i class="fas fa-times"></i>&nbsp;Reject</button>
+                                                            </form>
+                                                @endif
                                             @endif
                                             @if(Auth::user()->hasRole('Finance') || Auth::user()->hasRole('Super Admin'))
-                                            @if($nightPremium->approval_status == 'approvedBySupervisor')
+                                                @if(($nightPremium->approval_status == 'approvedBySupervisor' && $nightPremium->employee->rank == 'Rank File') || 
+                                                    ($nightPremium->approval_status == 'pending' && $nightPremium->employee->rank == 'Managerial'))
                                                         <form action="{{ route('night-premium.approvedByFinance', $nightPremium->id) }}" method="POST">
                                                             @csrf
                                                             @method('PUT')
@@ -190,7 +193,7 @@
                                                             @method('PUT')
                                                             <button type="submit" class="dropdown-item"><i class="fas fa-times"></i>&nbsp;Reject</button>
                                                         </form>
-                                                    @endif
+                                                @endif
                                             @endif
                                             @if(Auth::user()->hasRole('VP Finance') || Auth::user()->hasRole('Super Admin'))
                                             @if($nightPremium->approval_status == 'approvedByFinance')
@@ -206,13 +209,17 @@
                                                         </form>
                                                     @endif
                                             @endif
-                                                @can('night-premium-delete')
-                                                    <form action="{{ route('night-premium.destroy', $nightPremium->id) }}" method="POST">
-                                                        @csrf
+
+                                            @if(Auth::user()->hasRole('Finance') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('HR ComBen') || Auth::user()->hasRole('Supervisor') || Auth::user()->hasRole('VP Finance'))
+                                                <a href="{{ route('night-premium.show', $nightPremium->id) }}" class="dropdown-item"><i class="fas fa-eye"></i>&nbsp;View</a>
+                                            @endif
+                                            @if(Auth::user()->hasRole('Super Admin'))
+                                                <form action="{{ route('night-premium.destroy', $nightPremium->id) }}" method="POST">
+                                                    @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="dropdown-item"><i class="fas fa-trash"></i>&nbsp;Delete</button>
                                                     </form>
-                                                @endcan
+                                            @endif
                                             </div>
                                         </div>
                                         @endif

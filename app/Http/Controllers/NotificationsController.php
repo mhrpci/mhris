@@ -894,38 +894,71 @@ class NotificationsController extends Controller
 
     /**
      * Generate notifications for pending overtime pay requests
-     * Visible to users with Finance and HR ComBen roles
+     * Visible to users with Finance role for non-Rank File employees
+     * Visible to Supervisors for Rank File employees in same department
      */
     private function generateOvertimePayPendingNotification()
     {
         $user = Auth::user();
-        if ($user && ($user->hasRole('Finance') || $user->hasRole('HR ComBen') || $user->hasRole('Super Admin'))) {
-            $overtimePays = OvertimePay::with('employee')
+        if (!$user) {
+            return;
+        }
+
+        // For Super Admin, show all pending overtime requests
+        if ($user->hasRole('Super Admin')) {
+            $overtimePays = OvertimePay::with(['employee', 'employee.department'])
                 ->where('approval_status', 'pending')
-                ->where('is_read', false)
                 ->orderBy('created_at', 'desc')
                 ->get();
+        } 
+        // For Supervisors, show only pending overtime requests for Rank File employees in their department
+        elseif ($user->hasRole('Supervisor')) {
+            $supervisorDepartmentId = $user->department_id;
+            
+            $overtimePays = OvertimePay::with(['employee', 'employee.department'])
+                ->where('approval_status', 'pending')
+                ->where('is_read_by_supervisor', false)
+                ->whereHas('employee', function($query) use ($supervisorDepartmentId) {
+                    $query->where('department_id', $supervisorDepartmentId)
+                          ->where('rank', 'Rank File');
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } 
+        // For Finance role, show overtime requests for non-Rank File employees
+        elseif ($user->hasRole('Finance')) {
+            $overtimePays = OvertimePay::with(['employee', 'employee.department'])
+                ->where('approval_status', 'pending')
+                ->where('is_read_by_finance', false)
+                ->whereHas('employee', function($query) {
+                    $query->where('rank', '!=', 'Rank File');
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $overtimePays = collect(); // Empty collection for other roles
+        }
 
-            foreach ($overtimePays as $overtime) {
-                $this->notifications['overtime_pay_pending'][] = [
-                    'id' => 'overtime_pending_' . $overtime->id,
-                    'icon' => 'fas fa-clock',
-                    'text' => "{$overtime->employee->first_name} {$overtime->employee->last_name} requested overtime pay",
-                    'time' => $overtime->created_at->diffForHumans(),
-                    'timestamp' => $overtime->created_at->timestamp,
-                    'data' => [
-                        'id' => $overtime->id,
-                        'type' => 'overtime_pending',
-                        'employee_name' => $overtime->employee->first_name . ' ' . $overtime->employee->last_name,
-                        'date' => $overtime->date->format('Y-m-d'),
-                        'overtime_hours' => $overtime->overtime_hours,
-                        'overtime_rate' => $overtime->overtime_rate,
-                        'overtime_pay' => $overtime->overtime_pay,
-                        'status' => 'pending',
-                        'department' => $overtime->employee->department->name ?? 'N/A'
-                    ]
-                ];
-            }
+        foreach ($overtimePays as $overtime) {
+            $this->notifications['overtime_pay_pending'][] = [
+                'id' => 'overtime_pending_' . $overtime->id,
+                'icon' => 'fas fa-clock',
+                'text' => "{$overtime->employee->first_name} {$overtime->employee->last_name} requested overtime pay",
+                'time' => $overtime->created_at->diffForHumans(),
+                'timestamp' => $overtime->created_at->timestamp,
+                'data' => [
+                    'id' => $overtime->id,
+                    'type' => 'overtime_pending',
+                    'employee_name' => $overtime->employee->first_name . ' ' . $overtime->employee->last_name,
+                    'date' => $overtime->date->format('Y-m-d'),
+                    'overtime_hours' => $overtime->overtime_hours,
+                    'overtime_rate' => $overtime->overtime_rate,
+                    'overtime_pay' => $overtime->overtime_pay,
+                    'status' => 'pending',
+                    'department' => $overtime->employee->department->name ?? 'N/A',
+                    'rank' => $overtime->employee->rank ?? 'N/A'
+                ]
+            ];
         }
     }
 
@@ -938,8 +971,8 @@ class NotificationsController extends Controller
         $user = Auth::user();
         if ($user && $user->hasRole('Employee')) {
             $overtimePays = OvertimePay::with(['employee', 'approver'])
-                ->where('approval_status', 'approved')
-                ->where('is_view', false)
+                ->where('approval_status', 'approvedByVPFinance')
+                ->where('is_read_by_employee', false)
                 ->whereHas('employee', function($query) use ($user) {
                     $query->where('email_address', $user->email);
                 })
@@ -981,7 +1014,7 @@ class NotificationsController extends Controller
         if ($user && $user->hasRole('Employee')) {
             $overtimePays = OvertimePay::with(['employee', 'approver'])
                 ->where('approval_status', 'rejected')
-                ->where('is_view', false)
+                ->where('is_read_by_employee', false)
                 ->whereHas('employee', function($query) use ($user) {
                     $query->where('email_address', $user->email);
                 })

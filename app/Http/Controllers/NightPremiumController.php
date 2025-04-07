@@ -8,9 +8,20 @@ use App\Models\NightPremium;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\User;
 class NightPremiumController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            $user = Auth::user();
+            if (!$user || !($user->roles->pluck('name')->intersect(['Supervisor', 'Finance', 'VP Finance', 'Admin', 'Super Admin'])->count() > 0)) {
+                abort(403, 'Unauthorized action.');
+            }
+            return $next($request);
+        });
+    }
     /**
      * Display a listing of the resource.
      */
@@ -110,18 +121,80 @@ class NightPremiumController extends Controller
      */
     public function show(NightPremium $nightPremium)
     {
+        $user = Auth::user();
+        
+        // Check user's role and mark as read accordingly
+        if ($user) {
+            try {
+                // Handle read status based on user role
+                $this->markAsReadBasedOnRole($user, $nightPremium);
+            } catch (\Exception $e) {
+                Log::error('Error marking night premium as read: ' . $e->getMessage());
+            }
+        }
+        
         return view('night-premium.show', compact('nightPremium'));
+    }
+    
+    /**
+     * Mark overtime as read based on user role
+     * 
+     * @param User $user
+     * @param OvertimePay $overtime
+     * @return void
+     */
+    protected function markAsReadBasedOnRole(User $user, NightPremium $nightPremium): void
+    {
+        // VP Finance role check
+        if ($user->roles->pluck('name')->contains('VP Finance')) {
+            $nightPremium->is_read_by_vpfinance = true;
+            $nightPremium->is_read_at_vpfinance = now();
+            $nightPremium->save();
+            
+            Log::info('NightPremium #' . $nightPremium->id . ' marked as read by VP Finance user #' . $user->id);
+        } 
+        // Finance Head role check
+        elseif ($user->roles->pluck('name')->contains('Finance')) {
+            $nightPremium->is_read_by_finance = true;
+            $nightPremium->is_read_at_finance = now();
+            $nightPremium->save();
+            
+            Log::info('NightPremium #' . $nightPremium->id . ' marked as read by Finance Head user #' . $user->id);
+        } 
+        // Supervisor role check
+        elseif ($user->roles->pluck('name')->contains('Supervisor')) {
+            $nightPremium->is_read_by_supervisor = true;
+            $nightPremium->is_read_at_supervisor = now();
+            $nightPremium->save();
+            
+            Log::info('NightPremium #' . $nightPremium->id . ' marked as read by Supervisor user #' . $user->id);
+        } 
+        // Employee role check - only mark as read if it belongs to the employee
+        elseif ($user->roles->pluck('name')->contains('Employee') && 
+                $user->employee && 
+                $nightPremium->employee_id == $user->employee->id) {
+            $nightPremium->is_read_by_employee = true;
+            $nightPremium->is_read_at_employee = now();
+            $nightPremium->save();
+            
+            Log::info('NightPremium #' . $nightPremium->id . ' marked as read by Employee user #' . $user->id);
+        }
     }
 
  
 
-    /**
+       /**
      * Approve the night premium pay by supervisor
      */
     public function approvedBySupervisor(NightPremium $nightPremium)
     {
         if($nightPremium->approval_status !== 'pending') {
             return redirect()->back()->with('error', 'This night premium record has already been processed.');
+        }
+
+        // Check if employee has rank "Rank File"
+        if($nightPremium->employee->rank !== 'Rank File') {
+            return redirect()->back()->with('error', 'Supervisor approval is only applicable for Rank File employees.');
         }
 
         $nightPremium->approval_status = 'approvedBySupervisor';
@@ -140,6 +213,11 @@ class NightPremiumController extends Controller
             return redirect()->back()->with('error', 'This night premium record has already been processed.');
         }
 
+        // Check if employee has rank "Rank File"
+        if($nightPremium->employee->rank !== 'Rank File') {
+            return redirect()->back()->with('error', 'Supervisor rejection is only applicable for Rank File employees.');
+        }
+
         $nightPremium->approval_status = 'rejectedBySupervisor';
         $nightPremium->rejection_reason = $request->rejection_reason;
         $nightPremium->approveBySupervisor(Auth::id());
@@ -153,8 +231,17 @@ class NightPremiumController extends Controller
      */
     public function approvedByFinance(NightPremium $nightPremium)
     {
-        if($nightPremium->approval_status !== 'approvedBySupervisor') {
-            return redirect()->back()->with('error', 'This night premium must be approved by supervisor first.');
+        // Check if employee has rank "Managerial"
+        if($nightPremium->employee->rank === 'Managerial') {
+            // For Managerial rank, this is the first approval step
+            if($nightPremium->approval_status !== 'pending') {
+                return redirect()->back()->with('error', 'This night premium record has already been processed.');
+            }
+        } else {
+            // For other ranks, supervisor must approve first
+            if($nightPremium->approval_status !== 'approvedBySupervisor') {
+                return redirect()->back()->with('error', 'This night premium must be approved by supervisor first.');
+            }
         }
 
         $nightPremium->approval_status = 'approvedByFinance';
@@ -169,8 +256,17 @@ class NightPremiumController extends Controller
      */
     public function rejectedByFinance(Request $request, NightPremium $nightPremium)
     {
-        if($nightPremium->approval_status !== 'approvedBySupervisor') {
-            return redirect()->back()->with('error', 'This night premium must be approved by supervisor first.');
+        // Check if employee has rank "Managerial"
+        if($nightPremium->employee->rank === 'Managerial') {
+            // For Managerial rank, this is the first approval step
+            if($nightPremium->approval_status !== 'pending') {
+                return redirect()->back()->with('error', 'This night premium record has already been processed.');
+            }
+        } else {
+            // For other ranks, supervisor must approve first
+            if($nightPremium->approval_status !== 'approvedBySupervisor') {
+                return redirect()->back()->with('error', 'This night premium must be approved by supervisor first.');
+            }
         }
 
         $nightPremium->approval_status = 'rejectedByFinance';
