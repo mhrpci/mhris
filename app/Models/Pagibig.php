@@ -59,7 +59,8 @@ class Pagibig extends Model
 
         if ($employee->department->name === 'BGPDI') {
             // For BGPDI employees - weekly contributions (1/4 of the total)
-            $quarterContribution = $pagibig->employer_contribution / 4;
+            $quarterContribution = $pagibig->employee_contribution / 4;
+            $quarterEmployerContribution = $pagibig->employer_contribution / 4;
             $contributionDate = $pagibig->contribution_date;
 
             // Set weekly dates
@@ -84,11 +85,13 @@ class Pagibig extends Model
                     ],
                     [
                         'pagibig_contribution' => $quarterContribution,
+                        'employer_pagibig_contribution' => $quarterEmployerContribution,
                     ]
                 );
             }
         } else {
             // Original bi-monthly logic for other departments
+            $employeeContribution = $pagibig->employee_contribution / 2;
             $employerContribution = $pagibig->employer_contribution / 2;
             $contributionDate = $pagibig->contribution_date;
 
@@ -98,7 +101,7 @@ class Pagibig extends Model
             foreach ([$firstDate, $secondDate] as $date) {
                 PagibigContribution::create([
                     'employee_id' => $pagibig->employee_id,
-                    'pagibig_contribution' => $employerContribution,
+                    'pagibig_contribution' => $employeeContribution,
                     'date' => $date,
                 ]);
 
@@ -108,7 +111,8 @@ class Pagibig extends Model
                         'date' => $date,
                     ],
                     [
-                        'pagibig_contribution' => $employerContribution,
+                        'pagibig_contribution' => $employeeContribution,
+                        'employer_pagibig_contribution' => $employerContribution,
                     ]
                 );
             }

@@ -10,6 +10,7 @@ use App\Models\Employee;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
+use Illuminate\Support\Facades\Schema;
 
 class PayrollController extends Controller
 {
@@ -114,15 +115,15 @@ class PayrollController extends Controller
                 // Calculate payroll
                 $payroll = $this->payrollService->calculatePayroll($employee->id, $start_date, $end_date);
 
-                // Send email notification if successful
-                if ($payroll && $employee->email_address) {
-                    \Mail::to($employee->email_address)->send(new \App\Mail\PayrollAvailable([
-                        'employee_name' => $employee->full_name,
-                        'start_date' => Carbon::parse($start_date)->format('F d, Y'),
-                        'end_date' => Carbon::parse($end_date)->format('F d, Y'),
-                        'payroll_type' => ucfirst($payroll_type)
-                    ]));
-                }
+                // // Send email notification if successful
+                // if ($payroll && $employee->email_address) {
+                //     \Mail::to($employee->email_address)->send(new \App\Mail\PayrollAvailable([
+                //         'employee_name' => $employee->full_name,
+                //         'start_date' => Carbon::parse($start_date)->format('F d, Y'),
+                //         'end_date' => Carbon::parse($end_date)->format('F d, Y'),
+                //         'payroll_type' => ucfirst($payroll_type)
+                //     ]));
+                // }
 
                 $successCount++;
             } catch (\Exception $e) {
@@ -413,5 +414,191 @@ class PayrollController extends Controller
             ->where('start_date', $start_date)
             ->where('end_date', $end_date)
             ->exists();
+    }
+
+    /**
+     * Get payroll records for the specified date range for adjustments
+     */
+    public function getAdjustments(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'period_type' => 'required|in:biweekly,bimonthly',
+        ]);
+
+        $start_date = Carbon::parse($request->input('start_date'))->startOfDay();
+        $end_date = Carbon::parse($request->input('end_date'))->endOfDay();
+        $period_type = $request->input('period_type');
+
+        // Get payrolls within the date range
+        $query = Payroll::with(['employee.department', 'employee.position'])
+            ->whereBetween('start_date', [$start_date, $end_date])
+            ->orWhereBetween('end_date', [$start_date, $end_date]);
+
+        // Apply period type filtering
+        if ($period_type === 'biweekly') {
+            // For biweekly, typically weekly-paid employees (e.g., BGPDI department)
+            $query->whereHas('employee.department', function ($q) {
+                $q->where('name', 'BGPDI');
+            });
+        } else if ($period_type === 'bimonthly') {
+            // For bimonthly, typically monthly-paid employees (non-BGPDI departments)
+            $query->whereHas('employee.department', function ($q) {
+                $q->where('name', '!=', 'BGPDI');
+            });
+        }
+
+        // Group payrolls by department
+        $payrolls = $query->get();
+        
+        // Get all departments from the Department model
+        $departmentsList = \App\Models\Department::all();
+        
+        // Define departments for filtering and readability, using data from Department model
+        $departments = [];
+        foreach ($departmentsList as $dept) {
+            $departments[$dept->name] = strtoupper($dept->name);
+        }
+
+        // Group payrolls by department
+        $payrollsByDepartment = $payrolls->groupBy(function ($payroll) {
+            return $payroll->employee->department->name ?? 'Others';
+        });
+
+        // If AJAX request, return just the HTML content
+        if ($request->ajax()) {
+            return view('payroll.adjustments-content', compact('payrollsByDepartment', 'departments'));
+        }
+
+        return response()->json(['error' => 'Invalid request method'], 400);
+    }
+
+    /**
+     * Save payroll adjustments
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function saveAdjustments(Request $request)
+    {
+        $request->validate([
+            'adjustments' => 'required|array',
+            'adjustments.*.payroll_id' => 'required|exists:payrolls,id',
+            'adjustments.*.adjustments' => 'nullable|numeric',
+            'adjustments.*.allowances' => 'nullable|numeric',
+            'adjustments.*.other_adjustments' => 'nullable|numeric',
+            'adjustments.*.cash_bond' => 'nullable|numeric',
+            'adjustments.*.other_deduction' => 'nullable|numeric',
+        ]);
+
+        $adjustments = $request->input('adjustments');
+        $updatedPayrolls = [];
+
+        try {
+            \DB::beginTransaction();
+
+            foreach ($adjustments as $adjustment) {
+                // Find the payroll record
+                $payroll = Payroll::findOrFail($adjustment['payroll_id']);
+                
+                // Store original values for calculations and logging
+                $originalNetSalary = $payroll->net_salary;
+                $originalAdjustments = $payroll->adjustments ?? 0;
+                $originalAllowances = $payroll->allowances ?? 0;
+                $originalOtherAdjustments = $payroll->other_adjustments ?? 0;
+                $originalCashBond = $payroll->cash_bond ?? 0;
+                $originalOtherDeduction = $payroll->other_deduction ?? 0;
+                
+                // Get new values with proper handling of null, empty, and zero values
+                // Use is_numeric to check if the value is a number (including zero)
+                // Fall back to null instead of 0 to distinguish between explicitly set zeros and missing values
+                $newAdjustments = isset($adjustment['adjustments']) && is_numeric($adjustment['adjustments']) 
+                    ? (float) $adjustment['adjustments'] 
+                    : null;
+                
+                $newAllowances = isset($adjustment['allowances']) && is_numeric($adjustment['allowances']) 
+                    ? (float) $adjustment['allowances'] 
+                    : null;
+                
+                $newOtherAdjustments = isset($adjustment['other_adjustments']) && is_numeric($adjustment['other_adjustments']) 
+                    ? (float) $adjustment['other_adjustments'] 
+                    : null;
+                
+                $newCashBond = isset($adjustment['cash_bond']) && is_numeric($adjustment['cash_bond']) 
+                    ? (float) $adjustment['cash_bond'] 
+                    : null;
+                
+                $newOtherDeduction = isset($adjustment['other_deduction']) && is_numeric($adjustment['other_deduction']) 
+                    ? (float) $adjustment['other_deduction'] 
+                    : null;
+                
+                // Calculate the differences (new - original), handling null values
+                // Only calculate difference if a new value was explicitly provided (even if zero)
+                $adjustmentsDiff = $newAdjustments !== null ? $newAdjustments - $originalAdjustments : 0;
+                $allowancesDiff = $newAllowances !== null ? $newAllowances - $originalAllowances : 0;
+                $otherAdjustmentsDiff = $newOtherAdjustments !== null ? $newOtherAdjustments - $originalOtherAdjustments : 0;
+                $cashBondDiff = $newCashBond !== null ? $newCashBond - $originalCashBond : 0;
+                $otherDeductionDiff = $newOtherDeduction !== null ? $newOtherDeduction - $originalOtherDeduction : 0;
+                
+                // Calculate net impact on salary
+                $positiveAdjustments = $adjustmentsDiff + $allowancesDiff + $otherAdjustmentsDiff;
+                $negativeAdjustments = $cashBondDiff + $otherDeductionDiff;
+                
+                // Update the net salary by applying only the differences
+                $newNetSalary = $originalNetSalary + $positiveAdjustments - $negativeAdjustments;
+                $payroll->net_salary = $newNetSalary;
+                
+                // Update the adjustment fields with new values, preserving original values when no new value was provided
+                if ($newAdjustments !== null) $payroll->adjustments = $newAdjustments;
+                if ($newAllowances !== null) $payroll->allowances = $newAllowances;
+                if ($newOtherAdjustments !== null) $payroll->other_adjustments = $newOtherAdjustments;
+                if ($newCashBond !== null) $payroll->cash_bond = $newCashBond;
+                if ($newOtherDeduction !== null) $payroll->other_deduction = $newOtherDeduction;
+                
+                $payroll->save();
+                
+                // Store the updated net salary for the response
+                $updatedPayrolls[$payroll->id] = number_format($payroll->net_salary, 2);
+                
+                // Log the adjustments made
+                \Log::info("Payroll adjustment applied to payroll ID {$payroll->id} for {$payroll->employee->first_name} {$payroll->employee->last_name}. " .
+                    "Net salary changed from {$originalNetSalary} to {$newNetSalary}. " .
+                    "Adjustments: {$originalAdjustments} → " . ($newAdjustments !== null ? $newAdjustments : 'unchanged') . ", " .
+                    "Allowances: {$originalAllowances} → " . ($newAllowances !== null ? $newAllowances : 'unchanged') . ", " . 
+                    "Other Adj: {$originalOtherAdjustments} → " . ($newOtherAdjustments !== null ? $newOtherAdjustments : 'unchanged') . ", " .
+                    "Cash Bond: {$originalCashBond} → " . ($newCashBond !== null ? $newCashBond : 'unchanged') . ", " .
+                    "Other Deduct: {$originalOtherDeduction} → " . ($newOtherDeduction !== null ? $newOtherDeduction : 'unchanged'));
+            }
+
+            \DB::commit();
+
+            // For AJAX requests, return JSON response
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payroll adjustments saved successfully',
+                    'updated_payrolls' => $updatedPayrolls,
+                    'redirect' => route('payroll.index')
+                ]);
+            }
+
+            // For non-AJAX requests, redirect with success message
+            return redirect()->route('payroll.index')
+                ->with('success', 'Payroll adjustments saved successfully');
+        } catch (\Exception $e) {
+            \DB::rollback();
+            \Log::error("Error saving payroll adjustments: " . $e->getMessage());
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to save adjustments: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Failed to save adjustments: ' . $e->getMessage());
+        }
     }
 }

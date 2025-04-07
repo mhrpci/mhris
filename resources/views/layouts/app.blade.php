@@ -195,6 +195,14 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shepherd.js/10.0.1/js/shepherd.min.js"></script>
 
+    {{-- Set toast data as data attribute for JavaScript to avoid syntax errors --}}
+    @if(session('toast'))
+    <div id="toastDataContainer" 
+         data-from="{{ session('toast')['from'] }}" 
+         data-to="{{ session('toast')['to'] }}" 
+         style="display: none;"></div>
+    @endif
+
     <style>
         /* Button Loading State */
         .btn .loading-state {
@@ -209,6 +217,145 @@
         
         .btn.is-loading .loading-state {
             display: inline-flex !important;
+        }
+
+        /* Preloader styles using ICON_APP.png */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .dark-mode #preloader {
+            background-color: #343a40;
+        }
+        
+        .preloader-content {
+            text-align: center;
+            position: relative;
+        }
+        
+        /* Circle container */
+        .circle-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 20px;
+        }
+        
+        /* Logo inside circle */
+        .preloader-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            z-index: 2;
+        }
+        
+        /* Half circle animations */
+        .half-circle {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border: 6px solid transparent;
+            border-radius: 50%;
+        }
+        
+        .half-circle-1 {
+            border-top-color: #7b1fa2; /* Deep Purple */
+            animation: rotate1 2s linear infinite;
+        }
+        
+        .half-circle-2 {
+            border-right-color: #9c27b0; /* Purple */
+            animation: rotate2 2s linear infinite;
+        }
+        
+        .half-circle-3 {
+            border-bottom-color: #ba68c8; /* Light Purple */
+            animation: rotate3 2s linear infinite;
+        }
+        
+        .half-circle-4 {
+            border-left-color: #6a1b9a; /* Darker Purple */
+            animation: rotate4 2s linear infinite;
+        }
+        
+        @keyframes rotate1 {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes rotate2 {
+            0% { transform: rotate(45deg); }
+            100% { transform: rotate(405deg); }
+        }
+        
+        @keyframes rotate3 {
+            0% { transform: rotate(90deg); }
+            100% { transform: rotate(450deg); }
+        }
+        
+        @keyframes rotate4 {
+            0% { transform: rotate(135deg); }
+            100% { transform: rotate(495deg); }
+        }
+
+        /* Page Loading Transition - Animates content after preloader */
+        body {
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        
+        /* Fade In Animation for Progressive Loading */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .fade-in-element {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        /* Loading text styling */
+        .loading-text {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: #7b1fa2; /* Deep Purple to match circle */
+            letter-spacing: 1px;
+            margin-top: 15px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-text::after {
+            content: "...";
+            width: 20px;
+            text-align: left;
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60%, 100% { content: "..."; }
+        }
+        
+        .dark-mode .loading-text {
+            color: #ba68c8; /* Lighter purple for dark mode */
         }
 
         /* Contribution Notification Button & Modal Styling */
@@ -381,16 +528,20 @@
     @stack('styles')
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
-    <!-- Toast Container - Removed -->
-
-    <!-- Preloader -->
-    <div id="loader" class="loader">
-        <div class="loader-content">
-            <div class="mhr-loader">
-                <div class="spinner"></div>
-                <div class="mhr-text">MHR</div>
+    <!-- Preloader using ICON_APP.png with animated half circles -->
+    <div id="preloader">
+        <div class="preloader-content">
+            <div class="circle-container">
+                <!-- Animated half circles -->
+                <div class="half-circle half-circle-1"></div>
+                <div class="half-circle half-circle-2"></div>
+                <div class="half-circle half-circle-3"></div>
+                <div class="half-circle half-circle-4"></div>
+                
+                <!-- Logo centered inside circles -->
+                <img src="{{ asset('vendor/adminlte/dist/img/ICON_APP.png') }}" class="preloader-icon" alt="MHR Icon">
             </div>
-            <h4 class="mt-4 text-dark">Loading...</h4>
+            <div class="loading-text">Loading</div>
         </div>
     </div>
 
@@ -499,52 +650,88 @@
     @yield('js')
 
     <script>
-        // Replace window.showToast with SweetAlert2 based function
-        window.showToast = function(message, type = 'info', duration = 3000) {
-            // Map toast types to SweetAlert2 icons
-            const iconMap = {
-                'success': 'success',
-                'error': 'error', 
-                'warning': 'warning',
-                'info': 'info'
+        // Preloader control
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide preloader after page loaded
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                setTimeout(() => {
+                    preloader.style.opacity = '0';
+                    preloader.style.visibility = 'hidden';
+                    
+                    // Apply fade-in animation to key elements for smooth loading experience
+                    const elementsToAnimate = [
+                        '.content-wrapper',
+                        '.main-sidebar',
+                        '.main-header'
+                    ];
+                    
+                    // Apply animation with slight delay between elements
+                    elementsToAnimate.forEach((selector, index) => {
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach(el => {
+                            setTimeout(() => {
+                                el.classList.add('fade-in-element');
+                            }, index * 100);
+                        });
+                    });
+                }, 800); // Show preloader for 800ms minimum for better UX
+            }
+            
+            // Replace window.showToast with SweetAlert2 based function
+            window.showToast = function(message, type = 'info', duration = 3000) {
+                // Map toast types to SweetAlert2 icons
+                const iconMap = {
+                    'success': 'success',
+                    'error': 'error', 
+                    'warning': 'warning',
+                    'info': 'info'
+                };
+                
+                // Show SweetAlert2 notification
+                Swal.fire({
+                    icon: iconMap[type] || 'info',
+                    title: type.charAt(0).toUpperCase() + type.slice(1),
+                    text: message,
+                    toast: true,
+                    position: 'bottom-end',
+                    showConfirmButton: false,
+                    timer: duration,
+                    timerProgressBar: true
+                });
             };
             
-            // Show SweetAlert2 notification
+            // Check for session toast data
+            const toastContainer = document.getElementById('toastDataContainer');
+            if (toastContainer) {
+                const from = toastContainer.getAttribute('data-from');
+                const to = toastContainer.getAttribute('data-to');
+                if (from && to) {
+                    showToastNotification(`Switched from ${from} to ${to}`, "success");
+                }
+            }
+        });
+        
+        // Helper function for account switch toast
+        function showToastNotification(message, type) {
             Swal.fire({
-                icon: iconMap[type] || 'info',
-                title: type.charAt(0).toUpperCase() + type.slice(1),
+                icon: type,
+                title: 'Account Switched',
                 text: message,
                 toast: true,
                 position: 'bottom-end',
                 showConfirmButton: false,
-                timer: duration,
+                timer: 3000,
                 timerProgressBar: true
             });
-        };
-        
-        // Process account switch alerts
-        document.addEventListener('DOMContentLoaded', function() {
-            @if(session('toast'))
-                // Replace toast with SweetAlert2
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Account Switched',
-                    text: "Switched from {{ session('toast')['from'] }} to {{ session('toast')['to'] }}",
-                    toast: true,
-                    position: 'bottom-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-            @endif
-        });
+        }
         
         // All Contributions Notification Form
         $(document).ready(function() {
             // Update the form action when the modal is shown
             $('#contributeNotifyModal').on('shown.bs.modal', function() {
                 $('#all_notification_date').trigger('focus');
-                $('#allContributionsForm').attr('action', '{{ route('contributions.notify-all') }}');
+                $('#allContributionsForm').attr('action', "{{ route('contributions.notify-all') }}");
             });
             
             // Handle form submission with loading state

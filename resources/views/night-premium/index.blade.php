@@ -6,8 +6,7 @@
         <!-- Enhanced professional-looking link buttons -->
 <div class="mb-4">
     <div class="contribution-nav" role="navigation" aria-label="Contribution Types">
-        @canany(['hrcomben', 'admin', 'super-admin'])
-        <a href="{{ route('attendances.index') }}" class="contribution-link {{ request()->routeIs('attendances.index') ? 'active' : '' }}">
+    <a href="{{ route('attendances.index') }}" class="contribution-link {{ request()->routeIs('attendances.index') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-clock"></i>
             </div>
@@ -16,7 +15,6 @@
                 <small class="description">Attendance List</small>
             </div>
         </a>
-        @endcanany
         @canany(['hrcomben', 'admin', 'super-admin'])
         <a href="{{ route('attendances.create') }}" class="contribution-link {{ request()->routeIs('attendances.create') ? 'active' : '' }}">
             <div class="icon-wrapper">
@@ -67,25 +65,25 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Overtime List</h3>
+                    <h3 class="card-title">Night Premium List</h3>
                     <div class="card-tools">
                         @canany(['super-admin', 'hrcomben'])
-                        <a href="{{ route('overtime.create') }}" class="btn btn-success btn-sm rounded-pill">
-                            Add overtime <i class="fas fa-plus-circle"></i>
+                        <a href="{{ route('night-premium.create') }}" class="btn btn-success btn-sm rounded-pill">
+                            Add Night Premium <i class="fas fa-plus-circle"></i>
                         </a>
                         @endcanany
                     </div>
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <table id="overtime-table" class="table table-bordered table-hover">
+                    <table id="night-premium-table" class="table table-bordered table-hover">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Date</th>
-                                <th>Overtime Hour</th>
-                                <th>Overtime Rate</th>
-                                <th>Overtime Pay</th>
+                                <th>Night Hours</th>
+                                <th>Night Rate</th>
+                                <th>Night Premium Pay</th>
                                 <th>Status</th>
                                 <th>Approved By</th>
                                 <th>Rejected By</th>
@@ -93,67 +91,67 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($overtime as $overtime)
+                            @foreach ($nightPremiums as $nightPremium)
                                 <tr>
-                                    <td>{{ $overtime->employee->company_id }} {{ $overtime->employee->last_name }} {{ $overtime->employee->first_name }} {{ $overtime->employee->middle_name ?? ' ' }} {{ $overtime->employee->suffix ?? ' ' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($overtime->date)->format('F j, Y') }}</td>
-                                    <td>{{ $overtime->overtime_hours }}</td>
-                                    <td>{{ $overtime->overtime_rate }}</td>
-                                    <td>{{ number_format($overtime->overtime_pay, 2) }}</td>
+                                    <td>{{ $nightPremium->employee->company_id }} {{ $nightPremium->employee->last_name }} {{ $nightPremium->employee->first_name }} {{ $nightPremium->employee->middle_name ?? ' ' }} {{ $nightPremium->employee->suffix ?? ' ' }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($nightPremium->date)->format('F j, Y') }}</td>
+                                    <td>{{ $nightPremium->night_hours }}</td>
+                                    <td>{{ $nightPremium->night_rate }}</td>
+                                    <td>{{ number_format($nightPremium->night_premium_pay, 2) }}</td>
                                     <td>
-                                    @if($overtime->approval_status == 'pending')
+                                        @if($nightPremium->approval_status == 'pending')
                                             <span class="badge badge-warning">Pending</span>
-                                        @elseif($overtime->approval_status == 'approvedBySupervisor')
+                                        @elseif($nightPremium->approval_status == 'approvedBySupervisor')
                                             <span class="badge badge-success">Approved by Supervisor</span>
-                                            <small>{{ $overtime->approved_at_supervisor ? \Carbon\Carbon::parse($overtime->approved_at_supervisor)->format('M j, Y g:i A') : '' }}</small>
-                                        @elseif($overtime->approval_status == 'approvedByFinance')
+                                            <small>{{ $nightPremium->approved_at_supervisor ? \Carbon\Carbon::parse($nightPremium->approved_at_supervisor)->format('M j, Y g:i A') : '' }}</small>
+                                        @elseif($nightPremium->approval_status == 'approvedByFinance')
                                             <span class="badge badge-success">Approved by Finance</span>
-                                            <small>{{ $overtime->approved_at_finance ? \Carbon\Carbon::parse($overtime->approved_at_finance)->format('M j, Y g:i A') : '' }}</small>
-                                        @elseif($overtime->approval_status == 'approvedByVPFinance')
+                                            <small>{{ $nightPremium->approved_at_finance ? \Carbon\Carbon::parse($nightPremium->approved_at_finance)->format('M j, Y g:i A') : '' }}</small>
+                                        @elseif($nightPremium->approval_status == 'approvedByVPFinance')
                                             <span class="badge badge-success">Approved by VP Finance</span>
-                                            <small>{{ $overtime->approved_at_vpfinance ? \Carbon\Carbon::parse($overtime->approved_at_vpfinance)->format('M j, Y g:i A') : '' }}</small>
+                                            <small>{{ $nightPremium->approved_at_vpfinance ? \Carbon\Carbon::parse($nightPremium->approved_at_vpfinance)->format('M j, Y g:i A') : '' }}</small>
                                         @else
                                             <span class="badge badge-danger">Rejected</span>
-                                            <small>{{ $overtime->rejected_at ? \Carbon\Carbon::parse($overtime->rejected_at)->format('M j, Y g:i A') : '' }}</small>
+                                            <small>{{ $nightPremium->rejected_at ? \Carbon\Carbon::parse($nightPremium->rejected_at)->format('M j, Y g:i A') : '' }}</small>
                                         @endif
                                     </td>
                                     <td>
-                                    @if($overtime->approval_status == 'approvedBySupervisor')
-                                        @if($overtime->supervisor)
-                                            {{ $overtime->supervisor->first_name }} {{ $overtime->supervisor->last_name }}
+                                    @if($nightPremium->approval_status == 'approvedBySupervisor')
+                                        @if($nightPremium->supervisor)
+                                            {{ $nightPremium->supervisor->first_name }} {{ $nightPremium->supervisor->last_name }}
                                         @else
                                             -
                                         @endif
-                                    @elseif($overtime->approval_status == 'approvedByFinance')
-                                        @if($overtime->financeHead)
-                                            {{ $overtime->financeHead->first_name }} {{ $overtime->financeHead->last_name }}
+                                    @elseif($nightPremium->approval_status == 'approvedByFinance')
+                                        @if($nightPremium->financeHead)
+                                            {{ $nightPremium->financeHead->first_name }} {{ $nightPremium->financeHead->last_name }}
                                         @else
                                             -
                                         @endif
-                                    @elseif($overtime->approval_status == 'approvedByVPFinance')
-                                        @if($overtime->vpFinance)
-                                            {{ $overtime->vpFinance->first_name }} {{ $overtime->vpFinance->last_name }}
+                                    @elseif($nightPremium->approval_status == 'approvedByVPFinance')
+                                        @if($nightPremium->vpFinance)
+                                            {{ $nightPremium->vpFinance->first_name }} {{ $nightPremium->vpFinance->last_name }}
                                         @else
                                             -
                                         @endif
                                     @endif
                                     </td>
                                     <td>
-                                    @if($overtime->approval_status == 'rejectedBySupervisor')
-                                        @if($overtime->supervisor)
-                                            {{ $overtime->supervisor->first_name }} {{ $overtime->supervisor->last_name }}
+                                    @if($nightPremium->approval_status == 'rejectedBySupervisor')
+                                        @if($nightPremium->supervisor)
+                                            {{ $nightPremium->supervisor->first_name }} {{ $nightPremium->supervisor->last_name }}
                                         @else
                                             -
                                         @endif
-                                    @elseif($overtime->approval_status == 'rejectedByFinance')
-                                        @if($overtime->financeHead)
-                                            {{ $overtime->financeHead->first_name }} {{ $overtime->financeHead->last_name }}
+                                    @elseif($nightPremium->approval_status == 'rejectedByFinance')
+                                        @if($nightPremium->financeHead)
+                                            {{ $nightPremium->financeHead->first_name }} {{ $nightPremium->financeHead->last_name }}
                                         @else
                                             -
                                         @endif
-                                    @elseif($overtime->approval_status == 'rejectedByVPFinance')
-                                        @if($overtime->vpFinance)
-                                            {{ $overtime->vpFinance->first_name }} {{ $overtime->vpFinance->last_name }}
+                                    @elseif($nightPremium->approval_status == 'rejectedByVPFinance')
+                                        @if($nightPremium->vpFinance)
+                                            {{ $nightPremium->vpFinance->first_name }} {{ $nightPremium->vpFinance->last_name }}
                                         @else
                                             -
                                         @endif
@@ -167,13 +165,13 @@
                                             </button>
                                             <div class="dropdown-menu">
                                             @if(Auth::user()->hasRole('Supervisor') || Auth::user()->hasRole('Super Admin'))
-                                            @if($overtime->approval_status == 'pending')
-                                                        <form action="{{ route('overtime.approvedBySupervisor', $overtime->id) }}" method="POST">
+                                            @if($nightPremium->approval_status == 'pending')
+                                                        <form action="{{ route('night-premium.approvedBySupervisor', $nightPremium->id) }}" method="POST">
                                                             @csrf
                                                             @method('PUT')
                                                             <button type="submit" class="dropdown-item"><i class="fas fa-check"></i>&nbsp;Approve</button>
                                                         </form>
-                                                        <form action="{{ route('overtime.rejectedBySupervisor', $overtime->id) }}" method="POST">
+                                                        <form action="{{ route('night-premium.rejectedBySupervisor', $nightPremium->id) }}" method="POST">
                                                             @csrf
                                                             @method('PUT')
                                                             <button type="submit" class="dropdown-item"><i class="fas fa-times"></i>&nbsp;Reject</button>
@@ -181,13 +179,13 @@
                                                     @endif
                                             @endif
                                             @if(Auth::user()->hasRole('Finance') || Auth::user()->hasRole('Super Admin'))
-                                            @if($overtime->approval_status == 'approvedBySupervisor')
-                                                        <form action="{{ route('overtime.approvedByFinance', $overtime->id) }}" method="POST">
+                                            @if($nightPremium->approval_status == 'approvedBySupervisor')
+                                                        <form action="{{ route('night-premium.approvedByFinance', $nightPremium->id) }}" method="POST">
                                                             @csrf
                                                             @method('PUT')
                                                             <button type="submit" class="dropdown-item"><i class="fas fa-check"></i>&nbsp;Approve</button>
                                                         </form>
-                                                        <form action="{{ route('overtime.rejectedByFinance', $overtime->id) }}" method="POST">
+                                                        <form action="{{ route('night-premium.rejectedByFinance', $nightPremium->id) }}" method="POST">
                                                             @csrf
                                                             @method('PUT')
                                                             <button type="submit" class="dropdown-item"><i class="fas fa-times"></i>&nbsp;Reject</button>
@@ -195,21 +193,21 @@
                                                     @endif
                                             @endif
                                             @if(Auth::user()->hasRole('VP Finance') || Auth::user()->hasRole('Super Admin'))
-                                            @if($overtime->approval_status == 'approvedByFinance')
-                                                        <form action="{{ route('overtime.approvedByVPFinance', $overtime->id) }}" method="POST">
+                                            @if($nightPremium->approval_status == 'approvedByFinance')
+                                                        <form action="{{ route('night-premium.approvedByVPFinance', $nightPremium->id) }}" method="POST">
                                                             @csrf
                                                             @method('PUT')
                                                             <button type="submit" class="dropdown-item"><i class="fas fa-check"></i>&nbsp;Approve</button>
                                                         </form>
-                                                        <form action="{{ route('overtime.rejectedByVPFinance', $overtime->id) }}" method="POST">
+                                                        <form action="{{ route('night-premium.rejectedByVPFinance', $nightPremium->id) }}" method="POST">
                                                             @csrf
                                                             @method('PUT')
                                                             <button type="submit" class="dropdown-item"><i class="fas fa-times"></i>&nbsp;Reject</button>
                                                         </form>
                                                     @endif
                                             @endif
-                                                @can('overtime-delete')
-                                                    <form action="{{ route('overtime.destroy', $overtime->id) }}" method="POST">
+                                                @can('night-premium-delete')
+                                                    <form action="{{ route('night-premium.destroy', $nightPremium->id) }}" method="POST">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="dropdown-item"><i class="fas fa-trash"></i>&nbsp;Delete</button>
@@ -291,17 +289,17 @@
             
             // Set appropriate messages based on the action
             if (action.includes('approve')) {
-                confirmTitle = 'Approve Overtime?';
-                confirmText = "Are you sure you want to approve this overtime request?";
+                confirmTitle = 'Approve Night Premium?';
+                confirmText = "Are you sure you want to approve this night premium request?";
                 confirmButtonText = 'Yes, approve it!';
                 confirmIcon = 'question';
             } else if (action.includes('reject')) {
-                confirmTitle = 'Reject Overtime?';
-                confirmText = "Are you sure you want to reject this overtime request?";
+                confirmTitle = 'Reject Night Premium?';
+                confirmText = "Are you sure you want to reject this night premium request?";
                 confirmButtonText = 'Yes, reject it!';
                 confirmIcon = 'question';
             } else {
-                confirmTitle = 'Delete Overtime?';
+                confirmTitle = 'Delete Night Premium?';
                 confirmText = "You won't be able to revert this!";
                 confirmButtonText = 'Yes, delete it!';
                 confirmIcon = 'warning';
@@ -325,17 +323,7 @@
         });
 
         // DataTable initialization
-        $('#overtime-table').DataTable();
+        $('#night-premium-table').DataTable();
     });
 </script>
-
-<style>
-    /* Toast styles */
-    .colored-toast.swal2-icon-success {
-        box-shadow: 0 0 12px rgba(40, 167, 69, 0.4) !important;
-    }
-    .colored-toast.swal2-icon-error {
-        box-shadow: 0 0 12px rgba(220, 53, 69, 0.4) !important;
-    }
-</style>
-@endsection
+@endsection 

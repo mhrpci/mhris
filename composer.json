@@ -22,7 +22,7 @@
         "laravel/ui": "^4.5",
         "maatwebsite/excel": "^3.1",
         "mckenziearts/laravel-notify": "^2.5",
-        "minishlink/web-push": "^9.0",
+        "minishlink/web-push": "*",
         "openai-php/client": "^0.10.1",
         "openai-php/laravel": "^0.10.2",
         "php-ffmpeg/php-ffmpeg": "^1.3",

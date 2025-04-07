@@ -50,9 +50,9 @@
                         </li>
                         @endif
                       @endauth
-                        @canany(['admin', 'super-admin', 'hrcomben', 'normal-employee','supervisor','vpfinance-admin'])
-                        <li class="nav-item has-treeview {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance') ? 'active' : '' }}">
+                        @canany(['admin', 'super-admin', 'hrcomben', 'normal-employee','supervisor','vpfinance-admin','finance'])
+                        <li class="nav-item has-treeview {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-clock"></i>
                                 <p>
                                     Attendance
@@ -60,14 +60,22 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
-                            @canany(['admin', 'super-admin', 'hrcomben','supervisor','vpfinance-admin'])
+                                @canany(['admin', 'super-admin', 'hrcomben','supervisor','vpfinance-admin'])
                                 <li class="nav-item">
-                                    <a href="{{ url('/attendances') }}" class="nav-link {{ Request::is('attendances*') || Request::is('timesheets*') ? 'active' : '' }}">
+                                    <a href="{{ url('/attendances') }}" class="nav-link {{ Request::is('attendances*') || Request::is('timesheets*') || Request::is('overtime*') || Request::is('night-premium*') ? 'active' : '' }}">
                                         <i class="fas fa-clipboard-list nav-icon"></i>
                                         <p>Attendance</p>
                                     </a>
                                 </li>
                                 @endcanany
+                                @if(auth()->user()->hasRole('Finance'))
+                                <li class="nav-item">
+                                    <a href="{{ url('/overtime') }}" class="nav-link {{ Request::is('overtime*') ? 'active' : '' }}">
+                                        <i class="fas fa-clipboard-list nav-icon"></i>
+                                        <p>Overtime</p>
+                                    </a>
+                                </li>
+                                @endif
                                 @auth
                                 @if(auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor'))
                                 <li class="nav-item">
@@ -137,8 +145,8 @@
                         </li>
                         @endcanany
                         @canany(['admin', 'super-admin', 'hrcomben','finance','normal-employee','vpfinance-admin'])
-                        <li class="nav-item has-treeview {{ Request::is('payroll*', 'overtime*', 'my-payrolls*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ Request::is('payroll*', 'overtime*', 'my-payrolls*') ? 'active' : '' }}">
+                        <li class="nav-item has-treeview {{ Request::is('payroll*', 'my-payrolls*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ Request::is('payroll*', 'my-payrolls*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-coins"></i>
                                 <p>
                                     Payroll Management
@@ -148,7 +156,7 @@
                             <ul class="nav nav-treeview">
                                 @canany(['admin', 'super-admin','hrcomben','finance','vpfinance-admin'])
                                 <li class="nav-item">
-                                    <a href="{{ url('/payroll') }}" class="nav-link {{ Request::is('payroll*', 'overtime*') ? 'active' : '' }}">
+                                    <a href="{{ url('/payroll') }}" class="nav-link {{ Request::is('payroll*') ? 'active' : '' }}">
                                         <i class="fas fa-money-bill-wave nav-icon"></i>
                                         <p>Payroll</p>
                                     </a>

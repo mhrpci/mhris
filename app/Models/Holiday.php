@@ -18,6 +18,12 @@ class Holiday extends Model
         'title',
         'date',
         'type',
+        'holiday_hours',
+    ];
+
+    protected $casts = [
+        'date' => 'date',
+        'holiday_hours' => 'decimal:2',
     ];
 
     public static function types(): array
@@ -27,6 +33,30 @@ class Holiday extends Model
             self::TYPE_SPECIAL,
             self::TYPE_SPECIAL_WORKING,
         ];
+    }
+    
+    /**
+     * Get default holiday hours based on type
+     * 
+     * @return float
+     */
+    public function getDefaultHours(): float
+    {
+        return $this->type === self::TYPE_SPECIAL_WORKING ? 0.0 : 8.0;
+    }
+    
+    /**
+     * Set the holiday hours based on type when creating
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($holiday) {
+            if (!isset($holiday->holiday_hours)) {
+                $holiday->holiday_hours = $holiday->type === self::TYPE_SPECIAL_WORKING ? 0.0 : 8.0;
+            }
+        });
     }
 }
 

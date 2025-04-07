@@ -55,6 +55,7 @@ use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\RouteManagementController;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\NightPremiumController;
 
 /*
 |--------------------------------------------------------------------------
@@ -160,8 +161,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('types', TypeController::class);
     Route::resource('inventory', ItInventoryController::class);
     Route::resource('overtime', OverTimePayController::class);
-    Route::put('overtime/{overtime}/approve', [OverTimePayController::class, 'approve'])->name('overtime.approve');
-    Route::put('overtime/{overtime}/reject', [OverTimePayController::class, 'reject'])->name('overtime.reject');
     Route::resource('posts', PostController::class);
     Route::resource('holidays', HolidayController::class);
     Route::resource('tasks', TaskController::class);
@@ -176,6 +175,24 @@ Route::middleware('auth')->group(function () {
     Route::resource('pagibig', PagibigController::class)->except(['edit', 'update']);
     Route::resource('philhealth', PhilhealthController::class)->except(['edit', 'update']);
     Route::resource('system-updates', SystemUpdateController::class);
+    Route::resource('night-premium', NightPremiumController::class);
+    
+    // Night Premium routes
+    Route::put('night-premium/{nightPremium}/approvedBySupervisor', [NightPremiumController::class, 'approvedBySupervisor'])->name('night-premium.approvedBySupervisor');
+    Route::put('night-premium/{nightPremium}/rejectedBySupervisor', [NightPremiumController::class, 'rejectedBySupervisor'])->name('night-premium.rejectedBySupervisor');
+    Route::put('night-premium/{nightPremium}/approvedByFinance', [NightPremiumController::class, 'approvedByFinance'])->name('night-premium.approvedByFinance');
+    Route::put('night-premium/{nightPremium}/rejectedByFinance', [NightPremiumController::class, 'rejectedByFinance'])->name('night-premium.rejectedByFinance');
+    Route::put('night-premium/{nightPremium}/approvedByVPFinance', [NightPremiumController::class, 'approvedByVPFinance'])->name('night-premium.approvedByVPFinance');
+    Route::put('night-premium/{nightPremium}/rejectedByVPFinance', [NightPremiumController::class, 'rejectedByVPFinance'])->name('night-premium.rejectedByVPFinance');
+
+    // Overtime routes
+    Route::put('overtime/{overtime}/approvedBySupervisor', [OverTimePayController::class, 'approvedBySupervisor'])->name('overtime.approvedBySupervisor');
+    Route::put('overtime/{overtime}/rejectedBySupervisor', [OverTimePayController::class, 'rejectedBySupervisor'])->name('overtime.rejectedBySupervisor');
+    Route::put('overtime/{overtime}/approvedByFinance', [OverTimePayController::class, 'approvedByFinance'])->name('overtime.approvedByFinance');
+    Route::put('overtime/{overtime}/rejectedByFinance', [OverTimePayController::class, 'rejectedByFinance'])->name('overtime.rejectedByFinance');
+    Route::put('overtime/{overtime}/approvedByVPFinance', [OverTimePayController::class, 'approvedByVPFinance'])->name('overtime.approvedByVPFinance');
+    Route::put('overtime/{overtime}/rejectedByVPFinance', [OverTimePayController::class, 'rejectedByVPFinance'])->name('overtime.rejectedByVPFinance');
+    Route::get('/overtime-hours/{employeeId}', [OverTimePayController::class, 'getOvertimeHours'])->name('overtime.hours');
 
     // Contribution Notify routes
     Route::post('/sss/notify', [SssController::class, 'notifyEmployees'])->name('sss.notify');
@@ -249,6 +266,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-payrolls', [PayrollController::class, 'myPayrolls'])->name('payroll.myPayrolls');
     Route::get('payroll/download-pdf/{id}', [PayrollController::class, 'downloadPdf'])->name('payroll.downloadPdf');
 
+    // New payroll adjustment routes
+    Route::get('/payroll/adjustments/get', [PayrollController::class, 'getAdjustments'])->name('payroll.getAdjustments');
+    Route::post('/payroll/adjustments/save', [PayrollController::class, 'saveAdjustments'])->name('payroll.saveAdjustments');
+
     // Contributions routes
     Route::get('/contributions-employee/{employee_id}', [ContributionController::class, 'employeeContributions'])->name('contributions.employee');
     Route::get('/contributions-employees-list', [ContributionController::class, 'allEmployeesContribution'])->name('contributions.employees-list');
@@ -303,8 +324,6 @@ Route::middleware('auth')->group(function () {
     // Inventory routes
     Route::post('inventory/import', [ItInventoryController::class, 'import'])->name('inventory.import');
 
-    // Overtime routes
-    Route::get('/overtime-hours/{employeeId}', [OverTimePayController::class, 'getOvertimeHours'])->name('overtime.hours');
 
     // Notifications routes
     Route::get('/notifications/data', [NotificationsController::class, 'getNotificationsData'])->name('notifications.data');
@@ -427,6 +446,7 @@ Route::middleware(['auth', 'super.admin'])->prefix('route-management')->name('ro
     Route::put('/{route}', [RouteManagementController::class, 'update'])->name('update');
     Route::post('/bulk-toggle', [RouteManagementController::class, 'bulkToggle'])->name('bulk-toggle');
 });
+
 
 Auth::routes();
 

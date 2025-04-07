@@ -41,24 +41,34 @@
 
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="date">Dat<span class="text-danger">*</span></label>
+                                        <label for="date">Date<span class="text-danger">*</span></label>
                                         <input type="date" id="date" name="date" class="form-control" required>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="overtime_hours">Overtime Hour</label>
-                                        <input type="number" id="overtime_hours" name="overtime_hours" class="form-control" step="0.1">
+                                        <label for="time_in">Time In<span class="text-danger">*</span></label>
+                                        <input type="datetime-local" id="time_in" name="time_in" class="form-control" required>
+                                        <small class="text-muted">Time in date must match the date selected above</small>
                                     </div>
                                 </div>
 
-                                {{-- <div class="col-md-6">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="time_out">Time Out<span class="text-danger">*</span></label>
+                                        <input type="datetime-local" id="time_out" name="time_out" class="form-control" required>
+                                        <small class="text-muted">Time out can be on a different date</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="overtime_rate">Overtime Rate</label>
-                                        <input type="number" step="0.01" name="overtime_rate" id="overtime_rate" class="form-control" value="1.25" required readonly>
+                                        <input type="number" step="0.01" name="overtime_rate" id="overtime_rate" class="form-control" value="1.25" required>
+                                        <small class="text-muted">1.25 for regular overtime, 1.5 for holiday overtime</small>
                                     </div>
-                                </div> --}}
+                                </div>
                             </div>
 
                             <div class="row">
@@ -93,6 +103,47 @@
             $('select').select2({
                 theme: 'bootstrap4',
                 width: '100%'
+            });
+
+            // Initialize date field with today's date
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            $('#date').val(formattedDate);
+
+            // Set default time_in and time_out based on the date
+            function updateDefaultTimes() {
+                const selectedDate = $('#date').val();
+                if (selectedDate) {
+                    // Set default time_in to 5:00 PM on the selected date
+                    const defaultTimeIn = selectedDate + 'T17:00';
+                    $('#time_in').val(defaultTimeIn);
+                    
+                    // Set default time_out to 6:30 PM on the selected date (1.5 hours later)
+                    const defaultTimeOut = selectedDate + 'T18:30';
+                    $('#time_out').val(defaultTimeOut);
+                }
+            }
+            
+            // Call the function initially to set default values
+            updateDefaultTimes();
+            
+            // Set date field as default for time_in and time_out when date changes
+            $('#date').on('change', function() {
+                updateDefaultTimes();
+            });
+            
+            // Validate that time_in date matches the selected date
+            $('form').on('submit', function(e) {
+                const selectedDate = $('#date').val();
+                const timeIn = $('#time_in').val();
+                
+                if (timeIn) {
+                    const timeInDate = timeIn.split('T')[0];
+                    if (timeInDate !== selectedDate) {
+                        e.preventDefault();
+                        alert('Time in date must match the selected overtime date.');
+                    }
+                }
             });
         });
     </script>

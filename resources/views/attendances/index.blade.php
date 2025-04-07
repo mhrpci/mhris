@@ -37,6 +37,28 @@
             </div>
         </a>
         @endcanany
+        @canany(['hrcomben', 'admin', 'super-admin', 'finance', 'vpfinance-admin', 'supervisor'])
+        <a href="{{ route('overtime.index') }}" class="contribution-link {{ request()->routeIs('overtime.index') ? 'active' : '' }}">
+            <div class="icon-wrapper">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="text-wrapper">
+                <span class="title">Overtime</span>
+                <small class="description">Employee overtime records</small>
+            </div>
+        </a>
+        @endcanany
+        @canany(['hrcomben', 'admin', 'super-admin', 'finance', 'vpfinance-admin', 'supervisor'])
+        <a href="{{ route('night-premium.index') }}" class="contribution-link {{ request()->routeIs('night-premium.index') ? 'active' : '' }}">
+            <div class="icon-wrapper">
+                <i class="fas fa-moon"></i>
+            </div>
+            <div class="text-wrapper">
+                <span class="title">Night Premium</span>
+                <small class="description">Employee night premium records</small>
+            </div>
+        </a>
+        @endcanany
     </div>
 </div>
     <div class="row">

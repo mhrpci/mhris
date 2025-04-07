@@ -5,14 +5,24 @@ namespace App\Services;
 use App\Models\Contribution;
 use App\Models\Loan;
 use App\Models\Attendance;
+use App\Models\Leave;
 use App\Models\OvertimePay;
 use App\Models\Payroll;
 use App\Models\Employee;
+use App\Models\Holiday;
+use App\Models\NightPremium;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class PayrollService
 {
+    protected $holidayService;
+
+    public function __construct(HolidayService $holidayService)
+    {
+        $this->holidayService = $holidayService;
+    }
+
     public function calculatePayroll($employee_id, $start_date, $end_date)
     {
         // Fetch employee data
@@ -106,6 +116,9 @@ class PayrollService
         $late_deduction = 0;
         $undertime_deduction = 0;
         $overtime_pay = 0;
+        $night_premium_pay = 0;
+        $late_time_total = '00:00'; // Initialize late time total
+        $under_time_total = '00:00'; // Initialize under time total
 
         foreach ($attendances as $attendance) {
             $remarks = $attendance->remarks;
@@ -117,17 +130,23 @@ class PayrollService
 
                 if ($time_in && $time_in->gt($standard_start)) {
                     $late_minutes = $time_in->diffInMinutes($standard_start);
-                    $late_deduction += $late_minutes * 0.02;
+                    $late_deduction += $late_minutes * $this->deductionPerMinute($employee);
+                    
+                    // Get or calculate late_time
+                    $late_time_total = $this->addTimes($late_time_total, $attendance->late_time ?? $attendance->calculateLateTime());
                 }
             }
 
-            if ($remarks === 'Undertime') {
+            if ($remarks === 'UnderTime') {
                 $standard_end = Carbon::parse('17:00:00');
                 $time_out = Carbon::parse($attendance->time_out);
 
                 if ($time_out && $time_out->lt($standard_end)) {
                     $undertime_minutes = $standard_end->diffInMinutes($time_out);
-                    $undertime_deduction += $undertime_minutes * 0.02;
+                    $undertime_deduction += $undertime_minutes * $this->deductionPerMinute($employee);
+                    
+                    // Get or calculate under_time
+                    $under_time_total = $this->addTimes($under_time_total, $attendance->under_time ?? $attendance->calculateUnderTime());
                 }
             }
 
@@ -136,13 +155,13 @@ class PayrollService
             }
         }
 
-
-        // Check for dates with no attendance records
-        // $total_no_attendance_days = $this->calculateNoAttendanceDays($employee_id, $start_date, $end_date);
-        // $no_attendance_deduction = $total_no_attendance_days * $daily_salary;
-
         // Fetch Overtime Pay records and calculate total overtime pay
         $overtime_pay = OvertimePay::getTotalOvertimePay($employee_id, $start_date, $end_date);
+        $overtime_hours = OvertimePay::getTotalOvertimeHours($employee_id, $start_date, $end_date);
+
+        // Fetch Night Premium Pay records and calculate total night premium pay
+        $night_premium_pay = NightPremium::getTotalNightPremiumPay($employee_id, $start_date, $end_date);
+        $night_premium_hours = NightPremium::getTotalNightHours($employee_id, $start_date, $end_date);
 
         // Total deductions include absent, late, undertime deductions, and no attendance deductions
         $total_deductions = $late_deduction + $undertime_deduction; 
@@ -150,11 +169,24 @@ class PayrollService
 
         // Deduct Contributions (if within payroll period)
         $contribution_deductions = 0;
+        $employer_contributions = [
+            'employer_sss_contribution' => 0,
+            'employer_philhealth_contribution' => 0,
+            'employer_pagibig_contribution' => 0
+        ];
+        
         if ($contributions) {
             $contribution_deductions += $contributions->sss_contribution ?? 0;
             $contribution_deductions += $contributions->pagibig_contribution ?? 0;
             $contribution_deductions += $contributions->philhealth_contribution ?? 0;
             $contribution_deductions += $contributions->tin_contribution ?? 0;
+            
+            // Get employer contributions
+            $employer_contributions = [
+                'employer_sss_contribution' => $contributions->employer_sss_contribution ?? 0,
+                'employer_philhealth_contribution' => $contributions->employer_philhealth_contribution ?? 0,
+                'employer_pagibig_contribution' => $contributions->employer_pagibig_contribution ?? 0
+            ];
         }
 
         // Deduct Loans (if within payroll period)
@@ -190,8 +222,76 @@ class PayrollService
             $loan_deductions = $sss_loan + $pagibig_loan + $cash_advance;
         }
 
+        // Calculate holiday hours and pay
+        $holidays = $this->holidayService->getHolidaysInRange($start, $end);
+        $holiday_hours = 0;
+        $holiday_pay = 0;
+        $regular_holiday_hours = 0;
+        $special_holiday_hours = 0;
+        $special_working_holiday_hours = 0;
+        
+        foreach ($holidays as $holiday) {
+            // Skip holidays that are on weekends, as they might be counted already
+            $holidayDate = Carbon::parse($holiday->date);
+            if ($holidayDate->isWeekend()) {
+                Log::info("Holiday {$holiday->title} falls on weekend, not counting additional hours");
+                continue;
+            }
+            
+            // Track total holiday hours
+            $holiday_hours += $holiday->holiday_hours;
+            
+            // Track holiday hours by type
+            if ($holiday->type === Holiday::TYPE_REGULAR) {
+                $regular_holiday_hours += $holiday->holiday_hours;
+                // Regular holiday pays 100% of daily rate
+                $holiday_pay += ($daily_salary * $holiday->holiday_hours / 8);
+            } elseif ($holiday->type === Holiday::TYPE_SPECIAL) {
+                $special_holiday_hours += $holiday->holiday_hours;
+                // Special non-working holiday pays 30% of daily rate
+                $holiday_pay += ($daily_salary * $holiday->holiday_hours / 8) * 0.3;
+            } elseif ($holiday->type === Holiday::TYPE_SPECIAL_WORKING) {
+                $special_working_holiday_hours += $holiday->holiday_hours;
+                // Special working holidays don't add pay as they're treated as regular working days
+            }
+            
+            Log::info("Added holiday {$holiday->title} with {$holiday->holiday_hours} hours to payroll for employee {$employee_id}");
+        }
+
+        // Get unpaid approved leaves within the payroll period
+        $unpaid_leaves = Leave::where('employee_id', $employee_id)
+            ->where('status', 'approved')
+            ->where('payment_status', 'Without Pay')
+            ->where(function($query) use ($start, $end) {
+                $query->whereBetween('date_from', [$start, $end])
+                    ->orWhereBetween('date_to', [$start, $end])
+                    ->orWhere(function($q) use ($start, $end) {
+                        $q->where('date_from', '<', $start)
+                          ->where('date_to', '>', $end);
+                    });
+            })
+            ->get();
+
+        // Sum up the calculated hours from unpaid approved leaves
+        $unpaid_leave_hours = 0;
+        foreach ($unpaid_leaves as $leave) {
+            $unpaid_leave_hours += $leave->calculated_hours;
+            
+            // Log details of each unpaid leave being included
+            Log::info("Including unpaid leave (ID: {$leave->id}) in payroll for employee {$employee_id}", [
+                'leave_id' => $leave->id,
+                'employee_id' => $employee_id,
+                'date_from' => $leave->date_from,
+                'date_to' => $leave->date_to,
+                'calculated_hours' => $leave->calculated_hours,
+                'leave_type' => $leave->leave_type,
+                'type_name' => $leave->type->name ?? 'Unknown',
+                'payroll_period' => "{$start_date} to {$end_date}"
+            ]);
+        }
+
         // Calculate Net Salary
-        $net_salary = $gross_salary - $total_deductions - $contribution_deductions - $loan_deductions + $overtime_pay - $absent_deduction;
+        $net_salary = $gross_salary - $total_deductions - $contribution_deductions - $loan_deductions + $overtime_pay + $night_premium_pay - $absent_deduction;
 
         // Calculate Total Earnings
         $total_earnings = $this->calculateTotalEarnings($gross_salary, $overtime_pay);
@@ -206,46 +306,34 @@ class PayrollService
             'late_deduction' => $late_deduction,
             'undertime_deduction' => $undertime_deduction,
             'absent_deduction' => $absent_deduction,
-            // 'no_attendance_deduction' => $no_attendance_deduction,
+            'unpaid_leave_hours' => $unpaid_leave_hours,
+            'late_time' => $late_time_total,
+            'under_time' => $under_time_total,
             'sss_contribution' => $contributions->sss_contribution ?? 0,
             'pagibig_contribution' => $contributions->pagibig_contribution ?? 0,
             'philhealth_contribution' => $contributions->philhealth_contribution ?? 0,
             'tin_contribution' => $contributions->tin_contribution ?? 0,
+            'employer_sss_contribution' => $employer_contributions['employer_sss_contribution'],
+            'employer_philhealth_contribution' => $employer_contributions['employer_philhealth_contribution'],
+            'employer_pagibig_contribution' => $employer_contributions['employer_pagibig_contribution'],
             'sss_loan' => $sss_loan,
             'pagibig_loan' => $pagibig_loan,
             'cash_advance' => $cash_advance,
             'overtime_pay' => $overtime_pay,
-            'total_earnings' => $total_earnings
+            'overtime_hours' => $overtime_hours,
+            'night_premium_pay' => $night_premium_pay,
+            'night_premium_hours' => $night_premium_hours,
+            'total_earnings' => $total_earnings,
+            'holiday_hours' => $holiday_hours,
+            'holiday_pay' => $holiday_pay,
+            'regular_holiday_hours' => $regular_holiday_hours,
+            'special_holiday_hours' => $special_holiday_hours,
+            'special_working_holiday_hours' => $special_working_holiday_hours,
         ]);
 
         return $payroll;
     }
 
-    // private function calculateNoAttendanceDays($employee_id, $start_date, $end_date)
-    // {
-    //     // Initialize the start and end date
-    //     $start = Carbon::parse($start_date)->startOfDay();
-    //     $end = Carbon::parse($end_date)->endOfDay();
-
-    //     // Get all attendance dates within the range
-    //     $attendance_dates = Attendance::where('employee_id', $employee_id)
-    //         ->whereBetween('date_attended', [$start, $end])
-    //         ->pluck('date_attended')
-    //         ->toArray();
-
-    //     $total_no_attendance_days = 0;
-    //     $current_date = $start->copy();
-
-    //     while ($current_date->lte($end)) {
-    //         // If the current date is not a Sunday and there's no attendance record, count it as a no attendance day
-    //         if (!$current_date->isSunday() && !in_array($current_date->toDateString(), $attendance_dates)) {
-    //             $total_no_attendance_days++;
-    //         }
-    //         $current_date->addDay();
-    //     }
-
-    //     return $total_no_attendance_days;
-    // }
 
     private function calculateTotalEarnings($basic_salary, $overtime_pay)
     {
@@ -255,5 +343,35 @@ class PayrollService
     private function calculateWorkingDays($employee)
     {
         return $employee->department->name === "BGPDI" ? 7 : 13;
+    }
+    
+    public function deductionPerMinute($employee)
+    {
+        $daily_salary = $employee->salary / 26;
+        $deduction_per_minute = 8 * 60;
+        return $daily_salary / $deduction_per_minute;
+    }
+    
+    /**
+     * Add two time strings in format HH:MM
+     *
+     * @param string $time1
+     * @param string $time2
+     * @return string
+     */
+    private function addTimes($time1, $time2)
+    {
+        // Parse times
+        [$hours1, $minutes1] = array_map('intval', explode(':', $time1));
+        [$hours2, $minutes2] = array_map('intval', explode(':', $time2));
+        
+        // Add times
+        $totalMinutes = ($hours1 * 60 + $minutes1) + ($hours2 * 60 + $minutes2);
+        
+        // Convert back to HH:MM format
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        
+        return sprintf('%02d:%02d', $hours, $minutes);
     }
 }

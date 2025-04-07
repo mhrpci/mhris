@@ -26,15 +26,6 @@
                 </div>
             </a>
             @endcan
-            <a href="{{ route('overtime.index') }}" class="contribution-link {{ request()->routeIs('overtime.index') ? 'active' : '' }}">
-                <div class="icon-wrapper">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="text-wrapper">
-                    <span class="title">Overtime</span>
-                    <small class="description">Employee overtime records</small>
-                </div>
-            </a>
         </div>
     </div>
         <div class="row">

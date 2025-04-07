@@ -49,6 +49,21 @@
                                         <label class="text-muted small">Remarks</label>
                                         <p class="font-weight-bold">{{ $attendance->remarks ?? 'No remarks' }}</p>
                                     </div>
+                                    <div class="mb-3">
+                                        @if($attendance->remarks == 'Late')
+                                        <label class="text-muted small">Late Time</label>
+                                        <p class="font-weight-bold">{{ $attendance->late_time }} hours/minutes</p>
+                                        @elseif($attendance->remarks == 'UnderTime')
+                                        <label class="text-muted small">Under Time</label>
+                                        <p class="font-weight-bold">{{ $attendance->under_time }} hours/minutes</p>
+                                        @elseif($attendance->remarks == 'On Leave')
+                                        <label class="text-muted small">Unpaid Leave Time</label>
+                                        <p class="font-weight-bold">{{ $attendance->unpaid_leave_time }} hours/minutes</p>
+                                        @elseif($attendance->remarks == 'Overtime')
+                                        <label class="text-muted small">Overtime</label>
+                                        <p class="font-weight-bold">{{ $attendance->overtime_hours }} hours/minutes</p>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>

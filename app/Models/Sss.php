@@ -156,10 +156,13 @@ class Sss extends Model
     private static function createSssContributionEntries($employeeId, $employeeContribution, $contributionDate)
     {
         $employee = Employee::find($employeeId);
+        $contribution = self::calculateContribution($employee->salary);
+        $employerContribution = $contribution['employer_contribution'];
         
         if ($employee->department->name === 'BGPDI') {
             // For BGPDI employees - weekly contributions (1/4 of the total)
             $quarterContribution = $employeeContribution / 4;
+            $quarterEmployerContribution = $employerContribution / 4;
             $contributionMonth = Carbon::parse($contributionDate);
             
             // Set weekly dates (7th, 14th, 21st, 28th of the month)
@@ -184,12 +187,14 @@ class Sss extends Model
                     ],
                     [
                         'sss_contribution' => $quarterContribution,
+                        'employer_sss_contribution' => $quarterEmployerContribution,
                     ]
                 );
             }
         } else {
             // For other departments - bi-monthly contributions (1/2 of the total)
             $halfContribution = $employeeContribution / 2;
+            $halfEmployerContribution = $employerContribution / 2;
             $contributionMonth = Carbon::parse($contributionDate);
 
             $firstDate = $contributionMonth->copy()->setDay(10);
@@ -209,6 +214,7 @@ class Sss extends Model
                     ],
                     [
                         'sss_contribution' => $halfContribution,
+                        'employer_sss_contribution' => $halfEmployerContribution,
                     ]
                 );
             }

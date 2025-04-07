@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('overtime_pays', function (Blueprint $table) {
-            $table->enum('approval_status', ['pending', 'approvedBySupervisor', 'rejectedBySupervisor', 'approvedByFinance', 'rejectedByFinance', 'approvedByVPFinance', 'rejectedByVPFinance'])->default('pending');
+            $table->dateTime('time_in')->nullable()->after('date');
+            $table->dateTime('time_out')->nullable()->after('time_in');
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('overtime_pays', function (Blueprint $table) {
-            $table->dropColumn(['approval_status']);
+            $table->dropColumn(['time_in', 'time_out']);
         });
     }
 };

@@ -20,7 +20,6 @@ class Attendance extends Model
         'ABSENT' => 'Absent',
         'LATE' => 'Late',
         'UNDERTIME' => 'UnderTime',
-        'OVERTIME' => 'Overtime',
         'PRESENT' => 'Present',
         'NO_CLOCK_OUT' => 'No Clock Out',
         'HALF_DAY' => 'Half Day'
@@ -44,6 +43,9 @@ class Attendance extends Model
         'hours_worked',
         'leave_payment_status',
         'overtime_hours',
+        'late_time',
+        'under_time',
+        'unpaid_leave_time',
     ];
 
     protected $casts = [
@@ -136,10 +138,9 @@ class Attendance extends Model
     {
         $this->time_in = $this->time_in ?? null;
         $this->time_out = $this->time_out ?? null;
-        $this->remarks = ($this->time_in !== null && $this->time_out !== null) ? 'Overtime' : $reason;
+        $this->remarks = $reason;
         $this->hours_worked = $this->hours_worked ?? '00:00:00';
         $this->leave_payment_status = $this->leave_payment_status ?? null;
-        $this->overtime_hours = $this->hours_worked ?? '00:00:00';
     }
 
     private function setHolidayAttendance()
@@ -187,6 +188,7 @@ class Attendance extends Model
             $this->time_in = null;
             $this->time_out = null;
             $this->hours_worked = '00:00:00';
+            $this->unpaid_leave_time = '08:00:00'; // Standard work day duration as unpaid
         }
 
         $this->remarks = 'On Leave';
@@ -219,11 +221,10 @@ class Attendance extends Model
 
         if ($timeIn && $timeIn->gt($shiftStart)) {
             $this->remarks = 'Late';
+            $this->late_time = $this->calculateLateTime();
         } elseif ($timeOut && $timeOut->lt($shiftEnd)) {
             $this->remarks = 'UnderTime';
-        } elseif ($this->isOvertime()) {
-            $this->remarks = 'Overtime';
-            $this->overtime_hours = $this->calculateOvertimeHours();
+            $this->under_time = $this->calculateUnderTime();
         } else {
             $this->remarks = 'Present';
         }
@@ -234,14 +235,6 @@ class Attendance extends Model
 
         $this->hours_worked = $this->getHoursWorkedAttribute();
         $this->leave_payment_status = 'With Pay'; // Assuming regular work days are always with pay
-    }
-
-    public function isOvertime(): bool
-    {
-        $shiftEnd = Carbon::parse('18:00:00'); // 06:00 PM
-        $timeOut = $this->time_out ? Carbon::parse($this->time_out) : null;
-
-        return $timeOut && $timeOut->gte($shiftEnd);
     }
 
     public function getHoursWorkedAttribute(): string
@@ -272,22 +265,20 @@ class Attendance extends Model
         parent::boot();
 
         static::saved(function ($model) {
-            // Create overtime pay record if remarks is Overtime
-            if ($model->remarks === 'Overtime' && $model->overtime_hours) {
-                // Convert overtime hours from HH:MM:SS to decimal hours
-                $overtimeHoursArray = explode(':', $model->overtime_hours);
-                $decimalHours = $overtimeHoursArray[0] + ($overtimeHoursArray[1] / 60) + ($overtimeHoursArray[2] / 3600);
+            // Store the late time and under time details
+            if ($model->remarks === 'Late' && !$model->late_time) {
+                $model->late_time = $model->calculateLateTime();
+                $model->save();
+            }
 
-                OvertimePay::updateOrCreate(
-                    [
-                        'employee_id' => $model->employee_id,
-                        'date' => $model->date_attended,
-                    ],
-                    [
-                        'overtime_hours' => $decimalHours,
-                        'overtime_rate' => 1.25, // Default overtime rate, adjust as needed
-                    ]
-                );
+            if ($model->remarks === 'UnderTime' && !$model->under_time) {
+                $model->under_time = $model->calculateUnderTime();
+                $model->save();
+            }
+
+            if ($model->remarks === 'On Leave' && $model->leave_payment_status === 'Without Pay' && !$model->unpaid_leave_time) {
+                $model->unpaid_leave_time = '08:00:00'; // Standard workday duration
+                $model->save();
             }
         });
 
@@ -315,25 +306,6 @@ class Attendance extends Model
         return 0;
     }
 
-    public function getOvertimeDifferenceInDecimal(): float
-    {
-        if ($this->remarks === 'Overtime' && $this->time_out) {
-            $standardTimeOut = Carbon::parse('17:00:00');
-            $actualTimeOut = Carbon::parse($this->time_out);
-
-            // Calculate the difference
-            $overtimeDuration = $actualTimeOut->diff($standardTimeOut);
-
-            // Convert the difference to decimal format
-            $hours = $overtimeDuration->h;
-            $minutes = $overtimeDuration->i;
-
-            return $hours + ($minutes / 60);
-        }
-
-        return 0.0;
-    }
-
     private function setAbsentForNonRegularHoliday()
     {
         $this->time_in = null;
@@ -341,29 +313,6 @@ class Attendance extends Model
         $this->remarks = 'Absent';
         $this->hours_worked = '00:00:00';
         $this->leave_payment_status = null;
-    }
-
-    public function calculateOvertimeHours(): string
-    {
-        // Only calculate if remarks is Overtime and time_out exists
-        if ($this->remarks !== 'Overtime' || !$this->time_out) {
-            return '00:00:00';
-        }
-
-        // Set overtime start time to 17:00:00 (5:00 PM)
-        $overtimeStart = Carbon::parse('17:00:00');
-        $timeOut = Carbon::parse($this->time_out);
-
-        // If time_out is before overtime start, return 0
-        if ($timeOut->lte($overtimeStart)) {
-            return '00:00:00';
-        }
-
-        // Calculate the difference between overtime start and time_out
-        $overtimeDuration = $overtimeStart->diff($timeOut);
-
-        // Format the duration as HH:MM:SS
-        return $overtimeDuration->format('%H:%I:%S');
     }
 
     public function calculateLateTime(): string
@@ -380,5 +329,30 @@ class Attendance extends Model
         }
 
         return '00:00'; // No late time if not late
+    }
+
+    public function calculateUnderTime(): string
+    {
+        if ($this->remarks === 'UnderTime' && $this->time_out) {
+            $shiftEnd = Carbon::parse('17:00:00');
+            $timeOut = Carbon::parse($this->time_out);
+
+            // Calculate the difference in minutes
+            $underTimeDuration = $shiftEnd->diffInMinutes($timeOut);
+
+            // Format the under time duration as HH:MM
+            return sprintf('%02d:%02d', floor($underTimeDuration / 60), $underTimeDuration % 60);
+        }
+
+        return '00:00'; // No under time if not undertime
+    }
+
+    public function getUnpaidLeaveTimeAttribute(): string
+    {
+        if ($this->remarks === 'On Leave' && $this->leave_payment_status === 'Without Pay') {
+            return $this->unpaid_leave_time ?? '08:00:00'; // Default to standard workday
+        }
+
+        return '00:00'; // No unpaid leave time if not on unpaid leave
     }
 }

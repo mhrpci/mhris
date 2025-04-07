@@ -52,6 +52,22 @@
                                     <td>Overtime Pay</td>
                                     <td class="text-end">₱{{ number_format($payroll->overtime_pay, 2) }}</td>
                                 </tr>
+                                <tr>
+                                    <td>Night Premium Pay</td>
+                                    <td class="text-end">₱{{ number_format($payroll->night_premium_pay, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Adjustments</td>
+                                    <td class="text-end">₱{{ number_format($payroll->adjustments, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Allowances</td>
+                                    <td class="text-end">₱{{ number_format($payroll->allowances, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Other Adjustments</td>
+                                    <td class="text-end">₱{{ number_format($payroll->other_adjustments, 2) }}</td>
+                                </tr>
                                 <tr class="fw-bold">
                                     <td>Total Earnings</td>
                                     <td class="text-end">₱{{ number_format($payroll->total_earnings, 2) }}</td>
@@ -91,6 +107,14 @@
                                         <td class="text-end">₱{{ number_format($amount, 2) }}</td>
                                     </tr>
                                 @endforeach
+                                <tr>
+                                    <td>Cash Bond</td>
+                                    <td class="text-end">₱{{ number_format($payroll->cash_bond, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Other Deductions</td>
+                                    <td class="text-end">₱{{ number_format($payroll->other_deduction, 2) }}</td>
+                                </tr>
                                 <tr class="fw-bold">
                                     <td>Total Deductions</td>
                                     <td class="text-end">₱{{ number_format($totalDeductions, 2) }}</td>

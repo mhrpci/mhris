@@ -7,6 +7,8 @@ use App\Models\Employee;
 use App\Models\OvertimePay;
 use App\Models\Attendance;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class OverTimePayController extends Controller
 {
@@ -52,44 +54,66 @@ class OverTimePayController extends Controller
 public function store(Request $request)
 {
     // Validate the request data
-    $validatedData = $request->validate([
+    $validator = Validator::make($request->all(), [
         'employee_id' => 'required|exists:employees,id',
         'date' => 'required|date',
-        'overtime_hours' => 'required|numeric',
-        'overtime_rate' => 'nullable|numeric',
-        'overtime_pay' => 'nullable|numeric',
+        'time_in' => 'required|date_format:Y-m-d\TH:i',
+        'time_out' => 'required|date_format:Y-m-d\TH:i|after:time_in',
+        'overtime_rate' => 'required|numeric|min:1',
     ]);
 
-    // Check if the employee already has an overtime record on the same date
-    $existingOvertime = OvertimePay::where('employee_id', $request->employee_id)
-                                   ->where('date', $request->date)
-                                   ->first();
-
-    if ($existingOvertime) {
-        return redirect()->back()->withErrors(['error' => 'Overtime for this employee on the selected date already exists.']);
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
     }
 
-    // Fetch the attendance record for the employee on the given date
-    $attendance = Attendance::where('employee_id', $request->employee_id)
-                            ->where('date_attended', $request->date)
-                            ->first();
-
-    // Check if the attendance remark is 'Overtime'
-    if (!$attendance || $attendance->remarks !== 'Overtime') {
-        return redirect()->back()->withErrors(['error' => 'The employee is not marked for overtime on the selected date.']);
+    try {
+        // Format the datetimes properly
+        $date = date('Y-m-d', strtotime($request->date));
+        $timeIn = date('Y-m-d H:i:s', strtotime($request->time_in));
+        $timeOut = date('Y-m-d H:i:s', strtotime($request->time_out));
+        
+        // Verify time_in date matches the date field
+        $timeInDate = date('Y-m-d', strtotime($timeIn));
+        if ($timeInDate !== $date) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['time_in' => 'Time in date must match the overtime date']);
+        }
+        
+        // Calculate the time difference in hours (before saving)
+        $timeDiff = strtotime($timeOut) - strtotime($timeIn);
+        $hours = $timeDiff / 3600; // Convert seconds to hours
+        $hours = round($hours, 2); // Round to 2 decimal places
+        
+        // Create the overtime record
+        $overtime = new OvertimePay();
+        $overtime->employee_id = $request->employee_id;
+        $overtime->date = $date;
+        $overtime->time_in = $timeIn;
+        $overtime->time_out = $timeOut;
+        $overtime->overtime_rate = $request->overtime_rate;
+        $overtime->approval_status = 'pending';
+        $overtime->overtime_hours = $hours > 0 ? $hours : 0; // Set overtime_hours before saving
+        $overtime->save();
+        
+        // Calculate overtime pay
+        try {
+            $overtime->calculateOvertimePay();
+        } catch (\Exception $e) {
+            // If calculation fails, log the error but continue
+            Log::error('Overtime calculation error: ' . $e->getMessage());
+        }
+        
+        return redirect()->route('overtime.index')
+            ->with('success', 'Overtime created successfully.');
+    } catch (\Exception $e) {
+        Log::error('Overtime creation error: ' . $e->getMessage());
+        return redirect()->back()
+            ->withInput()
+            ->withErrors(['error' => 'An error occurred: ' . $e->getMessage()]);
     }
-
-    // Convert the overtime difference to decimal and compare
-    $overtimeDifferenceDecimal = $attendance->getOvertimeDifferenceInDecimal();
-
-    if (abs($overtimeDifferenceDecimal - $request->overtime_hours) > 0.01) {
-        return redirect()->back()->withErrors(['error' => 'The overtime hours do not match the recorded overtime difference.']);
-    }
-
-    // If all checks pass, create the overtime record
-    OvertimePay::create($validatedData);
-
-    return redirect()->route('overtime.index')->with('success', 'Overtime created successfully.');
 }
 
 
@@ -119,33 +143,103 @@ public function store(Request $request)
     //     return redirect()->route('overtime.index');
     // }
 
-    /**
-     * Approve the overtime pay
+     /**
+     * Approve the night premium pay by supervisor
      */
-    public function approve(OvertimePay $overtime)
+    public function approvedBySupervisor(OvertimePay $overtime)
     {
         if($overtime->approval_status !== 'pending') {
-            return redirect()->back()->with('error', 'This overtime record has already been processed.');
+            return redirect()->back()->with('error', 'This night premium record has already been processed.');
         }
 
-        $overtime->approve(Auth::id());
+        $overtime->approval_status = 'approvedBySupervisor';
+        $overtime->approveBySupervisor(Auth::id());
+        $overtime->save();
         
-        return redirect()->route('overtime.index')->with('success', 'Overtime approved successfully.');
+        return redirect()->route('overtime.index')->with('success', 'Overtime approved by supervisor successfully.');
     }
 
     /**
-     * Reject the overtime pay
+     * Reject the night premium pay by supervisor
      */
-    public function reject(Request $request, OvertimePay $overtime)
+    public function rejectedBySupervisor(Request $request, OvertimePay $overtime)
     {
         if($overtime->approval_status !== 'pending') {
             return redirect()->back()->with('error', 'This overtime record has already been processed.');
         }
 
+        $overtime->approval_status = 'rejectedBySupervisor';
         $overtime->rejection_reason = $request->rejection_reason;
-        $overtime->reject(Auth::id());
+        $overtime->approveBySupervisor(Auth::id());
+        $overtime->save();
         
-        return redirect()->route('overtime.index')->with('success', 'Overtime rejected successfully.');
+        return redirect()->route('overtime.index')->with('success', 'Overtime rejected by supervisor.');
+    }
+
+    /**
+     * Approve the night premium pay by finance head
+     */
+    public function approvedByFinance(OvertimePay $overtime)
+    {
+        if($overtime->approval_status !== 'approvedBySupervisor') {
+            return redirect()->back()->with('error', 'This overtime must be approved by supervisor first.');
+        }
+
+        $overtime->approval_status = 'approvedByFinance';
+        $overtime->approveByFinanceHead(Auth::id());
+        $overtime->save();
+        
+        return redirect()->route('overtime.index')->with('success', 'Overtime approved by finance head successfully.');
+    }
+
+    /**
+     * Reject the night premium pay by finance head
+     */
+    public function rejectedByFinance(Request $request, OvertimePay $overtime)
+    {
+        if($overtime->approval_status !== 'approvedBySupervisor') {
+            return redirect()->back()->with('error', 'This overtime must be approved by supervisor first.');
+        }
+
+        $overtime->approval_status = 'rejectedByFinance';
+        $overtime->rejection_reason = $request->rejection_reason;
+        $overtime->approveByFinanceHead(Auth::id());
+        $overtime->save();
+        
+        return redirect()->route('overtime.index')->with('success', 'Overtime rejected by finance head.');
+    }
+
+    /**
+     * Approve the night premium pay by VP finance
+     */
+    public function approvedByVPFinance(OvertimePay $overtime)
+    {
+        if($overtime->approval_status !== 'approvedByFinance') {
+            return redirect()->back()->with('error', 'This overtime must be approved by finance head first.');
+        }
+
+        $overtime->approval_status = 'approvedByVPFinance';
+        $overtime->approveByVpFinance(Auth::id());
+        $overtime->save();
+        
+        return redirect()->route('overtime.index')->with('success', 'Overtime approved by VP finance successfully.');
+    }
+
+    /**
+     * Reject the night premium pay by VP finance
+     */
+    public function rejectedByVPFinance(Request $request, OvertimePay $overtime)
+    {
+        if($overtime->approval_status !== 'approvedByFinance') {
+            return redirect()->back()->with('error', 'This overtime must be approved by finance head first.');
+        }
+
+        $overtime->approval_status = 'rejectedByVPFinance';
+        $overtime->rejection_reason = $request->rejection_reason;
+        $overtime->approveByVpFinance(Auth::id());
+        $overtime->save();
+        
+        return redirect()->route('overtime.index')->with('success', 'Overtime rejected by VP finance.');
     }
 
     /**

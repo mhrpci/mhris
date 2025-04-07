@@ -54,7 +54,9 @@ class Philhealth extends Model
         if ($employee->department->name === 'BGPDI') {
             // For BGPDI employees - weekly contributions (1/4 of the total)
             $quarterContribution = $this->employee_contribution / 4;
+            $quarterEmployerContribution = $this->employer_contribution / 4;
             $roundedQuarterContribution = round($quarterContribution, 2);
+            $roundedQuarterEmployerContribution = round($quarterEmployerContribution, 2);
 
             // Set weekly dates
             $weeklyDates = [
@@ -78,13 +80,16 @@ class Philhealth extends Model
                     ],
                     [
                         'philhealth_contribution' => $roundedQuarterContribution,
+                        'employer_philhealth_contribution' => $roundedQuarterEmployerContribution,
                     ]
                 );
             }
         } else {
             // Original bi-monthly logic for other departments
             $halfContribution = $this->employee_contribution / 2;
+            $halfEmployerContribution = $this->employer_contribution / 2;
             $roundedHalfContribution = round($halfContribution, 2);
+            $roundedHalfEmployerContribution = round($halfEmployerContribution, 2);
 
             $firstHalfDate = Carbon::create($contributionDate->year, $contributionDate->month, 10);
             $secondHalfDate = Carbon::create($contributionDate->year, $contributionDate->month, 25);
@@ -103,6 +108,7 @@ class Philhealth extends Model
                     ],
                     [
                         'philhealth_contribution' => $roundedHalfContribution,
+                        'employer_philhealth_contribution' => $roundedHalfEmployerContribution,
                     ]
                 );
             }

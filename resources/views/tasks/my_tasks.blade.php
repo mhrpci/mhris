@@ -172,7 +172,7 @@
 </div>
 @endsection
 
-@push('styles')
+@section('styles')
 <style>
     /* Common Styles */
     .rotating {
@@ -311,9 +311,9 @@
         }
     }
 </style>
-@endpush
+@endsection
 
-@push('scripts')
+@section('scripts')
 <script>
     $(document).ready(function () {
         let table;
@@ -401,4 +401,4 @@
         });
     });
 </script>
-@endpush
+@endsection

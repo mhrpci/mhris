@@ -15,15 +15,21 @@ class Contribution extends Model
         'employee_id',
         'date',
         'sss_contribution',
+        'employer_sss_contribution',
         'philhealth_contribution',
+        'employer_philhealth_contribution',
         'pagibig_contribution',
+        'employer_pagibig_contribution',
         'tin_contribution',
     ];
 
     protected $casts = [
         'sss_contribution' => 'float',
+        'employer_sss_contribution' => 'float',
         'philhealth_contribution' => 'float',
+        'employer_philhealth_contribution' => 'float',
         'pagibig_contribution' => 'float',
+        'employer_pagibig_contribution' => 'float',
         'tin_contribution' => 'float',
     ];
 

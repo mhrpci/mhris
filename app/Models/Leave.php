@@ -28,6 +28,7 @@ class Leave extends Model
         'approved_by_signature',
         'validated_by_signature',
         'rejected_by',
+        'calculated_hours',
     ];
 
     protected $primaryKey = 'id'; // This is already the default, but just to be explicit
@@ -171,5 +172,44 @@ class Leave extends Model
             'pending' => 'warning',
             default => 'secondary'
         };
+    }
+
+    /**
+     * Calculate leave hours based on leave type
+     * For 'Leave' type: Each day is 8 hours, and date ranges like 4/3 to 4/4 count as 1 day
+     * For other types: Calculate actual hours difference
+     */
+    public function calculateLeaveHours()
+    {
+        // If leave type is "Leave", calculate days and convert to hours (8 hours per day)
+        if ($this->leave_type === 'Leave') {
+            // Get the date difference excluding the end date (so 4/3 to 4/4 is 1 day)
+            $dateFrom = Carbon::parse($this->date_from)->startOfDay();
+            $dateTo = Carbon::parse($this->date_to)->startOfDay();
+            $days = $dateTo->diffInDays($dateFrom);
+            
+            // Count as at least 1 day if same day or 1 day apart
+            $days = max(1, $days);
+            
+            // Each day equals 8 hours
+            $this->calculated_hours = $days * 8;
+        } else {
+            // For other leave types, calculate actual hours difference
+            $diffHours = $this->diffhours;
+            $this->calculated_hours = $diffHours['hours'] + ($diffHours['minutes'] / 60);
+        }
+        
+        return $this->calculated_hours;
+    }
+    
+    /**
+     * Boot method to automatically calculate hours when saving
+     */
+    protected static function booted()
+    {
+        // Calculate hours before saving
+        static::saving(function ($leave) {
+            $leave->calculateLeaveHours();
+        });
     }
 }
