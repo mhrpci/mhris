@@ -185,6 +185,10 @@ Route::middleware('auth')->group(function () {
     Route::put('night-premium/{nightPremium}/approvedByVPFinance', [NightPremiumController::class, 'approvedByVPFinance'])->name('night-premium.approvedByVPFinance');
     Route::put('night-premium/{nightPremium}/rejectedByVPFinance', [NightPremiumController::class, 'rejectedByVPFinance'])->name('night-premium.rejectedByVPFinance');
 
+    // Employee Night Premium Application routes
+    Route::match(['get', 'post'], '/employee-night-premium/apply', [NightPremiumController::class, 'applyForNightPremium'])->name('night-premium.apply');
+    Route::get('/employee-night-premium/history', [NightPremiumController::class, 'employeeNightPremiumHistory'])->name('night-premium.history');
+
     // Overtime routes
     Route::put('overtime/{overtime}/approvedBySupervisor', [OverTimePayController::class, 'approvedBySupervisor'])->name('overtime.approvedBySupervisor');
     Route::put('overtime/{overtime}/rejectedBySupervisor', [OverTimePayController::class, 'rejectedBySupervisor'])->name('overtime.rejectedBySupervisor');
@@ -193,6 +197,10 @@ Route::middleware('auth')->group(function () {
     Route::put('overtime/{overtime}/approvedByVPFinance', [OverTimePayController::class, 'approvedByVPFinance'])->name('overtime.approvedByVPFinance');
     Route::put('overtime/{overtime}/rejectedByVPFinance', [OverTimePayController::class, 'rejectedByVPFinance'])->name('overtime.rejectedByVPFinance');
     Route::get('/overtime-hours/{employeeId}', [OverTimePayController::class, 'getOvertimeHours'])->name('overtime.hours');
+    
+    // Employee Overtime Application routes
+    Route::match(['get', 'post'], '/employee-overtime/apply', [OverTimePayController::class, 'applyForOvertime'])->name('overtime.apply');
+    Route::get('/employee-overtime/history', [OverTimePayController::class, 'employeeOvertimeHistory'])->name('overtime.history');
 
     // Contribution Notify routes
     Route::post('/sss/notify', [SssController::class, 'notifyEmployees'])->name('sss.notify');

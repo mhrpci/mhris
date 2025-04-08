@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use App\Models\OvertimePay;
 use App\Models\User;
+use App\Models\NightPremium;
 
 class NotificationsController extends Controller
 {
@@ -26,6 +27,9 @@ class NotificationsController extends Controller
         'overtime_pay_pending' => [],
         'overtime_pay_approved' => [],
         'overtime_pay_rejected' => [],
+        'night_premium_pending' => [],
+        'night_premium_approved' => [],
+        'night_premium_rejected' => [],
     ];
 
     // Method to fetch notifications data
@@ -77,7 +81,25 @@ class NotificationsController extends Controller
                             'status' => ucfirst($details['status'] ?? 'pending'),
                             'approved_by' => $details['approved_by'] ?? null,
                             'approved_at' => $details['approved_at'] ?? null,
-                            'department' => $details['department'] ?? ''
+                            'department' => $details['department'] ?? '',
+                            'rejection_reason' => $details['rejection_reason'] ?? null
+                        ];
+                    } elseif (strpos($type, 'night_premium') !== false) {
+                        $formattedDetails = [
+                            'type' => 'night_premium',
+                            'employee_name' => $details['employee_name'] ?? '',
+                            'date' => $details['date'] ?? '',
+                            'time_in' => $details['time_in'] ?? null,
+                            'time_out' => $details['time_out'] ?? null,
+                            'night_hours' => $details['night_hours'] ?? 0,
+                            'night_rate' => $details['night_rate'] ?? 0,
+                            'night_premium_pay' => $details['night_premium_pay'] ?? 0,
+                            'status' => ucfirst($details['status'] ?? 'pending'),
+                            'approved_by' => $details['approved_by'] ?? null,
+                            'approved_at' => $details['approved_at'] ?? null,
+                            'department' => $details['department'] ?? '',
+                            'rejection_reason' => $details['rejection_reason'] ?? null,
+                            'reason' => $details['reason'] ?? 'No reason provided'
                         ];
                     }
 
@@ -119,6 +141,9 @@ class NotificationsController extends Controller
         $this->generateOvertimePayPendingNotification();
         $this->generateOvertimePayApprovedNotification();
         $this->generateOvertimePayRejectedNotification();
+        $this->generateNightPremiumPendingNotification();
+        $this->generateNightPremiumApprovedNotification();
+        $this->generateNightPremiumRejectedNotification();
     }
 
     private function generateLeaveRequestNotifications()
@@ -489,7 +514,11 @@ class NotificationsController extends Controller
             }
 
             if (in_array($notification['data']['type'], ['overtime_pending', 'overtime_approved', 'overtime_rejected'])) {
-                return url("/overtime");
+                return route('overtime.show', ['overtime' => $notification['data']['id']]);
+            }
+            
+            if (in_array($notification['data']['type'], ['night_premium_pending', 'night_premium_approved', 'night_premium_rejected'])) {
+                return route('night-premium.show', ['night_premium' => $notification['data']['id']]);
             }
         }
         
@@ -506,6 +535,9 @@ class NotificationsController extends Controller
         }
         if (strpos($notification['text'], 'requested overtime pay') !== false) {
             return 'overtime';
+        }
+        if (strpos($notification['text'], 'requested night premium pay') !== false) {
+            return 'night-premium';
         }
         return 'default';
     }
@@ -538,6 +570,15 @@ class NotificationsController extends Controller
         }
         if (strpos($notification['text'], 'overtime pay request has been rejected') !== false) {
             return 'Overtime Pay Rejected';
+        }
+        if (strpos($notification['text'], 'requested night premium pay') !== false) {
+            return 'Night Premium Pay Request';
+        }
+        if (strpos($notification['text'], 'night premium pay request has been approved') !== false) {
+            return 'Night Premium Pay Approved';
+        }
+        if (strpos($notification['text'], 'night premium pay request has been rejected') !== false) {
+            return 'Night Premium Pay Rejected';
         }
         return 'Notification';
     }
@@ -618,6 +659,32 @@ class NotificationsController extends Controller
                     }
                     $overtime->save();
                 }
+            } elseif (strpos($notificationType, 'night_premium') !== false) {
+                $nightPremium = NightPremium::find($id);
+                if ($nightPremium) {
+                    // Determine which read flag to set based on user role
+                    $user = Auth::user();
+                    
+                    if ($user->hasRole('Supervisor')) {
+                        $nightPremium->is_read_by_supervisor = true;
+                        $nightPremium->is_read_at_supervisor = now();
+                    } elseif ($user->hasRole('Finance')) {
+                        $nightPremium->is_read_by_finance = true;
+                        $nightPremium->is_read_at_finance = now();
+                    } elseif ($user->hasRole('Employee')) {
+                        $nightPremium->is_read_by_employee = true;
+                        $nightPremium->is_read_at_employee = now();
+                    }
+                    
+                    // Handle approved/rejected status
+                    if (strpos($notificationType, 'approved') !== false || 
+                        strpos($notificationType, 'rejected') !== false) {
+                        $nightPremium->is_read_by_employee = true;
+                        $nightPremium->is_read_at_employee = now();
+                    }
+                    
+                    $nightPremium->save();
+                }
             }
             
             return response()->json(['success' => true]);
@@ -679,6 +746,9 @@ class NotificationsController extends Controller
                 
             $overtimeQuery = OvertimePay::with(['employee', 'employee.department', 'approver'])
                 ->where('created_at', '>=', $sevenDaysAgo);
+                
+            $nightPremiumQuery = NightPremium::with(['employee', 'employee.department', 'approver'])
+                ->where('created_at', '>=', $sevenDaysAgo);
 
             // Apply role-based restrictions
             if ($user && ($user->hasRole('Super Admin') || $user->hasRole('Admin'))) {
@@ -692,6 +762,13 @@ class NotificationsController extends Controller
                     $query->where('department_id', $supervisorDepartmentId);
                 });
                 
+                $nightPremiumQuery->where('approval_status', 'pending')
+                    ->where('is_read_by_supervisor', false)
+                    ->whereHas('employee', function($query) use ($supervisorDepartmentId) {
+                        $query->where('department_id', $supervisorDepartmentId)
+                            ->where('rank', 'Rank File');
+                    });
+                
                 // Set other queries to return no results for supervisors
                 $advancesQuery->where('id', 0);
                 $overtimeQuery->where('id', 0);
@@ -702,11 +779,18 @@ class NotificationsController extends Controller
                 
                 $overtimeQuery->where('approval_status', 'pending');
                 
-                // HR ComBen cannot see cash advances
+                // HR ComBen cannot see cash advances and night premiums
                 $advancesQuery->where('id', 0);
+                $nightPremiumQuery->where('id', 0);
             } elseif ($user && $user->hasRole('Finance')) {
-                // Finance can see pending overtime requests
+                // Finance can see pending overtime requests and night premium requests
                 $overtimeQuery->where('approval_status', 'pending');
+                
+                $nightPremiumQuery->where('approval_status', 'pending')
+                    ->where('is_read_by_finance', false)
+                    ->whereHas('employee', function($query) {
+                        $query->where('rank', '!=', 'Rank File');
+                    });
                 
                 // Finance cannot see leaves or cash advances
                 $leavesQuery->where('id', 0);
@@ -723,6 +807,12 @@ class NotificationsController extends Controller
                            ->whereHas('employee', function($query) use ($user) {
                                $query->where('email_address', $user->email);
                            });
+                           
+                $nightPremiumQuery->whereIn('approval_status', ['approvedByVPFinance', 'rejected'])
+                           ->where('is_read_by_employee', false)
+                           ->whereHas('employee', function($query) use ($user) {
+                               $query->where('email_address', $user->email);
+                           });
                 
                 // Employees cannot see cash advances in this view
                 $advancesQuery->where('id', 0);
@@ -731,6 +821,7 @@ class NotificationsController extends Controller
                 $leavesQuery->where('id', 0);
                 $advancesQuery->where('id', 0);
                 $overtimeQuery->where('id', 0);
+                $nightPremiumQuery->where('id', 0);
             }
 
             // Execute queries with ordering
@@ -767,6 +858,60 @@ class NotificationsController extends Controller
                             'Approved By' => $leave->approvedByUser ? 
                                 $leave->approvedByUser->name : 'Not yet approved',
                             'Reference Number' => $leave->id ?? 'N/A',
+                            'Applied On' => $createdAt->format('M d, Y h:i A')
+                        ]
+                    ];
+                });
+
+            // Add the night premiums mapping here
+            $nightPremiums = $nightPremiumQuery->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($nightPremium) {
+                    $createdAt = $nightPremium->created_at ? Carbon::parse($nightPremium->created_at) : now();
+                    $date = $nightPremium->date ? Carbon::parse($nightPremium->date) : null;
+                    
+                    // Determine notification text based on status
+                    $notificationText = "{$nightPremium->employee->first_name} {$nightPremium->employee->last_name} requested night premium pay";
+                    $notificationType = 'night_premium_pending';
+                    $icon = 'fas fa-moon';
+                    $title = 'Night Premium Pay Request';
+                    
+                    if ($nightPremium->approval_status === 'approvedByVPFinance') {
+                        $notificationText = "Your night premium pay request has been approved";
+                        $notificationType = 'night_premium_approved';
+                        $icon = 'fas fa-check-circle';
+                        $title = 'Night Premium Pay Approved';
+                    } elseif ($nightPremium->approval_status === 'rejected') {
+                        $notificationText = "Your night premium pay request has been rejected";
+                        $notificationType = 'night_premium_rejected';
+                        $icon = 'fas fa-times-circle';
+                        $title = 'Night Premium Pay Rejected';
+                    }
+                    
+                    return [
+                        'id' => 'night_premium_' . $nightPremium->id,
+                        'type' => $notificationType,
+                        'icon' => $icon,
+                        'title' => $title,
+                        'text' => $notificationText,
+                        'time' => $createdAt,
+                        'time_human' => $createdAt->diffForHumans(),
+                        'timestamp' => $createdAt->timestamp,
+                        'status' => $nightPremium->approval_status ?? 'pending',
+                        'is_read' => ($nightPremium->is_read_by_employee || $nightPremium->is_read_by_supervisor || $nightPremium->is_read_by_finance),
+                        'url' => route('night-premium.show', ['night_premium' => $nightPremium->id]),
+                        'details' => [
+                            'Employee' => $nightPremium->employee->first_name . ' ' . $nightPremium->employee->last_name,
+                            'Department' => $nightPremium->employee->department->name ?? 'N/A',
+                            'Date' => $date ? $date->format('M d, Y') : 'N/A',
+                            'Time In' => $nightPremium->time_in ? Carbon::parse($nightPremium->time_in)->format('h:i A') : 'N/A',
+                            'Time Out' => $nightPremium->time_out ? Carbon::parse($nightPremium->time_out)->format('h:i A') : 'N/A',
+                            'Night Hours' => $nightPremium->night_hours ?? 0,
+                            'Night Rate' => $nightPremium->night_rate ?? 0,
+                            'Night Premium Pay' => $nightPremium->night_premium_pay ?? 0,
+                            'Status' => ucfirst($nightPremium->approval_status ?? 'pending'),
+                            'Reason' => $nightPremium->reason ?? 'No reason provided',
+                            'Rejection Reason' => $nightPremium->rejection_reason ?? 'N/A',
                             'Applied On' => $createdAt->format('M d, Y h:i A')
                         ]
                     ];
@@ -826,10 +971,10 @@ class NotificationsController extends Controller
                         ($status === 'approved' ? 
                             "Overtime pay for {$overtime->employee->first_name} {$overtime->employee->last_name} has been approved" : 
                             "Overtime pay for {$overtime->employee->first_name} {$overtime->employee->last_name} has been rejected");
-
+                    
                     return [
                         'id' => 'overtime_' . $overtime->id,
-                        'type' => 'overtime',
+                        'type' => 'overtime_' . strtolower($status),
                         'icon' => $status === 'approved' ? 'fas fa-check-circle' : 
                                  ($status === 'rejected' ? 'fas fa-times-circle' : 'fas fa-clock'),
                         'title' => $title,
@@ -840,6 +985,7 @@ class NotificationsController extends Controller
                         'status' => $status,
                         'status_class' => $statusClass,
                         'is_read' => $overtime->is_read ?? false,
+                        'url' => route('overtime.show', ['overtime' => $overtime->id]),
                         'details' => [
                             'Employee' => $overtime->employee->first_name . ' ' . $overtime->employee->last_name,
                             'Department' => $overtime->employee->department->name ?? 'N/A',
@@ -858,7 +1004,7 @@ class NotificationsController extends Controller
                 });
 
             // Merge and sort notifications
-            $allNotifications = $leaves->concat($advances)->concat($overtimes)
+            $allNotifications = $leaves->concat($advances)->concat($overtimes)->concat($nightPremiums)
                 ->filter(function ($notification) {
                     return !is_null($notification['time']);
                 })
@@ -893,9 +1039,8 @@ class NotificationsController extends Controller
     }
 
     /**
-     * Generate notifications for pending overtime pay requests
-     * Visible to users with Finance role for non-Rank File employees
-     * Visible to Supervisors for Rank File employees in same department
+     * Generate notifications for pending overtime pay
+     * Visible to Super Admin, Supervisors, and Finance
      */
     private function generateOvertimePayPendingNotification()
     {
@@ -1041,6 +1186,169 @@ class NotificationsController extends Controller
                         'status' => 'rejected',
                         'department' => $overtime->employee->department->name ?? 'N/A',
                         'rejection_reason' => $overtime->rejection_reason ?? 'No reason provided'
+                    ]
+                ];
+            }
+        }
+    }
+
+    /**
+     * Generate notifications for pending night premium pay
+     * Visible to Super Admin, Supervisors, and Finance
+     */
+    private function generateNightPremiumPendingNotification()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return;
+        }
+
+        // For Super Admin, show all pending night premium requests
+        if ($user->hasRole('Super Admin')) {
+            $nightPremiums = NightPremium::with(['employee', 'employee.department'])
+                ->where('approval_status', 'pending')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } 
+        // For Supervisors, show only pending night premium requests for Rank File employees in their department
+        elseif ($user->hasRole('Supervisor')) {
+            $supervisorDepartmentId = $user->department_id;
+            
+            $nightPremiums = NightPremium::with(['employee', 'employee.department'])
+                ->where('approval_status', 'pending')
+                ->where('is_read_by_supervisor', false)
+                ->whereHas('employee', function($query) use ($supervisorDepartmentId) {
+                    $query->where('department_id', $supervisorDepartmentId)
+                          ->where('rank', 'Rank File');
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } 
+        // For Finance role, show night premium requests for non-Rank File employees
+        elseif ($user->hasRole('Finance')) {
+            $nightPremiums = NightPremium::with(['employee', 'employee.department'])
+                ->where('approval_status', 'pending')
+                ->where('is_read_by_finance', false)
+                ->whereHas('employee', function($query) {
+                    $query->where('rank', '!=', 'Rank File');
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $nightPremiums = collect(); // Empty collection for other roles
+        }
+
+        foreach ($nightPremiums as $nightPremium) {
+            $this->notifications['night_premium_pending'][] = [
+                'id' => 'night_premium_pending_' . $nightPremium->id,
+                'icon' => 'fas fa-moon',
+                'text' => "{$nightPremium->employee->first_name} {$nightPremium->employee->last_name} requested night premium pay",
+                'time' => $nightPremium->created_at->diffForHumans(),
+                'timestamp' => $nightPremium->created_at->timestamp,
+                'data' => [
+                    'id' => $nightPremium->id,
+                    'type' => 'night_premium_pending',
+                    'employee_name' => $nightPremium->employee->first_name . ' ' . $nightPremium->employee->last_name,
+                    'date' => $nightPremium->date->format('Y-m-d'),
+                    'time_in' => $nightPremium->time_in ? Carbon::parse($nightPremium->time_in)->format('h:i A') : null,
+                    'time_out' => $nightPremium->time_out ? Carbon::parse($nightPremium->time_out)->format('h:i A') : null,
+                    'night_hours' => $nightPremium->night_hours,
+                    'night_rate' => $nightPremium->night_rate,
+                    'night_premium_pay' => $nightPremium->night_premium_pay,
+                    'status' => 'pending',
+                    'department' => $nightPremium->employee->department->name ?? 'N/A',
+                    'rank' => $nightPremium->employee->rank ?? 'N/A',
+                    'reason' => $nightPremium->reason ?? 'No reason provided'
+                ]
+            ];
+        }
+    }
+
+    /**
+     * Generate notifications for approved night premium pay
+     * Visible to Employees who requested the night premium
+     */
+    private function generateNightPremiumApprovedNotification()
+    {
+        $user = Auth::user();
+        if ($user && $user->hasRole('Employee')) {
+            $nightPremiums = NightPremium::with(['employee', 'approver'])
+                ->where('approval_status', 'approvedByVPFinance')
+                ->where('is_read_by_employee', false)
+                ->whereHas('employee', function($query) use ($user) {
+                    $query->where('email_address', $user->email);
+                })
+                ->orderBy('updated_at', 'desc')
+                ->get();
+
+            foreach ($nightPremiums as $nightPremium) {
+                $this->notifications['night_premium_approved'][] = [
+                    'id' => 'night_premium_approved_' . $nightPremium->id,
+                    'icon' => 'fas fa-check-circle',
+                    'text' => "Your night premium pay request has been approved",
+                    'time' => $nightPremium->updated_at->diffForHumans(),
+                    'timestamp' => $nightPremium->updated_at->timestamp,
+                    'data' => [
+                        'id' => $nightPremium->id,
+                        'type' => 'night_premium_approved',
+                        'employee_name' => $nightPremium->employee->first_name . ' ' . $nightPremium->employee->last_name,
+                        'date' => $nightPremium->date->format('Y-m-d'),
+                        'time_in' => $nightPremium->time_in ? Carbon::parse($nightPremium->time_in)->format('h:i A') : null,
+                        'time_out' => $nightPremium->time_out ? Carbon::parse($nightPremium->time_out)->format('h:i A') : null,
+                        'night_hours' => $nightPremium->night_hours,
+                        'night_rate' => $nightPremium->night_rate,
+                        'night_premium_pay' => $nightPremium->night_premium_pay,
+                        'approved_by' => $nightPremium->approver->name ?? 'System',
+                        'approved_at' => $nightPremium->approved_at->format('M d, Y h:i A'),
+                        'status' => 'approved',
+                        'department' => $nightPremium->employee->department->name ?? 'N/A',
+                        'reason' => $nightPremium->reason ?? 'No reason provided'
+                    ]
+                ];
+            }
+        }
+    }
+
+    /**
+     * Generate notifications for rejected night premium pay
+     * Visible to Employees who requested the night premium
+     */
+    private function generateNightPremiumRejectedNotification()
+    {
+        $user = Auth::user();
+        if ($user && $user->hasRole('Employee')) {
+            $nightPremiums = NightPremium::with(['employee', 'approver'])
+                ->where('approval_status', 'rejected')
+                ->where('is_read_by_employee', false)
+                ->whereHas('employee', function($query) use ($user) {
+                    $query->where('email_address', $user->email);
+                })
+                ->orderBy('updated_at', 'desc')
+                ->get();
+
+            foreach ($nightPremiums as $nightPremium) {
+                $this->notifications['night_premium_rejected'][] = [
+                    'id' => 'night_premium_rejected_' . $nightPremium->id,
+                    'icon' => 'fas fa-times-circle',
+                    'text' => "Your night premium pay request has been rejected",
+                    'time' => $nightPremium->updated_at->diffForHumans(),
+                    'timestamp' => $nightPremium->updated_at->timestamp,
+                    'data' => [
+                        'id' => $nightPremium->id,
+                        'type' => 'night_premium_rejected',
+                        'employee_name' => $nightPremium->employee->first_name . ' ' . $nightPremium->employee->last_name,
+                        'date' => $nightPremium->date->format('Y-m-d'),
+                        'time_in' => $nightPremium->time_in ? Carbon::parse($nightPremium->time_in)->format('h:i A') : null,
+                        'time_out' => $nightPremium->time_out ? Carbon::parse($nightPremium->time_out)->format('h:i A') : null,
+                        'night_hours' => $nightPremium->night_hours,
+                        'night_rate' => $nightPremium->night_rate,
+                        'night_premium_pay' => $nightPremium->night_premium_pay,
+                        'rejected_by' => $nightPremium->approver->name ?? 'System',
+                        'rejected_at' => $nightPremium->approved_at->format('M d, Y h:i A'),
+                        'status' => 'rejected',
+                        'department' => $nightPremium->employee->department->name ?? 'N/A',
+                        'rejection_reason' => $nightPremium->rejection_reason ?? 'No reason provided',
+                        'reason' => $nightPremium->reason ?? 'No reason provided'
                     ]
                 ];
             }

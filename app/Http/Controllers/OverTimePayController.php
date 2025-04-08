@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class OverTimePayController extends Controller
@@ -19,9 +20,24 @@ class OverTimePayController extends Controller
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
-            if (!$user || !($user->roles->pluck('name')->intersect(['Supervisor', 'Finance', 'VP Finance', 'Admin', 'Super Admin'])->count() > 0)) {
+            if (!$user) {
                 abort(403, 'Unauthorized action.');
             }
+
+            // Check if user has any of the required roles
+            $hasRequiredRole = $user->roles->pluck('name')->intersect(['Supervisor', 'Finance', 'Employee', 'VP Finance', 'Admin', 'Super Admin'])->count() > 0;
+
+            // Check if user is a supervisor with matching email to an employee
+            $isSupervisorWithMatchingEmail = false;
+            if ($user->roles->pluck('name')->contains('Supervisor')) {
+                $employee = Employee::where('email_address', $user->email)->first();
+                $isSupervisorWithMatchingEmail = $employee !== null;
+            }
+
+            if (!$hasRequiredRole && !$isSupervisorWithMatchingEmail) {
+                abort(403, 'Unauthorized action.');
+            }
+            
             return $next($request);
         });
     }
@@ -31,6 +47,12 @@ class OverTimePayController extends Controller
      */
     public function index()
     {
+        // Check if user has the required role
+        $user = Auth::user();
+        if (!$user || !$user->roles->pluck('name')->intersect(['Super Admin', 'Admin', 'Finance', 'VP Finance', 'HR ComBen', 'Supervisor'])->count() > 0) {
+            abort(403, 'Unauthorized action.');
+        }
+
         // Fetch all OvertimePay records
         $overtime = OvertimePay::all();
 
@@ -48,8 +70,14 @@ class OverTimePayController extends Controller
      */
     public function create()
     {
+        // Check if user has the required role
+        $user = Auth::user();
+        if (!$user || !$user->roles->pluck('name')->intersect(['Super Admin', 'Admin', 'Finance', 'VP Finance', 'HR ComBen', 'Supervisor'])->count() > 0) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $employees = Employee::where('employee_status', 'Active')->get();
-        return view('overtime.create',compact('employees'));
+        return view('overtime.create', compact('employees'));
     }
 
     /**
@@ -57,6 +85,12 @@ class OverTimePayController extends Controller
      */
     public function store(Request $request)
     {
+        // Check if user has the required role
+        $user = Auth::user();
+        if (!$user || !$user->roles->pluck('name')->intersect(['Super Admin', 'Admin', 'Finance', 'VP Finance', 'HR ComBen', 'Supervisor'])->count() > 0) {
+            abort(403, 'Unauthorized action.');
+        }
+
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'employee_id' => 'required|exists:employees,id',
@@ -125,7 +159,11 @@ class OverTimePayController extends Controller
      */
     public function show(OvertimePay $overtime)
     {
+        // Check if user has the required role
         $user = Auth::user();
+        if (!$user || !$user->roles->pluck('name')->intersect(['Super Admin', 'Admin', 'Finance', 'VP Finance', 'HR ComBen', 'Supervisor'])->count() > 0) {
+            abort(403, 'Unauthorized action.');
+        }
         
         // Check user's role and mark as read accordingly
         if ($user) {
@@ -208,6 +246,7 @@ class OverTimePayController extends Controller
      */
     public function approvedBySupervisor(OvertimePay $overtime)
     {
+        $user = Auth::user();
         if($overtime->approval_status !== 'pending') {
             return redirect()->back()->with('error', 'This overtime record has already been processed.');
         }
@@ -217,6 +256,23 @@ class OverTimePayController extends Controller
             return redirect()->back()->with('error', 'Supervisor approval is only applicable for Rank File employees.');
         }
 
+        // Check if supervisor email matches any employee email_address
+        $isSupervisorWithEmployeeEmail = false;
+        if($user->roles->pluck('name')->contains('Supervisor')) {
+            $supervisorEmployee = Employee::where('email_address', $user->email)->first();
+            $isSupervisorWithEmployeeEmail = $supervisorEmployee !== null;
+        }
+
+        // Allow supervisors with matching email to approve
+        if($user->roles->pluck('name')->contains('Supervisor') && $isSupervisorWithEmployeeEmail) {
+            $overtime->approval_status = 'approvedBySupervisor';
+            $overtime->approveBySupervisor(Auth::id());
+            $overtime->save();
+            
+            return redirect()->route('overtime.index')->with('success', 'Overtime approved by supervisor successfully.');
+        }
+
+        // Default case
         $overtime->approval_status = 'approvedBySupervisor';
         $overtime->approveBySupervisor(Auth::id());
         $overtime->save();
@@ -225,10 +281,11 @@ class OverTimePayController extends Controller
     }
 
     /**
-     * Reject the night premium pay by supervisor
+     * Reject the overtime pay by supervisor
      */
     public function rejectedBySupervisor(Request $request, OvertimePay $overtime)
     {
+        $user = Auth::user();
         if($overtime->approval_status !== 'pending') {
             return redirect()->back()->with('error', 'This overtime record has already been processed.');
         }
@@ -238,6 +295,24 @@ class OverTimePayController extends Controller
             return redirect()->back()->with('error', 'Supervisor rejection is only applicable for Rank File employees.');
         }
 
+        // Check if supervisor email matches any employee email_address
+        $isSupervisorWithEmployeeEmail = false;
+        if($user->roles->pluck('name')->contains('Supervisor')) {
+            $supervisorEmployee = Employee::where('email_address', $user->email)->first();
+            $isSupervisorWithEmployeeEmail = $supervisorEmployee !== null;
+        }
+
+        // Allow supervisors with matching email to reject
+        if($user->roles->pluck('name')->contains('Supervisor') && $isSupervisorWithEmployeeEmail) {
+            $overtime->approval_status = 'rejectedBySupervisor';
+            $overtime->rejection_reason = $request->rejection_reason;
+            $overtime->approveBySupervisor(Auth::id());
+            $overtime->save();
+            
+            return redirect()->route('overtime.index')->with('success', 'Overtime rejected by supervisor.');
+        }
+
+        // Default case
         $overtime->approval_status = 'rejectedBySupervisor';
         $overtime->rejection_reason = $request->rejection_reason;
         $overtime->approveBySupervisor(Auth::id());
@@ -335,7 +410,219 @@ class OverTimePayController extends Controller
      */
     public function destroy(OvertimePay $overtime)
     {
+        // Check if user has the required role
+        $user = Auth::user();
+        if (!$user || !$user->roles->pluck('name')->intersect(['Super Admin', 'Admin', 'Finance', 'VP Finance', 'HR ComBen'])->count() > 0) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $overtime->delete();
-        return redirect()->route('overtime.index');
+        return redirect()->route('overtime.index')->with('success', 'Overtime record has been deleted successfully.');
+    }
+
+    /**
+     * Allow employee to apply for overtime
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function applyForOvertime(Request $request)
+    {
+        // Check if user is authenticated
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Allow access for users with Employee role or Supervisor role with matching email
+        $hasEmployeeRole = $user->roles->pluck('name')->contains('Employee');
+        $isSupervisorWithEmployeeEmail = false;
+        
+        if ($user->roles->pluck('name')->contains('Supervisor')) {
+            $supervisorEmployee = Employee::where('email_address', $user->email)->first();
+            $isSupervisorWithEmployeeEmail = $supervisorEmployee !== null;
+        }
+
+        if (!$hasEmployeeRole && !$isSupervisorWithEmployeeEmail) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Find employee based on user email
+        $employee = Employee::where('email_address', $user->email)->first();
+        if (!$employee) {
+            return redirect()->back()->with('error', 'No employee record found matching your email.');
+        }
+
+        // Show the apply form if this is a GET request
+        if ($request->isMethod('get')) {
+            return view('overtime.apply', compact('employee'));
+        }
+
+        // Process the application if this is a POST request
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date',
+            'time_in' => 'required|date_format:Y-m-d\TH:i',
+            'time_out' => 'required|date_format:Y-m-d\TH:i|after:time_in',
+            'reason' => 'required|string|min:10|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            // Start DB transaction
+            DB::beginTransaction();
+            
+            // Format the datetimes properly
+            $date = date('Y-m-d', strtotime($request->date));
+            $timeIn = date('Y-m-d H:i:s', strtotime($request->time_in));
+            $timeOut = date('Y-m-d H:i:s', strtotime($request->time_out));
+            
+            // Verify time_in date matches the date field
+            $timeInDate = date('Y-m-d', strtotime($timeIn));
+            if ($timeInDate !== $date) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['time_in' => 'Time in date must match the overtime date']);
+            }
+            
+            // Calculate the time difference in hours
+            $timeDiff = strtotime($timeOut) - strtotime($timeIn);
+            $hours = $timeDiff / 3600; // Convert seconds to hours
+            $hours = round($hours, 2); // Round to 2 decimal places
+            
+            if ($hours <= 0) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['time_out' => 'Overtime period must be greater than zero hours']);
+            }
+            
+            // Check for duplicate overtime application
+            $existingOvertime = OvertimePay::where('employee_id', $employee->id)
+                ->where('date', $date)
+                ->where(function($query) use ($timeIn, $timeOut) {
+                    $query->where(function($q) use ($timeIn, $timeOut) {
+                        $q->where('time_in', '<=', $timeIn)
+                          ->where('time_out', '>=', $timeIn);
+                    })->orWhere(function($q) use ($timeIn, $timeOut) {
+                        $q->where('time_in', '<=', $timeOut)
+                          ->where('time_out', '>=', $timeOut);
+                    })->orWhere(function($q) use ($timeIn, $timeOut) {
+                        $q->where('time_in', '>=', $timeIn)
+                          ->where('time_out', '<=', $timeOut);
+                    });
+                })->first();
+                
+            if ($existingOvertime) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['error' => 'An overlapping overtime request already exists for this date and time range']);
+            }
+            
+            // Set default overtime rate based on company policy
+            // This can be adjusted based on business needs
+            $overtimeRate = 1.25; // Example: 1.25x regular pay
+            
+            // Create the overtime record
+            $overtime = new OvertimePay();
+            $overtime->employee_id = $employee->id;
+            $overtime->date = $date;
+            $overtime->time_in = $timeIn;
+            $overtime->time_out = $timeOut;
+            $overtime->overtime_rate = $overtimeRate;
+            $overtime->approval_status = 'pending';
+            $overtime->overtime_hours = $hours > 0 ? $hours : 0;
+            $overtime->reason = $request->reason;
+            $overtime->save();
+            
+            // Calculate overtime pay
+            try {
+                $overtime->calculateOvertimePay();
+            } catch (\Exception $e) {
+                // If calculation fails, log the error but continue
+                Log::error('Overtime calculation error: ' . $e->getMessage(), [
+                    'employee_id' => $employee->id,
+                    'overtime_id' => $overtime->id,
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+            
+            // Commit transaction
+            DB::commit();
+            
+            // Log successful application
+            Log::info('Overtime application submitted', [
+                'employee_id' => $employee->id,
+                'overtime_id' => $overtime->id,
+                'date' => $date,
+                'hours' => $hours
+            ]);
+            
+            return redirect()->route('overtime.history')
+                ->with('success', 'Overtime application submitted successfully. Waiting for approval.');
+        } catch (\Exception $e) {
+            // Roll back transaction on error
+            DB::rollBack();
+            
+            Log::error('Overtime application error: ' . $e->getMessage(), [
+                'employee_id' => $employee->id ?? 'unknown',
+                'user_id' => $user->id,
+                'input' => $request->except(['_token']),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'An error occurred: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Display overtime history for the authenticated employee
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function employeeOvertimeHistory()
+    {
+        // Check if user is authenticated
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Allow access for users with Employee role or Supervisor role with matching email
+        $hasEmployeeRole = $user->roles->pluck('name')->contains('Employee');
+        $isSupervisorWithEmployeeEmail = false;
+        
+        if ($user->roles->pluck('name')->contains('Supervisor')) {
+            $supervisorEmployee = Employee::where('email_address', $user->email)->first();
+            $isSupervisorWithEmployeeEmail = $supervisorEmployee !== null;
+        }
+
+        if (!$hasEmployeeRole && !$isSupervisorWithEmployeeEmail) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Find employee based on user email
+        $employee = Employee::where('email_address', $user->email)->first();
+        if (!$employee) {
+            return redirect()->back()->with('error', 'No employee record found matching your email.');
+        }
+
+        // Get overtime records for this employee
+        $overtimeRecords = OvertimePay::where('employee_id', $employee->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        // Calculate overtime pay for each record
+        foreach ($overtimeRecords as $overtimePay) {
+            $overtimePay->calculateOvertimePay();
+        }
+
+        return view('overtime.employee-history', compact('overtimeRecords', 'employee'));
     }
 }

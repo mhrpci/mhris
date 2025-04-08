@@ -26,7 +26,7 @@
             </div>
         </a>
         @endcanany
-        @canany(['hrcomben', 'admin', 'super-admin'])
+        @canany(['hrcomben', 'admin', 'super-admin', 'finance', 'vpfinance-admin', 'supervisor'])
         <a href="{{ url('/timesheets') }}" class="contribution-link {{ request()->routeIs('attendances.timesheets') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-calendar-alt"></i>

@@ -43,6 +43,7 @@ class NightPremium extends Model
         'is_read_by_rejected',
         'is_read_at_rejected',
         'rejection_reason',
+        'reason',
     ];
 
     /**

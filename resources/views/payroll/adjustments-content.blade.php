@@ -139,8 +139,8 @@
                         </tr>
                         @foreach($payrolls as $payroll)
                             <tr class="employee-row" data-department="{{ $department }}" data-search="{{ $payroll->employee->first_name }} {{ $payroll->employee->last_name }} {{ $payroll->employee->position->name ?? $payroll->employee->position }}" data-payroll-id="{{ $payroll->id }}">
-                                <td>
-                                    {{ substr($payroll->employee->company_id, -4) }}
+                                <td class="employee-id-cell text-center">
+                                    <span class="id-badge">{{ substr($payroll->employee->company_id, -4) }}</span>
                                 </td>
                                 <td>{{ $payroll->employee->last_name }}, {{ $payroll->employee->first_name }}</td>
                                 <td>{{ $payroll->employee->position->name ?? $payroll->employee->position }}</td>
@@ -384,6 +384,36 @@
     border-color: #17a2b8;
 }
 
+/* Employee ID styling */
+.employee-id-cell {
+    background-color: #f8f9fa;
+    vertical-align: middle !important;
+}
+
+.id-badge {
+    display: inline-block;
+    min-width: 60px;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    color: #495057;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* Make ID visible on hover and add transition effect */
+.id-badge:hover {
+    background-color: #007bff;
+    color: white;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+    cursor: default;
+}
+
 .new-value {
     background-color: #fff8e6;
     border-color: #ffc107;
@@ -416,6 +446,8 @@
     font-variant-numeric: tabular-nums;
     font-family: 'Courier New', monospace;
     padding-right: 5px;
+    width: 100%;
+    min-width: 80px;
 }
 
 .numeric-input::-webkit-inner-spin-button,
@@ -427,6 +459,76 @@
 .numeric-input[readonly] {
     background-color: #f8f9fa;
     cursor: default;
+}
+
+/* Enhanced table cell styling */
+#adjustmentTable td {
+    padding: 4px 6px;
+    vertical-align: middle;
+    position: relative;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+#adjustmentTable td input {
+    max-width: 100%;
+}
+
+/* Add hover effect to show full content */
+#adjustmentTable td:hover {
+    overflow: visible;
+    z-index: 1;
+}
+
+#adjustmentTable td:hover input {
+    position: relative;
+    background-color: #ffffff;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    z-index: 2;
+}
+
+/* Hover tooltip for truncated content */
+.cell-content-tooltip {
+    position: absolute;
+    background: #333;
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 100;
+    max-width: 250px;
+    white-space: normal;
+    display: none;
+}
+
+/* Responsive table layout */
+@media (max-width: 1200px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    #adjustmentTable {
+        min-width: 1400px;
+    }
+    
+    #adjustmentTable td {
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    #adjustmentTable td {
+        padding: 3px 4px;
+        font-size: 0.9rem;
+    }
+    
+    .form-control-sm {
+        height: calc(1.5em + 0.5rem + 2px);
+        padding: 0.15rem 0.3rem;
+        font-size: 0.85rem;
+    }
 }
 
 /* Highlight changes in net salary */
@@ -460,6 +562,18 @@
 .adjustment-instructions li {
     margin-bottom: 5px;
 }
+
+/* Value indicator - shows small indicator when value is present */
+.has-value::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #28a745;
+}
 </style>
 
 <script>
@@ -482,6 +596,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Format to 2 decimal places when losing focus
             if (this.value) {
                 this.value = parseFloat(this.value).toFixed(2);
+                
+                // Add 'has-value' class to parent TD if value is greater than zero
+                if (parseFloat(this.value) > 0) {
+                    this.parentElement.classList.add('has-value');
+                } else {
+                    this.parentElement.classList.remove('has-value');
+                }
             }
         });
         
@@ -491,6 +612,190 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.value = parseFloat(this.dataset.original || 0).toFixed(2);
             }
         });
+        
+        // Initial setup for existing values
+        if (input.value && parseFloat(input.value) > 0) {
+            input.parentElement.classList.add('has-value');
+        }
+    });
+    
+    // Make table cells adapt to content
+    document.querySelectorAll('#adjustmentTable td').forEach(function(cell) {
+        // Add title attribute for hover tooltip on content that might be truncated
+        const inputElement = cell.querySelector('input');
+        if (inputElement && inputElement.value) {
+            cell.setAttribute('title', inputElement.value);
+        }
+    });
+    
+    // Implement responsive column toggle for smaller screens
+    const handleResponsiveTable = function() {
+        if (window.innerWidth < 992) {
+            // Add column toggle buttons if not already present
+            if (!document.getElementById('columnToggleContainer')) {
+                const toggleContainer = document.createElement('div');
+                toggleContainer.id = 'columnToggleContainer';
+                toggleContainer.className = 'mb-3 d-flex flex-wrap';
+                
+                const columns = [
+                    { id: 'col-position', label: 'Position', target: 2 },
+                    { id: 'col-department', label: 'Department', target: 3 },
+                    { id: 'col-monthly', label: 'Monthly Rate', target: 4 },
+                    { id: 'col-daily', label: 'Daily Rate', target: 5 },
+                    { id: 'col-lwop', label: 'L/UT/LWOP', target: 6 }
+                ];
+                
+                columns.forEach(function(col) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-sm btn-outline-secondary mr-1 mb-1';
+                    btn.textContent = col.label;
+                    btn.dataset.target = col.target;
+                    btn.addEventListener('click', function() {
+                        // Toggle column visibility
+                        const target = parseInt(this.dataset.target);
+                        const cells = document.querySelectorAll(`#adjustmentTable td:nth-child(${target+1}), #adjustmentTable th:nth-child(${target+1})`);
+                        cells.forEach(function(cell) {
+                            cell.classList.toggle('d-none');
+                        });
+                        btn.classList.toggle('active');
+                    });
+                    toggleContainer.appendChild(btn);
+                });
+                
+                document.querySelector('.payroll-header').appendChild(toggleContainer);
+            }
+        }
+    };
+    
+    // Run initially and on window resize
+    handleResponsiveTable();
+    window.addEventListener('resize', handleResponsiveTable);
+    
+    // Handle department expansion/collapse
+    document.querySelectorAll('.toggle-department').forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+            const departmentHeader = this.closest('.department-header');
+            const department = departmentHeader.dataset.department;
+            const rows = document.querySelectorAll(`tr.employee-row[data-department="${department}"]`);
+            
+            rows.forEach(function(row) {
+                row.classList.toggle('d-none');
+            });
+            
+            // Toggle icon
+            this.classList.toggle('fa-chevron-down');
+            this.classList.toggle('fa-chevron-right');
+        });
+    });
+    
+    // Toggle all departments
+    document.getElementById('toggleAllDepartments').addEventListener('click', function() {
+        const allRows = document.querySelectorAll('.employee-row');
+        const allToggles = document.querySelectorAll('.toggle-department');
+        const isCollapsed = this.querySelector('span').textContent.includes('Expand');
+        
+        allRows.forEach(function(row) {
+            if (isCollapsed) {
+                row.classList.remove('d-none');
+            } else {
+                row.classList.add('d-none');
+            }
+        });
+        
+        allToggles.forEach(function(toggle) {
+            if (isCollapsed) {
+                toggle.classList.remove('fa-chevron-right');
+                toggle.classList.add('fa-chevron-down');
+            } else {
+                toggle.classList.remove('fa-chevron-down');
+                toggle.classList.add('fa-chevron-right');
+            }
+        });
+        
+        // Update button text
+        if (isCollapsed) {
+            this.querySelector('span').textContent = 'Collapse All';
+            this.querySelector('i').classList.remove('fa-expand-alt');
+            this.querySelector('i').classList.add('fa-compress-alt');
+        } else {
+            this.querySelector('span').textContent = 'Expand All';
+            this.querySelector('i').classList.remove('fa-compress-alt');
+            this.querySelector('i').classList.add('fa-expand-alt');
+        }
+    });
+    
+    // Add search functionality
+    document.getElementById('adjustmentSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.employee-row');
+        
+        rows.forEach(function(row) {
+            const searchText = row.dataset.search.toLowerCase();
+            if (searchText.includes(searchTerm)) {
+                row.classList.remove('d-none');
+                // Make sure parent department is visible
+                const department = row.dataset.department;
+                const departmentHeader = document.querySelector(`.department-header[data-department="${department}"]`);
+                departmentHeader.classList.remove('d-none');
+                
+                // Make sure chevron icon is correct
+                const toggle = departmentHeader.querySelector('.toggle-department');
+                toggle.classList.remove('fa-chevron-right');
+                toggle.classList.add('fa-chevron-down');
+            } else {
+                row.classList.add('d-none');
+                
+                // Check if all rows in department are hidden
+                const department = row.dataset.department;
+                const departmentRows = document.querySelectorAll(`.employee-row[data-department="${department}"]`);
+                let allHidden = true;
+                departmentRows.forEach(function(deptRow) {
+                    if (!deptRow.classList.contains('d-none')) {
+                        allHidden = false;
+                    }
+                });
+                
+                // Hide department header if all rows are hidden
+                if (allHidden) {
+                    const departmentHeader = document.querySelector(`.department-header[data-department="${department}"]`);
+                    departmentHeader.classList.add('d-none');
+                }
+            }
+        });
+    });
+    
+    // Department filter
+    document.getElementById('departmentFilter').addEventListener('change', function() {
+        const selectedDept = this.value;
+        const departmentHeaders = document.querySelectorAll('.department-header');
+        const employeeRows = document.querySelectorAll('.employee-row');
+        
+        if (selectedDept === '') {
+            // Show all departments
+            departmentHeaders.forEach(header => header.classList.remove('d-none'));
+            employeeRows.forEach(row => row.classList.remove('d-none'));
+        } else {
+            // Show only selected department
+            departmentHeaders.forEach(function(header) {
+                if (header.dataset.department === selectedDept) {
+                    header.classList.remove('d-none');
+                    // Update chevron
+                    const toggle = header.querySelector('.toggle-department');
+                    toggle.classList.remove('fa-chevron-right');
+                    toggle.classList.add('fa-chevron-down');
+                } else {
+                    header.classList.add('d-none');
+                }
+            });
+            
+            employeeRows.forEach(function(row) {
+                if (row.dataset.department === selectedDept) {
+                    row.classList.remove('d-none');
+                } else {
+                    row.classList.add('d-none');
+                }
+            });
+        }
     });
 });
 </script> 

@@ -429,6 +429,17 @@
                                         iconClass = 'bg-warning';
                                         badgeHtml = '<span class="badge badge-warning">Pending</span>';
                                     }
+                                } else if (notification.type.includes('night_premium')) {
+                                    if (notification.details.status === 'Approved') {
+                                        iconClass = 'bg-success';
+                                        badgeHtml = '<span class="badge badge-success">Approved</span>';
+                                    } else if (notification.details.status === 'Rejected') {
+                                        iconClass = 'bg-danger';
+                                        badgeHtml = '<span class="badge badge-danger">Rejected</span>';
+                                    } else {
+                                        iconClass = 'bg-warning';
+                                        badgeHtml = '<span class="badge badge-warning">Pending</span>';
+                                    }
                                 }
                                 
                                 const notificationHtml = `
@@ -582,7 +593,7 @@
                                 const cashAdvanceId = notificationId.split('_').pop();
                                 url = '{{ url("/cash_advances") }}/' + cashAdvanceId;
                             } else if (notificationType.includes('overtime')) {
-                                // For overtime notifications, check if user is employee
+                                // For overtime notifications, extract the ID
                                 const overtimeId = notificationId.split('_').pop();
                                 // Set route based on user role - we're using a JS variable populated by Blade
                                 const isEmployee = "{{ Auth::user()->hasRole('Employee') ? 'true' : 'false' }}" === "true";
@@ -590,7 +601,18 @@
                                 if (isEmployee) {
                                     url = "{{ url('/overtime') }}/" + overtimeId;
                                 } else {
-                                    url = "{{ route('overtime.index') }}";
+                                    url = "{{ route('overtime.show', ['overtime' => ':id']) }}".replace(':id', overtimeId);
+                                }
+                            } else if (notificationType.includes('night_premium')) {
+                                // For night premium notifications, extract the ID
+                                const nightPremiumId = notificationId.split('_').pop();
+                                // Set route based on user role
+                                const isEmployee = "{{ Auth::user()->hasRole('Employee') ? 'true' : 'false' }}" === "true";
+                                
+                                if (isEmployee) {
+                                    url = "{{ url('/night-premium') }}/" + nightPremiumId;
+                                } else {
+                                    url = "{{ route('night-premium.show', ['night_premium' => ':id']) }}".replace(':id', nightPremiumId);
                                 }
                             }
                             
@@ -700,6 +722,30 @@
                                                         // Add details for cash advance notifications
                                                         if (notification.details && notification.details.amount) {
                                                             detailsText = `Amount: ₱${notification.details.amount.toLocaleString()}`;
+                                                            if (notification.details.reason) {
+                                                                detailsText += ` • Reason: ${notification.details.reason}`;
+                                                            }
+                                                        }
+                                                    } else if (notification.type.includes('night_premium')) {
+                                                        if (notification.type.includes('approved')) {
+                                                            toastType = 'success';
+                                                            toastIcon = 'fas fa-check-circle';
+                                                        } else if (notification.type.includes('rejected')) {
+                                                            toastType = 'danger';
+                                                            toastIcon = 'fas fa-times-circle';
+                                                        } else {
+                                                            toastType = 'warning';
+                                                        }
+                                                        
+                                                        // Add details for night premium notifications
+                                                        if (notification.details) {
+                                                            detailsText = `Date: ${notification.details.date || 'N/A'}`;
+                                                            if (notification.details.night_hours) {
+                                                                detailsText += ` • Hours: ${notification.details.night_hours}`;
+                                                            }
+                                                            if (notification.details.night_premium_pay) {
+                                                                detailsText += ` • Amount: ₱${parseFloat(notification.details.night_premium_pay).toLocaleString()}`;
+                                                            }
                                                             if (notification.details.reason) {
                                                                 detailsText += ` • Reason: ${notification.details.reason}`;
                                                             }

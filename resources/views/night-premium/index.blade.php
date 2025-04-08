@@ -6,7 +6,7 @@
         <!-- Enhanced professional-looking link buttons -->
 <div class="mb-4">
     <div class="contribution-nav" role="navigation" aria-label="Contribution Types">
-    @canany(['hrcomben', 'admin', 'super-admin', 'supervisor'])
+    @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Finance') || Auth::user()->hasRole('VP Finance') || Auth::user()->hasRole('HR ComBen') || Auth::user()->hasRole('Supervisor'))
     <a href="{{ route('attendances.index') }}" class="contribution-link {{ request()->routeIs('attendances.index') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-clock"></i>
@@ -16,8 +16,8 @@
                 <small class="description">Attendance List</small>
             </div>
         </a>
-        @endcanany
-        @canany(['hrcomben', 'admin', 'super-admin'])
+        @endif
+        @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Supervisor'))
         <a href="{{ route('attendances.create') }}" class="contribution-link {{ request()->routeIs('attendances.create') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-sign-in-alt"></i>
@@ -27,8 +27,8 @@
                 <small class="description">Attendance Create</small>
             </div>
         </a>
-        @endcanany
-        @canany(['hrcomben', 'admin', 'super-admin'])
+        @endif
+        @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Finance') || Auth::user()->hasRole('VP Finance') || Auth::user()->hasRole('HR ComBen') || Auth::user()->hasRole('Supervisor'))
         <a href="{{ url('/timesheets') }}" class="contribution-link {{ request()->routeIs('attendances.timesheets') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-calendar-alt"></i>
@@ -38,8 +38,8 @@
                 <small class="description">Employee attendance records</small>
             </div>
         </a>
-        @endcanany
-        @canany(['hrcomben', 'admin', 'super-admin', 'finance', 'supervisor'])
+        @endif
+        @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Finance') || Auth::user()->hasRole('VP Finance') || Auth::user()->hasRole('HR ComBen') || Auth::user()->hasRole('Supervisor'))
         <a href="{{ route('overtime.index') }}" class="contribution-link {{ request()->routeIs('overtime.index') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-clock"></i>
@@ -49,8 +49,8 @@
                 <small class="description">Employee overtime records</small>
             </div>
         </a>
-        @endcanany
-        @canany(['hrcomben', 'admin', 'super-admin', 'finance', 'supervisor'])
+        @endif
+        @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Finance') || Auth::user()->hasRole('VP Finance') || Auth::user()->hasRole('HR ComBen') || Auth::user()->hasRole('Supervisor'))
         <a href="{{ route('night-premium.index') }}" class="contribution-link {{ request()->routeIs('night-premium.index') ? 'active' : '' }}">
             <div class="icon-wrapper">
                 <i class="fas fa-moon"></i>
@@ -60,7 +60,7 @@
                 <small class="description">Employee night premium records</small>
             </div>
         </a>
-        @endcanany
+        @endif
     </div>
 </div>
     <div class="row">

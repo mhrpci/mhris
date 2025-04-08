@@ -51,8 +51,8 @@
                         @endif
                       @endauth
                         @canany(['admin', 'super-admin', 'hrcomben', 'normal-employee','supervisor','vpfinance-admin','finance'])
-                        <li class="nav-item has-treeview {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*') ? 'active' : '' }}">
+                        <li class="nav-item has-treeview {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*', 'employee-overtime*', 'employee-night-premium*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*', 'employee-overtime*', 'employee-night-premium*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-clock"></i>
                                 <p>
                                     Attendance
@@ -82,6 +82,18 @@
                                     <a href="{{ route('attendances.attendance') }}" class="nav-link {{ Request::is('attendance') ? 'active' : '' }}">
                                         <i class="fas fa-clock nav-icon"></i>
                                         <p>Clock In/Out</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url('/employee-overtime/apply') }}" class="nav-link {{ Request::is('employee-overtime*') ? 'active' : '' }}">
+                                        <i class="fas fa-business-time nav-icon"></i>
+                                        <p>Apply Overtime</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url('/employee-night-premium/apply') }}" class="nav-link {{ Request::is('employee-night-premium*') ? 'active' : '' }}">
+                                        <i class="fas fa-moon nav-icon"></i>
+                                        <p>Apply Night Premium</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">

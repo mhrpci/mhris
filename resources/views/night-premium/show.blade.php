@@ -125,23 +125,6 @@
                                                 @endif
                                             </table>
                                         </div>
-                                        
-                                        <div class="col-md-6">
-                                            @if($nightPremium->approval_status == 'pending' && auth()->user()->can('night-premium-edit'))
-                                            <div class="text-right">
-                                                <form id="approveForm" action="{{ route('night-premium.approve', $nightPremium->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-success">
-                                                        <i class="fas fa-check mr-1"></i> Approve
-                                                    </button>
-                                                </form>
-                                                
-                                                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#rejectModal">
-                                                    <i class="fas fa-times mr-1"></i> Reject
-                                                </button>
-                                            </div>
-                                            @endif
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -152,35 +135,5 @@
         </div>
     </div>
 </div>
-
-<!-- Reject Modal -->
-@if($nightPremium->approval_status == 'pending' && auth()->user()->can('night-premium-edit'))
-<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form action="{{ route('night-premium.reject', $nightPremium->id) }}" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="modal-header">
-                    <h5 class="modal-title" id="rejectModalLabel">Reject Night Premium</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="rejection_reason">Reason for Rejection</label>
-                        <textarea class="form-control" name="rejection_reason" id="rejection_reason" rows="3" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Confirm Rejection</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
 
 @endsection 
