@@ -7,6 +7,109 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        /* Preloader Styles */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+        
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .mhrhci-letters {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .mhrhci-letter {
+            display: inline-block;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: #1e40af; /* Royal blue color */
+            margin: 0 0.25rem;
+            opacity: 0;
+            transform: translateY(20px);
+            text-shadow: 0 2px 5px rgba(30, 64, 175, 0.3);
+        }
+        
+        .mhrhci-letter:nth-child(1) { animation: letterAppear 0.6s 0.1s forwards; }
+        .mhrhci-letter:nth-child(2) { animation: letterAppear 0.6s 0.2s forwards; }
+        .mhrhci-letter:nth-child(3) { animation: letterAppear 0.6s 0.3s forwards; }
+        .mhrhci-letter:nth-child(4) { animation: letterAppear 0.6s 0.4s forwards; }
+        .mhrhci-letter:nth-child(5) { animation: letterAppear 0.6s 0.5s forwards; }
+        .mhrhci-letter:nth-child(6) { animation: letterAppear 0.6s 0.6s forwards; }
+        
+        @keyframes letterAppear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .preloader-glow {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(30, 64, 175, 0.2) 0%, rgba(30, 64, 175, 0) 70%);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+        
+        .preloader-spinner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 3px solid rgba(30, 64, 175, 0.1);
+            border-top: 3px solid #1e40af;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .preloader-progress {
+            position: absolute;
+            bottom: 30%;
+            width: 200px;
+            height: 3px;
+            background: rgba(30, 64, 175, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .preloader-progress-bar {
+            height: 100%;
+            width: 0;
+            background: #1e40af;
+            border-radius: 3px;
+            animation: progress 2.5s ease-out forwards;
+        }
+        
+        @keyframes progress {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -232,7 +335,6 @@
         .modal.active {
             display: flex;
             opacity: 1;
-            visibility: visible;
         }
 
         .modal-content {
@@ -375,47 +477,6 @@
         .scroll-animation.visible {
             opacity: 1;
             transform: translateY(0);
-        }
-
-        /* Add preloader styles */
-        .preloader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #ffffff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease-out;
-        }
-
-        .preloader.fade-out {
-            opacity: 0;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2c5282;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
-
-        .loading-text {
-            color: #2c5282;
-            font-size: 1.2rem;
-            font-weight: 500;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         /* Search bar styles */
@@ -1311,6 +1372,23 @@
             const counter = document.getElementById('messageCounter');
             counter.textContent = `${e.target.value.length}/500`;
         });
+
+        // Handle preloader
+        document.addEventListener('DOMContentLoaded', function() {
+            const preloader = document.querySelector('.preloader');
+            
+            // Hide preloader when page is loaded
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    preloader.classList.add('hidden');
+                    // Enable scrolling on body
+                    document.body.style.overflow = 'auto';
+                }, 2000); // Delay to ensure animations complete
+            });
+            
+            // Disable scrolling while preloader is active
+            document.body.style.overflow = 'hidden';
+        });
     </script>
 </div>
 </script>
@@ -1413,13 +1491,25 @@
         }
     </style>
 </head>
-<body>
-    <!-- Add preloader HTML right after body tag -->
+<body class="bg-gray-50">
+    <!-- Preloader -->
     <div class="preloader">
-        <div class="spinner"></div>
-        <div class="loading-text">Loading...</div>
+        <div class="preloader-glow"></div>
+        <div class="preloader-spinner"></div>
+        <div class="mhrhci-letters">
+            <span class="mhrhci-letter">M</span>
+            <span class="mhrhci-letter">H</span>
+            <span class="mhrhci-letter">R</span>
+            <span class="mhrhci-letter">H</span>
+            <span class="mhrhci-letter">C</span>
+            <span class="mhrhci-letter">I</span>
+        </div>
+        <div class="preloader-progress">
+            <div class="preloader-progress-bar"></div>
+        </div>
     </div>
 
+    <!-- Add overlay background -->
     <div class="header">
         <button onclick="window.location.href='/mhrhealthcareinc'" class="back-button"><i class="fas fa-arrow-left"></i> Back</button>
         <h1>Our Products</h1>

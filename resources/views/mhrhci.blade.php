@@ -9,8 +9,174 @@
     <link rel="icon" type="image/png" href="{{ asset('vendor/adminlte/dist/img/mhrhci.png') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Preloader Styles */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+        
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .mhrhci-letters {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .mhrhci-letter {
+            display: inline-block;
+            font-family: 'Arial', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: #1e40af; /* Royal blue color */
+            margin: 0 0.25rem;
+            opacity: 0;
+            transform: translateY(20px);
+            text-shadow: 0 2px 5px rgba(30, 64, 175, 0.3);
+        }
+        
+        .mhrhci-letter:nth-child(1) { animation: letterAppear 0.6s 0.1s forwards; }
+        .mhrhci-letter:nth-child(2) { animation: letterAppear 0.6s 0.2s forwards; }
+        .mhrhci-letter:nth-child(3) { animation: letterAppear 0.6s 0.3s forwards; }
+        .mhrhci-letter:nth-child(4) { animation: letterAppear 0.6s 0.4s forwards; }
+        .mhrhci-letter:nth-child(5) { animation: letterAppear 0.6s 0.5s forwards; }
+        .mhrhci-letter:nth-child(6) { animation: letterAppear 0.6s 0.6s forwards; }
+        
+        @keyframes letterAppear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .preloader-glow {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(30, 64, 175, 0.2) 0%, rgba(30, 64, 175, 0) 70%);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+        
+        .preloader-spinner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 3px solid rgba(30, 64, 175, 0.1);
+            border-top: 3px solid #1e40af;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .preloader-progress {
+            position: absolute;
+            bottom: 30%;
+            width: 200px;
+            height: 3px;
+            background: rgba(30, 64, 175, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .preloader-progress-bar {
+            height: 100%;
+            width: 0;
+            background: #1e40af;
+            border-radius: 3px;
+            animation: progress 2.5s ease-out forwards;
+        }
+        
+        @keyframes progress {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
+        .animate-modal {
+            animation: modalFade 0.3s ease-out;
+        }
+        
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: translateY(-1rem);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Add new scroll reveal animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Add new slideshow styles */
+        .slideshow-image {
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .slideshow-image.active {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="preloader-glow"></div>
+        <div class="preloader-spinner"></div>
+        <div class="mhrhci-letters">
+            <span class="mhrhci-letter">M</span>
+            <span class="mhrhci-letter">H</span>
+            <span class="mhrhci-letter">R</span>
+            <span class="mhrhci-letter">H</span>
+            <span class="mhrhci-letter">C</span>
+            <span class="mhrhci-letter">I</span>
+        </div>
+        <div class="preloader-progress">
+            <div class="preloader-progress-bar"></div>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="bg-white shadow-lg fixed w-full z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -159,71 +325,22 @@
     <section id="contact" class="py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="grid md:grid-cols-2">
-                    <div class="bg-blue-600 text-white p-12">
-                        <h2 class="text-3xl font-bold mb-6">Get in Touch</h2>
-                        <p class="mb-8">Need assistance with medical equipment or supplies? Our team is here to help.</p>
-                        <div class="space-y-4">
-                            <div class="flex items-center">
-                                <i class="fas fa-map-marker-alt w-6"></i>
-                                <span class="ml-4">MHR Building: Jose L. Briones St., NRA, Cebu City, Philippines, 6000</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-phone w-6"></i>
-                                <span class="ml-4">+63 32 234 5678</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-envelope w-6"></i>
-                                <span class="ml-4">csr.mhrhealthcare@gmail.com</span>
-                            </div>
+                <div class="bg-blue-600 text-white p-12">
+                    <h2 class="text-3xl font-bold mb-6">Get in Touch</h2>
+                    <p class="mb-8">Need assistance with medical equipment or supplies? Our team is here to help.</p>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marker-alt w-6"></i>
+                            <span class="ml-4">MHR Building: Jose L. Briones St., NRA, Cebu City, Philippines, 6000</span>
                         </div>
-                    </div>
-                    <div class="p-12">
-                        @if(session('success'))
-                            <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                                {{ session('success') }}
-                            </div>
-                        @endif
-
-                        @if(session('error'))
-                            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                                {{ session('error') }}
-                            </div>
-                        @endif
-
-                        @if($errors->any())
-                            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                                <ul>
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                        <form class="space-y-6" method="POST" action="{{ route('contact.sendmhrhci') }}" id="contactForm">
-                            @csrf
-                            <div>
-                                <label class="block text-gray-700 mb-2 font-medium">Name</label>
-                                <input type="text" name="name" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Your name">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 mb-2 font-medium">Email</label>
-                                <input type="email" name="email" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Your email">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 mb-2 font-medium">Message</label>
-                                <textarea name="message" required class="w-full p-3 border border-gray-300 rounded-lg h-32 focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Your message"></textarea>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center">
-                                    <i class="fas fa-paper-plane mr-2"></i>
-                                    Send Message
-                                </button>
-                                <button type="reset" class="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition duration-300">
-                                    Reset Form
-                                </button>
-                            </div>
-                        </form>
+                        <div class="flex items-center">
+                            <i class="fas fa-phone w-6"></i>
+                            <span class="ml-4">+63 32 234 5678</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-envelope w-6"></i>
+                            <span class="ml-4">csr.mhrhealthcare@gmail.com</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -268,6 +385,21 @@
     <!-- Add this script at the end of the body tag -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Handle preloader
+        const preloader = document.querySelector('.preloader');
+        
+        // Hide preloader when page is loaded
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                preloader.classList.add('hidden');
+                // Enable scrolling on body
+                document.body.style.overflow = 'auto';
+            }, 2000); // Delay a bit to ensure animations complete
+        });
+        
+        // Disable scrolling while preloader is active
+        document.body.style.overflow = 'hidden';
+        
         // Get all navigation links
         const navLinks = document.querySelectorAll('nav a');
         
@@ -371,53 +503,6 @@
             </div>
         </div>
     </div>
-
-    <style>
-        .animate-modal {
-            animation: modalFade 0.3s ease-out;
-        }
-        
-        @keyframes modalFade {
-            from {
-                opacity: 0;
-                transform: translateY(-1rem);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Add new scroll reveal animations */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease;
-        }
-
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Add new slideshow styles */
-        .slideshow-image {
-            opacity: 0;
-            transition: opacity 1.5s ease-in-out;
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .slideshow-image.active {
-            opacity: 1;
-        }
-    </style>
 
     <script>
         function openModal() {

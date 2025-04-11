@@ -58,9 +58,129 @@
         .animate-fadeIn {
             animation: fadeIn 0.5s ease-out forwards;
         }
+        
+        /* Preloader Styles */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+        
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .mhrpci-letters {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .mhrpci-letter {
+            display: inline-block;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: #7C3AED; /* Main purple color */
+            margin: 0 0.25rem;
+            opacity: 0;
+            transform: translateY(20px);
+            text-shadow: 0 2px 5px rgba(124, 58, 237, 0.3);
+        }
+        
+        .mhrpci-letter:nth-child(1) { animation: letterAppear 0.6s 0.1s forwards; }
+        .mhrpci-letter:nth-child(2) { animation: letterAppear 0.6s 0.2s forwards; }
+        .mhrpci-letter:nth-child(3) { animation: letterAppear 0.6s 0.3s forwards; }
+        .mhrpci-letter:nth-child(4) { animation: letterAppear 0.6s 0.4s forwards; }
+        .mhrpci-letter:nth-child(5) { animation: letterAppear 0.6s 0.5s forwards; }
+        .mhrpci-letter:nth-child(6) { animation: letterAppear 0.6s 0.6s forwards; }
+        
+        @keyframes letterAppear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .preloader-glow {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, rgba(124, 58, 237, 0) 70%);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+        
+        .preloader-spinner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 3px solid rgba(124, 58, 237, 0.1);
+            border-top: 3px solid #7C3AED;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .preloader-progress {
+            position: absolute;
+            bottom: 30%;
+            width: 200px;
+            height: 3px;
+            background: rgba(124, 58, 237, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .preloader-progress-bar {
+            height: 100%;
+            width: 0;
+            background: #7C3AED;
+            border-radius: 3px;
+            animation: progress 2.5s ease-out forwards;
+        }
+        
+        @keyframes progress {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="preloader-glow"></div>
+        <div class="preloader-spinner"></div>
+        <div class="mhrpci-letters">
+            <span class="mhrpci-letter">M</span>
+            <span class="mhrpci-letter">H</span>
+            <span class="mhrpci-letter">R</span>
+            <span class="mhrpci-letter">P</span>
+            <span class="mhrpci-letter">C</span>
+            <span class="mhrpci-letter">I</span>
+        </div>
+        <div class="preloader-progress">
+            <div class="preloader-progress-bar"></div>
+        </div>
+    </div>
+
     <!-- Header & Navigation -->
     <header class="bg-white shadow-md fixed w-full z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -362,6 +482,21 @@
     <script>
         // Initialize AOS animations
         document.addEventListener('DOMContentLoaded', function() {
+            // Handle preloader
+            const preloader = document.querySelector('.preloader');
+            
+            // Hide preloader when page is loaded
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    preloader.classList.add('hidden');
+                    // Enable scrolling on body
+                    document.body.style.overflow = 'auto';
+                }, 2000); // Delay a bit to ensure animations complete
+            });
+            
+            // Disable scrolling while preloader is active
+            document.body.style.overflow = 'hidden';
+            
             AOS.init();
             
             // Mobile menu toggle
