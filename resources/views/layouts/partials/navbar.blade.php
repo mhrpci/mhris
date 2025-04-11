@@ -897,7 +897,11 @@
                             <i class="fas fa-history mr-2"></i> User General Logs
                         </a>
                         @endcanany
-                        
+                        @canany(['super-admin'])
+                        <a href="{{ route('database.backups') }}" class="dropdown-item">
+                            <i class="fas fa-database mr-2"></i> Database Backups
+                        </a>
+                        @endcanany
                     </div>
                 </li>
                 @endcanany

@@ -56,6 +56,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\RouteManagementController;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\NightPremiumController;
+use App\Http\Controllers\DatabaseBackupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -459,5 +460,12 @@ Route::middleware(['auth', 'super.admin'])->prefix('route-management')->name('ro
     Route::post('/bulk-toggle', [RouteManagementController::class, 'bulkToggle'])->name('bulk-toggle');
 });
 
+// Database Backup routes
+Route::middleware(['auth', 'role:Super Admin'])->group(function () {
+    Route::get('/database-backups', [DatabaseBackupController::class, 'index'])->name('database.backups');
+    Route::get('/database-backups/create', [DatabaseBackupController::class, 'create'])->name('database.backup.create');
+    Route::get('/database-backups/download/{filename}', [DatabaseBackupController::class, 'download'])->name('database.backup.download');
+    Route::delete('/database-backups/delete/{filename}', [DatabaseBackupController::class, 'delete'])->name('database.backup.delete');
+});
 
 Auth::routes();
