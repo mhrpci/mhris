@@ -336,6 +336,7 @@ Route::middleware('auth')->group(function () {
 
     // Inventory routes
     Route::post('inventory/import', [ItInventoryController::class, 'import'])->name('inventory.import');
+    Route::post('inventory/export', [ItInventoryController::class, 'export'])->name('inventory.export');
 
 
     // Notifications routes

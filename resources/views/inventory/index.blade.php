@@ -15,9 +15,15 @@
                                     Add Inventory <i class="fas fa-plus-circle"></i>
                                 </a>
                                 @endcan
-                                <button type="button" class="btn btn-primary btn-sm rounded-pill" data-toggle="modal" data-target="#importModal">
+                                <button type="button" class="btn btn-primary btn-sm rounded-pill mr-2" data-toggle="modal" data-target="#importModal">
                                     Import Inventory <i class="fas fa-file-import"></i>
                                 </button>
+                                <form action="{{ route('inventory.export') }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-info btn-sm rounded-pill">
+                                        Export Inventory <i class="fas fa-file-export"></i>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

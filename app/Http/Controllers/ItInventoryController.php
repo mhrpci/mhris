@@ -104,4 +104,18 @@ class ItInventoryController extends Controller
             return redirect()->route('inventory.index')->with('error', 'Failed to import inventory data');
         }
     }
+    
+    /**
+     * Export inventory data as Excel.
+     */
+    public function export(Request $request)
+    {
+        try {
+            $inventories = ItInventory::all();
+            
+            return Excel::download(new \App\Exports\ItInventoryExport, 'inventory.xlsx');
+        } catch (\Exception $e) {
+            return redirect()->route('inventory.index')->with('error', 'Failed to export inventory data: ' . $e->getMessage());
+        }
+    }
 }
