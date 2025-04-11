@@ -449,9 +449,6 @@ class PayrollController extends Controller
             });
         }
 
-        // Group payrolls by department
-        $payrolls = $query->get();
-        
         // Get all departments from the Department model
         $departmentsList = \App\Models\Department::all();
         
@@ -462,13 +459,84 @@ class PayrollController extends Controller
         }
 
         // Group payrolls by department
+        $payrolls = $query->get();
         $payrollsByDepartment = $payrolls->groupBy(function ($payroll) {
             return $payroll->employee->department->name ?? 'Others';
         });
 
-        // If AJAX request, return just the HTML content
         if ($request->ajax()) {
             return view('payroll.adjustments-content', compact('payrollsByDepartment', 'departments'));
+        }
+
+        return response()->json(['error' => 'Invalid request method'], 400);
+    }
+
+    /**
+     * Get payroll records for print preview
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     */
+    public function getPrintPreview(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'period_type' => 'required|in:biweekly,bimonthly',
+        ]);
+
+        $start_date = Carbon::parse($request->input('start_date'))->startOfDay();
+        $end_date = Carbon::parse($request->input('end_date'))->endOfDay();
+        $period_type = $request->input('period_type');
+
+        // Get payrolls within the date range
+        $query = Payroll::with(['employee.department', 'employee.position'])
+            ->whereBetween('start_date', [$start_date, $end_date])
+            ->orWhereBetween('end_date', [$start_date, $end_date]);
+
+        // Apply period type filtering
+        if ($period_type === 'biweekly') {
+            // For biweekly, typically weekly-paid employees (e.g., BGPDI department)
+            $query->whereHas('employee.department', function ($q) {
+                $q->where('name', 'BGPDI');
+            });
+        } else if ($period_type === 'bimonthly') {
+            // For bimonthly, typically monthly-paid employees (non-BGPDI departments)
+            $query->whereHas('employee.department', function ($q) {
+                $q->where('name', '!=', 'BGPDI');
+            });
+        }
+
+        // Get all departments from the Department model
+        $departmentsList = \App\Models\Department::all();
+        
+        // Define departments for filtering and readability, using data from Department model
+        $departments = [];
+        foreach ($departmentsList as $dept) {
+            $departments[$dept->name] = strtoupper($dept->name);
+        }
+
+        // Group payrolls by department
+        $payrolls = $query->get();
+        
+        // Format dates for display
+        $periodStart = $start_date->format('M j, Y');
+        $periodEnd = $end_date->format('M j, Y');
+        $payrollYear = $end_date->format('Y');
+        
+        // Group payrolls by department
+        $payrollsByDepartment = $payrolls->groupBy(function ($payroll) {
+            return $payroll->employee->department->name ?? 'Others';
+        });
+
+        if ($request->ajax()) {
+            return view('payroll.print-preview-content', compact(
+                'payrollsByDepartment', 
+                'departments', 
+                'periodStart', 
+                'periodEnd',
+                'payrollYear'
+            ));
         }
 
         return response()->json(['error' => 'Invalid request method'], 400);
@@ -601,4 +669,62 @@ class PayrollController extends Controller
                 ->with('error', 'Failed to save adjustments: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get payroll records for the specified date range for printable payroll
+     */
+    // public function getPrintablePayroll(Request $request)
+    // {
+    //     $request->validate([
+    //         'start_date' => 'required|date',
+    //         'end_date' => 'required|date|after_or_equal:start_date',
+    //         'period_type' => 'required|in:biweekly,bimonthly',
+    //     ]);
+
+    //     $start_date = Carbon::parse($request->input('start_date'))->startOfDay();
+    //     $end_date = Carbon::parse($request->input('end_date'))->endOfDay();
+    //     $period_type = $request->input('period_type');
+
+    //     // Get payrolls within the date range
+    //     $query = Payroll::with(['employee.department', 'employee.position'])
+    //         ->whereBetween('start_date', [$start_date, $end_date])
+    //         ->orWhereBetween('end_date', [$start_date, $end_date]);
+
+    //     // Apply period type filtering
+    //     if ($period_type === 'biweekly') {
+    //         // For biweekly, typically weekly-paid employees (e.g., BGPDI department)
+    //         $query->whereHas('employee.department', function ($q) {
+    //             $q->where('name', 'BGPDI');
+    //         });
+    //     } else if ($period_type === 'bimonthly') {
+    //         // For bimonthly, typically monthly-paid employees (non-BGPDI departments)
+    //         $query->whereHas('employee.department', function ($q) {
+    //             $q->where('name', '!=', 'BGPDI');
+    //         });
+    //     }
+
+    //     // Group payrolls by department
+    //     $payrolls = $query->get();
+        
+    //     // Get all departments from the Department model
+    //     $departmentsList = \App\Models\Department::all();
+        
+    //     // Define departments for filtering and readability, using data from Department model
+    //     $departments = [];
+    //     foreach ($departmentsList as $dept) {
+    //         $departments[$dept->name] = strtoupper($dept->name);
+    //     }
+
+    //     // Group payrolls by department
+    //     $payrollsByDepartment = $payrolls->groupBy(function ($payroll) {
+    //         return $payroll->employee->department->name ?? 'Others';
+    //     });
+
+    //     // If AJAX request, return just the HTML content
+    //     if ($request->ajax()) {
+    //         return view('payroll.printable-payroll-content', compact('payrollsByDepartment', 'departments'));
+    //     }
+
+    //     return response()->json(['error' => 'Invalid request method'], 400);
+    // }
 }

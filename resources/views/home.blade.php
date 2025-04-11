@@ -3853,21 +3853,23 @@
 
     /* Holiday section responsive styling with light/dark mode support */
     .holiday-notification {
-        padding: 12px;
+        padding: 12px 15px;
         border-radius: 8px;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
         font-size: 1rem;
         font-weight: 400;
         border-left: 4px solid #dc3545;
-        background-color: rgba(220, 53, 69, 0.1);
+        background-color: #ffe5e5; /* Light pink background to match the image */
         transition: all 0.3s ease;
         color: #212529; /* Always keep the base text black */
+        display: block;
     }
 
     .holiday-notification strong,
     .holiday-notification .holiday-title,
     .holiday-notification .date-text,
-    .holiday-notification .today-text {
+    .holiday-notification .today-text,
+    .holiday-notification .upcoming-text {
         color: #212529 !important; /* Force black text for "Today is" and date */
     }
 
@@ -3944,6 +3946,17 @@
             padding: 6px 0;
             font-size: 0.9rem;
         }
+    }
+
+    .holiday-list-container {
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+
+    .holiday-notification .upcoming-text {
+        font-weight: 500;
+        letter-spacing: 0.2px;
     }
 </style>
 @endsection
@@ -4261,11 +4274,10 @@
                     @if ($upcomingHolidays->isEmpty())
                         <p class="text-muted">No upcoming holidays this month</p>
                     @else
-                        <ul class="custom-list">
+                        <ul class="holiday-list-container">
                             @foreach ($upcomingHolidays as $holiday)
-                                <li>
-                                    <strong class="text-danger">{{ $holiday->title }}</strong> -
-                                    <span class="date-text">{{ \Carbon\Carbon::parse($holiday->date)->format('F j, Y') }}</span>
+                                <li class="holiday-notification upcoming-holiday">
+                                    <span class="upcoming-text">Upcoming</span> <strong class="holiday-title">{{ $holiday->title }}</strong> - <span class="date-text">{{ \Carbon\Carbon::parse($holiday->date)->format('F j, Y') }}</span>
                                 </li>
                             @endforeach
                         </ul>
@@ -4422,6 +4434,20 @@
         });
     }
     window.addEventListener('scroll', animateCards);
+
+    // Fix holiday modal functionality 
+    document.addEventListener('DOMContentLoaded', function() {
+        // Holiday Modal Handler - improved with more robust showing logic
+        const holidayModal = document.getElementById('holidayModal');
+        const todayHasHoliday = {{ $todayHoliday ? 'true' : 'false' }};
+        
+        // When today is a holiday and modal should be shown, prioritize showing it
+        if (holidayModal && todayHasHoliday && shouldShowModal('holiday_modal_shown') && hasExpired('holiday_modal_shown')) {
+            setTimeout(function() {
+                $(holidayModal).modal('show');
+            }, 1000); // Slight delay to ensure DOM is fully loaded
+        }
+    });
 </script>
 
 <!-- Analytics Dashboard -->
@@ -4510,8 +4536,8 @@
                 $loanItems = [
                     [
                         'title' => 'SSS Loans',
-                        'icon' => 'fas fa-money-bill-wave',
-                        'color' => 'warning',
+                        'icon' => 'fas fa-shield-alt',
+                        'color' => '#ffc107', /* warning yellow */
                         'total' => $analytics['loans']['sss_loans']['total_amount'],
                         'count' => $analytics['loans']['sss_loans']['loan_count'],
                         'chartId' => 'sssLoanChart',
@@ -4519,8 +4545,8 @@
                     ],
                     [
                         'title' => 'Pagibig Loans',
-                        'icon' => 'fas fa-hand-holding-usd',
-                        'color' => 'info',
+                        'icon' => 'fas fa-home',
+                        'color' => '#0dcaf0', /* info cyan */
                         'total' => $analytics['loans']['pagibig_loans']['total_amount'],
                         'count' => $analytics['loans']['pagibig_loans']['loan_count'],
                         'chartId' => 'pagibigLoanChart',
@@ -4529,7 +4555,7 @@
                     [
                         'title' => 'Cash Advances',
                         'icon' => 'fas fa-hand-holding-usd',
-                        'color' => 'secondary',
+                        'color' => '#6c757d', /* secondary gray */
                         'total' => $analytics['loans']['cash_advances']['total_amount'],
                         'count' => $analytics['loans']['cash_advances']['advance_count'],
                         'chartId' => 'cashAdvanceChart',
@@ -4540,22 +4566,22 @@
 
             @foreach($loanItems as $item)
             <div class="col-md-4 mb-4">
-                <div class="analytics-card">
-                    <div class="analytics-title">
-                        <i class="{{ $item['icon'] }} text-{{ $item['color'] }}"></i>
+                <div class="analytics-card" style="background: #1e2233; color: white; border-radius: 10px; overflow: hidden;">
+                    <div class="analytics-title" style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <i class="{{ $item['icon'] }}" style="color: {{ $item['color'] }}; margin-right: 8px;"></i>
                         {{ $item['title'] }}
                     </div>
-                    <div class="analytics-content">
+                    <div class="analytics-content" style="padding: 15px;">
                         <div class="analytics-metric">
-                            <span class="analytics-label">Total Amount</span>
-                            <span class="analytics-number">₱{{ number_format($item['total'], 2) }}</span>
+                            <span class="analytics-label" style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Total Amount</span>
+                            <span class="analytics-number" style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 10px;">₱{{ number_format($item['total'], 2) }}</span>
                         </div>
-                        <div class="chart-container">
+                        <div class="chart-container" style="height: 120px; margin-bottom: 15px;">
                             <canvas id="{{ $item['chartId'] }}"></canvas>
                         </div>
-                        <div class="trend-info">
-                            <i class="fas fa-info-circle"></i>
-                            Monthly Trend - {{ $item['count'] }} active
+                        <div class="trend-info" style="font-size: 0.8rem; color: rgba(255,255,255,0.7); display: flex; align-items: center;">
+                            <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
+                            Monthly Trend - {{ $item['count'] }} {{ Str::plural('loan', $item['count']) }}
                         </div>
                     </div>
                 </div>
@@ -4572,7 +4598,14 @@
     function createLineChart(elementId, label, data, color) {
         const ctx = document.getElementById(elementId).getContext('2d');
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
+        
+        // Check if the chart is for a loan (has dark background)
+        const isLoanChart = ['sssLoanChart', 'pagibigLoanChart', 'cashAdvanceChart'].includes(elementId);
+        
+        // Set different styling for loan charts
+        const gridColor = isLoanChart ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const textColor = isLoanChart ? 'rgba(255, 255, 255, 0.7)' : '#666';
+        
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -4587,7 +4620,7 @@
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     pointBackgroundColor: color,
-                    pointBorderColor: '#fff',
+                    pointBorderColor: isLoanChart ? '#1e2233' : '#fff',
                     pointBorderWidth: 2
                 }]
             },
@@ -4611,10 +4644,22 @@
                 scales: {
                     y: {
                         beginAtZero: true,
+                        grid: {
+                            color: gridColor
+                        },
                         ticks: {
+                            color: textColor,
                             callback: function(value) {
                                 return '₱' + value.toLocaleString();
                             }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: gridColor
+                        },
+                        ticks: {
+                            color: textColor
                         }
                     }
                 },
@@ -5164,7 +5209,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <i class="far fa-calendar-alt text-primary me-2"></i>
                                         {{ \Carbon\Carbon::parse($todayHoliday->date)->format('F j, Y') }}
                                     </div>
-                                    <p class="holiday-description">{{ $todayHoliday->description }}</p>
+                                    <p class="holiday-description">{{ $todayHoliday->description ?? 'Enjoy your holiday today!' }}</p>
                                 </div>
                             </div>
                         </div>

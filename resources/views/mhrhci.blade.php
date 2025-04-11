@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical & Hospital Resources Health Care, Inc.</title>
+    <title>Medical & Hospital Resources Health Care, Inc. | Welcome to MHRHCI</title>
+    <meta name="description" content="Medical & Hospital Resources Health Care, Inc. (MHRHCI) - A leading distributor of medical and hospital supplies in the Philippines, serving healthcare facilities across the nation with high-quality medical products and equipment.">
+    <meta name="keywords" content="MHRHCI, Medical & Hospital Resources Health Care, Inc., MHRHCI, Medical & Hospital Resources Health Care, Inc.">
     <link rel="icon" type="image/png" href="{{ asset('vendor/adminlte/dist/img/mhrhci.png') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">

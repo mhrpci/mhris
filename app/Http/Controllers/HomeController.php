@@ -20,6 +20,7 @@ use App\Models\CashAdvance;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SystemUpdate;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -87,22 +88,52 @@ class HomeController extends Controller
      */
     public function upcomingHolidays()
     {
-        // Fetch all holidays
-        $holidays = Holiday::orderBy('date', 'asc')->get();
-
+        // Get today's date in Y-m-d format
+        $today = Carbon::today();
+        $todayFormatted = $today->format('Y-m-d');
+        
+        // Log today's date for debugging
+        Log::info("Checking holidays for date: {$todayFormatted}");
+        
+        // Fetch all holidays with explicit date formatting
+        $holidays = Holiday::get()->map(function($holiday) {
+            // Ensure date is properly parsed and formatted
+            $holiday->formatted_date = Carbon::parse($holiday->date)->format('Y-m-d');
+            return $holiday;
+        });
+        
+        // Log all holidays for debugging
+        Log::info("Found " . $holidays->count() . " total holidays");
+        
         // Get the current month and year
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
         // Filter upcoming holidays that are in the current month
-        $upcomingHolidays = $holidays->filter(function ($holiday) use ($currentMonth, $currentYear) {
+        $upcomingHolidays = $holidays->filter(function ($holiday) use ($currentMonth, $currentYear, $todayFormatted) {
             $holidayDate = Carbon::parse($holiday->date);
-            return $holidayDate->isFuture() && $holidayDate->month === $currentMonth && $holidayDate->year === $currentYear;
+            return $holidayDate->isFuture() && 
+                    $holidayDate->month === $currentMonth && 
+                    $holidayDate->year === $currentYear &&
+                    $holiday->formatted_date !== $todayFormatted; // Exclude today
         });
 
-        // Check if today is a holiday
-        $today = Carbon::today();
-        $todayHoliday = $holidays->firstWhere('date', $today->format('Y-m-d'));
+        // Check if today is a holiday with multiple approaches for better matching
+        $todayHoliday = $holidays->first(function ($holiday) use ($todayFormatted) {
+            return $holiday->formatted_date === $todayFormatted;
+        });
+
+        // If not found using the formatted approach, try direct database query
+        if (!$todayHoliday) {
+            $todayHoliday = Holiday::whereDate('date', $todayFormatted)->first();
+        }
+        
+        // Log the result of today's holiday check
+        if ($todayHoliday) {
+            Log::info("Today is a holiday: {$todayHoliday->title}");
+        } else {
+            Log::info("No holiday found for today");
+        }
 
         // Get the month name
         $monthName = $this->monthName($currentMonth);
@@ -235,16 +266,19 @@ class HomeController extends Controller
                 'total_amount' => $sssLoans->sum('loan_amount'),
                 'average_amount' => $sssLoans->avg('loan_amount'),
                 'loan_count' => $sssLoans->count(),
+                'monthly_trend' => $this->getMonthlyTrend($sssLoans, 'loan_amount'),
             ],
             'pagibig_loans' => [
                 'total_amount' => $pagibigLoans->sum('loan_amount'),
                 'average_amount' => $pagibigLoans->avg('loan_amount'),
                 'loan_count' => $pagibigLoans->count(),
+                'monthly_trend' => $this->getMonthlyTrend($pagibigLoans, 'loan_amount'),
             ],
             'cash_advances' => [
                 'total_amount' => $cashAdvances->sum('cash_advance_amount'),
                 'average_amount' => $cashAdvances->avg('cash_advance_amount'),
                 'advance_count' => $cashAdvances->count(),
+                'monthly_trend' => $this->getMonthlyTrend($cashAdvances, 'cash_advance_amount'),
             ],
         ];
 

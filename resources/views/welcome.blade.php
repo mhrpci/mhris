@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>MHR Property Conglomerate Inc. | Leading Business Conglomerate</title>
-    <meta name="description" content="MHR Property Conglomerate Inc. (MHRPCI) - A diverse business conglomerate operating across healthcare, fuel distribution, construction, and hospitality sectors in the Philippines.">
-    <meta name="keywords" content="MHRPCI, MHR Property Conglomerate, healthcare, fuel distribution, construction, hospitality, Cebu business, medical supplies">
+    <title>MHR Property Conglomerate Inc. | Good Success | Welcome to MHRPCI</title>
+    <meta name="description" content="MHR Property Conglomerate Inc. (MHRPCI) - A diverse business conglomerate delivering Good Success across healthcare, fuel distribution, construction, and hospitality sectors in the Philippines.">
+    <meta name="keywords" content="Good Success, MHRPCI, MHR Property Conglomerate, Inc., MHR, MHR Property Conglomerate, Inc.">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}">
@@ -24,6 +24,31 @@
     
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Schema.org structured data for better SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "MHR Property Conglomerate Inc.",
+      "alternateName": "MHRPCI",
+      "url": "https://mhrpci.site",
+      "logo": "{{ asset('vendor/adminlte/dist/img/LOGO4.png') }}",
+      "description": "MHR Property Conglomerate Inc. (MHRPCI) - A diverse business conglomerate delivering Good Success across healthcare, fuel distribution, construction, and hospitality sectors in the Philippines.",
+      "slogan": "Your Partner for Good Success in Business and Beyond",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "MHR Health Care, Co.",
+        "addressLocality": "Cebu City",
+        "addressRegion": "Cebu",
+        "postalCode": "6000",
+        "addressCountry": "PH"
+      },
+      "sameAs": [
+        "https://www.facebook.com/mhrpciofficial/"
+      ]
+    }
+    </script>
     
     <style>
         :root {
@@ -257,6 +282,9 @@
                 <div data-aos="fade-right" data-aos-duration="1000" class="text-center md:text-left">
                     <h2 class="text-white text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 sm:mb-6">Transforming Industries, Empowering Growth</h2>
                     <p class="text-indigo-100 text-sm xs:text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto md:mx-0">MHR Property Conglomerate Inc. is a diverse business group operating across healthcare, fuel distribution, construction, and hospitality sectors in the Philippines.</p>
+                    <div class="bg-white bg-opacity-20 rounded-lg px-6 py-4 inline-block mb-6 sm:mb-8 transform hover:scale-105 transition duration-300 shadow-lg backdrop-blur-sm">
+                        <p class="text-white text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold animate-pulse">Good Success!</p>
+                    </div>
                     <div class="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4">
                         <a href="#about" class="bg-white text-indigo-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:bg-gray-100 transition duration-300 text-sm sm:text-base">Discover More</a>
                         <a href="#contact" class="border-2 border-white text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:bg-white hover:text-indigo-600 transition duration-300 text-sm sm:text-base">Contact Us</a>
@@ -287,7 +315,7 @@
                         MHR Property Conglomerate Inc. (MHRPCI) is a dynamic business group with a diverse portfolio spanning healthcare, fuel distribution, construction, and hospitality. Beginning in 2000 with the establishment of Cebic Trading, MHRPCI has grown into a leading conglomerate with multiple companies working in synergy across various industries.
                     </p>
                     <p class="text-gray-600 mb-6">
-                        Today, we're proud to have expanded our operations across the Philippines, delivering excellent products and services while creating value for our stakeholders and contributing to community development.
+                        Today, we're proud to have expanded our operations across the Philippines, delivering excellent products and services while creating value for our stakeholders and contributing to community development. Our story is one of Good Success through dedication, innovation, and commitment to excellence.
                     </p>
                     
                     <div class="grid grid-cols-2 gap-6 mb-6">

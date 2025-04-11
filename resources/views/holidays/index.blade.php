@@ -14,10 +14,13 @@
                                 <i class="fas fa-file-import mr-1"></i>
                                 <span>Import Holidays</span>
                             </button>
-                            <a href="{{ route('holidays.export') }}" class="btn btn-info btn-sm rounded-pill mr-2 mb-2 d-flex align-items-center">
-                                <i class="fas fa-file-export mr-1"></i>
-                                <span>Export Holidays</span>
-                            </a>
+                            <form action="{{ route('holidays.export') }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-info btn-sm rounded-pill mr-2 mb-2 d-flex align-items-center">
+                                    <i class="fas fa-file-export mr-1"></i>
+                                    <span>Export Holidays</span>
+                                </button>
+                            </form>
                             <a href="{{ route('holidays.create') }}" class="btn btn-success btn-sm rounded-pill mb-2 d-flex align-items-center">
                                 <i class="fas fa-plus-circle mr-1"></i>
                                 <span>Add Holiday</span>

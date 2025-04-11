@@ -278,6 +278,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/payroll/adjustments/get', [PayrollController::class, 'getAdjustments'])->name('payroll.getAdjustments');
     Route::post('/payroll/adjustments/save', [PayrollController::class, 'saveAdjustments'])->name('payroll.saveAdjustments');
 
+    // New printable payroll routes
+    Route::get('/payroll/printable-payroll/get', [PayrollController::class, 'getPrintablePayroll'])->name('payroll.getPrintablePayroll');
+    Route::get('/payroll/print-preview/get', [PayrollController::class, 'getPrintPreview'])->name('payroll.getPrintPreview');
+
     // Contributions routes
     Route::get('/contributions-employee/{employee_id}', [ContributionController::class, 'employeeContributions'])->name('contributions.employee');
     Route::get('/contributions-employees-list', [ContributionController::class, 'allEmployeesContribution'])->name('contributions.employees-list');
@@ -443,7 +447,7 @@ Route::middleware('auth')->group(function () {
 
     // Holiday import and export routes
     Route::post('holidays/import', [App\Http\Controllers\HolidayController::class, 'import'])->name('holidays.import');
-    Route::post('holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
+    Route::match(['get', 'post'], 'holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
 });
 
 // Route Management routes
@@ -457,4 +461,3 @@ Route::middleware(['auth', 'super.admin'])->prefix('route-management')->name('ro
 
 
 Auth::routes();
-
