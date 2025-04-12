@@ -528,11 +528,11 @@
 
     <div class="form-group">
         <label>Date of Leave</label>
-        <span class="input-line">{{ $leave->date_from ? \Carbon\Carbon::parse($leave->date_from)->format('m/d/Y') : '' }}</span>
+        <span class="input-line">{{ $leave->date_from ? \Carbon\Carbon::parse($leave->date_from)->format('m/d/Y') : '' }} - {{ $leave->date_to ? \Carbon\Carbon::parse($leave->date_to)->format('m/d/Y') : '' }}</span>
     </div>
 
     <div class="form-group">
-        <label>Reasons for leave</label>
+        <label>easons for leave</label>
         <span class="input-line" data-field="reason">{{ $leave->reason_to_leave ?? '' }}</span>
     </div>
 

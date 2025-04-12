@@ -3814,40 +3814,6 @@
     }
 
     /* Initialize confetti on modal shown */
-    document.addEventListener('DOMContentLoaded', function() {
-        $(document).on('shown.bs.modal', '[id^=birthdayModal]', function() {
-            createConfetti($(this).find('.confetti-container'));
-        });
-    });
-
-    function createConfetti(container) {
-        const colors = ['#FF6B6B', '#FFD166', '#4ECDC4', '#5E60CE', '#FF8E53'];
-        const confettiCount = 100;
-        
-        // Clear previous confetti
-        container.empty();
-        
-        for (let i = 0; i < confettiCount; i++) {
-            const confetti = document.createElement('div');
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            const size = Math.random() * 10 + 5;
-            const left = Math.random() * 100;
-            const delay = Math.random() * 5;
-            const duration = Math.random() * 5 + 5;
-            
-            confetti.style.cssText = `
-                position: absolute;
-                width: ${size}px;
-                height: ${size}px;
-                background-color: ${color};
-                top: -20px;
-                left: ${left}%;
-                opacity: 0.7;
-                border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
-                animation: confetti-fall ${duration}s ease-in ${delay}s infinite;
-            `;
-            
-            container.append(confetti);
         }
     }
 
@@ -4537,7 +4503,7 @@
                     [
                         'title' => 'SSS Loans',
                         'icon' => 'fas fa-shield-alt',
-                        'color' => '#ffc107', /* warning yellow */
+                        'color' => 'warning',
                         'total' => $analytics['loans']['sss_loans']['total_amount'],
                         'count' => $analytics['loans']['sss_loans']['loan_count'],
                         'chartId' => 'sssLoanChart',
@@ -4546,7 +4512,7 @@
                     [
                         'title' => 'Pagibig Loans',
                         'icon' => 'fas fa-home',
-                        'color' => '#0dcaf0', /* info cyan */
+                        'color' => 'info',
                         'total' => $analytics['loans']['pagibig_loans']['total_amount'],
                         'count' => $analytics['loans']['pagibig_loans']['loan_count'],
                         'chartId' => 'pagibigLoanChart',
@@ -4555,7 +4521,7 @@
                     [
                         'title' => 'Cash Advances',
                         'icon' => 'fas fa-hand-holding-usd',
-                        'color' => '#6c757d', /* secondary gray */
+                        'color' => 'secondary',
                         'total' => $analytics['loans']['cash_advances']['total_amount'],
                         'count' => $analytics['loans']['cash_advances']['advance_count'],
                         'chartId' => 'cashAdvanceChart',
@@ -4566,21 +4532,21 @@
 
             @foreach($loanItems as $item)
             <div class="col-md-4 mb-4">
-                <div class="analytics-card" style="background: #1e2233; color: white; border-radius: 10px; overflow: hidden;">
-                    <div class="analytics-title" style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                        <i class="{{ $item['icon'] }}" style="color: {{ $item['color'] }}; margin-right: 8px;"></i>
+                <div class="analytics-card">
+                    <div class="analytics-title">
+                        <i class="{{ $item['icon'] }} text-{{ $item['color'] }}"></i>
                         {{ $item['title'] }}
                     </div>
-                    <div class="analytics-content" style="padding: 15px;">
+                    <div class="analytics-content">
                         <div class="analytics-metric">
-                            <span class="analytics-label" style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Total Amount</span>
-                            <span class="analytics-number" style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 10px;">₱{{ number_format($item['total'], 2) }}</span>
+                            <span class="analytics-label">Total Amount</span>
+                            <span class="analytics-number">₱{{ number_format($item['total'], 2) }}</span>
                         </div>
-                        <div class="chart-container" style="height: 120px; margin-bottom: 15px;">
+                        <div class="chart-container">
                             <canvas id="{{ $item['chartId'] }}"></canvas>
                         </div>
-                        <div class="trend-info" style="font-size: 0.8rem; color: rgba(255,255,255,0.7); display: flex; align-items: center;">
-                            <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
+                        <div class="trend-info">
+                            <i class="fas fa-info-circle"></i>
                             Monthly Trend - {{ $item['count'] }} {{ Str::plural('loan', $item['count']) }}
                         </div>
                     </div>
@@ -4599,12 +4565,26 @@
         const ctx = document.getElementById(elementId).getContext('2d');
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         
-        // Check if the chart is for a loan (has dark background)
-        const isLoanChart = ['sssLoanChart', 'pagibigLoanChart', 'cashAdvanceChart'].includes(elementId);
+        // Detect dark mode
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         
-        // Set different styling for loan charts
-        const gridColor = isLoanChart ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-        const textColor = isLoanChart ? 'rgba(255, 255, 255, 0.7)' : '#666';
+        // Set colors based on mode
+        const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : '#666';
+        const pointBorderColor = isDarkMode ? '#2d3748' : '#fff';
+        
+        // Map bootstrap color names to hex values
+        const colorMap = {
+            'primary': '#0d6efd',
+            'success': '#198754',
+            'danger': '#dc3545',
+            'warning': '#ffc107', 
+            'info': '#0dcaf0',
+            'secondary': '#6c757d'
+        };
+        
+        // Get the actual color value
+        const chartColor = colorMap[color] || color;
         
         new Chart(ctx, {
             type: 'line',
@@ -4613,14 +4593,14 @@
                 datasets: [{
                     label: label,
                     data: data,
-                    borderColor: color,
-                    backgroundColor: color + '20', // Add transparency to background
+                    borderColor: chartColor,
+                    backgroundColor: chartColor + '20', // Add transparency to background
                     fill: true,
                     tension: 0.4,
                     pointRadius: 4,
                     pointHoverRadius: 6,
-                    pointBackgroundColor: color,
-                    pointBorderColor: isLoanChart ? '#1e2233' : '#fff',
+                    pointBackgroundColor: chartColor,
+                    pointBorderColor: pointBorderColor,
                     pointBorderWidth: 2
                 }]
             },
@@ -4634,6 +4614,11 @@
                     tooltip: {
                         mode: 'index',
                         intersect: false,
+                        backgroundColor: isDarkMode ? '#1a202c' : 'rgba(255, 255, 255, 0.9)',
+                        titleColor: isDarkMode ? '#e2e8f0' : '#333',
+                        bodyColor: isDarkMode ? '#e2e8f0' : '#333',
+                        borderColor: isDarkMode ? '#4a5568' : '#ddd',
+                        borderWidth: 1,
                         callbacks: {
                             label: function(context) {
                                 return '₱' + context.raw.toLocaleString();
@@ -4671,18 +4656,70 @@
         });
     }
 
-    // Create charts when the page loads
+    // Create charts when the page loads and handle theme changes
     document.addEventListener('DOMContentLoaded', function() {
+        // Listen for theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+            // Recreate all charts when theme changes
+            // Contribution Charts
+            createLineChart('sssChart', 'SSS Contributions', @json($analytics['sss']['monthly_trend']), 'primary');
+            createLineChart('pagibigChart', 'Pagibig Contributions', @json($analytics['pagibig']['monthly_trend']), 'success');
+            createLineChart('philhealthChart', 'Philhealth Contributions', @json($analytics['philhealth']['monthly_trend']), 'danger');
+
+            // Loan Charts
+            createLineChart('sssLoanChart', 'SSS Loans', @json($analytics['loans']['sss_loans']['monthly_trend'] ?? []), 'warning');
+            createLineChart('pagibigLoanChart', 'Pagibig Loans', @json($analytics['loans']['pagibig_loans']['monthly_trend'] ?? []), 'info');
+            createLineChart('cashAdvanceChart', 'Cash Advances', @json($analytics['loans']['cash_advances']['monthly_trend'] ?? []), 'secondary');
+        });
+
+        // Initial chart creation
         // Contribution Charts
-        createLineChart('sssChart', 'SSS Contributions', @json($analytics['sss']['monthly_trend']), '#0d6efd');
-        createLineChart('pagibigChart', 'Pagibig Contributions', @json($analytics['pagibig']['monthly_trend']), '#198754');
-        createLineChart('philhealthChart', 'Philhealth Contributions', @json($analytics['philhealth']['monthly_trend']), '#dc3545');
+        createLineChart('sssChart', 'SSS Contributions', @json($analytics['sss']['monthly_trend']), 'primary');
+        createLineChart('pagibigChart', 'Pagibig Contributions', @json($analytics['pagibig']['monthly_trend']), 'success');
+        createLineChart('philhealthChart', 'Philhealth Contributions', @json($analytics['philhealth']['monthly_trend']), 'danger');
 
         // Loan Charts
-        createLineChart('sssLoanChart', 'SSS Loans', @json($analytics['loans']['sss_loans']['monthly_trend'] ?? []), '#ffc107');
-        createLineChart('pagibigLoanChart', 'Pagibig Loans', @json($analytics['loans']['pagibig_loans']['monthly_trend'] ?? []), '#0dcaf0');
-        createLineChart('cashAdvanceChart', 'Cash Advances', @json($analytics['loans']['cash_advances']['monthly_trend'] ?? []), '#6c757d');
+        createLineChart('sssLoanChart', 'SSS Loans', @json($analytics['loans']['sss_loans']['monthly_trend'] ?? []), 'warning');
+        createLineChart('pagibigLoanChart', 'Pagibig Loans', @json($analytics['loans']['pagibig_loans']['monthly_trend'] ?? []), 'info');
+        createLineChart('cashAdvanceChart', 'Cash Advances', @json($analytics['loans']['cash_advances']['monthly_trend'] ?? []), 'secondary');
+        
+        // Initialize confetti for birthday modals
+        $(document).on('shown.bs.modal', '[id^=birthdayModal]', function() {
+            createConfetti($(this).find('.confetti-container'));
+        });
     });
+    
+    // Confetti function for birthday modals
+    function createConfetti(container) {
+        const colors = ['#FF6B6B', '#FFD166', '#4ECDC4', '#5E60CE', '#FF8E53'];
+        const confettiCount = 100;
+        
+        // Clear previous confetti
+        container.empty();
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const size = Math.random() * 10 + 5;
+            const left = Math.random() * 100;
+            const delay = Math.random() * 5;
+            const duration = Math.random() * 5 + 5;
+            
+            confetti.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                background-color: ${color};
+                top: -20px;
+                left: ${left}%;
+                opacity: 0.7;
+                border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                animation: confetti-fall ${duration}s ease-in ${delay}s infinite;
+            `;
+            
+            container.append(confetti);
+        }
+    }
 </script>
 @endsection
 
