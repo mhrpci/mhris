@@ -95,7 +95,6 @@ return array(
     'App\\Http\\Controllers\\ProfileController' => $baseDir . '/app/Http/Controllers/ProfileController.php',
     'App\\Http\\Controllers\\ProvinceController' => $baseDir . '/app/Http/Controllers/ProvinceController.php',
     'App\\Http\\Controllers\\QuotationController' => $baseDir . '/app/Http/Controllers/QuotationController.php',
-    'App\\Http\\Controllers\\ReportController' => $baseDir . '/app/Http/Controllers/ReportController.php',
     'App\\Http\\Controllers\\RoleController' => $baseDir . '/app/Http/Controllers/RoleController.php',
     'App\\Http\\Controllers\\RouteManagementController' => $baseDir . '/app/Http/Controllers/RouteManagementController.php',
     'App\\Http\\Controllers\\SearchController' => $baseDir . '/app/Http/Controllers/SearchController.php',

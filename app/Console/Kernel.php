@@ -28,7 +28,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('attendance:store');
         $schedule->command('holidays:fetch')->yearly()->at('00:00');
         $schedule->command('leaves:reset')->yearly()->at('00:00');
-        $schedule->command('database:backup')->daily()->at('02:00');
+        $schedule->command('database:backup')->daily()->at('04:00');
 
         $schedule->call(function () {
             $controller = new \App\Http\Controllers\NotificationsController();

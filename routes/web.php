@@ -38,7 +38,6 @@ use App\Http\Controllers\SssLoanController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CashAdvanceController;
 use App\Http\Controllers\PagibigLoanController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\EmployeeBirthdayController;
 use App\Http\Controllers\ControllerAnalysisController;
 use App\Http\Controllers\UserActivityController;
@@ -57,7 +56,7 @@ use App\Http\Controllers\RouteManagementController;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\NightPremiumController;
 use App\Http\Controllers\DatabaseBackupController;
-
+use App\Http\Controllers\ReportController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -353,16 +352,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/mark-as-read', [NotificationsController::class, 'markAsRead']);
     Route::delete('/notifications/clear', [NotificationsController::class, 'clearAll']);
     Route::get('/notifications/all', [NotificationsController::class, 'showAllNotifications'])->name('notifications.all');
-    
-    // Report routes
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::post('/reports/loans', [ReportController::class, 'generateLoanReport'])->name('reports.loans');
-    Route::post('/reports/contributions', [ReportController::class, 'generateContributionReport'])->name('reports.contributions');
-    Route::post('/reports/attendances', [ReportController::class, 'generateAttendanceReport'])->name('reports.attendances');
-    Route::post('/reports/leaves', [ReportController::class, 'generateLeaveReport'])->name('reports.leaves');
-    Route::post('/reports/hirings', [ReportController::class, 'generateHiringReport'])->name('reports.hirings');
-    Route::post('/reports/careers', [ReportController::class, 'generateCareerReport'])->name('reports.careers');
-    Route::get('/reports/detailed-loan', [ReportController::class, 'generateDetailedLoanReport'])->name('reports.detailed-loan');
 
     // Server Time routes
     Route::get('/server-time', function() {
@@ -387,6 +376,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::get('/notifications/check-updates', [App\Http\Controllers\NotificationsController::class, 'checkForUpdates'])->name('notifications.check-updates');
     Route::get('/notifications/all', [App\Http\Controllers\NotificationsController::class, 'showAllNotifications'])->name('notifications.all');
+
+     // Report routes
+     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+     Route::post('/reports/loans', [ReportController::class, 'generateLoanReport'])->name('reports.loans');
+     Route::post('/reports/contributions', [ReportController::class, 'generateContributionReport'])->name('reports.contributions');
+     Route::post('/reports/attendances', [ReportController::class, 'generateAttendanceReport'])->name('reports.attendances');
+     Route::post('/reports/leaves', [ReportController::class, 'generateLeaveReport'])->name('reports.leaves');
+     Route::post('/reports/hirings', [ReportController::class, 'generateHiringReport'])->name('reports.hirings');
+     Route::post('/reports/careers', [ReportController::class, 'generateCareerReport'])->name('reports.careers');
+     Route::get('/reports/detailed-loan', [ReportController::class, 'generateDetailedLoanReport'])->name('reports.detailed-loan');
 
     // Web Push Notification Routes
     Route::get('/notifications/vapid-public-key', [App\Http\Controllers\NotificationsController::class, 'getVapidPublicKey'])->name('notifications.vapid-public-key');
