@@ -4,6 +4,8 @@
         @page {
             size: legal landscape;
             margin: 0.5in;
+            scale: auto;
+            counter-increment: page;
         }
         body {
             -webkit-print-color-adjust: exact !important;
@@ -12,6 +14,26 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            width: 100%;
+            counter-reset: page 1;
+        }
+        /* Hide all images when printing */
+        img {
+            display: none !important;
+        }
+        /* Don't hide department headers in print - allow them to show */
+        .print-department-header {
+            display: table-row !important;
+            background-color: #f0f0f0 !important;
+            font-weight: bold !important;
+            page-break-before: always;
+        }
+        /* Hide only subtotal and grand total rows */
+        .print-department-subtotal,
+        .print-grand-total,
+        tr[class*="total"],
+        .all-departments-total {
+            display: none !important;
         }
         .print-content {
             width: 100%;
@@ -20,11 +42,15 @@
         }
         .payroll-print-table {
             width: 100%;
-            font-size: 8pt;
+            font-size: 6pt;
             border-collapse: collapse;
             margin-bottom: 20px;
-            table-layout: fixed;
+            table-layout: auto;
             page-break-inside: auto;
+            transform-origin: top left;
+            /* Ensure table scales to fit paper */
+            max-width: 100%;
+            transform: scale(1);
         }
         .payroll-print-table tr {
             page-break-inside: avoid;
@@ -36,15 +62,18 @@
             padding: 2px;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
             line-height: 1.2;
         }
         .payroll-print-table th {
             background-color: #f2f2f2 !important;
-            text-align: center;
+            text-align: center !important;
             vertical-align: middle;
             font-weight: bold;
-            font-size: 7pt;
+            font-size: 4pt;
+            white-space: normal;
+            word-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
         }
         .print-department-header td {
             background-color: #eaeaea !important;
@@ -110,20 +139,46 @@
             display: none !important;
         }
         
-        /* Ensure background colors print */
-        * {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        
         /* Improve numeric column alignment */
         .text-right {
             text-align: right !important;
         }
         
-        /* Ensure page breaks don't occur in the middle of departments */
+        /* Ensure page breaks begin at each department */
         .print-department-section {
             page-break-inside: avoid;
+        }
+        
+        /* Add department header styling to make each department clearly identifiable */
+        .print-department-header td {
+            font-weight: bold !important;
+            text-transform: uppercase !important;
+            background-color: #f0f0f0 !important;
+            border-top: 2px solid #000 !important;
+            border-bottom: 2px solid #000 !important;
+            padding: 5px !important;
+            font-size: 7pt !important;
+            page-break-before: always !important;
+            break-before: always !important;
+            counter-reset: department-page 1;
+        }
+
+        /* Set department-specific colors for easier identification */
+        .print-department-header[data-department="Support Personnel"] td {
+            background-color: #e6f2ff !important;
+        }
+        
+        .print-department-header[data-department="BGPDI"] td {
+            background-color: #e6ffe6 !important;
+        }
+        
+        .print-department-header[data-department="VHI"] td {
+            background-color: #fff2e6 !important;
+        }
+        
+        .print-department-header[data-department="Marketing Department"] td,
+        .print-department-header[data-department="Technical Department"] td {
+            background-color: #ffe6e6 !important;
         }
         
         /* High contrast for better printouts */
@@ -186,6 +241,14 @@
             max-height: 22px;
             height: 22px;
         }
+        
+        /* Set specific font size for table cells */
+        .payroll-print-table td {
+            font-size: 6pt !important; /* Force 6pt font size */
+            min-font-size: 6pt !important; /* Ensure font doesn't go below 6pt */
+            max-font-size: 6pt !important; /* Ensure font doesn't go above 6pt */
+            line-height: 1.1 !important; /* Tighter line height for smaller font */
+        }
     </style>
     
     <!-- Regular screen styles -->
@@ -199,9 +262,33 @@
             border: 1px solid #ddd;
             padding: 4px;
         }
+        .payroll-print-table td {
+            font-size: 10px; /* Regular screen size */
+        }
         .print-department-header td {
             background-color: #eaeaea;
+            font-weight: bold;
+            text-transform: uppercase;
         }
+
+        /* Department-specific colors for screen view */
+        .print-department-header[data-department="Support Personnel"] td {
+            background-color: #e6f2ff;
+        }
+        
+        .print-department-header[data-department="BGPDI"] td {
+            background-color: #e6ffe6;
+        }
+        
+        .print-department-header[data-department="VHI"] td {
+            background-color: #fff2e6;
+        }
+        
+        .print-department-header[data-department="Marketing Department"] td,
+        .print-department-header[data-department="Technical Department"] td {
+            background-color: #ffe6e6;
+        }
+
         .print-department-subtotal {
             background-color: #f9f9fa;
         }
@@ -295,7 +382,34 @@
                                     echo sprintf('%02d:%02d', $hours, $minutes);
                                 @endphp
                             </td>
-                            <td class="text-right">{{ isset($payroll->total_basic_pay) ? number_format($payroll->total_basic_pay, 2) : '-' }}</td>
+                            <td class="text-right">
+                                @php
+                                    // Calculate total_basic_pay using the formula:
+                                    // employee->salary/2 - (late,undertime,leave without pay deductions) + adjustments
+                                    $semiMonthlySalary = $payroll->employee->salary / 2;
+                                    $deductions = $payroll->late_deduction + $payroll->undertime_deduction;
+                                    
+                                    // Calculate deduction for unpaid leave hours if present
+                                    $unpaidLeaveDeduction = 0;
+                                    if(isset($payroll->unpaid_leave_hours) && $payroll->unpaid_leave_hours > 0) {
+                                        // Calculate daily rate and then deduct based on hours
+                                        $dailyRate = $payroll->employee->salary / 26;
+                                        $hourlyRate = $dailyRate / 8;
+                                        $unpaidLeaveDeduction = $hourlyRate * $payroll->unpaid_leave_hours;
+                                    }
+                                    
+                                    // Add adjustments if present
+                                    $adjustments = $payroll->other_adjustments ?? 0;
+                                    
+                                    // Calculate total basic pay
+                                    $totalBasicPay = $semiMonthlySalary - $deductions - $unpaidLeaveDeduction + $adjustments;
+                                    
+                                    // Store this value if needed for later calculations
+                                    $payroll->total_basic_pay = $totalBasicPay;
+                                    
+                                    echo number_format($totalBasicPay, 2);
+                                @endphp
+                            </td>
                             <td class="text-center">
                                 @php
                                     if(isset($payroll->overtime_hours)) {
@@ -321,14 +435,37 @@
                                     if ($totalHolidayHours > 0) {
                                         echo number_format($totalHolidayHours, 2);
                                     } else {
-                                        echo '-';
+                                        echo '00:00';
                                     }
                                 @endphp
                             </td>
                             <td class="text-right">{{ isset($payroll->night_premium_hours) ? number_format($payroll->night_premium_hours, 2) : '-' }}</td>
                             <td class="text-right">{{ isset($payroll->allowances) ? number_format($payroll->allowances, 2) : '-' }}</td>
                             <td class="text-right">{{ isset($payroll->other_adjustments) ? number_format($payroll->other_adjustments, 2) : '-' }}</td>
-                            <td class="text-right">{{ isset($payroll->total_gross_pay) ? number_format($payroll->total_gross_pay, 2) : '-' }}</td>
+                            <td class="text-right">
+                                @php
+                                    // Calculate total_gross_pay
+                                    // Formula: total_basic_pay + overtime_pay + holiday_pay + night_premium_pay + allowances + other_adjustments
+                                    
+                                    // Get existing values or default to 0
+                                    $overtimePay = $payroll->overtime_pay ?? 0;
+                                    $holidayPay = $payroll->holiday_pay ?? 0;
+                                    $nightPremiumPay = $payroll->night_premium_pay ?? 0;
+                                    $allowances = $payroll->allowances ?? 0;
+                                    $otherAdjustments = $payroll->other_adjustments ?? 0;
+                                    
+                                    // Get total_basic_pay from previous calculation or from model
+                                    $totalBasicPay = $payroll->total_basic_pay ?? 0;
+                                    
+                                    // Calculate total gross pay
+                                    $totalGrossPay = $totalBasicPay + $overtimePay + $holidayPay + $nightPremiumPay + $allowances + $otherAdjustments;
+                                    
+                                    // Store this value if needed for later calculations
+                                    $payroll->total_gross_pay = $totalGrossPay;
+                                    
+                                    echo number_format($totalGrossPay, 2);
+                                @endphp
+                            </td>
                             <td class="text-right">{{ isset($payroll->sss_contribution) ? number_format($payroll->sss_contribution, 2) : '-' }}</td>
                             <td class="text-right">{{ isset($payroll->employer_sss_contribution) ? number_format($payroll->employer_sss_contribution, 2) : '-' }}</td>
                             <td class="text-right">{{ isset($payroll->pagibig_contribution) ? number_format($payroll->pagibig_contribution, 2) : '-' }}</td>
@@ -340,8 +477,34 @@
                             <td class="text-right">{{ isset($payroll->cash_advance) ? number_format($payroll->cash_advance, 2) : '-' }}</td>
                             <td class="text-right">{{ isset($payroll->cash_bond) ? number_format($payroll->cash_bond, 2) : '-' }}</td>
                             <td class="text-right">{{ isset($payroll->other_deduction) ? number_format($payroll->other_deduction, 2) : '-' }}</td>
-                            <td class="text-right">{{ isset($payroll->tax) ? number_format($payroll->tax, 2) : '-' }}</td>
-                            <td class="text-right">{{ isset($payroll->total_deduction) ? number_format($payroll->total_deduction, 2) : '-' }}</td>
+                            <td class="text-right">{{ isset($payroll->tax) ? number_format($payroll->tax, 2) : '00:00' }}</td>
+                            <td class="text-right">
+                                @php
+                                    // Calculate total_deduction
+                                    // Formula: sss_contribution + pagibig_contribution + philhealth_contribution + sss_loan + pagibig_loan + cash_advance + cash_bond + other_deduction + tax
+                                    
+                                    // Get existing values or default to 0
+                                    $sssContribution = $payroll->sss_contribution ?? 0;
+                                    $pagibigContribution = $payroll->pagibig_contribution ?? 0;
+                                    $philhealthContribution = $payroll->philhealth_contribution ?? 0;
+                                    $sssLoan = $payroll->sss_loan ?? 0;
+                                    $pagibigLoan = $payroll->pagibig_loan ?? 0;
+                                    $cashAdvance = $payroll->cash_advance ?? 0;
+                                    $cashBond = $payroll->cash_bond ?? 0;
+                                    $otherDeduction = $payroll->other_deduction ?? 0;
+                                    $tax = $payroll->tax ?? 0;
+                                    
+                                    // Calculate total deduction
+                                    $totalDeduction = $sssContribution + $pagibigContribution + $philhealthContribution + 
+                                                    $sssLoan + $pagibigLoan + $cashAdvance + $cashBond + 
+                                                    $otherDeduction + $tax;
+                                    
+                                    // Store this value if needed for later calculations
+                                    $payroll->total_deduction = $totalDeduction;
+                                    
+                                    echo number_format($totalDeduction, 2);
+                                @endphp
+                            </td>
                             <td class="text-right font-weight-bold">{{ number_format($payroll->net_salary, 2) }}</td>
                         </tr>
                     @endforeach
@@ -359,7 +522,25 @@
                         </td>
                         <td></td>
                         <td class="text-right font-weight-bold">
-                            {{ number_format($payrolls->sum('total_basic_pay'), 2) }}
+                            @php
+                                $totalBasicPaySum = 0;
+                                foreach ($payrolls as $payroll) {
+                                    $semiMonthlySalary = $payroll->employee->salary / 2;
+                                    $deductions = $payroll->late_deduction + $payroll->undertime_deduction;
+                                    
+                                    // Calculate deduction for unpaid leave hours if present
+                                    $unpaidLeaveDeduction = 0;
+                                    if(isset($payroll->unpaid_leave_hours) && $payroll->unpaid_leave_hours > 0) {
+                                        $dailyRate = $payroll->employee->salary / 26;
+                                        $hourlyRate = $dailyRate / 8;
+                                        $unpaidLeaveDeduction = $hourlyRate * $payroll->unpaid_leave_hours;
+                                    }
+                                    
+                                    $adjustments = $payroll->other_adjustments ?? 0;
+                                    $totalBasicPaySum += ($semiMonthlySalary - $deductions - $unpaidLeaveDeduction + $adjustments);
+                                }
+                                echo number_format($totalBasicPaySum, 2);
+                            @endphp
                         </td>
                         <td></td>
                         <td class="text-right font-weight-bold">
@@ -378,7 +559,36 @@
                             {{ number_format($payrolls->sum('other_adjustments'), 2) }}
                         </td>
                         <td class="text-right font-weight-bold">
-                            {{ number_format($payrolls->sum('total_gross_pay'), 2) }}
+                            @php
+                                $totalGrossPaySum = 0;
+                                foreach ($payrolls as $payroll) {
+                                    // Get values or default to 0
+                                    $semiMonthlySalary = $payroll->employee->salary / 2;
+                                    $deductions = $payroll->late_deduction + $payroll->undertime_deduction;
+                                    
+                                    // Calculate unpaid leave deduction
+                                    $unpaidLeaveDeduction = 0;
+                                    if(isset($payroll->unpaid_leave_hours) && $payroll->unpaid_leave_hours > 0) {
+                                        $dailyRate = $payroll->employee->salary / 26;
+                                        $hourlyRate = $dailyRate / 8;
+                                        $unpaidLeaveDeduction = $hourlyRate * $payroll->unpaid_leave_hours;
+                                    }
+                                    
+                                    // Calculate total basic pay
+                                    $adjustments = $payroll->other_adjustments ?? 0;
+                                    $totalBasicPay = $semiMonthlySalary - $deductions - $unpaidLeaveDeduction + $adjustments;
+                                    
+                                    // Other pay components
+                                    $overtimePay = $payroll->overtime_pay ?? 0;
+                                    $holidayPay = $payroll->holiday_pay ?? 0;
+                                    $nightPremiumPay = $payroll->night_premium_pay ?? 0;
+                                    $allowances = $payroll->allowances ?? 0;
+                                    
+                                    // Sum up total gross pay
+                                    $totalGrossPaySum += ($totalBasicPay + $overtimePay + $holidayPay + $nightPremiumPay + $allowances);
+                                }
+                                echo number_format($totalGrossPaySum, 2);
+                            @endphp
                         </td>
                         <td class="text-right font-weight-bold">
                             {{ number_format($payrolls->sum('sss_contribution'), 2) }}
@@ -417,7 +627,27 @@
                             {{ number_format($payrolls->sum('tax'), 2) }}
                         </td>
                         <td class="text-right font-weight-bold">
-                            {{ number_format($payrolls->sum('total_deduction'), 2) }}
+                            @php
+                                $totalDeductionSum = 0;
+                                foreach ($payrolls as $payroll) {
+                                    // Get values or default to 0
+                                    $sssContribution = $payroll->sss_contribution ?? 0;
+                                    $pagibigContribution = $payroll->pagibig_contribution ?? 0;
+                                    $philhealthContribution = $payroll->philhealth_contribution ?? 0;
+                                    $sssLoan = $payroll->sss_loan ?? 0;
+                                    $pagibigLoan = $payroll->pagibig_loan ?? 0;
+                                    $cashAdvance = $payroll->cash_advance ?? 0;
+                                    $cashBond = $payroll->cash_bond ?? 0;
+                                    $otherDeduction = $payroll->other_deduction ?? 0;
+                                    $tax = $payroll->tax ?? 0;
+                                    
+                                    // Sum up total deductions
+                                    $totalDeductionSum += ($sssContribution + $pagibigContribution + $philhealthContribution + 
+                                                      $sssLoan + $pagibigLoan + $cashAdvance + $cashBond + 
+                                                      $otherDeduction + $tax);
+                                }
+                                echo number_format($totalDeductionSum, 2);
+                            @endphp
                         </td>
                         <td class="text-right font-weight-bold">
                             {{ number_format($payrolls->sum('net_salary'), 2) }}
@@ -447,7 +677,25 @@
                         </td>
                         <td></td>
                         <td class="text-right font-weight-bold">
-                            {{ number_format($payrolls->sum('total_basic_pay'), 2) }}
+                            @php
+                                $totalBasicPaySum = 0;
+                                foreach ($payrolls as $payroll) {
+                                    $semiMonthlySalary = $payroll->employee->salary / 2;
+                                    $deductions = $payroll->late_deduction + $payroll->undertime_deduction;
+                                    
+                                    // Calculate deduction for unpaid leave hours if present
+                                    $unpaidLeaveDeduction = 0;
+                                    if(isset($payroll->unpaid_leave_hours) && $payroll->unpaid_leave_hours > 0) {
+                                        $dailyRate = $payroll->employee->salary / 26;
+                                        $hourlyRate = $dailyRate / 8;
+                                        $unpaidLeaveDeduction = $hourlyRate * $payroll->unpaid_leave_hours;
+                                    }
+                                    
+                                    $adjustments = $payroll->other_adjustments ?? 0;
+                                    $totalBasicPaySum += ($semiMonthlySalary - $deductions - $unpaidLeaveDeduction + $adjustments);
+                                }
+                                echo number_format($totalBasicPaySum, 2);
+                            @endphp
                         </td>
                         <td></td>
                         <td class="text-right font-weight-bold">
@@ -466,7 +714,36 @@
                             {{ number_format($payrolls->sum('other_adjustments'), 2) }}
                         </td>
                         <td class="text-right font-weight-bold">
-                            {{ number_format($payrolls->sum('total_gross_pay'), 2) }}
+                            @php
+                                $totalGrossPaySum = 0;
+                                foreach ($payrolls as $payroll) {
+                                    // Get values or default to 0
+                                    $semiMonthlySalary = $payroll->employee->salary / 2;
+                                    $deductions = $payroll->late_deduction + $payroll->undertime_deduction;
+                                    
+                                    // Calculate unpaid leave deduction
+                                    $unpaidLeaveDeduction = 0;
+                                    if(isset($payroll->unpaid_leave_hours) && $payroll->unpaid_leave_hours > 0) {
+                                        $dailyRate = $payroll->employee->salary / 26;
+                                        $hourlyRate = $dailyRate / 8;
+                                        $unpaidLeaveDeduction = $hourlyRate * $payroll->unpaid_leave_hours;
+                                    }
+                                    
+                                    // Calculate total basic pay
+                                    $adjustments = $payroll->other_adjustments ?? 0;
+                                    $totalBasicPay = $semiMonthlySalary - $deductions - $unpaidLeaveDeduction + $adjustments;
+                                    
+                                    // Other pay components
+                                    $overtimePay = $payroll->overtime_pay ?? 0;
+                                    $holidayPay = $payroll->holiday_pay ?? 0;
+                                    $nightPremiumPay = $payroll->night_premium_pay ?? 0;
+                                    $allowances = $payroll->allowances ?? 0;
+                                    
+                                    // Sum up total gross pay
+                                    $totalGrossPaySum += ($totalBasicPay + $overtimePay + $holidayPay + $nightPremiumPay + $allowances);
+                                }
+                                echo number_format($totalGrossPaySum, 2);
+                            @endphp
                         </td>
                         <td class="text-right font-weight-bold">
                             {{ number_format($payrolls->sum('sss_contribution'), 2) }}
@@ -505,7 +782,27 @@
                             {{ number_format($payrolls->sum('tax'), 2) }}
                         </td>
                         <td class="text-right font-weight-bold">
-                            {{ number_format($payrolls->sum('total_deduction'), 2) }}
+                            @php
+                                $totalDeductionSum = 0;
+                                foreach ($payrolls as $payroll) {
+                                    // Get values or default to 0
+                                    $sssContribution = $payroll->sss_contribution ?? 0;
+                                    $pagibigContribution = $payroll->pagibig_contribution ?? 0;
+                                    $philhealthContribution = $payroll->philhealth_contribution ?? 0;
+                                    $sssLoan = $payroll->sss_loan ?? 0;
+                                    $pagibigLoan = $payroll->pagibig_loan ?? 0;
+                                    $cashAdvance = $payroll->cash_advance ?? 0;
+                                    $cashBond = $payroll->cash_bond ?? 0;
+                                    $otherDeduction = $payroll->other_deduction ?? 0;
+                                    $tax = $payroll->tax ?? 0;
+                                    
+                                    // Sum up total deductions
+                                    $totalDeductionSum += ($sssContribution + $pagibigContribution + $philhealthContribution + 
+                                                      $sssLoan + $pagibigLoan + $cashAdvance + $cashBond + 
+                                                      $otherDeduction + $tax);
+                                }
+                                echo number_format($totalDeductionSum, 2);
+                            @endphp
                         </td>
                         <td class="text-right font-weight-bold">
                             {{ number_format($payrolls->sum('net_salary'), 2) }}
@@ -532,7 +829,21 @@
                         @php
                             $grandBasicTotal = 0;
                             foreach($payrollsByDepartment as $payrolls) {
-                                $grandBasicTotal += $payrolls->sum('total_basic_pay');
+                                foreach ($payrolls as $payroll) {
+                                    $semiMonthlySalary = $payroll->employee->salary / 2;
+                                    $deductions = $payroll->late_deduction + $payroll->undertime_deduction;
+                                    
+                                    // Calculate deduction for unpaid leave hours if present
+                                    $unpaidLeaveDeduction = 0;
+                                    if(isset($payroll->unpaid_leave_hours) && $payroll->unpaid_leave_hours > 0) {
+                                        $dailyRate = $payroll->employee->salary / 26;
+                                        $hourlyRate = $dailyRate / 8;
+                                        $unpaidLeaveDeduction = $hourlyRate * $payroll->unpaid_leave_hours;
+                                    }
+                                    
+                                    $adjustments = $payroll->other_adjustments ?? 0;
+                                    $grandBasicTotal += ($semiMonthlySalary - $deductions - $unpaidLeaveDeduction + $adjustments);
+                                }
                             }
                             echo number_format($grandBasicTotal, 2);
                         @endphp
@@ -578,7 +889,32 @@
                         @php
                             $grandGrossTotal = 0;
                             foreach($payrollsByDepartment as $payrolls) {
-                                $grandGrossTotal += $payrolls->sum('total_gross_pay');
+                                foreach ($payrolls as $payroll) {
+                                    // Get values or default to 0
+                                    $semiMonthlySalary = $payroll->employee->salary / 2;
+                                    $deductions = $payroll->late_deduction + $payroll->undertime_deduction;
+                                    
+                                    // Calculate unpaid leave deduction
+                                    $unpaidLeaveDeduction = 0;
+                                    if(isset($payroll->unpaid_leave_hours) && $payroll->unpaid_leave_hours > 0) {
+                                        $dailyRate = $payroll->employee->salary / 26;
+                                        $hourlyRate = $dailyRate / 8;
+                                        $unpaidLeaveDeduction = $hourlyRate * $payroll->unpaid_leave_hours;
+                                    }
+                                    
+                                    // Calculate total basic pay
+                                    $adjustments = $payroll->other_adjustments ?? 0;
+                                    $totalBasicPay = $semiMonthlySalary - $deductions - $unpaidLeaveDeduction + $adjustments;
+                                    
+                                    // Other pay components
+                                    $overtimePay = $payroll->overtime_pay ?? 0;
+                                    $holidayPay = $payroll->holiday_pay ?? 0;
+                                    $nightPremiumPay = $payroll->night_premium_pay ?? 0;
+                                    $allowances = $payroll->allowances ?? 0;
+                                    
+                                    // Sum up total gross pay
+                                    $grandGrossTotal += ($totalBasicPay + $overtimePay + $holidayPay + $nightPremiumPay + $allowances);
+                                }
                             }
                             echo number_format($grandGrossTotal, 2);
                         @endphp
@@ -695,7 +1031,23 @@
                         @php
                             $grandDeductionTotal = 0;
                             foreach($payrollsByDepartment as $payrolls) {
-                                $grandDeductionTotal += $payrolls->sum('total_deduction');
+                                foreach ($payrolls as $payroll) {
+                                    // Get values or default to 0
+                                    $sssContribution = $payroll->sss_contribution ?? 0;
+                                    $pagibigContribution = $payroll->pagibig_contribution ?? 0;
+                                    $philhealthContribution = $payroll->philhealth_contribution ?? 0;
+                                    $sssLoan = $payroll->sss_loan ?? 0;
+                                    $pagibigLoan = $payroll->pagibig_loan ?? 0;
+                                    $cashAdvance = $payroll->cash_advance ?? 0;
+                                    $cashBond = $payroll->cash_bond ?? 0;
+                                    $otherDeduction = $payroll->other_deduction ?? 0;
+                                    $tax = $payroll->tax ?? 0;
+                                    
+                                    // Sum up total deductions
+                                    $grandDeductionTotal += ($sssContribution + $pagibigContribution + $philhealthContribution + 
+                                                      $sssLoan + $pagibigLoan + $cashAdvance + $cashBond + 
+                                                      $otherDeduction + $tax);
+                                }
                             }
                             echo number_format($grandDeductionTotal, 2);
                         @endphp
@@ -720,7 +1072,7 @@
             <small class="text-muted">Generated on: {{ date('F j, Y g:i A') }}</small>
         </div>
         <div class="col-6 text-right">
-            <small class="text-muted">Page <span class="pageNumber"></span> of <span class="totalPages"></span></small>
+            <small class="text-muted">Page <span class="pageNumber">1</span> of <span class="totalPages">1</span></small>
         </div>
     </div>
     
@@ -728,6 +1080,15 @@
     <script>
         // Auto-trigger print dialog when the page loads in print preview
         window.onload = function() {
+            // Remove all images before printing
+            removeImagesForPrinting();
+            
+            // Hide total rows for printing
+            hideTotalRowsForPrinting();
+            
+            // Set font sizes for printing
+            setFontSizesForPrinting();
+            
             // Set up page numbering
             setupPageNumbering();
             
@@ -743,6 +1104,9 @@
                     // Apply final layout adjustments to match image
                     applyFinalPrintLayout();
                     
+                    // One final check of font sizes before printing
+                    enforceFontSizes();
+                    
                     // Modern browsers print function
                     window.print();
                     
@@ -757,8 +1121,109 @@
             }, 1000); // Increased delay for better compatibility
         };
 
+        // New function to hide all total rows before printing
+        function hideTotalRowsForPrinting() {
+            // Hide department subtotals
+            document.querySelectorAll('.print-department-subtotal').forEach(function(row) {
+                row.style.display = 'none';
+            });
+            
+            // Hide grand totals
+            document.querySelectorAll('.print-grand-total').forEach(function(row) {
+                row.style.display = 'none';
+            });
+            
+            // Don't hide department headers - we need them for identification
+            // document.querySelectorAll('.print-department-header').forEach(function(row) {
+            //     row.style.display = 'none';
+            // });
+            
+            // Hide any row that has "TOTAL" in its text except department headers
+            document.querySelectorAll('tr').forEach(function(row) {
+                if ((row.textContent.includes('TOTAL') || 
+                    row.textContent.includes('Total:') || 
+                    row.classList.contains('all-departments-total')) &&
+                    !row.classList.contains('print-department-header')) {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // New function to remove all images before printing
+        function removeImagesForPrinting() {
+            var images = document.querySelectorAll('img');
+            images.forEach(function(img) {
+                img.style.display = 'none';
+                // Also add a class for easier targeting with CSS
+                img.classList.add('print-hidden');
+            });
+            
+            // Also remove background images
+            var elementsWithBgImage = document.querySelectorAll('[style*="background-image"]');
+            elementsWithBgImage.forEach(function(el) {
+                el.style.backgroundImage = 'none';
+            });
+        }
+
+        // New function to set font sizes for printing
+        function setFontSizesForPrinting() {
+            // Set all td elements to exactly 6pt
+            document.querySelectorAll('.payroll-print-table td').forEach(function(cell) {
+                cell.style.fontSize = '6pt';
+                // Add !important flag via cssText
+                cell.style.cssText += '; font-size: 6pt !important;';
+                // Adjust line height for better readability with small font
+                cell.style.lineHeight = '1.1';
+                // Set font weight for better clarity at small size
+                cell.style.fontWeight = 'normal';
+                // Enhance contrast for better readability
+                cell.style.color = '#000000';
+            });
+            
+            // Set all th elements to 4pt as previously configured
+            document.querySelectorAll('.payroll-print-table th').forEach(function(cell) {
+                cell.style.fontSize = '4pt';
+                // Force center alignment for all headers
+                cell.style.textAlign = 'center';
+                cell.style.cssText += '; text-align: center !important;';
+            });
+        }
+
+        // New function to enforce font sizes right before printing
+        function enforceFontSizes() {
+            // Apply important styles directly to elements
+            document.querySelectorAll('.payroll-print-table td').forEach(function(cell) {
+                cell.style.setProperty('font-size', '6pt', 'important');
+                cell.style.setProperty('line-height', '1.1', 'important');
+            });
+            
+            // Add a final style block to force font sizes
+            var style = document.createElement('style');
+            style.innerHTML = `
+                @media print {
+                    .payroll-print-table td {
+                        font-size: 6pt !important;
+                        line-height: 1.1 !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         // Function to adjust table layout similar to the image
         function adjustTableForPrinting() {
+            // Calculate and apply scaling to fit the table within page width
+            var table = document.querySelector('.payroll-print-table');
+            if (table) {
+                // Fix overall table width to match image
+                table.style.width = '100%';
+                table.style.maxWidth = '100%';
+                table.style.tableLayout = 'auto';
+                
+                // Enable auto-fit for table
+                applyTableScaling(table);
+            }
+            
             // Make all empty cells consistent
             var cells = document.querySelectorAll('.payroll-print-table td');
             for (var i = 0; i < cells.length; i++) {
@@ -768,57 +1233,23 @@
                 }
                 
                 // Ensure all cells have consistent height
-                cells[i].style.height = '22px';
+                cells[i].style.height = '18px'; // Slightly reduced for smaller font
+                
+                // Set font size directly on each cell
+                cells[i].style.fontSize = '6pt';
             }
             
-            // Fix column widths to match the image exactly
-            var columnWidths = [
-                '32px',  // Employee Number
-                '150px', // Employee Name
-                '130px', // Position
-                '50px',  // Semi-Monthly
-                '50px',  // L/UT/LWOP
-                '50px',  // Total BasicPay
-                '50px',  // Overtime
-                '50px',  // Holiday with Pay
-                '50px',  // Night Premiums
-                '50px',  // Allowance
-                '50px',  // Other Adjustments
-                '50px',  // Total Gross Pay
-                '50px',  // SSS Prem EE Share
-                '50px',  // SSS ER
-                '50px',  // Pag-ibig Prem EE Share
-                '50px',  // Pag-ibig ER
-                '50px',  // PHIC Prem EE Share
-                '50px',  // PHIC ER
-                '50px',  // SSS Loan
-                '50px',  // Pag-ibig Loan
-                '50px',  // Cash Advance Salary
-                '50px',  // Cash Bond
-                '50px',  // Other Deduction
-                '50px',  // W/Tax
-                '50px',  // Total Ded.
-                '55px'   // Net Pay
-            ];
-            
-            // Apply column widths to match image layout - both to headers and cells for consistency
+            // Adjust header cells to fit text
             var headerCells = document.querySelectorAll('.payroll-print-table th');
             for (var i = 0; i < headerCells.length; i++) {
-                if (i < columnWidths.length) {
-                    headerCells[i].style.width = columnWidths[i];
-                    headerCells[i].style.maxWidth = columnWidths[i];
-                    headerCells[i].style.minWidth = columnWidths[i];
-                }
-            }
-            
-            // Apply same widths to first row of cells for better column alignment
-            var firstRowCells = document.querySelectorAll('.payroll-print-table tbody tr:first-child td');
-            for (var i = 0; i < firstRowCells.length; i++) {
-                if (i < columnWidths.length) {
-                    firstRowCells[i].style.width = columnWidths[i];
-                    firstRowCells[i].style.maxWidth = columnWidths[i];
-                    firstRowCells[i].style.minWidth = columnWidths[i];
-                }
+                // Remove any fixed width settings
+                headerCells[i].style.width = '';
+                headerCells[i].style.maxWidth = '';
+                headerCells[i].style.minWidth = '';
+                
+                // Ensure text wrapping for header cells
+                headerCells[i].style.whiteSpace = 'normal';
+                headerCells[i].style.wordWrap = 'break-word';
             }
             
             // Ensure proper text alignment in all cells
@@ -834,14 +1265,33 @@
             document.querySelectorAll('.payroll-print-table th').forEach(function(cell) {
                 cell.style.verticalAlign = 'middle';
             });
+        }
+
+        // New function to handle table scaling to fit the page
+        function applyTableScaling(table) {
+            // Get table and page dimensions
+            var tableWidth = table.offsetWidth;
+            var pageWidth = window.innerWidth - 96; // 96px = approximately 1 inch margins
             
-            // Pre-compute table widths for faster rendering
-            var table = document.querySelector('.payroll-print-table');
-            if (table) {
-                // Fix overall table width to match image
-                table.style.width = '100%';
-                table.style.maxWidth = '100%';
-                table.style.tableLayout = 'fixed';
+            // Calculate scale factor if table is wider than page
+            if (tableWidth > pageWidth) {
+                var scaleFactor = pageWidth / tableWidth;
+                
+                // Ensure minimum scale for readability (80% minimum)
+                scaleFactor = Math.max(scaleFactor, 0.8);
+                
+                // Apply scale transform 
+                table.style.transform = 'scale(' + scaleFactor + ')';
+                
+                // Adjust parent container to account for scaling
+                table.style.transformOrigin = 'top left';
+                table.parentNode.style.maxWidth = (tableWidth * scaleFactor) + 'px';
+                
+                // No need to increase font size when scaling down since we want it fixed at 6pt
+                // Just ensure it doesn't go below 6pt
+                document.querySelectorAll('.payroll-print-table td').forEach(function(cell) {
+                    cell.style.setProperty('font-size', '6pt', 'important');
+                });
             }
         }
 
@@ -850,29 +1300,127 @@
             // Force a repaint of the page to fix rendering issues
             document.body.classList.add('ready-to-print');
             
-            // Ensure all table cells are properly measured before printing
-            var cells = document.querySelectorAll('.payroll-print-table td, .payroll-print-table th');
-            for (var i = 0; i < cells.length; i++) {
-                cells[i].style.height = '22px';
-            }
-            
             // Apply legal page size with browser-specific prefixes for better compatibility
             var style = document.createElement('style');
             style.innerHTML = `
                 @page {
                     size: legal landscape;
                     margin: 0.5in;
+                    scale: auto;
                 }
                 @-moz-document url-prefix() {
                     @page {
                         size: legal landscape;
                         margin: 0.5in;
+                        scale: auto;
                     }
                 }
                 @media print and (-webkit-min-device-pixel-ratio:0) {
                     @page {
                         size: legal landscape;
                         margin: 0.5in;
+                        scale: auto;
+                    }
+                }
+                @media print {
+                    /* Hide all images in print */
+                    img, .print-hidden {
+                        display: none !important;
+                    }
+                    
+                    /* Remove all background images */
+                    * {
+                        background-image: none !important;
+                    }
+                    
+                    /* Don't hide department headers but hide other totals */
+                    .print-department-subtotal,
+                    .print-grand-total,
+                    tr[class*="total"],
+                    .all-departments-total {
+                        display: none !important;
+                    }
+                    
+                    /* Ensure department headers are visible with their specific colors */
+                    .print-department-header {
+                        display: table-row !important;
+                        page-break-before: always !important;
+                    }
+                    
+                    .print-department-header[data-department="Support Personnel"] td {
+                        background-color: #e6f2ff !important;
+                    }
+                    
+                    .print-department-header[data-department="BGPDI"] td {
+                        background-color: #e6ffe6 !important;
+                    }
+                    
+                    .print-department-header[data-department="VHI"] td {
+                        background-color: #fff2e6 !important;
+                    }
+                    
+                    .print-department-header[data-department="Marketing Department"] td,
+                    .print-department-header[data-department="Technical Department"] td {
+                        background-color: #ffe6e6 !important;
+                    }
+                    
+                    /* Force exact 6pt font size on all table cells */
+                    .payroll-print-table td {
+                        font-size: 6pt !important;
+                        line-height: 1.1 !important;
+                        min-height: 8pt;
+                    }
+                    
+                    /* Force center alignment on all th elements */
+                    .payroll-print-table th {
+                        text-align: center !important;
+                        vertical-align: middle !important;
+                    }
+                    
+                    /* For WebKit browsers */
+                    @media (-webkit-min-device-pixel-ratio: 0) {
+                        .payroll-print-table td {
+                            font-size: 6pt !important;
+                        }
+                        .payroll-print-table th {
+                            text-align: center !important;
+                        }
+                    }
+                    
+                    /* For Firefox */
+                    @-moz-document url-prefix() {
+                        .payroll-print-table td {
+                            font-size: 6pt !important;
+                        }
+                        .payroll-print-table th {
+                            text-align: center !important;
+                        }
+                    }
+                    
+                    /* For IE */
+                    @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+                        .payroll-print-table td {
+                            font-size: 6pt !important;
+                        }
+                        .payroll-print-table th {
+                            text-align: center !important;
+                        }
+                    }
+                    
+                    .payroll-print-table {
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        transform: scale(1);
+                        transform-origin: top left;
+                        table-layout: auto !important;
+                    }
+                    
+                    /* CSS for Internet Explorer */
+                    @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+                        .payroll-print-table {
+                            width: 100% !important;
+                            zoom: 0.9;
+                        }
                     }
                 }
             `;
@@ -881,23 +1429,45 @@
             
             // Apply print-specific styles to improve reliability
             document.querySelector('.print-content').classList.add('printing-active');
-        }
-        
-        // Setup print mode when document is ready
-        if (document.readyState === 'complete') {
-            setupPrintMode();
-        } else {
-            document.addEventListener('DOMContentLoaded', setupPrintMode);
+            
+            // Add listener for media query to handle print layouts
+            var mediaQueryList = window.matchMedia('print');
+            mediaQueryList.addListener(function(mql) {
+                if (mql.matches) {
+                    // When printing, reapply table scaling
+                    var table = document.querySelector('.payroll-print-table');
+                    if (table) {
+                        applyTableScaling(table);
+                    }
+                }
+            });
         }
         
         // Ensure proper page breaks between departments
         function setupPageBreaks() {
+            // Force page breaks before each department header
+            document.querySelectorAll('.print-department-header').forEach(function(header, index) {
+                if (index > 0) { // Skip the first one
+                    header.style.pageBreakBefore = 'always';
+                    header.style.breakBefore = 'always'; // Modern browsers
+                }
+                
+                // Add a visible separator line
+                var hr = document.createElement('hr');
+                hr.className = 'department-separator';
+                hr.style.borderTop = '2px solid #000';
+                hr.style.margin = '0';
+                hr.style.pageBreakAfter = 'avoid';
+                header.parentNode.insertBefore(hr, header);
+            });
+            
             // Add page break hints before department headers (except the first one)
             var departmentHeaders = document.querySelectorAll('.print-department-header');
             for (var i = 1; i < departmentHeaders.length; i++) { // Skip first header
                 var wrapper = document.createElement('div');
                 wrapper.className = 'suggested-page-break';
                 wrapper.style.pageBreakBefore = 'always';
+                wrapper.style.breakBefore = 'always'; // Modern browsers
                 departmentHeaders[i].parentNode.insertBefore(wrapper, departmentHeaders[i]);
             }
             
@@ -925,73 +1495,165 @@
         function setupPageNumbering() {
             // This script will be executed during printing to add page numbers
             var pageNumScript = document.createElement('script');
-            pageNumScript.innerHTML = `
-                (function() {
-                    // Initialize page counter
-                    var pageNum = 1;
-                    var totalPages = 0;
+            pageNumScript.innerHTML = 
+                "(function() {" +
+                    "// Initialize page counter" +
+                    "var pageNum = 1;" +
+                    "var totalPages = 0;" +
                     
-                    // Calculate total pages (improved method)
-                    function calculateTotalPages() {
-                        // Get the table height
-                        var table = document.querySelector('.payroll-print-table');
-                        if (!table) return 1;
+                    "// Calculate total pages (improved method)" +
+                    "function calculateTotalPages() {" +
+                        "// Get the table height" +
+                        "var table = document.querySelector('.payroll-print-table');" +
+                        "if (!table) return 1;" +
                         
-                        var tableHeight = table.offsetHeight;
+                        "var tableHeight = table.offsetHeight;" +
                         
-                        // Get the effective page height (accounting for headers and footers)
-                        var headerHeight = document.querySelector('.print-company-header') ? 
-                            document.querySelector('.print-company-header').offsetHeight : 0;
-                        var footerHeight = document.querySelector('.footer-section') ?
-                            document.querySelector('.footer-section').offsetHeight : 0;
+                        "// Get the effective page height (accounting for headers and footers)" +
+                        "var headerHeight = document.querySelector('.print-company-header') ? " +
+                            "document.querySelector('.print-company-header').offsetHeight : 0;" +
+                        "var footerHeight = document.querySelector('.footer-section') ?" +
+                            "document.querySelector('.footer-section').offsetHeight : 0;" +
                         
-                        // Calculate effective page height (96px = 1 inch in most browsers)
-                        var pageHeight = window.innerHeight - 96 - headerHeight - footerHeight;
+                        "// Calculate effective page height (96px = 1 inch in most browsers)" +
+                        "var pageHeight = window.innerHeight - 96 - headerHeight - footerHeight;" +
                         
-                        // Calculate pages, with minimum of 1
-                        return Math.max(1, Math.ceil(tableHeight / pageHeight));
-                    }
+                        "// Count department sections as they will each start on a new page" +
+                        "var departmentCount = document.querySelectorAll('.print-department-header').length;" +
+                        
+                        "// Get average rows per department" +
+                        "var totalRows = document.querySelectorAll('.print-employee-row').length;" +
+                        "var avgRowsPerDept = departmentCount > 0 ? Math.ceil(totalRows / departmentCount) : 0;" +
+                        
+                        "// Calculate rows that fit per page" +
+                        "var rowHeight = 22;" + // Height of a typical row in pixels
+                        "var rowsPerPage = Math.floor(pageHeight / rowHeight);" +
+                        
+                        "// Calculate pages needed per department" +
+                        "var pagesPerDept = Math.ceil(avgRowsPerDept / rowsPerPage);" +
+                        
+                        "// Total pages is at least the number of departments" +
+                        "var calculatedPages = Math.max(departmentCount, Math.ceil(tableHeight / pageHeight));" +
+                        
+                        "// Add extra pages for each department that exceeds one page" +
+                        "if (pagesPerDept > 1) {" +
+                            "calculatedPages = departmentCount * pagesPerDept;" +
+                        "}" +
+                        
+                        "// Ensure minimum of 1 page" +
+                        "return Math.max(1, calculatedPages);" +
+                    "}" +
                     
-                    // Update page number on each printed page
-                    window.onbeforeprint = function() {
-                        totalPages = calculateTotalPages();
-                        var pageNumElements = document.querySelectorAll('.pageNumber');
-                        var totalPagesElements = document.querySelectorAll('.totalPages');
+                    "// Update page numbers on each page" +
+                    "function updatePageNumbers() {" +
+                        "totalPages = calculateTotalPages();" +
+                        "var pageNumElements = document.querySelectorAll('.pageNumber');" +
+                        "var totalPagesElements = document.querySelectorAll('.totalPages');" +
                         
-                        for (var i = 0; i < pageNumElements.length; i++) {
-                            pageNumElements[i].textContent = '1';
-                        }
-                        
-                        for (var i = 0; i < totalPagesElements.length; i++) {
-                            totalPagesElements[i].textContent = totalPages.toString();
-                        }
-                    };
+                        "for (var i = 0; i < totalPagesElements.length; i++) {" +
+                            "totalPagesElements[i].textContent = totalPages.toString();" +
+                        "}" +
+                    "}" +
                     
-                    // Use print media change detection for page numbering where supported
-                    if (window.matchMedia) {
-                        var mediaQueryList = window.matchMedia('print');
-                        mediaQueryList.addListener(function(mql) {
-                            if (!mql.matches) {
-                                // Printing finished
-                                pageNum = 1;
-                            }
-                        });
-                    }
-                })();
-            `;
+                    "// Add CSS counter for page numbering" +
+                    "function addPageCounterCSS() {" +
+                        "var style = document.createElement('style');" +
+                        "style.innerHTML = " +
+                            "'@page {" +
+                                "counter-increment: page;" +
+                            "}' +" +
+                            
+                            "'.pageNumber::after {" +
+                                "content: counter(page);" +
+                            "}';" +
+                        "document.head.appendChild(style);" +
+                    "}" +
+                    
+                    "// Update page numbers before printing" +
+                    "window.onbeforeprint = function() {" +
+                        "updatePageNumbers();" +
+                        "addPageCounterCSS();" +
+                    "};" +
+                    
+                    "// Initialize page numbers immediately" +
+                    "updatePageNumbers();" +
+                    
+                    "// Use print media change detection for page numbering where supported" +
+                    "if (window.matchMedia) {" +
+                        "var mediaQueryList = window.matchMedia('print');" +
+                        "mediaQueryList.addListener(function(mql) {" +
+                            "if (!mql.matches) {" +
+                                "// Printing finished" +
+                                "pageNum = 1;" +
+                            "}" +
+                        "});" +
+                    "}" +
+                "})();";
             document.head.appendChild(pageNumScript);
+            
+            // Add CSS for page number styling
+            var pageNumStyle = document.createElement('style');
+            pageNumStyle.innerHTML = 
+                "@media print {" +
+                    "/* Page number display */" +
+                    ".footer-section {" +
+                        "position: fixed;" +
+                        "bottom: 0.3in;" +
+                        "left: 0.5in;" +
+                        "right: 0.5in;" +
+                        "font-size: 8pt;" +
+                        "border-top: 1px solid #ddd;" +
+                        "padding-top: 0.1in;" +
+                        "z-index: 9999;" +
+                    "}" +
+                    
+                    ".pageNumber, .totalPages {" +
+                        "font-weight: bold;" +
+                    "}" +
+                    
+                    "/* Reset page counter for each new department */" +
+                    ".print-department-header {" +
+                        "counter-reset: department-page 0;" +
+                    "}" +
+                    
+                    "/* Department-specific page counter */" +
+                    ".print-department-section {" +
+                        "counter-increment: department-page;" +
+                    "}" +
+                "}";
+            document.head.appendChild(pageNumStyle);
         }
         
         // Apply final layout adjustments to precisely match the image
         function applyFinalPrintLayout() {
             // Set exact font sizes
             document.querySelectorAll('.payroll-print-table th').forEach(function(cell) {
-                cell.style.fontSize = '7pt';
+                cell.style.fontSize = '4pt';
                 cell.style.fontWeight = 'bold';
+                // Ensure center alignment for headers
+                cell.style.setProperty('text-align', 'center', 'important');
+                // Allow text to wrap in headers
+                cell.style.whiteSpace = 'normal';
+                cell.style.wordWrap = 'break-word';
+                cell.style.wordBreak = 'break-word';
+                // Remove any fixed width settings
+                cell.style.width = '';
+                cell.style.maxWidth = '';
+                cell.style.minWidth = '';
             });
             
             document.querySelectorAll('.payroll-print-table td').forEach(function(cell) {
-                cell.style.fontSize = '8pt';
+                // Apply 6pt font size with !important to override any other styles
+                cell.style.setProperty('font-size', '6pt', 'important');
+                // Adjust line height for better readability with small font
+                cell.style.setProperty('line-height', '1.1', 'important');
+                // Ensure text doesn't overflow and is properly visible
+                cell.style.overflow = 'hidden';
+                cell.style.textOverflow = 'ellipsis';
+                // Maintain numerical precision
+                if (cell.classList.contains('text-right')) {
+                    cell.style.fontVariantNumeric = 'tabular-nums';
+                }
             });
             
             // Ensure department headers stand out
@@ -1028,7 +1690,22 @@
             document.querySelectorAll('.payroll-print-table th, .payroll-print-table td').forEach(function(cell) {
                 cell.style.border = '1px solid #000';
             });
+            
+            // Final check to ensure table fits page width and apply scaling if needed
+            var table = document.querySelector('.payroll-print-table');
+            if (table) {
+                table.style.tableLayout = 'auto';
+                applyTableScaling(table);
+            }
         }
+        
+        // Reapply scaling when window is resized (for preview)
+        window.addEventListener('resize', function() {
+            var table = document.querySelector('.payroll-print-table');
+            if (table) {
+                applyTableScaling(table);
+            }
+        });
         
         // Handle print errors with helpful feedback
         function handlePrintError(error) {
@@ -1080,4 +1757,5 @@
             document.body.appendChild(errorMsg);
         }
     </script>
+</div>
 </div>

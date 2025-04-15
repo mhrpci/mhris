@@ -58,6 +58,9 @@
                             <button type="button" class="btn btn-info btn-sm mr-2" id="printBtn">
                                 <i class="fas fa-print"></i> Print
                             </button>
+                            <button type="button" class="btn btn-warning btn-sm mr-2" id="notifyBtn">
+                                <i class="fas fa-bell"></i> Notify
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -300,36 +303,6 @@
                 </div>
             </div>
             <div class="modal-body p-0">
-                <div class="print-controls bg-light p-2 border-bottom d-print-none">
-                    <div class="container-fluid">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <div class="form-inline">
-                                    <label class="mr-2">Department:</label>
-                                    <select class="form-control form-control-sm mr-3" id="printDepartmentFilter">
-                                        <option value="">All Departments</option>
-                                        <option value="BGPDI">BGPDI</option>
-                                        <option value="VHI">VHI</option>
-                                        <option value="Marketing Department">Marketing Department</option>
-                                        <option value="Support Personnel">Support Personnel</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-right">
-                                <button class="btn btn-sm btn-outline-secondary mr-2" id="zoomOutBtn">
-                                    <i class="fas fa-search-minus"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary mr-2" id="zoomInBtn">
-                                    <i class="fas fa-search-plus"></i>
-                                </button>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="showGridlines" checked>
-                                    <label class="form-check-label" for="showGridlines">Show Gridlines</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="print-container" id="printContainer">
                     <!-- Print content will be loaded here -->
                 </div>
@@ -469,6 +442,7 @@
                 setEndDate($('#adjustment_start_date'), $('#adjustment_end_date'));
             }
         });
+
 
         // When period type changes, update end date
         $('#payroll_period_type').change(function() {

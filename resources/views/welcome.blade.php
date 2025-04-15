@@ -403,7 +403,7 @@
                     <h2 class="text-white text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 sm:mb-6">Transforming Industries, Empowering Growth</h2>
                     <p class="text-indigo-100 text-sm xs:text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto md:mx-0">MHR Property Conglomerate Inc. is a diverse business group operating across healthcare, fuel distribution, construction, and hospitality sectors in the Philippines.</p>
                     <div class="bg-white bg-opacity-20 rounded-lg px-6 py-4 inline-block mb-6 sm:mb-8 transform hover:scale-105 transition duration-300 shadow-lg backdrop-blur-sm">
-                        <p class="text-white text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold animate-pulse">Good Success!</p>
+                        <p class="text-white text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold">Good Success!</p>
                     </div>
                     <div class="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4">
                         <a href="#about" class="bg-white text-indigo-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:bg-gray-100 transition duration-300 text-sm sm:text-base">Discover More</a>

@@ -25,6 +25,7 @@ class PagibigController extends Controller
     {
         $employees = Employee::whereNotNull('pagibig_no')
         ->where('employee_status', 'Active')
+        ->whereRaw('DATEDIFF(CURRENT_DATE, date_hired) >= 60')
         ->get();
         return view('pagibig.create', compact('employees'));
     }

@@ -25,6 +25,7 @@ class PhilhealthController extends Controller
     {
         $employees = Employee::whereNotNull('philhealth_no')
         ->where('employee_status', 'Active')
+        ->whereRaw('DATEDIFF(CURRENT_DATE, date_hired) >= 60')
         ->get();
         return view('philhealth.create', compact('employees'));
     }
