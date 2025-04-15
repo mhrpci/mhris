@@ -240,7 +240,13 @@
                         <li class="nav-item">
                             <a href="{{ url('/hirings') }}" class="nav-link {{ Request::is('hirings*', 'all-careers*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-briefcase"></i>
-                                <p>Hiring Management</p>
+                                <p>
+                                    Hiring Management
+                                    @php
+                                        $unreadCareersCount = \App\Models\Career::where('is_read', false)->count();
+                                    @endphp
+                                    <span id="unread-careers-badge" class="badge badge-danger right" style="{{ $unreadCareersCount > 0 ? '' : 'display: none;' }}">{{ $unreadCareersCount }}</span>
+                                </p>
                             </a>
                         </li>
                         @endcan
@@ -332,3 +338,30 @@
             </div>
             <!-- /.sidebar -->
         </aside>
+
+        <script>
+            $(document).ready(function() {
+                // Function to update the unread careers count
+                function updateUnreadCareersCount() {
+                    $.ajax({
+                        url: '{{ route("careers.unread-count") }}',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            var badge = $('#unread-careers-badge');
+                            if (response.count > 0) {
+                                badge.text(response.count).show();
+                            } else {
+                                badge.hide();
+                            }
+                        },
+                        error: function(xhr) {
+                            console.error('Error fetching unread careers count:', xhr.responseText);
+                        }
+                    });
+                }
+                
+                // Update count every 30 seconds
+                setInterval(updateUnreadCareersCount, 30000);
+            });
+        </script>

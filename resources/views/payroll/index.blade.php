@@ -310,6 +310,48 @@
         </div>
     </div>
 </div>
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1" role="dialog" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="notificationModalLabel">
+                    <i class="fas fa-bell"></i> Send Payroll Notification
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="notificationForm">
+                    <div class="form-group">
+                        <label for="notification_period_type">Payroll Period Type</label>
+                        <select class="form-control" id="notification_period_type" required>
+                            <option value="">Select Period Type</option>
+                            <option value="biweekly">BiWeekly (7 days)</option>
+                            <option value="bimonthly">BiMonthly</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notification_start_date">Start Date</label>
+                        <input type="date" class="form-control" id="notification_start_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notification_end_date">End Date</label>
+                        <input type="date" class="form-control" id="notification_end_date" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="sendNotification">
+                    <i class="fas fa-paper-plane"></i> Send Notification
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -459,6 +501,105 @@
         // Show date selection modal when adjustments button is clicked
         $('#printBtn, #payrollPrintBtn').click(function() {
             $('#dateSelectionModalForPrint').modal('show');
+        });
+
+        // Show notification modal when notify button is clicked
+        $('#notifyBtn').click(function() {
+            $('#notificationModal').modal('show');
+        });
+
+        // Handle notification period type change
+        $('#notification_period_type').change(function() {
+            if ($('#notification_start_date').val()) {
+                $('#notification_start_date').trigger('change');
+            }
+        });
+
+        // Set end date for notification start date
+        $('#notification_start_date').change(function() {
+            const periodType = $('#notification_period_type').val();
+            if (periodType === 'biweekly') {
+                // For BiWeekly, set end date to 7 days after start date
+                const startDate = new Date($(this).val());
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6); // 7 days total (start date + 6 days)
+                const formattedEndDate = endDate.toISOString().split('T')[0];
+                $('#notification_end_date').val(formattedEndDate);
+            } else if (periodType === 'bimonthly') {
+                // For BiMonthly, use the existing logic
+                setEndDate($('#notification_start_date'), $('#notification_end_date'));
+            }
+        });
+
+        // Handle send notification button
+        $('#sendNotification').click(function() {
+            const periodType = $('#notification_period_type').val();
+            const startDate = $('#notification_start_date').val();
+            const endDate = $('#notification_end_date').val();
+
+            if (!periodType || !startDate || !endDate) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please select period type and both start and end dates',
+                    background: '#dc3545',
+                    color: '#fff'
+                });
+                return;
+            }
+
+            // Show loading state
+            const $btn = $(this);
+            const originalText = $btn.html();
+            $btn.html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+            $btn.prop('disabled', true);
+
+            // Send notification data to server
+            $.ajax({
+                url: "{{ route('payroll.sendNotification') }}",
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    period_type: periodType,
+                    start_date: startDate,
+                    end_date: endDate
+                },
+                success: function(response) {
+                    // Restore button state
+                    $btn.html(originalText);
+                    $btn.prop('disabled', false);
+                    
+                    // Close modal
+                    $('#notificationModal').modal('hide');
+                    
+                    // Show success message
+                    Swal.fire({
+                        ...toastConfig,
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message || "Notifications sent successfully",
+                        background: '#28a745',
+                        color: '#fff'
+                    });
+                },
+                error: function(xhr) {
+                    // Restore button state
+                    $btn.html(originalText);
+                    $btn.prop('disabled', false);
+                    
+                    // Show error message
+                    Swal.fire({
+                        ...toastConfig,
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON?.message || "Failed to send notifications. Please try again.",
+                        background: '#dc3545',
+                        color: '#fff'
+                    });
+                    
+                    console.error(xhr.responseText);
+                }
+            });
         });
 
         // Handle proceed to adjustments button

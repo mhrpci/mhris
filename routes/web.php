@@ -89,6 +89,7 @@ Route::get('/careers/{slug}', [CareerController::class, 'show'])->name('careers.
 Route::post('/careers/{id}/schedule-interview', [CareerController::class, 'scheduleInterview'])->name('careers.schedule-interview');
 Route::get('/saved-jobs', [CareerController::class, 'savedJobs'])->name('saved.jobs');
 Route::post('/toggle-save-job', [CareerController::class, 'toggleSaveJob'])->name('toggle.save.job');
+Route::get('/careers/unread-count', [CareerController::class, 'getUnreadCount'])->name('careers.unread-count')->middleware(['auth', 'can:hrhiring']);
 
 //GoogleAuth routes
 Route::get('auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('google.login');
@@ -282,6 +283,9 @@ Route::middleware('auth')->group(function () {
     // New printable payroll routes
     Route::get('/payroll/printable-payroll/get', [PayrollController::class, 'getPrintablePayroll'])->name('payroll.getPrintablePayroll');
     Route::get('/payroll/print-preview/get', [PayrollController::class, 'getPrintPreview'])->name('payroll.getPrintPreview');
+
+    // Add route for sending payroll notifications
+    Route::post('/payroll/send-notification', [PayrollController::class, 'sendNotification'])->name('payroll.sendNotification');
 
     // Contributions routes
     Route::get('/contributions-employee/{employee_id}', [ContributionController::class, 'employeeContributions'])->name('contributions.employee');

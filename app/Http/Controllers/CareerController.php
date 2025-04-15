@@ -270,4 +270,15 @@ class CareerController extends Controller
     {
         Mail::to($career->email)->send(new InterviewScheduled($career));
     }
+
+    /**
+     * Get the count of unread career applications.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getUnreadCount()
+    {
+        $count = Career::where('is_read', false)->count();
+        return response()->json(['count' => $count]);
+    }
 }

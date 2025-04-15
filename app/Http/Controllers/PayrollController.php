@@ -669,4 +669,80 @@ class PayrollController extends Controller
                 ->with('error', 'Failed to save adjustments: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Send payroll notifications to employees
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function sendNotification(Request $request)
+    {
+        $request->validate([
+            'period_type' => 'required|in:biweekly,bimonthly',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start_date = Carbon::parse($request->input('start_date'))->startOfDay();
+        $end_date = Carbon::parse($request->input('end_date'))->endOfDay();
+        $period_type = $request->input('period_type');
+
+        // Get payrolls within the date range
+        $query = Payroll::with(['employee'])
+            ->whereBetween('start_date', [$start_date, $end_date])
+            ->orWhereBetween('end_date', [$start_date, $end_date]);
+
+        // Apply period type filtering
+        if ($period_type === 'biweekly') {
+            // For biweekly, typically weekly-paid employees (e.g., BGPDI department)
+            $query->whereHas('employee.department', function ($q) {
+                $q->where('name', 'BGPDI');
+            });
+        } else if ($period_type === 'bimonthly') {
+            // For bimonthly, typically monthly-paid employees (non-BGPDI departments)
+            $query->whereHas('employee.department', function ($q) {
+                $q->where('name', '!=', 'BGPDI');
+            });
+        }
+
+        $payrolls = $query->get();
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($payrolls as $payroll) {
+            if ($payroll->employee && $payroll->employee->email_address) {
+                try {
+                    \Mail::to($payroll->employee->email_address)->send(new \App\Mail\PayrollAvailable([
+                        'employee_name' => $payroll->employee->full_name,
+                        'start_date' => Carbon::parse($payroll->start_date)->format('F d, Y'),
+                        'end_date' => Carbon::parse($payroll->end_date)->format('F d, Y'),
+                        'payroll_type' => ucfirst($period_type)
+                    ]));
+                    $successCount++;
+                } catch (\Exception $e) {
+                    \Log::error("Failed to send payroll notification to {$payroll->employee->email_address}: " . $e->getMessage());
+                    $errorCount++;
+                }
+            } else {
+                // Skip employees without email
+                $errorCount++;
+                if ($payroll->employee) {
+                    \Log::warning("Employee {$payroll->employee->id} has no email address for payroll notification.");
+                } else {
+                    \Log::warning("Payroll {$payroll->id} has no associated employee.");
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Notifications sent to {$successCount} employees. Failed: {$errorCount}.",
+            'data' => [
+                'success_count' => $successCount,
+                'error_count' => $errorCount,
+                'total_payrolls' => $payrolls->count()
+            ]
+        ]);
+    }
 }

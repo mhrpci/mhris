@@ -20,7 +20,13 @@
                 <i class="fas fa-user-tie"></i>
             </div>
             <div class="text-wrapper">
-                <span class="title">Applicants</span>
+                <span class="title">
+                    Applicants
+                    @php
+                        $unreadCareersCount = \App\Models\Career::where('is_read', false)->count();
+                    @endphp
+                    <span id="applicants-unread-badge" class="badge badge-danger" style="{{ $unreadCareersCount > 0 ? '' : 'display: none;' }}">{{ $unreadCareersCount }}</span>
+                </span>
                 <small class="description">Applicants List</small>
             </div>
         </a>
@@ -169,4 +175,31 @@
             box-shadow: 0 0 12px rgba(220, 53, 69, 0.4) !important;
         }
     </style>
+
+    <script>
+        $(document).ready(function() {
+            // Function to update the unread careers count
+            function updateApplicantsUnreadCount() {
+                $.ajax({
+                    url: '{{ route("careers.unread-count") }}',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        var badge = $('#applicants-unread-badge');
+                        if (response.count > 0) {
+                            badge.text(response.count).show();
+                        } else {
+                            badge.hide();
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error fetching unread careers count:', xhr.responseText);
+                    }
+                });
+            }
+            
+            // Update count every 30 seconds
+            setInterval(updateApplicantsUnreadCount, 30000);
+        });
+    </script>
 @endsection
