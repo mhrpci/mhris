@@ -18,23 +18,33 @@
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <table id="posts-table" class="table table-bordered table-hover">
+                    <table id="posts-table" class="table table-bordered table-striped">
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Image</th>
                                 <th>Title</th>
-                                <th>Start Date</th>
-                                <th>End Date</th>
-                                <th>Action</th>
+                                <th>Posted By</th>
+                                <th>Date Start</th>
+                                <th>Date End</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($posts as $post)
                                 <tr>
                                     <td>{{ $post->id }}</td>
+                                    <td>
+                                        @if($post->image_path)
+                                        <img src="{{ asset($post->image_path) }}" alt="Post image" class="img-thumbnail" style="max-width: 100px; max-height: 80px; object-fit: cover;">
+                                        @else
+                                        <span class="text-muted"><i class="far fa-image"></i> No image</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $post->title }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($post->date_start)->format('F j, Y') }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($post->date_end)->format('F j, Y') }}</td>
+                                    <td>{{ $post->user->first_name }} {{ $post->user->last_name }}</td>
+                                    <td>{{ $post->date_start ? $post->date_start->format('M d, Y') : '-' }}</td>
+                                    <td>{{ $post->date_end ? $post->date_end->format('M d, Y') : '-' }}</td>
                                     <td>
                                         <div class="btn-group">
                                             <button post="button" class="btn btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

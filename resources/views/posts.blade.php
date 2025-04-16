@@ -263,7 +263,13 @@
                         <div class="post-content">
                             {{ $post->content }}
                         </div>
-                        <a href="{{ url('/') }}" class="btn btn-primary">Back to Home</a>
+                        <a href="{{ url('/') }}" class="btn btn-primary">
+                            <span class="btn-text">Back to Home</span>
+                            <span class="btn-loader d-none">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Loading...
+                            </span>
+                        </a>
                     </div>
                 </div>
 
@@ -277,7 +283,13 @@
                                     <div class="card-body">
                                         <h5 class="card-title">{{ $relatedPost->title }}</h5>
                                         <p class="card-text">{{ Str::limit($relatedPost->content, 100) }}</p>
-                                        <a href="{{ url('/posts/' . $relatedPost->id) }}" class="btn btn-secondary btn-sm">Read More</a>
+                                        <a href="{{ url('/posts/' . $relatedPost->id) }}" class="btn btn-secondary btn-sm">
+                                            <span class="btn-text">Read More</span>
+                                            <span class="btn-loader d-none">
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                Loading...
+                                            </span>
+                                        </a>
                                     </div>
                                 </div>
                             @endforeach
@@ -321,6 +333,33 @@
                     preloader.style.display = 'none';
                 }, 500);
             }, 1500);
+            
+            // Add loading indicators to buttons
+            document.querySelectorAll('a.btn, button.btn').forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    // Don't show loader for buttons with cancel or data-no-loader attribute
+                    if (button.classList.contains('cancel') || button.hasAttribute('data-no-loader')) {
+                        return;
+                    }
+                    
+                    const btnText = button.querySelector('.btn-text');
+                    const btnLoader = button.querySelector('.btn-loader');
+                    
+                    if (btnText && btnLoader) {
+                        btnText.classList.add('d-none');
+                        btnLoader.classList.remove('d-none');
+                        button.disabled = true;
+                        
+                        // For demonstration, enable the button after 2 seconds
+                        // In a real scenario, this would happen after the AJAX call completes
+                        setTimeout(function() {
+                            btnText.classList.remove('d-none');
+                            btnLoader.classList.add('d-none');
+                            button.disabled = false;
+                        }, 2000);
+                    }
+                });
+            });
         });
     </script>
 </body>

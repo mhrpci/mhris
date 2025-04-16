@@ -41,6 +41,7 @@ use App\Http\Controllers\PagibigLoanController;
 use App\Http\Controllers\EmployeeBirthdayController;
 use App\Http\Controllers\ControllerAnalysisController;
 use App\Http\Controllers\UserActivityController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AccountController;
@@ -57,6 +58,9 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\NightPremiumController;
 use App\Http\Controllers\DatabaseBackupController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReactionController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommentReactionController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -163,6 +167,21 @@ Route::middleware('auth')->group(function () {
     Route::resource('inventory', ItInventoryController::class);
     Route::resource('overtime', OverTimePayController::class);
     Route::resource('posts', PostController::class);
+    
+    // Post reactions and comments routes
+    Route::post('/posts/{post}/reactions', [ReactionController::class, 'store'])->name('posts.reactions.store');
+    Route::delete('/posts/{post}/reactions', [ReactionController::class, 'destroy'])->name('posts.reactions.destroy');
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::get('/posts/{post}/comments', [CommentController::class, 'loadMore'])->name('posts.comments.more');
+    Route::get('/posts/{post}/reactions', [PostController::class, 'getReactionDetails'])->name('posts.reactions.details');
+    Route::get('/posts/{post}/reactions/{type}', [PostController::class, 'getReactionDetails'])->name('posts.reactions.type.details');
+    
+    // Comment reactions routes
+    Route::post('/comments/{comment}/reactions', [CommentReactionController::class, 'store'])->name('comments.reactions.store');
+    Route::delete('/comments/{comment}/reactions', [CommentReactionController::class, 'destroy'])->name('comments.reactions.destroy');
+    
     Route::resource('holidays', HolidayController::class);
     Route::resource('tasks', TaskController::class);
     Route::resource('credentials', CredentialController::class);
@@ -471,5 +490,8 @@ Route::middleware(['auth', 'role:Super Admin'])->group(function () {
     Route::get('/database-backups/download/{filename}', [DatabaseBackupController::class, 'download'])->name('database.backup.download');
     Route::delete('/database-backups/delete/{filename}', [DatabaseBackupController::class, 'delete'])->name('database.backup.delete');
 });
+
+// Search routes
+Route::get('/api/search', [SearchController::class, 'globalSearch'])->name('global.search');
 
 Auth::routes();

@@ -32,12 +32,32 @@
                     <div id="search-popup" class="search-popup" style="display: none;">
                         <div class="search-content">
                             <div class="search-header">
-                                <h5 class="mb-0">Search</h5>
+                                <h5 class="mb-0">Enterprise Search</h5>
                                 <button type="button" class="close" id="search-close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <input type="text" id="search-input" class="form-control" placeholder="Search...">
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="search-input" class="form-control" placeholder="Search employees, leaves, attendance..." autocomplete="off">
+                                <div class="search-shortcuts">
+                                    <span class="badge badge-light">Press <kbd>ESC</kbd> to close</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Search Results Container -->
+                            <div class="search-results-wrapper mt-3">
+                                <div class="loading-spinner text-center" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="search-results">
+                                    <div class="search-categories">
+                                        <!-- Categories will be filled via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </li>
@@ -96,12 +116,20 @@
                         left: 0;
                         width: 100%;
                         height: 100%;
-                        background: rgba(0, 0, 0, 0.5);
+                        background: rgba(9, 30, 66, 0.75);
+                        backdrop-filter: blur(4px);
+                        -webkit-backdrop-filter: blur(4px);
                         z-index: 9999;
                         display: flex;
                         justify-content: center;
                         align-items: flex-start;
-                        padding-top: 100px;
+                        padding-top: 70px;
+                        opacity: 0;
+                        transition: opacity 0.3s cubic-bezier(0.19, 1, 0.22, 1), backdrop-filter 0.3s ease;
+                    }
+                    
+                    .search-popup.visible {
+                        opacity: 1;
                     }
                     
                     /* Notification Dropdown Styles */
@@ -221,601 +249,839 @@
                     }
                     
                     .search-content {
-                        width: 80%;
-                        max-width: 600px;
+                        width: 90%;
+                        max-width: 780px;
                         background: white;
-                        padding: 20px;
-                        border-radius: 8px;
-                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                        animation: slideDown 0.3s ease-out;
+                        padding: 28px;
+                        border-radius: 18px;
+                        box-shadow: 0 10px 50px rgba(9, 30, 66, 0.25), 0 2px 5px rgba(9, 30, 66, 0.1);
+                        transform: translateY(-30px);
+                        opacity: 0;
+                        transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1), 
+                                    opacity 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+                        max-height: 85vh;
+                        overflow-y: auto;
+                        scrollbar-width: thin;
+                        scrollbar-color: #ddd #f8f8f8;
                     }
+                    
+                    .search-content::-webkit-scrollbar {
+                        width: 6px;
+                        height: 6px;
+                    }
+                    
+                    .search-content::-webkit-scrollbar-track {
+                        background: #f8f8f8;
+                        border-radius: 3px;
+                    }
+                    
+                    .search-content::-webkit-scrollbar-thumb {
+                        background-color: #ddd;
+                        border-radius: 3px;
+                    }
+                    
+                    .search-popup.visible .search-content {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                    
                     .search-header {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin-bottom: 15px;
+                        margin-bottom: 22px;
+                        border-bottom: 1px solid #f0f0f0;
+                        padding-bottom: 15px;
                     }
+                    
                     .search-header h5 {
-                        color: #333;
-                        font-weight: 600;
+                        color: #172b4d;
+                        font-weight: 700;
+                        font-size: 1.35rem;
+                        margin: 0;
+                        letter-spacing: -0.015em;
                     }
+                    
                     .search-header .close {
                         background: none;
                         border: none;
-                        font-size: 24px;
-                        color: #666;
+                        font-size: 20px;
+                        color: #5e6c84;
                         cursor: pointer;
                         padding: 0;
                         line-height: 1;
-                        transition: color 0.3s;
+                        width: 36px;
+                        height: 36px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 50%;
+                        transition: all 0.2s ease;
                     }
+                    
                     .search-header .close:hover {
-                        color: #333;
+                        background-color: rgba(9, 30, 66, 0.08);
+                        color: #172b4d;
                     }
-                    @keyframes slideDown {
-                        from {
-                            transform: translateY(-20px);
-                            opacity: 0;
-                        }
-                        to {
-                            transform: translateY(0);
-                            opacity: 1;
-                        }
+
+                    .search-input-wrapper {
+                        position: relative;
+                        margin-bottom: 24px;
                     }
+
+                    .search-icon {
+                        position: absolute;
+                        left: 20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: #5e6c84;
+                        font-size: 16px;
+                        pointer-events: none;
+                    }
+
                     #search-input {
                         width: 100%;
-                        padding: 12px 20px;
-                        font-size: 16px;
-                        border: 2px solid #ddd;
-                        border-radius: 4px;
+                        padding: 16px 20px 16px 52px;
+                        font-size: 17px;
+                        border: 2px solid #dfe1e6;
+                        border-radius: 10px;
                         outline: none;
-                        transition: border-color 0.3s;
+                        transition: all 0.3s;
+                        box-shadow: 0 4px 8px rgba(9, 30, 66, 0.05);
+                        font-weight: 500;
+                        color: #172b4d;
+                        background-color: #fafbfc;
+                        letter-spacing: -0.01em;
                     }
+                    
                     #search-input:focus {
-                        border-color: #007bff;
+                        border-color: #4c9aff;
+                        box-shadow: 0 0 0 2px rgba(76, 154, 255, 0.3);
+                        background-color: #fff;
+                    }
+                    
+                    #search-input::placeholder {
+                        color: #97a0af;
+                        font-weight: 400;
+                    }
+
+                    .search-shortcuts {
+                        position: absolute;
+                        right: 18px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        opacity: 0.7;
+                        transition: opacity 0.2s;
+                    }
+                    
+                    .search-input-wrapper:focus-within .search-shortcuts {
+                        opacity: 1;
+                    }
+
+                    .search-shortcuts kbd {
+                        background: #f4f5f7;
+                        border: 1px solid #dfe1e6;
+                        border-radius: 4px;
+                        box-shadow: 0 1px 1px rgba(9, 30, 66, 0.1);
+                        font-size: 11px;
+                        padding: 3px 6px;
+                        color: #5e6c84;
+                        font-family: 'SFMono-Regular', Consolas, monospace;
+                    }
+
+                    /* Search Results Styles */
+                    .search-results-wrapper {
+                        margin-top: 10px;
+                    }
+                    
+                    .search-category {
+                        margin-bottom: 28px;
+                        background: #fff;
+                        border-radius: 10px;
+                        overflow: hidden;
+                        box-shadow: 0 1px 3px rgba(9, 30, 66, 0.1);
+                        border: 1px solid #f0f0f0;
+                        transition: transform 0.2s ease, box-shadow 0.2s ease;
+                    }
+                    
+                    .search-category:hover {
+                        box-shadow: 0 4px 15px rgba(9, 30, 66, 0.1);
+                    }
+                    
+                    .search-results-items {
+                        max-height: 370px;
+                        overflow-y: auto;
+                        scrollbar-width: thin;
+                        scrollbar-color: #ddd #f8f8f8;
+                    }
+                    
+                    .search-results-items::-webkit-scrollbar {
+                        width: 6px;
+                        height: 6px;
+                    }
+                    
+                    .search-results-items::-webkit-scrollbar-track {
+                        background: #f8f8f8;
+                    }
+                    
+                    .search-results-items::-webkit-scrollbar-thumb {
+                        background-color: #ddd;
+                        border-radius: 4px;
+                    }
+                    
+                    .search-category-title {
+                        font-size: 15px;
+                        font-weight: 600;
+                        color: #172b4d;
+                        padding: 15px 20px;
+                        margin-bottom: 0;
+                        background: #f4f5f7;
+                        border-bottom: 1px solid #dfe1e6;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        position: sticky;
+                        top: 0;
+                        z-index: 2;
+                    }
+                    
+                    .search-category-count {
+                        font-size: 13px;
+                        color: #5e6c84;
+                        background: #fff;
+                        padding: 2px 10px;
+                        border-radius: 20px;
+                        border: 1px solid #dfe1e6;
+                        min-width: 28px;
+                        text-align: center;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: 500;
+                    }
+                    
+                    .search-result-item {
+                        display: flex;
+                        align-items: flex-start;
+                        padding: 16px 20px;
+                        transition: all 0.2s;
+                        text-decoration: none;
+                        color: inherit;
+                        border-bottom: 1px solid #f4f5f7;
+                        position: relative;
+                        overflow: hidden;
+                    }
+                    
+                    .search-result-item:last-child {
+                        border-bottom: none;
+                    }
+                    
+                    .search-result-item:hover {
+                        background-color: #f4f9ff;
+                    }
+                    
+                    .search-result-item:active {
+                        background-color: #e9f2ff;
+                    }
+                    
+                    .search-result-item::after {
+                        content: '\f054';
+                        font-family: 'Font Awesome 5 Free';
+                        font-weight: 900;
+                        position: absolute;
+                        right: 20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: #c1c7d0;
+                        transition: transform 0.2s ease, color 0.2s ease;
+                        font-size: 12px;
+                        opacity: 0.7;
+                    }
+                    
+                    .search-result-item:hover::after {
+                        transform: translate(4px, -50%);
+                        color: #4c9aff;
+                        opacity: 1;
+                    }
+                    
+                    .search-result-icon {
+                        width: 48px;
+                        height: 48px;
+                        border-radius: 50%;
+                        margin-right: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;
+                        font-size: 18px;
+                        color: white;
+                        box-shadow: 0 3px 10px rgba(9, 30, 66, 0.15);
+                        background-position: center;
+                        background-size: cover;
+                        position: relative;
+                        border: 2px solid rgba(255, 255, 255, 0.95);
+                        transition: transform 0.2s ease, box-shadow 0.2s ease;
+                    }
+                    
+                    .search-result-item:hover .search-result-icon {
+                        transform: scale(1.05);
+                        box-shadow: 0 4px 12px rgba(9, 30, 66, 0.2);
+                    }
+                    
+                    .search-result-info {
+                        flex-grow: 1;
+                        min-width: 0; /* Allows text to truncate properly */
+                        padding-right: 25px; /* Space for the arrow */
+                    }
+                    
+                    .search-result-title {
+                        font-weight: 600;
+                        margin-bottom: 5px;
+                        font-size: 16px;
+                        display: flex;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        color: #172b4d;
+                        letter-spacing: -0.01em;
+                    }
+                    
+                    .search-result-subtitle {
+                        color: #42526e;
+                        font-size: 14px;
+                        margin-bottom: 5px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        font-weight: 500;
+                    }
+                    
+                    .search-result-desc {
+                        color: #5e6c84;
+                        font-size: 13px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        margin-bottom: 2px;
+                    }
+                    
+                    .search-result-meta {
+                        margin-top: 8px;
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                    }
+                    
+                    .search-result-meta-item {
+                        font-size: 12px;
+                        color: #5e6c84;
+                        background: #f4f5f7;
+                        padding: 3px 8px;
+                        border-radius: 4px;
+                        white-space: nowrap;
+                        display: inline-flex;
+                        align-items: center;
+                        border: 1px solid #ebecf0;
+                        transition: background-color 0.2s ease, border-color 0.2s ease;
+                    }
+                    
+                    .search-result-item:hover .search-result-meta-item {
+                        background: #e9f2ff;
+                        border-color: #deebff;
+                    }
+                    
+                    .search-result-meta-item i {
+                        margin-right: 5px;
+                        font-size: 11px;
+                        opacity: 0.8;
+                    }
+                    
+                    .search-result-badge {
+                        padding: 3px 10px;
+                        border-radius: 12px;
+                        font-size: 11px;
+                        color: white;
+                        margin-left: 10px;
+                        text-transform: capitalize;
+                        white-space: nowrap;
+                        font-weight: 500;
+                        letter-spacing: 0.01em;
+                        box-shadow: 0 1px 2px rgba(9, 30, 66, 0.1);
+                    }
+                    
+                    .bg-success {
+                        background-color: #36b37e !important;
+                    }
+                    
+                    .bg-danger {
+                        background-color: #ff5630 !important;
+                    }
+                    
+                    .bg-warning {
+                        background-color: #ffab00 !important;
+                        color: #172b4d !important;
+                    }
+                    
+                    .bg-info {
+                        background-color: #0065ff !important;
+                    }
+                    
+                    .bg-primary {
+                        background-color: #0052cc !important;
+                    }
+                    
+                    .bg-secondary {
+                        background-color: #6b778c !important;
+                    }
+                    
+                    .no-results-found {
+                        text-align: center;
+                        padding: 60px 0;
+                        color: #5e6c84;
+                    }
+                    
+                    .no-results-found i {
+                        font-size: 52px;
+                        color: #dfe1e6;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .no-results-found p {
+                        font-size: 18px;
+                        margin-bottom: 10px;
+                        color: #172b4d;
+                        font-weight: 500;
+                    }
+                    
+                    .no-results-found .hint {
+                        font-size: 14px;
+                        color: #5e6c84;
+                        max-width: 400px;
+                        margin: 0 auto;
+                    }
+                    
+                    .search-empty-state {
+                        text-align: center;
+                        padding: 60px 20px;
+                        color: #5e6c84;
+                    }
+                    
+                    .search-empty-state i {
+                        font-size: 60px;
+                        color: #dfe1e6;
+                        margin-bottom: 25px;
+                    }
+                    
+                    .search-empty-state p {
+                        margin-bottom: 10px;
+                        font-size: 20px;
+                        color: #172b4d;
+                        font-weight: 500;
+                    }
+                    
+                    .search-empty-state .hint {
+                        font-size: 15px;
+                        color: #5e6c84;
+                        max-width: 450px;
+                        margin: 0 auto;
+                    }
+                    
+                    .loading-spinner {
+                        padding: 60px 0;
+                    }
+                    
+                    .loading-spinner .spinner-border {
+                        width: 42px;
+                        height: 42px;
+                        color: #0052cc;
+                    }
+                    
+                    .loading-spinner .searching-text {
+                        font-size: 16px;
+                        font-weight: 500;
+                        color: #5e6c84;
+                        margin-top: 15px;
+                    }
+
+                    /* Animated loading dots for "Searching..." text */
+                    .searching-text:after {
+                        content: '...';
+                        animation: dots 1.5s steps(4, end) infinite;
+                        display: inline-block;
+                        width: 20px;
+                        text-align: left;
+                    }
+
+                    @keyframes dots {
+                        0%, 20% { content: '.'; }
+                        40% { content: '..'; }
+                        60% { content: '...'; }
+                        80%, 100% { content: ''; }
+                    }
+                    
+                    /* Mini highlight animation */
+                    @keyframes highlight-pulse {
+                        0% { background-color: rgba(76, 154, 255, 0); }
+                        50% { background-color: rgba(76, 154, 255, 0.15); }
+                        100% { background-color: rgba(76, 154, 255, 0); }
+                    }
+                    
+                    .search-result-highlight {
+                        animation: highlight-pulse 1.5s ease-in-out;
+                    }
+
+                    /* Mobile responsive styles */
+                    @media (max-width: 767px) {
+                        .search-popup {
+                            padding-top: 30px;
+                        }
+                        
+                        .search-content {
+                            width: 95%;
+                            padding: 20px;
+                            max-height: 90vh;
+                            border-radius: 14px;
+                        }
+                        
+                        #search-input {
+                            padding: 14px 15px 14px 45px;
+                            font-size: 16px;
+                        }
+                        
+                        .search-category-title {
+                            font-size: 14px;
+                            padding: 12px 15px;
+                        }
+                        
+                        .search-result-icon {
+                            width: 42px;
+                            height: 42px;
+                            margin-right: 14px;
+                        }
+                        
+                        .search-result-item {
+                            padding: 14px 15px;
+                        }
+                        
+                        .search-header h5 {
+                            font-size: 1.1rem;
+                        }
+                        
+                        .search-shortcuts {
+                            display: none;
+                        }
+                        
+                        .search-result-title {
+                            font-size: 15px;
+                        }
+                        
+                        .search-result-subtitle {
+                            font-size: 13px;
+                        }
+                        
+                        .search-result-meta {
+                            margin-top: 6px;
+                            gap: 6px;
+                        }
+                        
+                        .search-empty-state p,
+                        .no-results-found p {
+                            font-size: 16px;
+                        }
+                    }
+                    
+                    /* Mini tablets and small screens */
+                    @media (min-width: 768px) and (max-width: 991px) {
+                        .search-content {
+                            width: 85%;
+                            max-width: 650px;
+                        }
+                        
+                        .search-result-item::after {
+                            right: 15px;
+                        }
+                    }
+                    
+                    /* Reduced motion preference */
+                    @media (prefers-reduced-motion: reduce) {
+                        .search-content, 
+                        .search-popup,
+                        .search-result-item::after {
+                            transition: none;
+                        }
+                        
+                        .search-result-item:hover .search-result-icon {
+                            transform: none;
+                        }
+                        
+                        .search-result-highlight {
+                            animation: none;
+                        }
                     }
                 </style>
 
                 <script>
                     $(document).ready(function() {
-                        // Show search popup
+                        // Show search popup with animations
                         $('#search-toggle').click(function(e) {
                             e.preventDefault();
-                            $('#search-popup').fadeIn(200);
-                            $('#search-input').focus();
+                            $('#search-popup').css('display', 'flex').addClass('visible');
+                            setTimeout(function() {
+                                $('#search-input').focus();
+                            }, 100);
+                            
+                            // Show empty state initially
+                            showEmptyState();
                         });
 
-                        // Close search popup when clicking close button
+                        // Close search popup with animations
                         $('#search-close').click(function() {
-                            $('#search-popup').fadeOut(200);
+                            closeSearchPopup();
                         });
 
                         // Close search popup when clicking outside
                         $(document).click(function(e) {
-                            if (!$(e.target).closest('#search-popup, #search-toggle').length) {
-                                $('#search-popup').fadeOut(200);
+                            if ($('#search-popup').is(':visible') && !$(e.target).closest('#search-popup, #search-toggle').length) {
+                                closeSearchPopup();
                             }
                         });
+                        
+                        // Function to close search popup with animation
+                        function closeSearchPopup() {
+                            $('#search-popup').removeClass('visible');
+                            setTimeout(function() {
+                                $('#search-popup').css('display', 'none');
+                            }, 300);
+                        }
 
-                        // Handle search input
+                        // Variable to track the timeout for debouncing
+                        let searchTimeout = null;
+                        let lastQuery = '';
+                        
+                        // Handle search input with debounce (250ms for faster responses)
                         $('#search-input').on('keyup', function(e) {
-                            if (e.key === 'Enter') {
-                                const searchTerm = $(this).val();
-                                // Add your search logic here
-                                console.log('Searching for:', searchTerm);
-                                // You can redirect to a search results page or handle the search as needed
+                            const query = $(this).val().trim();
+                            
+                            // Clear any existing timeout
+                            clearTimeout(searchTimeout);
+                            
+                            // If query is empty, show empty state
+                            if (query === '') {
+                                showEmptyState();
+                                return;
                             }
+                            
+                            // Don't search again if query hasn't changed
+                            if (query === lastQuery) {
+                                return;
+                            }
+                            
+                            // Show loading state
+                            showSearchingState(query);
+                            
+                            // Set a new timeout for improved performance
+                            searchTimeout = setTimeout(function() {
+                                lastQuery = query;
+                                performSearch(query);
+                            }, 250);
                         });
 
                         // Close on escape key
                         $(document).keyup(function(e) {
-                            if (e.key === "Escape") {
-                                $('#search-popup').fadeOut(200);
+                            if (e.key === "Escape" && $('#search-popup').is(':visible')) {
+                                closeSearchPopup();
                             }
                         });
                         
-                        // Initialize tooltips with custom configuration
-                        $('[data-tooltip]').tooltip({
-                            trigger: 'hover',
-                            placement: 'bottom',
-                            container: 'body',
-                            boundary: 'window',
-                            title: function() {
-                                return $(this).data('tooltip');
-                            },
-                            delay: {
-                                show: 200,
-                                hide: 0
-                            }
-                        });
-                        
-                        // Notification dropdown functionality
-                        $('.nav-link[data-tooltip="Notifications"]').on('click', function() {
-                            // Here you can add code to fetch real-time notifications
-                            console.log('Fetching notifications...');
-                        });
-                        
-                        // Keep track of the latest notification timestamp
-                        let lastNotificationTimestamp = 0;
-                        
-                        // Initial loading of notifications
-                        loadNotifications();
-                        
-                        // Function to load notifications via AJAX
-                        function loadNotifications() {
-                            $.ajax({
-                                url: '{{ route("notifications.get") }}',
-                                type: 'GET',
-                                dataType: 'json',
-                                success: function(response) {
-                                    // Update notification count
-                                    updateNotificationCount(response.unread_count);
-                                    
-                                    // Update notification content
-                                    renderNotifications(response.notifications);
-                                    
-                                    // Store the timestamp of the latest notification
-                                    if (response.notifications && response.notifications.length > 0) {
-                                        const timestamps = response.notifications.map(n => new Date(n.created_at).getTime() / 1000);
-                                        lastNotificationTimestamp = Math.max(...timestamps);
-                                    }
-                                },
-                                error: function(xhr) {
-                                    console.error('Error loading notifications:', xhr.responseText);
-                                }
-                            });
-                        }
-                        
-                        // Function to update notification count badge
-                        function updateNotificationCount(count) {
-                            const $badge = $('.notification-count');
-                            const $headerCount = $('.dropdown-header');
-                            
-                            if (count > 0) {
-                                $badge.text(count).show();
-                                $headerCount.text(count + ' Notifications');
-                            } else {
-                                $badge.hide();
-                                $headerCount.text('No Notifications');
-                            }
-                        }
-                        
-                        // Function to render notifications in the dropdown
-                        function renderNotifications(notifications) {
-                            const $container = $('.notifications-container');
-                            
-                            // Clear the container
-                            $container.empty();
-                            
-                            if (!notifications || notifications.length === 0) {
-                                $container.html(`
-                                    <div class="empty-notifications text-center p-3">
-                                        <i class="fas fa-bell-slash fa-2x text-muted mb-2"></i>
-                                        <p class="text-muted">No new notifications</p>
-                                    </div>
-                                `);
-                                return;
-                            }
-                            
-                            // Add each notification
-                            notifications.forEach(function(notification, index) {
-                                let iconClass = 'bg-primary';
-                                let iconHtml = `<i class="${notification.icon}"></i>`;
-                                let badgeHtml = '';
-                                
-                                // Set icon and badge based on notification type
-                                if (notification.type.includes('leave')) {
-                                    if (notification.details.status === 'Approved') {
-                                        iconClass = 'bg-success';
-                                        badgeHtml = '<span class="badge badge-success">Approved</span>';
-                                    } else if (notification.details.status === 'Rejected') {
-                                        iconClass = 'bg-danger';
-                                        badgeHtml = '<span class="badge badge-danger">Rejected</span>';
-                                    } else if (notification.type.includes('validated')) {
-                                        iconClass = 'bg-info';
-                                        badgeHtml = '<span class="badge badge-info">Validated</span>';
-                                    } else {
-                                        iconClass = 'bg-warning';
-                                        badgeHtml = '<span class="badge badge-warning">Pending</span>';
-                                    }
-                                } else if (notification.type.includes('cash_advance')) {
-                                    if (notification.details.status === 'Active') {
-                                        iconClass = 'bg-success';
-                                        badgeHtml = '<span class="badge badge-success">Approved</span>';
-                                    } else if (notification.details.status === 'Declined') {
-                                        iconClass = 'bg-danger';
-                                        badgeHtml = '<span class="badge badge-danger">Declined</span>';
-                                    } else {
-                                        iconClass = 'bg-warning';
-                                        badgeHtml = '<span class="badge badge-warning">Pending</span>';
-                                    }
-                                } else if (notification.type.includes('night_premium')) {
-                                    if (notification.details.status === 'Approved') {
-                                        iconClass = 'bg-success';
-                                        badgeHtml = '<span class="badge badge-success">Approved</span>';
-                                    } else if (notification.details.status === 'Rejected') {
-                                        iconClass = 'bg-danger';
-                                        badgeHtml = '<span class="badge badge-danger">Rejected</span>';
-                                    } else {
-                                        iconClass = 'bg-warning';
-                                        badgeHtml = '<span class="badge badge-warning">Pending</span>';
-                                    }
-                                }
-                                
-                                const notificationHtml = `
-                                    <a href="#" class="dropdown-item notification-item unread" data-id="${notification.id}" data-type="${notification.type}">
-                                        <div class="notification-icon ${iconClass}">
-                                            ${iconHtml}
-                                        </div>
-                                        <div class="notification-content">
-                                            <p class="notification-text">${notification.message}</p>
-                                            <p class="notification-time"><i class="far fa-clock mr-1"></i>${timeAgo(notification.created_at)}</p>
-                                        </div>
-                                        <div class="notification-action">
-                                            ${badgeHtml}
-                                        </div>
-                                    </a>
-                                `;
-                                
-                                $container.append(notificationHtml);
-                                
-                                // Add divider if not the last item
-                                if (index < notifications.length - 1) {
-                                    $container.append('<div class="dropdown-divider"></div>');
-                                }
-                            });
-                        }
-                        
-                        // Convert ISO date to "time ago" format
-                        function timeAgo(dateString) {
-                            const date = new Date(dateString);
-                            const now = new Date();
-                            const diffInSeconds = Math.floor((now - date) / 1000);
-                            
-                            if (diffInSeconds < 60) {
-                                return 'just now';
-                            }
-                            
-                            const diffInMinutes = Math.floor(diffInSeconds / 60);
-                            if (diffInMinutes < 60) {
-                                return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-                            }
-                            
-                            const diffInHours = Math.floor(diffInMinutes / 60);
-                            if (diffInHours < 24) {
-                                return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
-                            }
-                            
-                            const diffInDays = Math.floor(diffInHours / 24);
-                            if (diffInDays < 30) {
-                                return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
-                            }
-                            
-                            const diffInMonths = Math.floor(diffInDays / 30);
-                            if (diffInMonths < 12) {
-                                return `${diffInMonths} ${diffInMonths === 1 ? 'month' : 'months'} ago`;
-                            }
-                            
-                            const diffInYears = Math.floor(diffInMonths / 12);
-                            return `${diffInYears} ${diffInYears === 1 ? 'year' : 'years'} ago`;
-                        }
-                        
-                        // Show toast notification
-                        function showToast(type, title, message, icon, details = null) {
-                            // Generate unique ID for the toast
-                            const toastId = 'toast-' + Date.now();
-                            
-                            // Determine toast classes based on type
-                            let bgClass = 'bg-primary';
-                            if (type === 'success') bgClass = 'bg-success';
-                            if (type === 'warning') bgClass = 'bg-warning';
-                            if (type === 'danger') bgClass = 'bg-danger';
-                            if (type === 'info') bgClass = 'bg-info';
-                            
-                            // Create the toast HTML
-                            let toastHtml = `
-                                <div id="${toastId}" class="toast ${bgClass} text-white" role="alert" aria-live="assertive" aria-atomic="true" data-delay="5000">
-                                    <div class="toast-header ${bgClass} text-white">
-                                        <i class="${icon} mr-2"></i>
-                                        <strong class="mr-auto">${title}</strong>
-                                        <small>${timeAgo(new Date())}</small>
-                                        <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="toast-body">
-                                        ${message}
-                            `;
-                            
-                            // Add details if provided
-                            if (details) {
-                                toastHtml += `
-                                    <div class="mt-2 pt-2 border-top">
-                                        <small>${details}</small>
-                                    </div>
-                                `;
-                            }
-                            
-                            // Close the toast body and toast divs
-                            toastHtml += `
-                                    </div>
-                                    <div class="toast-progress"></div>
-                                </div>
-                            `;
-                            
-                            // Append the toast to the container
-                            $('.toast-container').append(toastHtml);
-                            
-                            // Show the toast
-                            $(`#${toastId}`).toast('show');
-                            
-                            // Remove toast when hidden
-                            $(`#${toastId}`).on('hidden.bs.toast', function() {
-                                $(this).remove();
-                            });
-                        }
-                        
-                        // Click handler for marking a notification as read
-                        $(document).on('click', '.notification-item', function(e) {
-                            e.preventDefault();
-                            
-                            const notificationId = $(this).data('id');
-                            const notificationType = $(this).data('type');
-                            
-                            // Make AJAX request to mark notification as read
-                            $.ajax({
-                                url: '{{ route("notifications.mark-read") }}',
-                                type: 'POST',
-                                dataType: 'json',
-                                data: {
-                                    id: notificationId,
-                                    type: notificationType,
-                                    _token: '{{ csrf_token() }}'
-                                },
-                                success: function(response) {
-                                    if (response.success) {
-                                        // Remove the unread class
-                                        $(e.currentTarget).removeClass('unread');
-                                        
-                                        // Update the count
-                                        loadNotifications();
-                                    }
-                                }
-                            });
-                            
-                            // Handle navigation to the related page
-                            let url = '#';
-                            
-                            if (notificationType.includes('leave')) {
-                                const leaveId = notificationId.split('_').pop();
-                                url = '{{ url("/leaves") }}/' + leaveId;
-                            } else if (notificationType.includes('cash_advance')) {
-                                const cashAdvanceId = notificationId.split('_').pop();
-                                url = '{{ url("/cash_advances") }}/' + cashAdvanceId;
-                            } else if (notificationType.includes('overtime')) {
-                                // For overtime notifications, extract the ID
-                                const overtimeId = notificationId.split('_').pop();
-                                // Set route based on user role - we're using a JS variable populated by Blade
-                                const isEmployee = "{{ Auth::user()->hasRole('Employee') ? 'true' : 'false' }}" === "true";
-                                
-                                if (isEmployee) {
-                                    url = "{{ url('/overtime') }}/" + overtimeId;
-                                } else {
-                                    url = "{{ route('overtime.show', ['overtime' => ':id']) }}".replace(':id', overtimeId);
-                                }
-                            } else if (notificationType.includes('night_premium')) {
-                                // For night premium notifications, extract the ID
-                                const nightPremiumId = notificationId.split('_').pop();
-                                // Set route based on user role
-                                const isEmployee = "{{ Auth::user()->hasRole('Employee') ? 'true' : 'false' }}" === "true";
-                                
-                                if (isEmployee) {
-                                    url = "{{ url('/night-premium') }}/" + nightPremiumId;
-                                } else {
-                                    url = "{{ route('night-premium.show', ['night_premium' => ':id']) }}".replace(':id', nightPremiumId);
-                                }
-                            }
-                            
-                            window.location.href = url;
-                        });
-                        
-                        // Mark all as read functionality
-                        $('.mark-all-read').click(function(e) {
-                            e.preventDefault();
-                            e.stopPropagation(); // Prevent dropdown from closing
-                            
-                            $.ajax({
-                                url: '{{ route("notifications.mark-all-read") }}',
-                                type: 'POST',
-                                dataType: 'json',
-                                data: {
-                                    _token: '{{ csrf_token() }}'
-                                },
-                                success: function(response) {
-                                    if (response.success) {
-                                        // Update UI
-                                        $('.notification-count').hide();
-                                        $('.notification-item').removeClass('unread');
-                                        
-                                        // Show success toast
-                                        showToast(
-                                            'success',
-                                            'Success',
-                                            'All notifications marked as read',
-                                            'fas fa-check-circle'
-                                        );
-                                        
-                                        // Reload notifications
-                                        loadNotifications();
-                                    }
-                                },
-                                error: function(xhr) {
-                                    showToast(
-                                        'danger',
-                                        'Error',
-                                        'Failed to mark notifications as read',
-                                        'fas fa-exclamation-circle'
-                                    );
-                                }
-                            });
-                        });
-                        
-                        // Polling for new notifications every 15 seconds
-                        setInterval(function() {
-                            // Check if the document has focus to reduce unnecessary requests when tab is inactive
-                            if (document.hasFocus()) {
+                        // Function to perform search
+                        function performSearch(query) {
                                 $.ajax({
-                                    url: '{{ route("notifications.check-updates") }}',
+                                url: '{{ route("global.search") }}',
                                     type: 'GET',
                                     data: {
-                                        timestamp: lastNotificationTimestamp
+                                    query: query,
+                                    limit: 10 // Show more results per category for better usability
                                     },
                                     dataType: 'json',
                                     success: function(response) {
-                                        if (response.hasUpdates) {
-                                            // Update the notification count
-                                            updateNotificationCount(response.count);
-                                            
-                                            // If there are new notifications, show toast for each (max 3)
-                                            if (response.notifications && response.notifications.length > 0) {
-                                                // Limit to showing 3 notifications max to avoid toast spam
-                                                const notificationsToShow = response.notifications.slice(0, 3);
-                                                
-                                                // Show toast for each new notification
-                                                notificationsToShow.forEach(function(notification) {
-                                                    let toastType = 'info';
-                                                    let toastIcon = notification.icon || 'fas fa-bell';
-                                                    let toastTitle = notification.title || 'Notification';
-                                                    let detailsText = '';
-                                                    
-                                                    // Customize the toast based on notification type
-                                                    if (notification.type.includes('leave')) {
-                                                        if (notification.type.includes('approved')) {
-                                                            toastType = 'success';
-                                                            toastIcon = 'fas fa-check-circle';
-                                                        } else if (notification.type.includes('rejected')) {
-                                                            toastType = 'danger';
-                                                            toastIcon = 'fas fa-times-circle';
-                                                        } else {
-                                                            toastType = 'warning';
-                                                        }
-                                                        
-                                                        // Add details for leave notifications
-                                                        if (notification.details) {
-                                                            detailsText = `
-                                                                ${notification.details.reason ? 'Reason: ' + notification.details.reason : ''}
-                                                                ${notification.details.start_date ? ' • Period: ' + notification.details.start_date : ''}
-                                                                ${notification.details.end_date ? ' to ' + notification.details.end_date : ''}
-                                                            `;
-                                                        }
-                                                    } else if (notification.type.includes('cash_advance')) {
-                                                        if (notification.type.includes('approved')) {
-                                                            toastType = 'success';
-                                                            toastIcon = 'fas fa-check-circle';
-                                                        } else if (notification.type.includes('declined')) {
-                                                            toastType = 'danger';
-                                                            toastIcon = 'fas fa-times-circle';
-                                                        } else {
-                                                            toastType = 'warning';
-                                                        }
-                                                        
-                                                        // Add details for cash advance notifications
-                                                        if (notification.details && notification.details.amount) {
-                                                            detailsText = `Amount: ₱${notification.details.amount.toLocaleString()}`;
-                                                            if (notification.details.reason) {
-                                                                detailsText += ` • Reason: ${notification.details.reason}`;
-                                                            }
-                                                        }
-                                                    } else if (notification.type.includes('night_premium')) {
-                                                        if (notification.type.includes('approved')) {
-                                                            toastType = 'success';
-                                                            toastIcon = 'fas fa-check-circle';
-                                                        } else if (notification.type.includes('rejected')) {
-                                                            toastType = 'danger';
-                                                            toastIcon = 'fas fa-times-circle';
-                                                        } else {
-                                                            toastType = 'warning';
-                                                        }
-                                                        
-                                                        // Add details for night premium notifications
-                                                        if (notification.details) {
-                                                            detailsText = `Date: ${notification.details.date || 'N/A'}`;
-                                                            if (notification.details.night_hours) {
-                                                                detailsText += ` • Hours: ${notification.details.night_hours}`;
-                                                            }
-                                                            if (notification.details.night_premium_pay) {
-                                                                detailsText += ` • Amount: ₱${parseFloat(notification.details.night_premium_pay).toLocaleString()}`;
-                                                            }
-                                                            if (notification.details.reason) {
-                                                                detailsText += ` • Reason: ${notification.details.reason}`;
-                                                            }
-                                                        }
-                                                    }
-                                                    
-                                                    showToast(
-                                                        toastType,
-                                                        toastTitle,
-                                                        notification.message,
-                                                        toastIcon,
-                                                        detailsText
-                                                    );
-                                                });
-                                                
-                                                // If there are more notifications than we showed
-                                                if (response.notifications.length > 3) {
-                                                    const remaining = response.notifications.length - 3;
-                                                    showToast(
-                                                        'info',
-                                                        'More Notifications',
-                                                        `You have ${remaining} more new notification${remaining > 1 ? 's' : ''}`,
-                                                        'fas fa-bell'
-                                                    );
-                                                }
-                                                
-                                                // Reload notifications if dropdown is open
-                                                if ($('.notifications-dropdown').hasClass('show')) {
-                                                    loadNotifications();
-                                                }
-                                            }
-                                            
-                                            // Update the timestamp
-                                            lastNotificationTimestamp = response.timestamp;
-                                            
-                                            // Play notification sound if enabled
-                                            playNotificationSound();
+                                    // Hide loading spinner
+                                    $('.loading-spinner').hide();
+                                    
+                                    if (response.success) {
+                                        const results = response.results;
+                                        
+                                        // Check if we have any results
+                                        if (results.total_count === 0) {
+                                            showNoResults(query);
+                                            return;
                                         }
+                                        
+                                        // Clear previous results
+                                        $('.search-categories').empty();
+                                        
+                                        // Render employees with staggered animation
+                                        if (results.employees && results.employees.length > 0) {
+                                            renderResultsCategory('Employees', results.employees, 'bg-primary', 'fas fa-user');
+                                        }
+                                        
+                                        // Render leaves
+                                        if (results.leaves && results.leaves.length > 0) {
+                                            renderResultsCategory('Leave Requests', results.leaves, 'bg-success', 'fas fa-calendar-alt');
+                                        }
+                                        
+                                        // Render attendance
+                                        if (results.attendances && results.attendances.length > 0) {
+                                            renderResultsCategory('Attendance Records', results.attendances, 'bg-info', 'fas fa-clock');
+                                        }
+                                                        } else {
+                                        showSearchError(response.message || 'An error occurred while searching');
                                     }
-                                });
-                            }
-                        }, 15000);  // Check every 15 seconds
-                        
-                        // Play notification sound
-                        function playNotificationSound() {
-                            // Check if notification sounds are enabled in user preferences
-                            const soundEnabled = localStorage.getItem('notification_sound_enabled') !== 'false';
-                            
-                            if (soundEnabled) {
-                                // Create audio element if it doesn't exist
-                                if (!window.notificationAudio) {
-                                    window.notificationAudio = new Audio('{{ asset("sounds/notification.mp3") }}');
+                                },
+                                error: function(xhr) {
+                                    // Hide loading spinner
+                                    $('.loading-spinner').hide();
+                                    
+                                    showSearchError('An error occurred while searching. Please try again.');
+                                    console.error('Search error:', xhr.responseText);
                                 }
-                                
-                                // Play the sound
-                                window.notificationAudio.play().catch(function(error) {
-                                    // Autoplay might be blocked by browser
-                                    console.log('Could not play notification sound:', error);
-                                });
-                            }
-
+                            });
                         }
                         
-                        // Reload notifications when dropdown is opened
-                        $('#notifications-dropdown-toggle').on('click', function() {
-                            // Only load if dropdown isn't already open
-                            if (!$(this).parent().hasClass('show')) {
-                                loadNotifications();
-                            }
-                        });
+                        // Function to render a category of results
+                        function renderResultsCategory(title, items, iconClass, iconName) {
+                            const $category = $('<div class="search-category"></div>');
+                            const $title = $('<div class="search-category-title"></div>')
+                                .text(title)
+                                .append($('<span class="search-category-count"></span>').text(items.length));
+                            
+                            $category.append($title);
+                            
+                            const $itemsContainer = $('<div class="search-results-items"></div>');
+                            
+                            items.forEach(function(item, index) {
+                                const $item = $('<a></a>')
+                                    .addClass('search-result-item')
+                                    .attr('href', item.url)
+                                    .attr('title', 'View details for ' + item.title);
+                                
+                                // Determine icon and color based on type and status
+                                let icon = iconName;
+                                let bgClass = item.status_color ? 'bg-' + item.status_color : iconClass;
+                                
+                                // Create icon element
+                                let $icon;
+                                if (item.image) {
+                                    $icon = $('<div class="search-result-icon" style="background-image: url(' + item.image + ');"></div>');
+                                                        } else {
+                                    $icon = $('<div class="search-result-icon ' + bgClass + '"><i class="' + icon + '"></i></div>');
+                                }
+                                
+                                // Create status badge if applicable
+                                let statusBadge = '';
+                                if (item.status) {
+                                    const badgeClass = item.status_color ? 'bg-' + item.status_color : 'bg-secondary';
+                                    statusBadge = '<span class="search-result-badge ' + badgeClass + '">' + 
+                                        (item.status.charAt(0).toUpperCase() + item.status.slice(1)) + '</span>';
+                                }
+                                
+                                // Create content
+                                const $content = $('<div class="search-result-info"></div>');
+                                $content.append('<div class="search-result-title">' + item.title + statusBadge + '</div>');
+                                $content.append('<div class="search-result-subtitle">' + item.subtitle + '</div>');
+                                $content.append('<div class="search-result-desc">' + item.description + '</div>');
+                                
+                                // Add metadata if available
+                                if (item.meta) {
+                                    const $meta = $('<div class="search-result-meta"></div>');
+                                    
+                                    if (item.type === 'employee') {
+                                        // Employee-specific metadata
+                                        if (item.meta.company_id) {
+                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-id-badge"></i> ' + item.meta.company_id + '</span>');
+                                        }
+                                        if (item.meta.email) {
+                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-envelope"></i> ' + item.meta.email + '</span>');
+                                        }
+                                        if (item.meta.date_hired) {
+                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-calendar-check"></i> Hired: ' + item.meta.date_hired + '</span>');
+                                        }
+                                    } else if (item.type === 'leave') {
+                                        // Leave-specific metadata
+                                        if (item.meta.days) {
+                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-calendar-day"></i> ' + item.meta.days + ' day(s)</span>');
+                                        }
+                                        if (item.meta.payment_status) {
+                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-money-bill-wave"></i> ' + item.meta.payment_status + '</span>');
+                                        }
+                                    } else if (item.type === 'attendance') {
+                                        // Attendance-specific metadata
+                                        if (item.meta.time_in && item.meta.time_in !== 'N/A') {
+                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-sign-in-alt"></i> In: ' + item.meta.time_in + '</span>');
+                                        }
+                                        if (item.meta.time_out && item.meta.time_out !== 'N/A') {
+                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-sign-out-alt"></i> Out: ' + item.meta.time_out + '</span>');
+                                        }
+                                        if (item.meta.hours_worked) {
+                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-hourglass-half"></i> ' + item.meta.hours_worked + '</span>');
+                                        }
+                                    }
+                                    
+                                    $content.append($meta);
+                                }
+                                
+                                $item.append($icon).append($content);
+                                $itemsContainer.append($item);
+                            });
+                            
+                            $category.append($itemsContainer);
+                            $('.search-categories').append($category);
+                        }
+                        
+                        // Function to show searching state
+                        function showSearchingState(query) {
+                            $('.loading-spinner').show().html(
+                                '<div class="text-center">' +
+                                '<div class="spinner-border text-primary mb-2" role="status">' +
+                                '<span class="sr-only">Loading...</span>' +
+                                '</div>' +
+                                '<p class="searching-text mb-0">Searching</p>' +
+                                '</div>'
+                            );
+                            $('.search-categories').empty();
+                        }
+                        
+                        // Function to show empty state
+                        function showEmptyState() {
+                            $('.loading-spinner').hide();
+                            $('.search-categories').html(
+                                '<div class="search-empty-state">' +
+                                '<i class="fas fa-search"></i>' +
+                                '<p>Start typing to search</p>' +
+                                '<div class="hint">Find employees, leave requests, and attendance records</div>' +
+                                '</div>'
+                            );
+                        }
+                        
+                        // Function to show no results message
+                        function showNoResults(query) {
+                            $('.search-categories').html(
+                                '<div class="no-results-found">' +
+                                '<i class="fas fa-search"></i>' +
+                                '<p>No results found for "' + query + '"</p>' +
+                                '<div class="hint">Try different keywords or check your spelling</div>' +
+                                '</div>'
+                            );
+                        }
+                        
+                        // Function to show search error
+                        function showSearchError(message) {
+                            $('.search-categories').html(
+                                '<div class="no-results-found">' +
+                                '<i class="fas fa-exclamation-circle text-danger"></i>' +
+                                '<p>' + message + '</p>' +
+                                '<div class="hint">Please try again or contact support if the issue persists</div>' +
+                                '</div>'
+                            );
+                        }
                     });
                 </script>
 
