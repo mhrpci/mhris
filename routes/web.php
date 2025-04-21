@@ -61,6 +61,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentReactionController;
+use App\Http\Controllers\GetAppController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -494,5 +496,8 @@ Route::middleware(['auth', 'role:Super Admin'])->group(function () {
 
 // Search routes
 Route::get('/api/search', [SearchController::class, 'globalSearch'])->name('global.search');
+
+// Get the App routes
+Route::get('/get-the-app', [GetAppController::class, 'index'])->name('get-the-app');
 
 Auth::routes();

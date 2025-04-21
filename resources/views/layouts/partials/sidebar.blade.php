@@ -333,6 +333,15 @@
                         </li>
                     </ul>
                     @endcanany
+                    @if(auth()->user()->hasRole('Employee'))
+                    <li class="nav-item">
+                        <a href="{{ url('/get-the-app') }}" class="nav-link {{ Request::is('get-the-app*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-mobile-screen-button"></i>
+                            <p>Get the App</p>
+                        </a>
+                    </li>
+                    @endif
+                    
                 </nav>
                 <!-- /.sidebar-menu -->
             </div>
