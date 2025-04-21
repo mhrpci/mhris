@@ -476,12 +476,12 @@ Route::middleware('auth')->group(function () {
 });
 
 // Route Management routes
-Route::middleware(['auth', 'role:Super Admin'])->prefix('route-management')->name('route-management.')->group(function () {
-    Route::get('/', [RouteManagementController::class, 'index'])->name('index');
-    Route::get('/sync', [RouteManagementController::class, 'sync'])->name('sync');
-    Route::post('/{route}/toggle', [RouteManagementController::class, 'toggleStatus'])->name('toggle');
-    Route::put('/{route}', [RouteManagementController::class, 'update'])->name('update');
-    Route::post('/bulk-toggle', [RouteManagementController::class, 'bulkToggle'])->name('bulk-toggle');
+Route::middleware(['auth', 'role:Super Admin'])->group(function () {
+    Route::get('/route-management', [RouteManagementController::class, 'index'])->name('index');
+    Route::get('/route-management/sync', [RouteManagementController::class, 'sync'])->name('sync');
+    Route::post('/route-management/{route}/toggle', [RouteManagementController::class, 'toggleStatus'])->name('toggle');
+    Route::put('/route-management/{route}', [RouteManagementController::class, 'update'])->name('update');
+    Route::post('/route-management/bulk-toggle', [RouteManagementController::class, 'bulkToggle'])->name('bulk-toggle');
 });
 
 // Database Backup routes
