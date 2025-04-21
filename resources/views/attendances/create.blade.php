@@ -73,7 +73,7 @@
                     <!-- /.card-header -->
                     <div class="card-body">
                         @if (count($errors) > 0)
-                            <div class="alert alert-danger">
+                            <div class="alert alert-danger d-none">
                                 <strong>Whoops!</strong> There were some problems with your input.<br><br>
                                 <ul>
                                     @foreach ($errors->all() as $error)
@@ -83,12 +83,12 @@
                             </div>
                         @endif
                         @if(session('successMessage'))
-                            <div class="alert alert-success">
+                            <div class="alert alert-success d-none">
                                 {{ session('successMessage') }}
                             </div>
                         @endif
                         @if(session('error'))
-                            <div class="alert alert-danger">
+                            <div class="alert alert-danger d-none">
                                 {{ session('error') }}
                             </div>
                         @endif
@@ -115,21 +115,21 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div id="time_in_group" class="form-group" style="display: none;">
+                                        <div id="time_in_group" class="form-group">
                                             <label for="time_in">Time In:</label>
                                             <input type="time" id="time_in" name="time_in" class="form-control">
                                         </div>
-                                        <div id="time_out_group" class="form-group" style="display: none;">
+                                        <div id="time_out_group" class="form-group">
                                             <label for="time_out">Time Out:</label>
                                             <input type="time" id="time_out" name="time_out" class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div id="time_stamp1_group" class="form-group" style="display: none;">
+                                        <div id="time_stamp1_group" class="form-group">
                                             <label for="time_stamp1">Time Stamp (In):</label>
                                             <input type="file" id="time_stamp1" name="time_stamp1" class="form-control" accept="image/*">
                                         </div>
-                                        <div id="time_stamp2_group" class="form-group" style="display: none;">
+                                        <div id="time_stamp2_group" class="form-group">
                                             <label for="time_stamp2">Time Stamp (Out):</label>
                                             <input type="file" id="time_stamp2" name="time_stamp2" class="form-control" accept="image/*">
                                         </div>
@@ -142,6 +142,7 @@
                                     <div class="col-md-6">
                                         <div class="btn-group" role="group" aria-label="Button group">
                                             <button type="submit" class="btn btn-primary">Submit Attendance</button>&nbsp;&nbsp;
+                                            <button type="submit" class="btn btn-success" formaction="{{ route('attendances.storeAndCreateAnother') }}">Save & Create Another</button>&nbsp;&nbsp;
                                             <a href="{{ route('attendances.index') }}" class="btn btn-info">Back</a>
                                         </div>
                                     </div>
@@ -189,30 +190,9 @@
                             text: `This employee has already created attendance for ${dateAttended}.`,
                             confirmButtonText: 'OK'
                         });
-                        return; // Exit the function if attendance is already submitted
                     }
-
-                    // Existing logic for showing/hiding time in/out based on attendance status
-                    if (data.hasTimeIn) {
-                        timeInGroup.style.display = 'none';
-                        timeStamp1Group.style.display = 'none';
-                        if (data.hasTimeOut) {
-                            timeOutGroup.style.display = 'none'; // Time Out already submitted
-                        } else {
-                            timeOutGroup.style.display = 'block'; // Time Out button available
-                        }
-                        timeStamp2Group.style.display = 'block';
-                    } else {
-                        timeInGroup.style.display = 'block';
-                        timeStamp1Group.style.display = 'block';
-                        timeOutGroup.style.display = 'none';
-                        timeStamp2Group.style.display = 'none';
-                    }
-                } else {
-                    timeInGroup.style.display = 'none';
-                    timeOutGroup.style.display = 'none';
-                    timeStamp1Group.style.display = 'none';
-                    timeStamp2Group.style.display = 'none';
+                    // No need to hide/show fields conditionally - all fields are always available 
+                    // for a simple CRUD experience
                 }
             }
 
@@ -241,17 +221,16 @@
                 const response = await fetch(`/check-attendance?employee_id=${employeeId}&date_attended=${dateAttended}`);
                 const data = await response.json();
 
-                // Logic for showing/hiding time in/out based on attendance status
+                // Logic for showing completion message only if both exist
                 if (data.hasTimeIn && data.hasTimeOut) {
-                    document.getElementById('attendance_actions').style.display = 'none';
                     document.getElementById('attendance_submitted').style.display = 'block';
-                } else if (data.hasTimeIn) {
-                    document.getElementById('time_in_group').style.display = 'none';
-                    document.getElementById('time_out_group').style.display = 'block'; // Show Time Out
                 } else {
-                    document.getElementById('time_in_group').style.display = 'block';
-                    document.getElementById('time_out_group').style.display = 'none';
+                    document.getElementById('attendance_submitted').style.display = 'none';
                 }
+                
+                // Always show both time in and time out options for simple CRUD experience
+                document.getElementById('time_in_group').style.display = 'block';
+                document.getElementById('time_out_group').style.display = 'block';
             }
 
             checkAttendance();
@@ -288,13 +267,12 @@
 
             document.getElementById('time_stamp1').addEventListener('change', function(event) {
                 handleImageCapture(event, 'time_in', 'Time In');
-                document.getElementById('time_in_group').style.display = 'none';
-                document.getElementById('time_out_group').style.display = 'none';
+                // Always keep both time fields visible for CRUD operation
             });
 
             document.getElementById('time_stamp2').addEventListener('change', function(event) {
                 handleImageCapture(event, 'time_out', 'Time Out');
-                document.getElementById('time_out_group').style.display = 'none';
+                // Always keep both time fields visible for CRUD operation
             });
 
             // Handle form submission
@@ -312,24 +290,48 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Redirect to the same page
-                        window.location.href = window.location.href;
+                        // Check if the form was submitted with the storeAndCreate action
+                        const formAction = this.action;
+                        const isStoreAndCreate = formAction.includes('store-and-create');
+                        
+                        if (isStoreAndCreate) {
+                            // Reset the form fields
+                            this.reset();
+                            // Show success message as toast
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message || 'Attendance record saved successfully.',
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                        } else {
+                            // Redirect to the same page
+                            window.location.href = window.location.href;
+                        }
                     } else {
                         Swal.fire({
+                            toast: true,
+                            position: 'top-end',
                             icon: 'error',
                             title: 'Submission Failed',
                             text: data.message || 'An error occurred while submitting attendance.',
-                            confirmButtonText: 'OK'
+                            showConfirmButton: false,
+                            timer: 3000
                         });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     Swal.fire({
+                        toast: true,
+                        position: 'top-end',
                         icon: 'error',
                         title: 'Submission Failed',
                         text: 'An unexpected error occurred. Please try again.',
-                        confirmButtonText: 'OK'
+                        showConfirmButton: false,
+                        timer: 3000
                     });
                 });
             });
@@ -360,6 +362,55 @@
                 theme: 'bootstrap4',
                 width: '100%'
             });
+
+            // Display toast notifications for success messages
+            @if (session('success'))
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: "{{ session('success') }}",
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            @endif
+
+            // Display toast notifications for errors
+            @if (session('error'))
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: "{{ session('error') }}",
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            @endif
+
+            // Display toast notifications for validation errors
+            @if (count($errors) > 0)
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please check the form for errors',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            @endif
+
+            // Display toast notification for successMessage
+            @if (session('successMessage'))
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: "{{ session('successMessage') }}",
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            @endif
         });
     </script>
 @stop

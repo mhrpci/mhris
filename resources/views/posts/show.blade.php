@@ -315,24 +315,6 @@
                                                                         <div class="reply-content mt-1">
                                                                             <p class="mb-0">{{ $reply->content }}</p>
                                                                         </div>
-                                                                        <div class="reply-reactions mt-2">
-                                                                            <div class="d-flex align-items-center">
-                                                                                <div class="reaction-icons-sm mr-2">
-                                                                                    <!-- Reaction counts will appear here dynamically -->
-                                                                                </div>
-                                                                                <div class="reaction-buttons-sm">
-                                                                                    <button class="btn btn-sm p-0 comment-reaction-btn" data-type="like" data-comment-id="{{ $reply->id }}">
-                                                                                        <span class="reaction-emoji-sm">👍</span>
-                                                                                    </button>
-                                                                                    <button class="btn btn-sm p-0 ml-1 comment-reaction-btn" data-type="love" data-comment-id="{{ $reply->id }}">
-                                                                                        <span class="reaction-emoji-sm">❤️</span>
-                                                                                    </button>
-                                                                                    <button class="btn btn-sm p-0 ml-1 comment-reaction-btn" data-type="haha" data-comment-id="{{ $reply->id }}">
-                                                                                        <span class="reaction-emoji-sm">😄</span>
-                                                                                    </button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
                                                                     </div>
                                                                     <div class="reply-meta ml-2 mt-1">
                                                                         <small class="text-muted">{{ $reply->created_at->diffForHumans() }}</small>
@@ -359,15 +341,9 @@
                     </div>
                 </div>
                 <div class="card-footer bg-white">
-                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('HR Compliance'))
                     <a href="{{ route('posts.index') }}" class="btn btn-outline-primary">
                         <i class="fas fa-arrow-left mr-1"></i> Back to Posts
                     </a>
-                @else
-                    <a href="{{ route('home') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-arrow-left mr-1"></i> Back to Home
-                    </a>
-                @endif
                 </div>
             </div>
         </div>
@@ -891,116 +867,1370 @@
     .comment-actions .btn:first-child {
         margin-left: 0;
     }
+
+    /* Hide all reaction elements */
+    .comment-reactions, .reply-reactions, 
+    .reaction-icons-sm, .reaction-buttons-sm, 
+    .comment-reaction-btn, .reaction-emoji-sm,
+    .post-reactions {
+        display: none !important;
+    }
+
+    /* Enhanced Comment edit styles */
+    .edit-comment-textarea {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        resize: none; /* Using JS for auto-resize */
+        min-height: 60px;
+        padding: 10px;
+        font-size: 14px;
+        transition: border-color 0.2s ease, height 0.1s ease;
+        overflow: hidden;
+    }
+    
+    .edit-comment-textarea:focus {
+        border-color: #4a76a8;
+        box-shadow: 0 0 0 0.2rem rgba(74, 118, 168, 0.25);
+    }
+    
+    /* Reply edit has smaller text area */
+    .reply .edit-comment-textarea {
+        min-height: 45px;
+        font-size: 13px;
+    }
+    
+    /* Comment fade effect */
+    .comment, .reply {
+        transition: opacity 0.3s ease, background-color 0.3s ease;
+    }
+    
+    /* Comment updated highlight effect */
+    .comment-updated {
+        animation: highlight-comment 2s ease;
+    }
+    
+    @keyframes highlight-comment {
+        0% { background-color: rgba(255, 243, 205, 0); }
+        30% { background-color: rgba(255, 243, 205, 1); }
+        100% { background-color: rgba(255, 243, 205, 0); }
+    }
+    
+    /* Mobile responsiveness improvements */
+    @media (max-width: 576px) {
+        .edit-form .btn {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .edit-comment-textarea {
+            font-size: 13px;
+            padding: 8px;
+        }
+        
+        .char-count {
+            font-size: 10px;
+        }
+    }
+    
+    /* Hide reaction elements */
+    .comment-reactions, .reply-reactions, 
+    .reaction-icons-sm, .reaction-buttons-sm, 
+    .comment-reaction-btn, .post-reactions, 
+    .reaction-emoji-sm { 
+        display: none !important; 
+    }
+
+    /* Professional edit and delete functionality */
+    .toast-container {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        z-index: 9999;
+    }
+    
+    .toast {
+        min-width: 250px;
+        opacity: 1 !important;
+    }
+    
+    /* Enhanced Comment edit styles */
+    .edit-comment-textarea {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        resize: none; /* Using JS for auto-resize */
+        min-height: 60px;
+        padding: 10px;
+        font-size: 14px;
+        transition: border-color 0.2s ease, height 0.1s ease;
+        overflow: hidden;
+    }
+    
+    .edit-comment-textarea:focus {
+        border-color: #4a76a8;
+        box-shadow: 0 0 0 0.2rem rgba(74, 118, 168, 0.25);
+    }
+    
+    /* Reply edit has smaller text area */
+    .reply .edit-comment-textarea {
+        min-height: 45px;
+        font-size: 13px;
+    }
+    
+    /* Comment fade effect */
+    .comment, .reply {
+        transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+    }
+    
+    /* Comment updated highlight effect */
+    .comment-updated {
+        animation: highlight-comment 2s ease;
+    }
+    
+    @keyframes highlight-comment {
+        0% { background-color: rgba(255, 243, 205, 0); }
+        30% { background-color: rgba(255, 243, 205, 1); }
+        100% { background-color: rgba(255, 243, 205, 0); }
+    }
+    
+    /* Edit/Delete Dropdown Styling */
+    .dropdown-menu {
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .dropdown-item {
+        padding: 8px 20px;
+        transition: background-color 0.2s;
+    }
+    
+    .dropdown-item:active {
+        background-color: #f8f9fa;
+        color: inherit;
+    }
+    
+    .dropdown-item.text-danger:hover {
+        background-color: #fff5f5;
+    }
+    
+    .dropdown-item i {
+        width: 20px;
+        text-align: center;
+    }
+    
+    /* Mobile responsiveness improvements */
+    @media (max-width: 576px) {
+        .edit-form .btn {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .edit-comment-textarea {
+            font-size: 13px;
+            padding: 8px;
+        }
+        
+        .char-count {
+            font-size: 10px;
+        }
+        
+        .reply-actions button {
+            padding: 4px !important;
+        }
+        
+        /* Make comment options more touch-friendly on mobile */
+        .comment-header .dropdown-toggle,
+        .reply-header .dropdown-toggle {
+            padding: 8px 5px !important;
+        }
+        
+        .dropdown-item {
+            padding: 10px 20px;
+        }
+    }
+    
+    /* Hide reaction elements */
+    .comment-reactions, .reply-reactions, 
+    .reaction-icons-sm, .reaction-buttons-sm, 
+    .comment-reaction-btn, .post-reactions, 
+    .reaction-emoji-sm { 
+        display: none !important; 
+    }
 </style>
 
 @section('js')
-<script>
-// Store the user data from PHP/Blade in variables first
-var authId = '{{ Auth::check() ? Auth::id() : 0 }}';
-var postUserId = '{{ $post->user_id }}';
-var isAuthor = {{ Auth::check() && Auth::id() == $post->user_id ? 'true' : 'false' }};
-var userInitial = '{{ Auth::check() ? strtoupper(substr(Auth::user()->first_name, 0, 1)) : "U" }}';
+<script id="app-data" type="application/json">
+{
+    "userInitial": "{{ Auth::check() ? strtoupper(substr(Auth::user()->first_name, 0, 1)) : 'U' }}",
+    "isAuthor": {{ Auth::check() && Auth::id() == $post->user_id ? 'true' : 'false' }},
+    "userId": {{ Auth::check() ? Auth::id() : '0' }},
+    "postId": {{ $post->id }}
+}
+</script>
 
-$(document).ready(function() {
-    // Use JavaScript variables from above instead of Blade expressions
-    var userInfo = {
-        authId: authId,
-        postUserId: postUserId,
-        isAuthor: isAuthor,
-        userInitial: userInitial
+<script>
+// Debug helper - log errors to console with context
+function logError(message, error) {
+    console.error(`[COMMENT SYSTEM] ${message}`, error);
+}
+
+// Parse app data with error handling
+let appData = {};
+try {
+    appData = JSON.parse(document.getElementById('app-data').textContent);
+} catch (error) {
+    logError('Failed to parse app data', error);
+    // Provide fallback values with proper JavaScript syntax
+    appData = {
+        userInitial: 'U',
+        isAuthor: false,
+        userId: 0,
+        postId: parseInt("{{ $post->id }}")
     };
+}
+window.appData = appData;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Ensure Bootstrap is available
+    if (typeof bootstrap === 'undefined' && typeof $ === 'undefined') {
+        logError('Bootstrap not found. Some functionality may not work properly.');
+    }
     
-    // Handle comment button click - auto focus comment textarea
-    $('#commentToggleBtn').click(function() {
-        // Scroll to comment form
-        $('html, body').animate({
-            scrollTop: $('.comment-form').offset().top - 100
-        }, 500);
-        
-        // Focus on the comment textarea
-        setTimeout(function() {
-            $('#commentContent').focus();
-        }, 550); // Small delay to ensure animation completes
-        
-        // Expand the textarea if it's not already expanded
-        if ($('#commentContent').height() < 60) {
-            $('#commentContent').animate({ height: '60px' }, 200);
-        }
-    });
-    
-    // Image zoom functionality
-    $('.zoom-image-btn').click(function() {
-        const imgSrc = $(this).data('image');
-        $('#fullImage').attr('src', imgSrc);
-        $('#imageModal').modal('show');
-    });
-    
-    // Add swipe gesture support for image modal on mobile
-    let touchStartX = 0;
-    let touchEndX = 0;
-    
-    $('#imageModal').on('touchstart', function(e) {
-        touchStartX = e.originalEvent.touches[0].clientX;
-    });
-    
-    $('#imageModal').on('touchend', function(e) {
-        touchEndX = e.originalEvent.changedTouches[0].clientX;
-        if (Math.abs(touchStartX - touchEndX) > 50) {
-            $(this).modal('hide');
-        }
-    });
-    
-    // Handle lazy loading images
-    if ('loading' in HTMLImageElement.prototype) {
-        // Browser supports native lazy loading
-    } else {
-        // Fallback for browsers that don't support lazy loading
-        $('img[loading="lazy"]').each(function() {
-            $(this).attr('loading', '');
-            if ($(this).is(':visible') && $(this).offset().top < window.innerHeight + window.scrollY) {
-                $(this).attr('src', $(this).attr('data-src'));
-            }
-        });
-        
-        $(window).on('scroll', function() {
-            $('img[data-src]').each(function() {
-                if ($(this).is(':visible') && $(this).offset().top < window.innerHeight + window.scrollY) {
-                    $(this).attr('src', $(this).attr('data-src'));
-                    $(this).removeAttr('data-src');
-                }
+    // Handle new comment form submission
+    const newCommentForm = document.getElementById('newCommentForm');
+    if (newCommentForm) {
+        newCommentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const postId = this.getAttribute('data-post-id');
+            const content = document.getElementById('commentContent').value;
+            const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            if (!content.trim()) return;
+            
+            // Show loader and disable button
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.querySelector('.comment-btn-text').classList.add('d-none');
+            submitBtn.querySelector('.comment-btn-loader').classList.remove('d-none');
+            
+            // Send AJAX request
+            fetch('/posts/' + postId + '/comments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf
+                },
+                body: JSON.stringify({
+                    content: content,
+                    _token: csrf
+                })
+            })
+            .then(response => response.json())
+            .then(function(response) {
+                // Create new comment HTML and add to top of comments list
+                const commentsSection = document.querySelector('.comments-list');
+                const authorBadge = window.appData.isAuthor ? '<span class="badge badge-pill badge-primary">Author</span>' : '';
+                
+                const commentHtml = 
+                    '<div class="comment mb-3" id="comment-' + response.comment.id + '">' +
+                    '    <div class="d-flex">' +
+                    '        <div class="commenter-avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mr-2" style="min-width: 40px; height: 40px; font-size: 16px;">' +
+                    '            ' + window.appData.userInitial +
+                    '        </div>' +
+                    '        <div class="flex-grow-1">' +
+                    '            <div class="comment-bubble p-3 rounded bg-light">' +
+                    '                <div class="comment-header d-flex justify-content-between">' +
+                    '                    <div class="comment-user">' +
+                    '                        <strong>' + response.user.name + '</strong>' +
+                    '                        ' + authorBadge +
+                    '                    </div>' +
+                    '                    <div class="dropdown">' +
+                    '                        <button class="btn btn-sm p-0 text-muted dropdown-toggle" type="button" id="commentDropdown' + response.comment.id + '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
+                    '                            <i class="fas fa-ellipsis-v"></i>' +
+                    '                        </button>' +
+                    '                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="commentDropdown' + response.comment.id + '">' +
+                    '                            <button class="dropdown-item edit-comment-btn" data-comment-id="' + response.comment.id + '">' +
+                    '                                <i class="fas fa-edit mr-2"></i> Edit' +
+                    '                            </button>' +
+                    '                            <button class="dropdown-item text-danger delete-comment-btn" data-comment-id="' + response.comment.id + '">' +
+                    '                                <i class="fas fa-trash mr-2"></i> Delete' +
+                    '                            </button>' +
+                    '                            <button class="dropdown-item reply-btn" data-comment-id="' + response.comment.id + '">' +
+                    '                                <i class="fas fa-reply mr-2"></i> Reply' +
+                    '                            </button>' +
+                    '                        </div>' +
+                    '                    </div>' +
+                    '                </div>' +
+                    '                <div class="comment-content mt-1">' +
+                    '                    <p class="mb-0">' + response.comment.content + '</p>' +
+                    '                </div>' +
+                    '            </div>' +
+                    '            <div class="comment-actions mt-1 ml-2">' +
+                    '                <small class="text-muted">' + response.created_at_formatted + '</small>' +
+                    '                <button class="btn btn-sm p-0 reply-btn text-muted ml-3" data-comment-id="' + response.comment.id + '">Reply</button>' +
+                    '            </div>' +
+                    '            <div class="reply-form mt-2 d-none ml-4" id="reply-form-' + response.comment.id + '">' +
+                    '                <form class="replyCommentForm d-flex align-items-start" data-post-id="' + window.appData.postId + '" data-parent-id="' + response.comment.id + '">' +
+                    '                    <input type="hidden" name="_token" value="' + csrf + '">' +
+                    '                    <div class="commenter-avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mr-2" style="min-width: 30px; height: 30px; font-size: 14px;">' +
+                    '                        ' + window.appData.userInitial +
+                    '                    </div>' +
+                    '                    <div class="flex-grow-1">' +
+                    '                        <div class="form-group mb-2">' +
+                    '                            <textarea class="form-control rounded-pill bg-light" name="content" rows="1" placeholder="Write a reply..." required></textarea>' +
+                    '                        </div>' +
+                    '                        <div>' +
+                    '                            <button type="submit" class="btn btn-primary btn-sm">' +
+                    '                                <span class="reply-btn-text">Reply</span>' +
+                    '                                <span class="reply-btn-loader d-none">' +
+                    '                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>' +
+                    '                                    Sending...' +
+                    '                                </span>' +
+                    '                            </button>' +
+                    '                            <button type="button" class="btn btn-light btn-sm cancel-reply" data-comment-id="' + response.comment.id + '">Cancel</button>' +
+                    '                        </div>' +
+                    '                    </div>' +
+                    '                </form>' +
+                    '            </div>' +
+                    '        </div>' +
+                    '    </div>' +
+                    '</div>';
+                
+                // Add to DOM
+                commentsSection.insertAdjacentHTML('afterbegin', commentHtml);
+                
+                // Clear form
+                document.getElementById('commentContent').value = '';
+                document.getElementById('commentContent').style.height = '';
+                
+                // Setup new event listeners
+                const newCommentEl = document.getElementById('comment-' + response.comment.id);
+                setupCommentEventListeners(newCommentEl);
+                
+                // Update comment count
+                updateCommentCount(1);
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('There was an error posting your comment. Please try again.');
+            })
+            .finally(function() {
+                // Hide loader and enable button
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.comment-btn-text').classList.remove('d-none');
+                submitBtn.querySelector('.comment-btn-loader').classList.add('d-none');
             });
         });
     }
-    
-    // ... rest of existing code ...
-});
 
-// Handle highlight button clicks (both in dropdown and in actions bar)
-$(document).on('click', '.highlight-comment-btn', function() {
-    const commentId = $(this).data('comment-id');
-    $(`#comment-${commentId}`).toggleClass('highlighted position-relative');
-    
-    // Toggle visual state of highlight buttons for this comment
-    const isHighlighted = $(`#comment-${commentId}`).hasClass('highlighted');
-    if (isHighlighted) {
-        $(this).addClass('text-warning').removeClass('text-muted');
-    } else {
-        $(this).addClass('text-muted').removeClass('text-warning');
+    // Handle reply form submission
+    function setupReplyFormListeners(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var postId = this.getAttribute('data-post-id');
+            var parentId = this.getAttribute('data-parent-id');
+            var content = this.querySelector('textarea').value;
+            var csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            var thisForm = this;
+            
+            if (!content.trim()) return;
+            
+            // Show loader and disable button
+            var submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.querySelector('.reply-btn-text').classList.add('d-none');
+            submitBtn.querySelector('.reply-btn-loader').classList.remove('d-none');
+            
+            // Send AJAX request
+            fetch('/posts/' + postId + '/comments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf
+                },
+                body: JSON.stringify({
+                    content: content,
+                    parent_id: parentId,
+                    _token: csrf
+                })
+            })
+            .then(response => response.json())
+            .then(function(response) {
+                // Hide the reply form
+                document.getElementById('reply-form-' + parentId).classList.add('d-none');
+                
+                // Find or create replies list
+                var repliesList = document.querySelector('#comment-' + parentId + ' .replies-list');
+                if (!repliesList) {
+                    document.querySelector('#comment-' + parentId + ' > .d-flex > .flex-grow-1').insertAdjacentHTML(
+                        'beforeend', 
+                        '<div class="replies-list ml-4 mt-2"><div class="replies-count mb-2"><small class="text-muted font-weight-bold">1 reply</small></div></div>'
+                    );
+                    repliesList = document.querySelector('#comment-' + parentId + ' .replies-list');
+                } else {
+                    // Update reply count
+                    var replyCount = repliesList.querySelector('.replies-count small');
+                    var currentCount = parseInt(replyCount.textContent.split(' ')[0]);
+                    var newCount = currentCount + 1;
+                    replyCount.textContent = newCount + ' ' + (newCount === 1 ? 'reply' : 'replies');
+                }
+                
+                // Create reply HTML
+                var authorBadge = window.appData.isAuthor ? '<span class="badge badge-pill badge-primary">Author</span>' : '';
+                
+                var replyHtml = 
+                    '<div class="reply mb-2" id="comment-' + response.comment.id + '">' +
+                    '    <div class="d-flex">' +
+                    '        <div class="commenter-avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mr-2" style="min-width: 30px; height: 30px; font-size: 14px;">' +
+                    '            ' + window.appData.userInitial +
+                    '        </div>' +
+                    '        <div class="flex-grow-1">' +
+                    '            <div class="reply-bubble p-2 rounded bg-light">' +
+                    '                <div class="reply-header d-flex justify-content-between">' +
+                    '                    <div class="reply-user">' +
+                    '                        <strong>' + response.user.name + '</strong>' +
+                    '                        ' + authorBadge +
+                    '                    </div>' +
+                    '                    <div class="reply-actions">' +
+                    '                        <button class="btn btn-sm p-0 edit-comment-btn text-muted" data-comment-id="' + response.comment.id + '"><i class="fas fa-edit"></i></button>' +
+                    '                        <button class="btn btn-sm p-0 delete-comment-btn text-muted ml-2" data-comment-id="' + response.comment.id + '"><i class="fas fa-trash"></i></button>' +
+                    '                    </div>' +
+                    '                </div>' +
+                    '                <div class="reply-content mt-1">' +
+                    '                    <p class="mb-0">' + response.comment.content + '</p>' +
+                    '                </div>' +
+                    '            </div>' +
+                    '            <div class="reply-meta ml-2 mt-1">' +
+                    '                <small class="text-muted">' + response.created_at_formatted + '</small>' +
+                    '            </div>' +
+                    '        </div>' +
+                    '    </div>' +
+                    '</div>';
+                
+                // Add reply to list
+                repliesList.insertAdjacentHTML('beforeend', replyHtml);
+                
+                // Setup event listeners for the new reply
+                const newReplyEl = document.getElementById('comment-' + response.comment.id);
+                setupCommentEventListeners(newReplyEl);
+                
+                // Clear the form input
+                thisForm.querySelector('textarea').value = '';
+                thisForm.querySelector('textarea').style.height = '';
+                
+                // Update comment count
+                updateCommentCount(1);
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('There was an error posting your reply. Please try again.');
+            })
+            .finally(function() {
+                // Hide loader and enable button
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.reply-btn-text').classList.remove('d-none');
+                submitBtn.querySelector('.reply-btn-loader').classList.add('d-none');
+            });
+        });
     }
-});
 
-// Handle reply buttons
-$(document).on('click', '.reply-btn', function() {
-    const commentId = $(this).data('comment-id');
-    // Hide all other reply forms
-    $('.reply-form').addClass('d-none');
-    // Show this reply form
-    $(`#reply-form-${commentId}`).removeClass('d-none');
+    // Set up event listeners for all reply forms
+    document.querySelectorAll('.replyCommentForm').forEach(function(form) {
+        setupReplyFormListeners(form);
+    });
+
+    // Enhanced edit comment functionality with auto-expanding textarea and character limit
+    function setupEditCommentListeners(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default in case it's a link
+            const commentId = this.getAttribute('data-comment-id');
+            if (!commentId) {
+                logError('Comment ID not found on edit button');
+                return;
+            }
+            
+            const commentEl = document.getElementById('comment-' + commentId);
+            if (!commentEl) {
+                logError('Comment element not found with ID: comment-' + commentId);
+                return;
+            }
+            
+            // Check if this comment is already being edited
+            const existingEditForm = commentEl.querySelector('.edit-form');
+            if (existingEditForm) {
+                return; // Don't create another edit form if one already exists
+            }
+            
+            // Remove any other active edit forms first
+            document.querySelectorAll('.edit-form').forEach(form => {
+                try {
+                    const contentElement = form.closest('.comment, .reply').querySelector('.comment-content p, .reply-content p');
+                    if (contentElement) contentElement.classList.remove('d-none');
+                    form.remove();
+                } catch (error) {
+                    logError('Error cleaning up edit forms', error);
+                }
+            });
+            
+            const contentEl = commentEl.querySelector('.comment-content p, .reply-content p');
+            if (!contentEl) {
+                logError('Content element not found in comment/reply', commentId);
+                return;
+            }
+            
+            const currentContent = contentEl.textContent.trim();
+            const maxLength = 1000; // Max character limit (same as server validation)
+            const isReply = commentEl.classList.contains('reply');
+            
+            try {
+                // Create cleaner, more professional edit form
+                const editFormHtml = 
+                    '<div class="edit-form mt-2">' +
+                    '    <div class="form-group">' +
+                    '        <textarea class="form-control edit-comment-textarea" maxlength="' + maxLength + '" rows="' + (isReply ? '2' : '3') + '" placeholder="Edit your ' + (isReply ? 'reply' : 'comment') + '...">' + currentContent + '</textarea>' +
+                    '        <div class="d-flex justify-content-between mt-1">' +
+                    '            <small class="text-muted">Press Esc to <a href="#" class="cancel-edit-btn" data-comment-id="' + commentId + '">cancel</a>, Enter+Shift to save</small>' +
+                    '            <small class="text-muted char-count">' + currentContent.length + '/' + maxLength + '</small>' +
+                    '        </div>' +
+                    '    </div>' +
+                    '    <div class="d-flex justify-content-end">' +
+                    '        <button type="button" class="btn btn-outline-secondary btn-sm mr-2 cancel-edit-btn" data-comment-id="' + commentId + '">Cancel</button>' +
+                    '        <button type="button" class="btn btn-primary btn-sm save-edit-btn" data-comment-id="' + commentId + '">' +
+                    '            <span class="edit-btn-text">Save Changes</span>' +
+                    '            <span class="edit-btn-loader d-none">' +
+                    '                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>' +
+                    '                Saving...' +
+                    '            </span>' +
+                    '        </button>' +
+                    '    </div>' +
+                    '</div>';
+                
+                // Hide content and show edit form
+                contentEl.classList.add('d-none');
+                contentEl.insertAdjacentHTML('afterend', editFormHtml);
+                
+                // Focus textarea and set cursor at end
+                const textarea = commentEl.querySelector('.edit-comment-textarea');
+                textarea.focus();
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                
+                // Auto-resize textarea as user types
+                function autoResizeTextarea() {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = (textarea.scrollHeight) + 'px';
+                }
+                
+                // Call once to initialize
+                autoResizeTextarea();
+                
+                // Update character count and auto-resize as user types
+                textarea.addEventListener('input', function() {
+                    try {
+                        const charCount = commentEl.querySelector('.char-count');
+                        if (charCount) {
+                            charCount.textContent = this.value.length + '/' + maxLength;
+                            
+                            // Change color when approaching limit
+                            if (this.value.length > maxLength * 0.8) {
+                                charCount.classList.add('text-warning');
+                            } else {
+                                charCount.classList.remove('text-warning');
+                            }
+                        }
+                        
+                        autoResizeTextarea();
+                    } catch (error) {
+                        logError('Error updating character count', error);
+                    }
+                });
+                
+                // Setup keyboard shortcuts (Esc to cancel, Shift+Enter to save)
+                textarea.addEventListener('keydown', function(e) {
+                    // Esc key to cancel
+                    if (e.key === 'Escape') {
+                        contentEl.classList.remove('d-none');
+                        const form = commentEl.querySelector('.edit-form');
+                        if (form) form.remove();
+                    }
+                    
+                    // Shift+Enter to save
+                    if (e.key === 'Enter' && e.shiftKey) {
+                        e.preventDefault();
+                        const saveBtn = commentEl.querySelector('.save-edit-btn');
+                        if (saveBtn) saveBtn.click();
+                    }
+                });
+                
+                // Setup cancel edit button (both link and button)
+                commentEl.querySelectorAll('.cancel-edit-btn').forEach(function(cancelBtn) {
+                    cancelBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        contentEl.classList.remove('d-none');
+                        const form = commentEl.querySelector('.edit-form');
+                        if (form) form.remove();
+                    });
+                });
+                
+                // Setup save edit button
+                const saveBtn = commentEl.querySelector('.save-edit-btn');
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', function() {
+                        const textarea = commentEl.querySelector('.edit-comment-textarea');
+                        if (!textarea) {
+                            logError('Textarea not found for saving');
+                            return;
+                        }
+                        
+                        const newContent = textarea.value.trim();
+                        
+                        if (!newContent) {
+                            showToast('Comment cannot be empty.', 'error');
+                            return;
+                        }
+                        
+                        if (newContent === currentContent) {
+                            // No changes, just cancel edit mode
+                            contentEl.classList.remove('d-none');
+                            const form = commentEl.querySelector('.edit-form');
+                            if (form) form.remove();
+                            return;
+                        }
+                        
+                        if (newContent.length > maxLength) {
+                            showToast(`Text is too long. Maximum ${maxLength} characters allowed.`, 'error');
+                            return;
+                        }
+                        
+                        const csrf = document.querySelector('meta[name="csrf-token"]');
+                        if (!csrf) {
+                            logError('CSRF token not found');
+                            showToast('Security error. Please refresh the page and try again.', 'error');
+                            return;
+                        }
+                        
+                        const csrfToken = csrf.getAttribute('content');
+                        
+                        // Show loader
+                        this.disabled = true;
+                        const textSpan = this.querySelector('.edit-btn-text');
+                        const loaderSpan = this.querySelector('.edit-btn-loader');
+                        if (textSpan) textSpan.classList.add('d-none');
+                        if (loaderSpan) loaderSpan.classList.remove('d-none');
+                        
+                        // Store button reference for error handling
+                        const saveButton = this;
+                        
+                        // Send AJAX request to update comment
+                        fetch('/comments/' + commentId, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                content: newContent,
+                                _token: csrfToken
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                if (response.status === 403) {
+                                    throw new Error('You are not authorized to edit this comment.');
+                                } else if (response.status === 422) {
+                                    return response.json().then(data => {
+                                        throw new Error(data.message || 'Validation error');
+                                    });
+                                } else {
+                                    throw new Error('Failed to update comment');
+                                }
+                            }
+                            return response.json();
+                        })
+                        .then(function(data) {
+                            // Update content
+                            contentEl.textContent = newContent;
+                            
+                            // Show content and remove edit form
+                            contentEl.classList.remove('d-none');
+                            const form = commentEl.querySelector('.edit-form');
+                            if (form) form.remove();
+                            
+                            // Add edited indicator if not already present
+                            const timeEl = commentEl.querySelector('.comment-actions small, .reply-meta small');
+                            if (timeEl && !timeEl.textContent.includes('· Edited')) {
+                                timeEl.textContent = timeEl.textContent + ' · Edited';
+                            }
+                            
+                            // Highlight the updated comment briefly
+                            contentEl.classList.add('comment-updated');
+                            setTimeout(() => {
+                                contentEl.classList.remove('comment-updated');
+                            }, 2000);
+                            
+                            // Show success toast
+                            showToast(isReply ? 'Reply updated successfully' : 'Comment updated successfully', 'success');
+                        })
+                        .catch(function(error) {
+                            logError('Error updating comment:', error);
+                            showToast(error.message || 'Failed to update. Please try again.', 'error');
+                            
+                            // Return to edit mode
+                            saveButton.disabled = false;
+                            if (textSpan) textSpan.classList.remove('d-none');
+                            if (loaderSpan) loaderSpan.classList.add('d-none');
+                        });
+                    });
+                }
+            } catch (error) {
+                logError('Error setting up edit form', error);
+                // Revert the UI to prevent broken state
+                contentEl.classList.remove('d-none');
+                showToast('Error preparing edit form. Please try again.', 'error');
+            }
+        });
+    }
+
+    // Handle delete comment functionality with confirmation modal
+    function setupDeleteCommentListeners(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default in case it's a link
+            
+            const commentId = this.getAttribute('data-comment-id');
+            if (!commentId) {
+                logError('Comment ID not found on delete button');
+                return;
+            }
+            
+            const commentEl = document.getElementById('comment-' + commentId);
+            if (!commentEl) {
+                logError('Comment element not found with ID: comment-' + commentId);
+                return;
+            }
+            
+            const isReply = commentEl.classList.contains('reply');
+            
+            try {
+                // Create and show a professional confirmation modal
+                const modalId = 'deleteConfirmModal-' + Date.now();
+                const modalHtml = `
+                    <div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-labelledby="${modalId}Label" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="${modalId}Label">Confirm Delete</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete this ${isReply ? 'reply' : 'comment'}? This action cannot be undone.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-danger confirm-delete-btn">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Check if any existing modals need to be cleaned up
+                const oldModals = document.querySelectorAll('.modal[id^="deleteConfirmModal-"]');
+                oldModals.forEach(modal => {
+                    try {
+                        if (typeof $ !== 'undefined') {
+                            $(modal).modal('hide');
+                        }
+                        setTimeout(() => {
+                            if (document.body.contains(modal)) {
+                                modal.remove();
+                            }
+                        }, 300);
+                    } catch (error) {
+                        logError('Error cleaning up old modals', error);
+                    }
+                });
+                
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                const modal = document.getElementById(modalId);
+                if (!modal) {
+                    logError('Modal element not found after creation');
+                    return;
+                }
+                
+                // Show the modal - check if we should use jQuery or Bootstrap
+                if (typeof $ !== 'undefined') {
+                    $(modal).modal('show');
+                } else if (typeof bootstrap !== 'undefined') {
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                } else {
+                    logError('Neither jQuery nor Bootstrap found for modal');
+                    modal.classList.add('show');
+                    modal.style.display = 'block';
+                }
+                
+                // Handle delete confirmation
+                const deleteBtn = modal.querySelector('.confirm-delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function() {
+                        const csrf = document.querySelector('meta[name="csrf-token"]');
+                        if (!csrf) {
+                            logError('CSRF token not found');
+                            showToast('Security error. Please refresh the page and try again.', 'error');
+                            return;
+                        }
+                        
+                        const csrfToken = csrf.getAttribute('content');
+                        
+                        // Add loading state to button
+                        this.disabled = true;
+                        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+                        
+                        // Store button reference for error handling
+                        const deleteButton = this;
+                        
+                        // Send AJAX request to delete comment
+                        fetch('/comments/' + commentId, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                if (response.status === 403) {
+                                    throw new Error('You are not authorized to delete this comment.');
+                                } else {
+                                    throw new Error('Failed to delete comment');
+                                }
+                            }
+                            return response.json();
+                        })
+                        .then(function(data) {
+                            // Hide modal
+                            if (typeof $ !== 'undefined') {
+                                $(modal).modal('hide');
+                            } else if (typeof bootstrap !== 'undefined') {
+                                const bsModal = bootstrap.Modal.getInstance(modal);
+                                if (bsModal) {
+                                    bsModal.hide();
+                                } else {
+                                    modal.classList.remove('show');
+                                    modal.style.display = 'none';
+                                }
+                            }
+                            
+                            // Check if this is a reply
+                            if (isReply) {
+                                try {
+                                    // Update reply count
+                                    const parentComment = commentEl.closest('.comment');
+                                    if (parentComment) {
+                                        const repliesList = parentComment.querySelector('.replies-list');
+                                        if (repliesList) {
+                                            const replyCount = repliesList.querySelector('.replies-count small');
+                                            if (replyCount) {
+                                                const currentCount = parseInt(replyCount.textContent.split(' ')[0]);
+                                                const newCount = currentCount - 1;
+                                                
+                                                if (newCount === 0) {
+                                                    // Remove entire replies list if this was the last reply
+                                                    repliesList.remove();
+                                                } else {
+                                                    // Update count text
+                                                    replyCount.textContent = newCount + ' ' + (newCount === 1 ? 'reply' : 'replies');
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (error) {
+                                    logError('Error updating reply count', error);
+                                    // Continue with deletion even if count update fails
+                                }
+                            }
+                            
+                            // Remove comment from DOM with fade effect
+                            commentEl.style.transition = 'opacity 0.3s, transform 0.3s';
+                            commentEl.style.opacity = '0';
+                            commentEl.style.transform = 'translateX(20px)';
+                            setTimeout(() => {
+                                try {
+                                    commentEl.remove();
+                                } catch (error) {
+                                    logError('Error removing comment element', error);
+                                }
+                                
+                                // Remove modal from DOM after animation completes
+                                setTimeout(() => {
+                                    try {
+                                        if (document.body.contains(modal)) {
+                                            modal.remove();
+                                        }
+                                    } catch (error) {
+                                        logError('Error removing modal element', error);
+                                    }
+                                }, 300);
+                            }, 300);
+                            
+                            // Update comment count
+                            try {
+                                updateCommentCount(-1);
+                            } catch (error) {
+                                logError('Error updating comment count', error);
+                            }
+                            
+                            // Show success toast
+                            showToast(isReply ? 'Reply deleted successfully' : 'Comment deleted successfully', 'success');
+                        })
+                        .catch(function(error) {
+                            logError('Error deleting comment:', error);
+                            
+                            // Reset button state
+                            deleteButton.disabled = false;
+                            deleteButton.textContent = 'Delete';
+                            
+                            // Show error toast
+                            showToast(error.message || 'Failed to delete. Please try again.', 'error');
+                        });
+                    });
+                }
+                
+                // Clean up modal when closed
+                if (typeof $ !== 'undefined') {
+                    $(modal).on('hidden.bs.modal', function() {
+                        try {
+                            // Only remove if not already removed by successful deletion
+                            if (document.body.contains(modal)) {
+                                modal.remove();
+                            }
+                        } catch (error) {
+                            logError('Error removing modal on hide', error);
+                        }
+                    });
+                }
+            } catch (error) {
+                logError('Error setting up delete modal', error);
+                showToast('Error preparing delete confirmation. Please try again.', 'error');
+            }
+        });
+    }
+
+    // Function to update comment count display with error handling
+    function updateCommentCount(increment) {
+        try {
+        var countElement = document.querySelector('.post-comments-summary span');
+        if (countElement) {
+                var currentText = countElement.textContent.trim();
+                var currentCount = parseInt(currentText.split(' ')[0]) || 0;
+                var newCount = Math.max(0, currentCount + increment); // Ensure count doesn't go below 0
+            countElement.textContent = newCount + ' ' + (newCount === 1 ? 'Comment' : 'Comments');
+            }
+        } catch (error) {
+            logError('Error updating comment count', error);
+        }
+    }
+
+    // Function to show toast messages with enhanced error handling
+    function showToast(message, type = 'info') {
+        try {
+            // Check if toast container exists, if not create it
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed bottom-0 right-0 p-3';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+            
+            // Create toast
+            const toastId = 'toast-' + Date.now();
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `toast bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} text-white`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.setAttribute('data-delay', '3000');
+            
+            const icon = type === 'success' ? '<i class="fas fa-check-circle mr-2"></i>' : 
+                        type === 'error' ? '<i class="fas fa-exclamation-circle mr-2"></i>' : 
+                        '<i class="fas fa-info-circle mr-2"></i>';
+            
+            toast.innerHTML = `
+                <div class="toast-header bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} text-white">
+                    ${icon}<strong class="mr-auto">${type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Info'}</strong>
+                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Try Bootstrap 5 approach first
+            try {
+                if (typeof bootstrap !== 'undefined') {
+                    const bsToast = new bootstrap.Toast(document.getElementById(toastId));
+                    bsToast.show();
+                } else if (typeof $ !== 'undefined') {
+                    // Fallback to Bootstrap 4 / jQuery
+                    $(toast).toast('show');
+                } else {
+                    // Manual fallback if Bootstrap isn't available
+                    toast.style.opacity = '1';
+                    setTimeout(() => {
+                        if (document.body.contains(toast)) {
+                            toast.style.opacity = '0';
+                            setTimeout(() => toast.remove(), 300);
+                        }
+                    }, 3000);
+                }
+                
+                // Remove toast when hidden (Bootstrap 5)
+                toast.addEventListener('hidden.bs.toast', function() {
+                    if (document.body.contains(toast)) {
+                        toast.remove();
+                    }
+                });
+                
+                // Also try jQuery method (Bootstrap 4)
+                if (typeof $ !== 'undefined') {
+                    $(toast).on('hidden.bs.toast', function() {
+                        if (document.body.contains(toast)) {
+                            toast.remove();
+                        }
+                    });
+                }
+            } catch (error) {
+                logError('Toast show error, using fallback', error);
+                // Fallback display method
+                toast.style.opacity = '1';
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        toast.style.opacity = '0';
+                        setTimeout(() => {
+                            if (document.body.contains(toast)) {
+                                toast.remove();
+                            }
+                        }, 300);
+                    }
+                }, 3000);
+            }
+        } catch (error) {
+            logError('Error showing toast', error);
+            // Last resort - alert if everything else fails
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+    }
+
+    // Setup comment event listeners with error handling
+    function setupCommentEventListeners(commentEl) {
+        try {
+            if (!commentEl) return;
+            
+            // Edit button listeners
+            commentEl.querySelectorAll('.edit-comment-btn').forEach(function(btn) {
+                setupEditCommentListeners(btn);
+            });
+            
+            // Delete button listeners
+            commentEl.querySelectorAll('.delete-comment-btn').forEach(function(btn) {
+                setupDeleteCommentListeners(btn);
+            });
+            
+            // Reply button listeners
+            commentEl.querySelectorAll('.reply-btn').forEach(function(btn) {
+                setupReplyBtnListeners(btn);
+            });
+            
+            // Reply form listeners
+            commentEl.querySelectorAll('.replyCommentForm').forEach(function(form) {
+                setupReplyFormListeners(form);
+            });
+            
+            // Cancel reply button listeners
+            commentEl.querySelectorAll('.cancel-reply').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    try {
+                        const commentId = this.getAttribute('data-comment-id');
+                        if (!commentId) return;
+                        
+                        const replyForm = document.getElementById('reply-form-' + commentId);
+                        if (replyForm) {
+                            replyForm.classList.add('d-none');
+                            const textarea = replyForm.querySelector('textarea');
+                            if (textarea) textarea.value = '';
+                        }
+                    } catch (error) {
+                        logError('Error in cancel reply handler', error);
+                    }
+                });
+            });
+        } catch (error) {
+            logError('Error setting up comment event listeners', error);
+        }
+    }
+
+    // Initial setup of all event listeners
+    try {
+        // Set up event listeners for all existing comments and replies
+        document.querySelectorAll('.comment, .reply').forEach(function(commentEl) {
+            setupCommentEventListeners(commentEl);
+        });
+    } catch (error) {
+        logError('Error in initial comment setup', error);
+    }
+
+    // ... existing code ...
+
+    // Handle reply button functionality
+    function setupReplyBtnListeners(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default in case it's a link
+            try {
+                const commentId = this.getAttribute('data-comment-id');
+                if (!commentId) {
+                    logError('Comment ID not found on reply button');
+                    return;
+                }
+                
+                const replyForm = document.getElementById('reply-form-' + commentId);
+                if (!replyForm) {
+                    logError('Reply form not found for comment: ' + commentId);
+                    return;
+                }
+            
+            if (replyForm.classList.contains('d-none')) {
+                // Hide all other reply forms first
+                document.querySelectorAll('.reply-form').forEach(function(form) {
+                    form.classList.add('d-none');
+                });
+                
+                // Show this reply form
+                replyForm.classList.remove('d-none');
+                    const textarea = replyForm.querySelector('textarea');
+                    if (textarea) {
+                        textarea.focus();
+                        
+                        // Auto-resize as user types
+                        textarea.addEventListener('input', function() {
+                            this.style.height = 'auto';
+                            this.style.height = (this.scrollHeight) + 'px';
+                        });
+                        
+                        // Initial height adjustment
+                        setTimeout(() => {
+                            textarea.style.height = 'auto';
+                            textarea.style.height = (textarea.scrollHeight) + 'px';
+                        }, 0);
+                    }
+            } else {
+                replyForm.classList.add('d-none');
+                }
+            } catch (error) {
+                logError('Error in reply button handler', error);
+            }
+        });
+    }
+
+    // ... existing code ...
+
+    // Add CSS for styled comments and reactions - clean up duplicates
+    const style = document.createElement('style');
+    style.textContent = `
+        /* Toast container styles */
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 9999;
+        }
+        
+        .toast {
+            min-width: 250px;
+            opacity: 1 !important;
+        }
+        
+        /* Enhanced Comment edit styles */
+        .edit-comment-textarea {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: none; /* Using JS for auto-resize */
+            min-height: 60px;
+            padding: 10px;
+            font-size: 14px;
+            transition: border-color 0.2s ease, height 0.1s ease;
+            overflow: hidden;
+        }
+        
+        .edit-comment-textarea:focus {
+            border-color: #4a76a8;
+            box-shadow: 0 0 0 0.2rem rgba(74, 118, 168, 0.25);
+        }
+        
+        /* Reply edit has smaller text area */
+        .reply .edit-comment-textarea {
+            min-height: 45px;
+            font-size: 13px;
+        }
+        
+        /* Comment fade effect */
+        .comment, .reply {
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+        }
+        
+        /* Comment updated highlight effect */
+        .comment-updated {
+            animation: highlight-comment 2s ease;
+        }
+        
+        @keyframes highlight-comment {
+            0% { background-color: rgba(255, 243, 205, 0); }
+            30% { background-color: rgba(255, 243, 205, 1); }
+            100% { background-color: rgba(255, 243, 205, 0); }
+        }
+        
+        /* Edit/Delete Dropdown Styling */
+        .dropdown-menu {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .dropdown-item {
+            padding: 8px 20px;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-item:active {
+            background-color: #f8f9fa;
+            color: inherit;
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background-color: #fff5f5;
+        }
+        
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Mobile responsiveness improvements */
+        @media (max-width: 576px) {
+            .edit-form .btn {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+            
+            .edit-comment-textarea {
+                font-size: 13px;
+                padding: 8px;
+            }
+            
+            .char-count {
+                font-size: 10px;
+            }
+            
+            .reply-actions button {
+                padding: 4px !important;
+            }
+            
+            /* Make comment options more touch-friendly on mobile */
+            .comment-header .dropdown-toggle,
+            .reply-header .dropdown-toggle {
+                padding: 8px 5px !important;
+            }
+            
+            .dropdown-item {
+                padding: 10px 20px;
+            }
+        }
+        
+        /* Hide reaction elements */
+        .comment-reactions, .reply-reactions, 
+        .reaction-icons-sm, .reaction-buttons-sm, 
+        .comment-reaction-btn, .post-reactions, 
+        .reaction-emoji-sm { 
+            display: none !important; 
+        }
+    `;
+    document.head.appendChild(style);
     
-    // Focus on the reply textarea after a short delay 
-    setTimeout(function() {
-        $(`#reply-form-${commentId} textarea`).focus();
-    }, 100);
+    // Image zoom functionality with error handling
+    try {
+        document.querySelectorAll('.zoom-image-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                try {
+                    const imgSrc = this.getAttribute('data-image');
+                    if (!imgSrc) {
+                        logError('Image source not found on zoom button');
+                        return;
+                    }
+                    
+                    const fullImage = document.getElementById('fullImage');
+                    if (!fullImage) {
+                        logError('Full image element not found');
+                        return;
+                    }
+                    
+                    fullImage.setAttribute('src', imgSrc);
+                    
+                    // Open modal using available method
+                    const imageModal = document.getElementById('imageModal');
+                    if (!imageModal) {
+                        logError('Image modal not found');
+                        return;
+                    }
+                    
+                    if (typeof bootstrap !== 'undefined') {
+                        new bootstrap.Modal(imageModal).show();
+                    } else if (typeof $ !== 'undefined') {
+                        $(imageModal).modal('show');
+                    } else {
+                        imageModal.style.display = 'block';
+                    }
+                } catch (error) {
+                    logError('Error in zoom image handler', error);
+                }
+            });
+        });
+    } catch (error) {
+        logError('Error setting up zoom image functionality', error);
+    }
+    
+    // Ensure all form textareas auto-resize as typed
+    try {
+        document.querySelectorAll('textarea.rounded-pill').forEach(function(textarea) {
+            textarea.addEventListener('focus', function() {
+                this.setAttribute('data-originalHeight', this.style.height);
+            });
+            
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            textarea.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.style.height = this.getAttribute('data-originalHeight') || '';
+                }
+            });
+        });
+    } catch (error) {
+        logError('Error setting up auto-resize textareas', error);
+    }
 });
 </script>
 @endsection
@@ -1226,15 +2456,16 @@ $(document).on('click', '.reply-btn', function() {
 
 <!-- Add a modal for full-screen image view -->
 <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-light border-0">
-            <div class="modal-header border-0 bg-transparent">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body text-center p-0">
-                <img src="" id="fullImage" class="img-fluid" alt="Full size image">
+            <div class="modal-body text-center">
+                <img id="fullImage" class="img-fluid" src="" alt="Full size image">
             </div>
         </div>
     </div>

@@ -197,6 +197,12 @@ class Attendance extends Model
 
     private function setRegularWorkDay()
     {
+        // Check if employee belongs to BGPDI department and apply special rules if needed
+        if ($this->employeeBelongsToBGPDI()) {
+            $this->setBGPDIAttendance();
+            return;
+        }
+
         $shiftStart = Carbon::parse('08:00:00');
         $shiftEnd = Carbon::parse('17:00:00');
         $halfDayTime = Carbon::parse('12:00:00');
@@ -354,5 +360,143 @@ class Attendance extends Model
         }
 
         return '00:00'; // No unpaid leave time if not on unpaid leave
+    }
+
+    /**
+     * Check if employee belongs to BGPDI department
+     */
+    private function employeeBelongsToBGPDI(): bool
+    {
+        return $this->employee && $this->employee->department && 
+               $this->employee->department->name === 'BGPDI';
+    }
+
+    /**
+     * Set attendance rules for BGPDI department employees
+     */
+    private function setBGPDIAttendance()
+    {
+        $positionName = $this->employee->position->name ?? '';
+        $timeIn = $this->time_in ? Carbon::parse($this->time_in) : null;
+        $timeOut = $this->time_out ? Carbon::parse($this->time_out) : null;
+
+        if (!$timeIn && !$timeOut) {
+            $this->setNoWorkDay('Absent');
+            return;
+        }
+
+        if ($positionName === 'MERCHANDISER') {
+            $this->handleMerchandiserAttendance($timeIn, $timeOut);
+        } elseif (in_array($positionName, ['CASHIER', 'PUMP ATTENDANT'])) {
+            $this->handleCashierAndPumpAttendantAttendance($timeIn, $timeOut);
+        } else {
+            // For other positions in BGPDI, use standard rules
+            $this->handleStandardAttendance($timeIn, $timeOut);
+        }
+
+        $this->hours_worked = $this->getHoursWorkedAttribute();
+        $this->leave_payment_status = 'With Pay';
+    }
+
+    /**
+     * Handle attendance rules for Merchandiser position
+     */
+    private function handleMerchandiserAttendance($timeIn, $timeOut)
+    {
+        $shiftStart = Carbon::parse('10:00:00');
+        $shiftEnd = Carbon::parse('19:00:00');
+
+        if (!$timeOut) {
+            $this->remarks = 'No Clock Out';
+            return;
+        }
+
+        if ($timeIn && $timeIn->gt($shiftStart)) {
+            $this->remarks = 'Late';
+            $this->late_time = $this->calculateCustomLateTime($timeIn, $shiftStart);
+        } elseif ($timeOut && $timeOut->lt($shiftEnd)) {
+            $this->remarks = 'UnderTime';
+            $this->under_time = $this->calculateCustomUnderTime($timeOut, $shiftEnd);
+        } else {
+            $this->remarks = 'Present';
+        }
+    }
+
+    /**
+     * Handle attendance rules for Cashier and Pump Attendant positions
+     */
+    private function handleCashierAndPumpAttendantAttendance($timeIn, $timeOut)
+    {
+        if (!$timeIn || !$timeOut) {
+            if (!$timeOut) {
+                $this->remarks = 'No Clock Out';
+            } else {
+                $this->remarks = 'Absent';
+            }
+            return;
+        }
+
+        // Determine which shift the employee is working
+        $morningShift = $timeIn->hour < 12;
+        
+        if ($morningShift) {
+            $shiftStart = Carbon::parse('05:00:00');
+            $shiftEnd = Carbon::parse('13:00:00');
+        } else {
+            $shiftStart = Carbon::parse('13:00:00');
+            $shiftEnd = Carbon::parse('21:00:00');
+        }
+
+        if ($timeIn->gt($shiftStart)) {
+            $this->remarks = 'Late';
+            $this->late_time = $this->calculateCustomLateTime($timeIn, $shiftStart);
+        } elseif ($timeOut->lt($shiftEnd)) {
+            $this->remarks = 'UnderTime';
+            $this->under_time = $this->calculateCustomUnderTime($timeOut, $shiftEnd);
+        } else {
+            $this->remarks = 'Present';
+        }
+    }
+
+    /**
+     * Handle attendance with standard rules
+     */
+    private function handleStandardAttendance($timeIn, $timeOut)
+    {
+        $shiftStart = Carbon::parse('08:00:00');
+        $shiftEnd = Carbon::parse('17:00:00');
+
+        if (!$timeOut) {
+            $this->remarks = 'No Clock Out';
+            return;
+        }
+
+        if ($timeIn && $timeIn->gt($shiftStart)) {
+            $this->remarks = 'Late';
+            $this->late_time = $this->calculateCustomLateTime($timeIn, $shiftStart);
+        } elseif ($timeOut && $timeOut->lt($shiftEnd)) {
+            $this->remarks = 'UnderTime';
+            $this->under_time = $this->calculateCustomUnderTime($timeOut, $shiftEnd);
+        } else {
+            $this->remarks = 'Present';
+        }
+    }
+
+    /**
+     * Calculate late time for custom shift schedules
+     */
+    private function calculateCustomLateTime($timeIn, $shiftStart): string
+    {
+        $lateDuration = $timeIn->diffInMinutes($shiftStart);
+        return sprintf('%02d:%02d', floor($lateDuration / 60), $lateDuration % 60);
+    }
+
+    /**
+     * Calculate under time for custom shift schedules
+     */
+    private function calculateCustomUnderTime($timeOut, $shiftEnd): string
+    {
+        $underTimeDuration = $shiftEnd->diffInMinutes($timeOut);
+        return sprintf('%02d:%02d', floor($underTimeDuration / 60), $underTimeDuration % 60);
     }
 }

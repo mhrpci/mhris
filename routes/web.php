@@ -248,6 +248,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-timesheet', [AttendanceController::class, 'checkUserAndShowTimesheet'])->name('attendances.my-timesheet');
     Route::get('/check-attendance', [AttendanceController::class, 'checkAttendance']);
     Route::get('/attendances/print', [AttendanceController::class, 'printAttendance'])->name('attendances.print');
+    Route::post('/attendances/store-and-create', [AttendanceController::class, 'storeAndCreateAnother'])->name('attendances.storeAndCreateAnother');
     Route::get('attendances/import', [AttendanceController::class, 'showImportForm'])->name('attendances.import.form');
     Route::post('attendances/import', [AttendanceController::class, 'import'])->name('attendances.import');
     Route::get('attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
