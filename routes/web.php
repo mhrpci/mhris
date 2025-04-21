@@ -476,7 +476,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Route Management routes
-Route::middleware(['auth', 'role:Super Admin'])->group(function () {
+Route::middleware(['auth', 'role:Super Admin'])->prefix('route-management')->name('route-management.')->group(function () {
     Route::get('/', [RouteManagementController::class, 'index'])->name('index');
     Route::get('/sync', [RouteManagementController::class, 'sync'])->name('sync');
     Route::post('/{route}/toggle', [RouteManagementController::class, 'toggleStatus'])->name('toggle');
