@@ -7,18 +7,58 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\DB;
 
 class RouteManagementController extends Controller
 {
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!Auth::user()->hasRole('Super Admin')) {
+            if (!Auth::check()) {
+                return redirect()->route('login');
+            }
+            
+            // Check if user has Super Admin role through direct DB query
+            $hasRole = DB::table('model_has_roles')
+                ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->where('model_has_roles.model_id', Auth::id())
+                ->where('roles.name', 'Super Admin')
+                ->exists();
+                
+            if (!$hasRole) {
                 abort(403, 'Unauthorized. Only Super Admin can access route management.');
             }
+            
             return $next($request);
         });
+    }
+
+    /**
+     * Clear the route cache in a way that's compatible with all cache drivers
+     */
+    private function clearRouteCache()
+    {
+        try {
+            // Try to use tags if supported
+            if (method_exists(Cache::getStore(), 'tags')) {
+                Cache::tags('routes')->flush();
+            } else {
+                // If tags not supported, use a more direct approach
+                Cache::forget('routes.all');
+                Cache::forget('routes.active');
+                
+                // Clear Laravel's route cache
+                if (app()->routesAreCached()) {
+                    $exitCode = Artisan::call('route:clear');
+                }
+            }
+        } catch (\Exception $e) {
+            // Log the exception but don't fail
+            Log::warning('Failed to clear route cache: ' . $e->getMessage());
+        }
     }
 
     public function index(Request $request)
@@ -95,7 +135,7 @@ class RouteManagementController extends Controller
 
         if (!empty($newRoutes)) {
             RouteManagement::insert($newRoutes);
-            Cache::tags('routes')->flush();
+            $this->clearRouteCache();
         }
 
         return redirect()->route('route-management.index')
@@ -105,7 +145,7 @@ class RouteManagementController extends Controller
     public function toggleStatus(RouteManagement $route)
     {
         $route->update(['is_active' => !$route->is_active]);
-        Cache::tags('routes')->flush();
+        $this->clearRouteCache();
 
         return response()->json([
             'success' => true,
@@ -118,14 +158,32 @@ class RouteManagementController extends Controller
     {
         $validated = $request->validate([
             'description' => 'nullable|string|max:255',
-            'is_active' => 'required|boolean'
+            'is_active' => 'nullable|boolean'
         ]);
 
         $route->update($validated);
-        Cache::tags('routes')->flush();
+        $this->clearRouteCache();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Route updated successfully'
+            ]);
+        }
 
         return redirect()->route('route-management.index')
             ->with('success', 'Route updated successfully.');
+    }
+
+    /**
+     * Get a single route for editing
+     */
+    public function show(RouteManagement $route)
+    {
+        return response()->json([
+            'success' => true,
+            'route' => $route
+        ]);
     }
 
     public function bulkToggle(Request $request)
@@ -139,7 +197,7 @@ class RouteManagementController extends Controller
         RouteManagement::whereIn('id', $validated['route_ids'])
             ->update(['is_active' => $validated['status']]);
         
-        Cache::tags('routes')->flush();
+        $this->clearRouteCache();
 
         return response()->json([
             'success' => true,
