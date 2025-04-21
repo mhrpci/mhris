@@ -337,7 +337,7 @@
                     <li class="nav-item">
                         <a href="{{ url('/get-the-app') }}" class="nav-link {{ Request::is('get-the-app*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-mobile-screen-button"></i>
-                            <p>Get the App</p>
+                            <p>Get the App</p> <i class="fas fa-info-circle float-right"></i>
                         </a>
                     </li>
                     @endif
