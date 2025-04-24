@@ -32,7 +32,7 @@
                     <div id="search-popup" class="search-popup" style="display: none;">
                         <div class="search-content">
                             <div class="search-header">
-                                <h5 class="mb-0">MHR Search</h5>
+                                <h5 class="mb-0">Enterprise Search</h5>
                                 <button type="button" class="close" id="search-close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
