@@ -253,7 +253,7 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
-                                @if(auth()->user()->hasRole('HR Compliance'))
+                                @if(auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('Super Admin'))
                                 <li class="nav-item">
                                     <a href="{{ url('/accountabilities') }}" class="nav-link {{ Request::is('accountabilities*') ? 'active' : '' }}">
                                         <i class="fas fa-check-circle nav-icon"></i>
@@ -261,7 +261,7 @@
                                     </a>
                                 </li>
                                 @endif
-                                @if(auth()->user()->hasRole('HR Policy'))
+                                @if(auth()->user()->hasRole('HR Policy') || auth()->user()->hasRole('Super Admin'))
                                 <li class="nav-item">
                                     <a href="{{ url('/credentials') }}" class="nav-link {{ Request::is('credentials*') ? 'active' : '' }}">
                                         <i class="fas fa-phone nav-icon"></i>
@@ -269,7 +269,7 @@
                                     </a>
                                 </li>
                                 @endif
-                                @if(auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('IT Staff'))
+                                @if(auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('Super Admin'))
                                 <li class="nav-item">
                                     <a href="{{ url('/inventory') }}" class="nav-link {{ Request::is('inventory*') ? 'active' : '' }}">
                                         <i class="fas fa-cubes nav-icon"></i>
