@@ -130,7 +130,7 @@ public function store(Request $request): RedirectResponse
         // Validate the incoming request
         $validator = Validator::make($request->all(), [
             'company_id' => 'required|unique:employees,company_id',
-            'profile' => 'nullable|image', // limit file size to 2MB
+            'profile' => 'nullable|image', // No size limit
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -322,8 +322,9 @@ public function update(Request $request, $slug): RedirectResponse
     // Handle the profile image upload
     if ($request->hasFile('profile')) {
         $image = $request->file('profile');
-        $filename = $image->store('profiles', 'public');
-        $employee->profile = $filename;
+        $filename = 'profile_' . time() . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('profiles', $filename, 'public');
+        $employee->profile = $path;
     }
     $employee->employment_status = $request->input('employee_status');
     $employee->rank = $request->input('rank');
@@ -387,8 +388,9 @@ public function update(Request $request, $slug): RedirectResponse
 
         if ($request->hasFile('profile_image')) {
             $image = $request->file('profile_image');
-            $filename = $image->store('profile_images', 'public');
-            $userData['profile_image'] = $filename;
+            $filename = 'profile_' . time() . '.' . $image->getClientOriginalExtension();
+            $path = $image->storeAs('profile_images', $filename, 'public');
+            $userData['profile_image'] = $path;
         }
 
         $user = User::create($userData);
@@ -876,13 +878,12 @@ public function updateProfile(Request $request)
             ], 403);
         }
 
-        // Validate the request with specific image requirements
+        // Validate the request with specific image requirements - removing size limit
         $validator = Validator::make($request->all(), [
             'profile' => [
                 'required',
                 'image',
                 'mimes:jpeg,png,jpg',
-                'max:2048', // 2MB max size
             ]
         ]);
 
@@ -912,16 +913,14 @@ public function updateProfile(Request $request)
                 Storage::disk('public')->delete($employee->profile);
             }
 
-            // Store new profile image
-            $stored = Storage::disk('public')->putFileAs(
-                'profiles',
-                $image,
-                $filename
-            );
+            // Store new profile image using storeAs method instead of putFileAs
+            $stored = $image->storeAs('profiles', $filename, 'public');
 
             if (!$stored) {
                 throw new \Exception('Failed to store profile image file');
             }
+
+            $path = $stored;
 
             // Update employee record with new profile and update timestamp
             $updated = $employee->update([
@@ -937,9 +936,11 @@ public function updateProfile(Request $request)
 
             // Also update the associated user's profile image if exists
             if ($user) {
-                $user->update([
-                    'profile_image' => $path
-                ]);
+                $user = User::where('email', $employee->email_address)->first();
+                if ($user) {
+                    $user->profile_image = $path;
+                    $user->save();
+                }
             }
 
             Log::info('Profile image updated successfully for employee ID: ' . $employee->id, [
