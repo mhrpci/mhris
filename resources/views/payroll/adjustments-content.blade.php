@@ -1,5 +1,3 @@
-
-
 <!-- Company header with fixed position -->
 <div class="payroll-header py-3 bg-light border-bottom sticky-top">
     <div class="container-fluid">
@@ -106,6 +104,10 @@
                         Other Deduction
                         <i class="fas fa-edit text-warning ml-1" data-toggle="tooltip" title="Editable: Additional deductions"></i>
                     </th>
+                    <th rowspan="2" class="editable-column position-relative">
+                        Description
+                        <i class="fas fa-edit text-warning ml-1" data-toggle="tooltip" title="Editable: Description for other deductions"></i>
+                    </th>
                     <th rowspan="2">TAX</th>
                     <th rowspan="2">Net Salary</th>
                 </tr>
@@ -125,20 +127,87 @@
                 </tr>
             </thead>
             <tbody>
-                @if($payrollsByDepartment->isEmpty())
+                @php
+                    // Filter payrolls based on user role
+                    $filteredPayrollsByDepartment = collect();
+                    
+                    if ($payrollsByDepartment->isNotEmpty()) {
+                        if (auth()->user()->hasRole('HR ComBen')) {
+                            // HR ComBen can only see Rank File employees
+                            foreach ($payrollsByDepartment as $department => $payrolls) {
+                                $filteredPayrolls = $payrolls->filter(function($payroll) {
+                                    return isset($payroll->employee->rank) && $payroll->employee->rank === 'Rank File';
+                                });
+                                
+                                if ($filteredPayrolls->isNotEmpty()) {
+                                    $filteredPayrollsByDepartment[$department] = $filteredPayrolls;
+                                }
+                            }
+                        } elseif (auth()->user()->hasRole(['Finance', 'Super Admin'])) {
+                            // Finance and Super Admin can see all payrolls
+                            $filteredPayrollsByDepartment = $payrollsByDepartment;
+                        }
+                    }
+
+                    // Regroup based on the new grouping logic
+                    $regroupedPayrolls = collect();
+                    
+                    foreach ($filteredPayrollsByDepartment as $department => $payrolls) {
+                        foreach ($payrolls as $payroll) {
+                            $deptName = $payroll->employee->department->name ?? 'Unknown';
+                            $employeeRank = $payroll->employee->rank ?? 'Unknown';
+                            $employmentStatus = $payroll->employee->employment_status ?? 'Unknown';
+                            
+                            // Determine the main group
+                            $mainGroup = "";
+                            if (in_array($deptName, ['Admin Department', 'Supply Chain Department', 'Finance and Accounting Department'])) {
+                                $mainGroup = "Support Personnel";
+                            } elseif (in_array($deptName, ['Marketing Department', 'Technical Department'])) {
+                                $mainGroup = "MHRHCI";
+                            } elseif ($deptName === 'BGPDI') {
+                                $mainGroup = "BGPDI";
+                            } elseif ($deptName === 'VHI') {
+                                $mainGroup = "VHI";
+                            } else {
+                                $mainGroup = $deptName; // Use department name for any other departments
+                            }
+                            
+                            // Add employment status grouping for trainees
+                            if ($employmentStatus === 'TRAINEE') {
+                                $mainGroup .= " - TRAINEE";
+                            } else {
+                                // Add confidentiality level to group
+                                $confLevel = ($employeeRank === 'Rank File') ? "Non Confi" : "Confi";
+                                $mainGroup .= " - " . $confLevel;
+                            }
+                            
+                            // Add to the regrouped collection
+                            if (!isset($regroupedPayrolls[$mainGroup])) {
+                                $regroupedPayrolls[$mainGroup] = collect();
+                            }
+                            
+                            $regroupedPayrolls[$mainGroup]->push($payroll);
+                        }
+                    }
+                    
+                    // Sort the main groups alphabetically
+                    $regroupedPayrolls = $regroupedPayrolls->sortKeys();
+                @endphp
+                
+                @if($regroupedPayrolls->isEmpty())
                     <tr>
-                        <td colspan="24" class="text-center">No payroll records found for the selected date range.</td>
+                        <td colspan="25" class="text-center">No payroll records found for the selected date range.</td>
                     </tr>
                 @else
-                    @foreach($payrollsByDepartment as $department => $payrolls)
-                        <tr class="bg-light department-header" data-department="{{ $department }}">
-                            <td colspan="24" class="font-weight-bold">
+                    @foreach($regroupedPayrolls as $group => $payrolls)
+                        <tr class="bg-light department-header" data-department="{{ str_replace(' ', '-', $group) }}">
+                            <td colspan="25" class="font-weight-bold">
                                 <i class="fas fa-chevron-down mr-2 toggle-department"></i>
-                                {{ $departments[$department] ?? strtoupper($department) }}
+                                {{ strtoupper($group) }}
                             </td>
                         </tr>
                         @foreach($payrolls as $payroll)
-                            <tr class="employee-row" data-department="{{ $department }}" data-search="{{ $payroll->employee->first_name }} {{ $payroll->employee->last_name }} {{ $payroll->employee->position->name ?? $payroll->employee->position }}" data-payroll-id="{{ $payroll->id }}">
+                            <tr class="employee-row" data-department="{{ str_replace(' ', '-', $group) }}" data-search="{{ $payroll->employee->first_name }} {{ $payroll->employee->last_name }} {{ $payroll->employee->position->name ?? $payroll->employee->position }}" data-payroll-id="{{ $payroll->id }}">
                                 <td class="employee-id-cell text-center">
                                     <span class="id-badge">{{ substr($payroll->employee->company_id, -4) }}</span>
                                 </td>
@@ -359,6 +428,14 @@
                                         value="{{ isset($payroll->other_deduction) || $payroll->other_deduction === 0.0 ? number_format($payroll->other_deduction, 2, '.', '') : '' }}">
                                 </td>
                                 <td>
+                                    <input type="text" 
+                                        class="form-control form-control-sm other-deduct-desc-field" 
+                                        placeholder="Description"
+                                        maxlength="500"
+                                        data-original="{{ $payroll->other_deduction_description ?? '' }}"
+                                        value="{{ $payroll->other_deduction_description ?? '' }}">
+                                </td>
+                                <td>
                                     <input type="number" 
                                         class="form-control form-control-sm numeric-input" 
                                         readonly 
@@ -419,6 +496,20 @@
     border-color: #ffc107;
 }
 
+.other-deduct-desc-field {
+    border-color: #ced4da;
+    font-size: 0.8rem;
+    background-color: #f8f9fa;
+    width: 100%;
+    min-width: 120px;
+}
+
+.other-deduct-desc-field:focus {
+    background-color: #fff;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
 .field-info {
     font-size: 0.7rem;
     display: block;
@@ -462,6 +553,7 @@
 }
 
 /* Enhanced table cell styling */
+#adjustmentTable th, 
 #adjustmentTable td {
     padding: 4px 6px;
     vertical-align: middle;
@@ -469,7 +561,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
+    max-width: 120px; /* Reduced from 150px to account for extra column */
 }
 
 #adjustmentTable td input {
@@ -619,6 +711,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Handle description fields for other deductions
+    document.querySelectorAll('.other-deduct-desc-field').forEach(function(input) {
+        // Mark as modified when changed
+        input.addEventListener('input', function() {
+            this.classList.add('modified');
+        });
+        
+        // No need to handle visibility anymore since it's in its own cell
+    });
+    
     // Make table cells adapt to content
     document.querySelectorAll('#adjustmentTable td').forEach(function(cell) {
         // Add title attribute for hover tooltip on content that might be truncated
@@ -764,7 +866,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Department filter
+    // Department filter - updated to handle the new grouping structure
     document.getElementById('departmentFilter').addEventListener('change', function() {
         const selectedDept = this.value;
         const departmentHeaders = document.querySelectorAll('.department-header');
@@ -775,27 +877,131 @@ document.addEventListener('DOMContentLoaded', function() {
             departmentHeaders.forEach(header => header.classList.remove('d-none'));
             employeeRows.forEach(row => row.classList.remove('d-none'));
         } else {
-            // Show only selected department
-            departmentHeaders.forEach(function(header) {
-                if (header.dataset.department === selectedDept) {
-                    header.classList.remove('d-none');
-                    // Update chevron
-                    const toggle = header.querySelector('.toggle-department');
-                    toggle.classList.remove('fa-chevron-right');
-                    toggle.classList.add('fa-chevron-down');
-                } else {
-                    header.classList.add('d-none');
-                }
-            });
-            
+            // Show only employees from selected department
+            // We need to check the actual department name in each row, not just the group
             employeeRows.forEach(function(row) {
-                if (row.dataset.department === selectedDept) {
+                const deptCell = row.querySelectorAll('td')[3]; // Department column (0-indexed)
+                const rowDeptName = deptCell.textContent.trim();
+                
+                if (rowDeptName === selectedDept) {
                     row.classList.remove('d-none');
+                    // Make the group header visible
+                    const groupId = row.dataset.department;
+                    const header = document.querySelector(`.department-header[data-department="${groupId}"]`);
+                    if (header) {
+                        header.classList.remove('d-none');
+                        // Update chevron
+                        const toggle = header.querySelector('.toggle-department');
+                        toggle.classList.remove('fa-chevron-right');
+                        toggle.classList.add('fa-chevron-down');
+                    }
                 } else {
                     row.classList.add('d-none');
                 }
             });
+            
+            // Check each group and hide if all rows are hidden
+            departmentHeaders.forEach(function(header) {
+                const groupId = header.dataset.department;
+                const groupRows = document.querySelectorAll(`.employee-row[data-department="${groupId}"]`);
+                
+                let allHidden = true;
+                groupRows.forEach(function(row) {
+                    if (!row.classList.contains('d-none')) {
+                        allHidden = false;
+                    }
+                });
+                
+                if (allHidden) {
+                    header.classList.add('d-none');
+                }
+            });
         }
     });
+    
+    // Add a custom group filter
+    const addGroupFilter = function() {
+        // Get all unique groups
+        const groups = [];
+        document.querySelectorAll('.department-header').forEach(function(header) {
+            const groupName = header.querySelector('td').textContent.trim();
+            if (!groups.includes(groupName)) {
+                groups.push(groupName);
+            }
+        });
+        
+        // Create select element
+        const filterContainer = document.createElement('div');
+        filterContainer.className = 'col-md-4 col-sm-6 mb-2';
+        
+        const groupSelect = document.createElement('select');
+        groupSelect.className = 'form-control form-control-sm';
+        groupSelect.id = 'groupFilter';
+        
+        // Add default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'All Groups';
+        groupSelect.appendChild(defaultOption);
+        
+        // Add options for each group
+        groups.forEach(function(group) {
+            const option = document.createElement('option');
+            option.value = group;
+            option.textContent = group;
+            groupSelect.appendChild(option);
+        });
+        
+        // Add event listener
+        groupSelect.addEventListener('change', function() {
+            const selectedGroup = this.value;
+            const headers = document.querySelectorAll('.department-header');
+            
+            if (selectedGroup === '') {
+                // Show all groups
+                headers.forEach(header => header.classList.remove('d-none'));
+                document.querySelectorAll('.employee-row').forEach(row => row.classList.remove('d-none'));
+            } else {
+                // Show only selected group
+                headers.forEach(function(header) {
+                    const groupText = header.querySelector('td').textContent.trim();
+                    if (groupText === selectedGroup) {
+                        header.classList.remove('d-none');
+                        // Show all rows in this group
+                        const groupId = header.dataset.department;
+                        document.querySelectorAll(`.employee-row[data-department="${groupId}"]`)
+                            .forEach(row => row.classList.remove('d-none'));
+                        
+                        // Update chevron
+                        const toggle = header.querySelector('.toggle-department');
+                        toggle.classList.remove('fa-chevron-right');
+                        toggle.classList.add('fa-chevron-down');
+                    } else {
+                        header.classList.add('d-none');
+                        // Hide all rows in this group
+                        const groupId = header.dataset.department;
+                        document.querySelectorAll(`.employee-row[data-department="${groupId}"]`)
+                            .forEach(row => row.classList.add('d-none'));
+                    }
+                });
+            }
+        });
+        
+        // Add label and append to container
+        const label = document.createElement('label');
+        label.htmlFor = 'groupFilter';
+        label.className = 'sr-only';
+        label.textContent = 'Filter by Group';
+        
+        filterContainer.appendChild(label);
+        filterContainer.appendChild(groupSelect);
+        
+        // Insert before the toggle all button
+        const toggleAllBtn = document.getElementById('toggleAllDepartments').parentNode;
+        toggleAllBtn.parentNode.insertBefore(filterContainer, toggleAllBtn);
+    };
+    
+    // Call function to add the group filter
+    addGroupFilter();
 });
 </script> 

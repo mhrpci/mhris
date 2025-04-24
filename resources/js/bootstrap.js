@@ -1,5 +1,24 @@
-
 // resources/js/bootstrap.js
+
+import _ from 'lodash';
+window._ = _;
+
+/**
+ * We'll load the axios HTTP library which allows us to easily issue requests
+ * to our Laravel back-end. This library automatically handles sending the
+ * CSRF token as a header based on the value of the "XSRF" token cookie.
+ */
+
+import axios from 'axios';
+window.axios = axios;
+
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+/**
+ * Echo exposes an expressive API for subscribing to channels and listening
+ * for events. Echo and event broadcasting allows your team to easily build
+ * robust real-time web applications.
+ */
 
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
@@ -8,10 +27,20 @@ window.Pusher = Pusher;
 
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: process.env.MIX_PUSHER_APP_KEY,
-    cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-    forceTLS: true,
+    key: import.meta.env.VITE_PUSHER_APP_KEY,
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    forceTLS: true
 });
+
+// Added for backward compatibility - get values from the window object if available
+if (!import.meta.env.VITE_PUSHER_APP_KEY && window.Laravel && window.Laravel.pusherKey) {
+    window.Echo = new Echo({
+        broadcaster: 'pusher',
+        key: window.Laravel.pusherKey,
+        cluster: window.Laravel.pusherCluster || 'mt1',
+        forceTLS: true
+    });
+}
 
 // Listen for the NewNotification event
 window.Echo.channel('notifications')

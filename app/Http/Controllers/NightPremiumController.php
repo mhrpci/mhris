@@ -23,7 +23,7 @@ class NightPremiumController extends Controller
             }
 
             // Check if user has any of the required roles
-            $hasRequiredRole = $user->roles->pluck('name')->intersect(['Supervisor', 'Finance', 'Employee', 'VP Finance', 'Admin', 'Super Admin'])->count() > 0;
+            $hasRequiredRole = $user->roles->pluck('name')->intersect(['HR ComBen', 'Supervisor', 'Finance', 'Employee', 'VP Finance', 'Admin', 'Super Admin'])->count() > 0;
 
             // Check if user is a supervisor with matching email to an employee
             $isSupervisorWithMatchingEmail = false;

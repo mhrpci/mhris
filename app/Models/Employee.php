@@ -189,7 +189,7 @@ class Employee extends Model
         $diffInMonths = $hiredDate->diffInMonths($now);
 
         // Check if the employee belongs to the MHRHCI department
-        if ($this->department && $this->department->name === 'MHRHCI') {
+        if ($this->position && $this->position->name === 'PHSS') {
             if ($diffInDays <= 18) {
                 return 'TRAINEE';
             } elseif ($diffInDays >= 19 && $diffInMonths < 4) {

@@ -13,6 +13,11 @@ use Spatie\Permission\Models\Role;
 use App\Models\OvertimePay;
 use App\Models\User;
 use App\Models\NightPremium;
+use App\Http\Controllers\Controller;
+use App\Models\Notification;
+use App\Models\Employee;
+use App\Models\LeaveRequest;
+use Spatie\Permission\Models\Permission;
 
 class NotificationsController extends Controller
 {
@@ -504,25 +509,26 @@ class NotificationsController extends Controller
 
     private function getNotificationUrl($notification)
     {
-        if (isset($notification['data'])) {
-            if (in_array($notification['data']['type'], ['leave', 'leave_approved', 'leave_validated', 'leave_rejected'])) {
-                return url("/leaves/{$notification['data']['id']}");
-            }
-            
-            if (in_array($notification['data']['type'], ['cash_advance', 'cash_advance_approved', 'cash_advance_declined'])) {
-                return url("/cash_advances/{$notification['data']['id']}");
-            }
-
-            if (in_array($notification['data']['type'], ['overtime_pending', 'overtime_approved', 'overtime_rejected'])) {
-                return route('overtime.show', ['overtime' => $notification['data']['id']]);
-            }
-            
-            if (in_array($notification['data']['type'], ['night_premium_pending', 'night_premium_approved', 'night_premium_rejected'])) {
-                return route('night-premium.show', ['night_premium' => $notification['data']['id']]);
-            }
-        }
+        $type = isset($notification['data']) ? ($notification['data']['type'] ?? '') : '';
+        $id = isset($notification['data']) ? ($notification['data']['id'] ?? null) : null;
         
-        return '#';
+        $urls = [
+            'leave_request' => route('leave.index'),
+            'leave_approved' => route('leave.index'),
+            'leave_rejected' => route('leave.index'),
+            'leave_validated' => route('leave.index'),
+            'cash_advance_request' => route('cashadvance.index'),
+            'cash_advance_approved' => route('cashadvance.index'),
+            'cash_advance_rejected' => route('cashadvance.index'),
+            'overtime_pending' => route('overtime.index'),
+            'overtime_approved' => route('overtime.index'),
+            'overtime_rejected' => route('overtime.index'),
+            'night_premium_pending' => route('nightpremium.index'),
+            'night_premium_approved' => route('nightpremium.index'),
+            'night_premium_rejected' => route('nightpremium.index'),
+        ];
+        
+        return $urls[$type] ?? route('notifications.all');
     }
 
     private function getIconClass($notification)
@@ -544,43 +550,25 @@ class NotificationsController extends Controller
 
     private function getNotificationTitle($notification)
     {
-        if (strpos($notification['text'], 'requested leave') !== false) {
-            return 'Leave Request';
-        }
-        if (strpos($notification['text'], 'requested cash advance') !== false) {
-            return 'Cash Advance Request';
-        }
-        if (strpos($notification['text'], 'leave request has been validated') !== false) {
-            return 'Leave Validated';
-        }
-        if (strpos($notification['text'], 'leave request has been rejected') !== false) {
-            return 'Leave Rejected';
-        }
-        if (strpos($notification['text'], 'cash advance request has been approved') !== false) {
-            return 'Cash Advance Approved';
-        }
-        if (strpos($notification['text'], 'cash advance request has been rejected') !== false) {
-            return 'Cash Advance Rejected';
-        }
-        if (strpos($notification['text'], 'requested overtime pay') !== false) {
-            return 'Overtime Pay Request';
-        }
-        if (strpos($notification['text'], 'overtime pay request has been approved') !== false) {
-            return 'Overtime Pay Approved';
-        }
-        if (strpos($notification['text'], 'overtime pay request has been rejected') !== false) {
-            return 'Overtime Pay Rejected';
-        }
-        if (strpos($notification['text'], 'requested night premium pay') !== false) {
-            return 'Night Premium Pay Request';
-        }
-        if (strpos($notification['text'], 'night premium pay request has been approved') !== false) {
-            return 'Night Premium Pay Approved';
-        }
-        if (strpos($notification['text'], 'night premium pay request has been rejected') !== false) {
-            return 'Night Premium Pay Rejected';
-        }
-        return 'Notification';
+        $type = isset($notification['data']) ? ($notification['data']['type'] ?? '') : '';
+        
+        $titles = [
+            'leave_request' => 'Leave Request',
+            'leave_approved' => 'Leave Approved',
+            'leave_rejected' => 'Leave Rejected',
+            'leave_validated' => 'Leave Validated',
+            'cash_advance_request' => 'Cash Advance Request',
+            'cash_advance_approved' => 'Cash Advance Approved',
+            'cash_advance_rejected' => 'Cash Advance Rejected',
+            'overtime_pending' => 'Overtime Request',
+            'overtime_approved' => 'Overtime Approved',
+            'overtime_rejected' => 'Overtime Rejected',
+            'night_premium_pending' => 'Night Premium Request',
+            'night_premium_approved' => 'Night Premium Approved',
+            'night_premium_rejected' => 'Night Premium Rejected',
+        ];
+        
+        return $titles[$type] ?? 'Notification';
     }
 
     private function getStatusClass($notification)
@@ -698,35 +686,37 @@ class NotificationsController extends Controller
     public function checkForUpdates(Request $request)
     {
         try {
-            $lastTimestamp = $request->input('timestamp', 0);
+            $timestamp = $request->input('timestamp', 0);
+            $newNotifications = $this->getNewNotificationsSince($timestamp);
             
-            // Generate fresh notifications
-            $this->generateNotifications();
-            
-            // Get only notifications newer than the last timestamp
-            $newNotifications = $this->getNewNotificationsSince($lastTimestamp);
+            $hasUpdates = count($newNotifications) > 0;
+            $newCount = count($newNotifications);
             
             return response()->json([
-                'hasUpdates' => count($newNotifications) > 0,
-                'count' => count($newNotifications),
-                'notifications' => $newNotifications,
-                'timestamp' => now()->timestamp
+                'has_updates' => $hasUpdates,
+                'new_count' => $newCount,
+                'timestamp' => time()
             ]);
         } catch (\Exception $e) {
-            Log::error('Error checking for updates: ' . $e->getMessage());
+            Log::error('Error in checkForUpdates: ' . $e->getMessage());
             return response()->json([
-                'hasUpdates' => false,
-                'count' => 0,
-                'timestamp' => now()->timestamp,
+                'has_updates' => false,
                 'error' => $e->getMessage()
             ]);
         }
     }
     
-    // Helper method to get only new notifications
     private function getNewNotificationsSince($timestamp)
     {
-        return array_filter($this->flattenNotifications(), function($notification) use ($timestamp) {
+        $this->generateNotifications();
+        $allNotifications = $this->flattenNotifications();
+        
+        if (!$timestamp) {
+            return $allNotifications;
+        }
+        
+        // Filter to only include notifications newer than the given timestamp
+        return array_filter($allNotifications, function($notification) use ($timestamp) {
             return $notification['timestamp'] > $timestamp;
         });
     }
@@ -1035,6 +1025,51 @@ class NotificationsController extends Controller
         } catch (\Exception $e) {
             Log::error('Error marking all notifications as read: ' . $e->getMessage());
             return response()->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Check for notification updates in background
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkBackgroundUpdates(Request $request)
+    {
+        try {
+            $timestamp = $request->input('timestamp', 0);
+            $newNotifications = $this->getNewNotificationsSince($timestamp);
+            
+            $hasUpdates = count($newNotifications) > 0;
+            $newCount = count($newNotifications);
+            
+            // Format notifications for push delivery
+            $formattedNotifications = [];
+            foreach ($newNotifications as $notification) {
+                $formattedNotifications[] = [
+                    'id' => $notification['id'],
+                    'title' => $this->getNotificationTitle($notification),
+                    'body' => $notification['text'],
+                    'icon' => $notification['icon'],
+                    'url' => $this->getNotificationUrl($notification),
+                    'type' => isset($notification['data']) ? ($notification['data']['type'] ?? '') : '',
+                    'timestamp' => $notification['timestamp'],
+                    'data' => $notification['data'] ?? []
+                ];
+            }
+            
+            return response()->json([
+                'has_updates' => $hasUpdates,
+                'new_count' => $newCount,
+                'notifications' => $formattedNotifications,
+                'timestamp' => time()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in checkBackgroundUpdates: ' . $e->getMessage());
+            return response()->json([
+                'has_updates' => false,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 
@@ -1351,6 +1386,257 @@ class NotificationsController extends Controller
                         'reason' => $nightPremium->reason ?? 'No reason provided'
                     ]
                 ];
+            }
+        }
+    }
+
+    /**
+     * Get the VAPID public key for WebPush notifications
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getVapidPublicKey()
+    {
+        return response()->json([
+            'publicKey' => config('webpush.vapid.public_key')
+        ]);
+    }
+
+    /**
+     * Check if push notifications are enabled for the current user
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkNotificationStatus()
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['enabled' => false]);
+        }
+        
+        // Check if the user has any push subscriptions
+        $enabled = $user->pushSubscriptions()->count() > 0;
+        
+        return response()->json([
+            'enabled' => $enabled
+        ]);
+    }
+
+    /**
+     * Store a new push subscription for the authenticated user
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storePushSubscription(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+        
+        $this->validate($request, [
+            'endpoint' => 'required|string|max:500',
+            'keys.auth' => 'required|string',
+            'keys.p256dh' => 'required|string'
+        ]);
+        
+        // Delete any existing subscriptions with this endpoint
+        $user->pushSubscriptions()
+            ->where('endpoint', $request->endpoint)
+            ->delete();
+        
+        // Create a new subscription
+        $subscription = $user->pushSubscriptions()->create([
+            'endpoint' => $request->endpoint,
+            'public_key' => $request->keys['p256dh'],
+            'auth_token' => $request->keys['auth'],
+            'content_encoding' => $request->contentEncoding ?? 'aes128gcm'
+        ]);
+        
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Send a test push notification to the current user
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function testPushNotification(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+        
+        try {
+            // Create a test notification payload
+            $payload = [
+                'toast' => [
+                    'title' => 'Notifications Enabled!',
+                    'message' => 'You will now receive real-time notifications.',
+                    'icon' => 'fas fa-bell'
+                ],
+                'url' => route('notifications.all'),
+                'timestamp' => now()->timestamp
+            ];
+            
+            // Send notifications to all subscriptions of this user
+            foreach ($user->pushSubscriptions as $subscription) {
+                $this->sendWebPushNotification($subscription, $payload);
+            }
+            
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error sending test push notification: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Send push notification to all user subscriptions
+     *
+     * @param  mixed  $notification
+     * @return void
+     */
+    public function sendPushNotification($notification)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) return;
+            
+            // Prepare notification data
+            $title = $this->getNotificationTitle($notification);
+            $message = $notification['text'];
+            $icon = $notification['icon'];
+            $url = $this->getNotificationUrl($notification);
+            
+            $payload = [
+                'toast' => [
+                    'title' => $title,
+                    'message' => $message,
+                    'icon' => $icon
+                ],
+                'url' => $url,
+                'timestamp' => $notification['timestamp'],
+                'data' => $notification['data'] ?? []
+            ];
+            
+            // Get all users who should receive the notification
+            $userIds = $this->getUsersForNotification($notification);
+            
+            // Send to all relevant users
+            $users = User::whereIn('id', $userIds)->get();
+            
+            foreach ($users as $recipient) {
+                foreach ($recipient->pushSubscriptions as $subscription) {
+                    $this->sendWebPushNotification($subscription, $payload);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending push notification: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Get users who should receive a notification
+     *
+     * @param  mixed  $notification
+     * @return array
+     */
+    private function getUsersForNotification($notification)
+    {
+        $type = isset($notification['data']) ? ($notification['data']['type'] ?? '') : '';
+        $userIds = [];
+        
+        if (strpos($type, 'leave_request') !== false) {
+            // Send to admins and supervisors
+            $userIds = User::role(['Super Admin', 'Admin', 'Supervisor'])->pluck('id')->toArray();
+        } elseif (strpos($type, 'leave_approved') !== false || 
+                  strpos($type, 'leave_rejected') !== false ||
+                  strpos($type, 'leave_validated') !== false) {
+            // Send to employee
+            if (isset($notification['data']['employee_id'])) {
+                $employee = \App\Models\Employee::find($notification['data']['employee_id']);
+                if ($employee && $employee->user) {
+                    $userIds[] = $employee->user->id;
+                }
+            }
+        } elseif (strpos($type, 'cash_advance') !== false) {
+            // Determine recipients based on notification type
+            if (strpos($type, 'request') !== false) {
+                // Send to admins
+                $userIds = User::role(['Super Admin', 'Admin'])->pluck('id')->toArray();
+            } else {
+                // Send to employee
+                if (isset($notification['data']['employee_id'])) {
+                    $employee = \App\Models\Employee::find($notification['data']['employee_id']);
+                    if ($employee && $employee->user) {
+                        $userIds[] = $employee->user->id;
+                    }
+                }
+            }
+        } elseif (strpos($type, 'overtime') !== false || strpos($type, 'night_premium') !== false) {
+            // Determine recipients based on role and status
+            if (strpos($type, 'pending') !== false) {
+                if (strpos($type, 'night_premium') !== false) {
+                    // Send to supervisors for rank file employees
+                    // Send to finance for non-rank file employees
+                    $userIds = User::role(['Super Admin', 'Finance', 'Supervisor'])->pluck('id')->toArray();
+                } else {
+                    // For overtime, send to supervisors and finance
+                    $userIds = User::role(['Super Admin', 'Finance', 'Supervisor'])->pluck('id')->toArray();
+                }
+            } else {
+                // For approved or rejected, send to employee
+                if (isset($notification['data']['employee_id'])) {
+                    $employee = \App\Models\Employee::find($notification['data']['employee_id']);
+                    if ($employee && $employee->user) {
+                        $userIds[] = $employee->user->id;
+                    }
+                }
+            }
+        }
+        
+        return $userIds;
+    }
+
+    /**
+     * Send a web push notification to a specific subscription
+     *
+     * @param  object  $subscription
+     * @param  array  $payload
+     * @return void
+     */
+    private function sendWebPushNotification($subscription, $payload)
+    {
+        try {
+            $webPush = new \Minishlink\WebPush\WebPush([
+                'VAPID' => [
+                    'subject' => config('app.url'),
+                    'publicKey' => config('webpush.vapid.public_key'),
+                    'privateKey' => config('webpush.vapid.private_key')
+                ]
+            ]);
+
+            $webPush->sendNotification(
+                $subscription->endpoint,
+                json_encode($payload),
+                $subscription->public_key,
+                $subscription->auth_token,
+                true
+            );
+        } catch (\Exception $e) {
+            Log::error('Error sending web push notification: ' . $e->getMessage());
+            
+            // Check if the subscription is invalid
+            if (strpos($e->getMessage(), '410 Gone') !== false) {
+                // Delete invalid subscription
+                $subscription->delete();
             }
         }
     }

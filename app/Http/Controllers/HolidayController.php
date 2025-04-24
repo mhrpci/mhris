@@ -132,11 +132,11 @@ class HolidayController extends Controller
                         // Assuming the type is included in the description
                         $description = substr($line, 12);
                         if (strpos($description, 'Special Non-Working') !== false) {
-                            $event['type'] = 'Special Non-Working';
+                            $event['type'] = 'Special Non-Working Holiday';
                         } elseif (strpos($description, 'Regular Holiday') !== false) {
                             $event['type'] = 'Regular Holiday';
                         } elseif (strpos($description, 'Common Local') !== false) {
-                            $event['type'] = 'Common Local';
+                            $event['type'] = 'Special Working Holiday';
                         } else {
                             $event['type'] = 'Regular Holiday'; // Default type if not specified
                         }
@@ -167,7 +167,7 @@ class HolidayController extends Controller
             ];
         } catch (\Exception $e) {
             // Log the error message
-            \Log::error('Error fetching holidays from Google Calendar: ' . $e->getMessage());
+            Log::error('Error fetching holidays from Google Calendar: ' . $e->getMessage());
 
             return [
                 'success' => false,
@@ -178,7 +178,13 @@ class HolidayController extends Controller
     }
     public function holidayCalendar()
     {
-        $holidays = Holiday::all();
+        $holidays = Holiday::all()->map(function($holiday) {
+            return [
+                'title' => $holiday->title,
+                'date' => Carbon::parse($holiday->date)->format('Y-m-d'),
+                'type' => $holiday->type
+            ];
+        });
         
         // Generate pay days (15th and last day of each month)
         $payDays = [];
@@ -187,18 +193,28 @@ class HolidayController extends Controller
         // Add pay days for all months in the current year
         for ($month = 1; $month <= 12; $month++) {
             // 15th of the month
-            $midMonth = Carbon::createFromDate($currentYear, $month, 15)->toDateString();
+            $midMonth = Carbon::createFromDate($currentYear, $month, 15);
+            // If 15th falls on weekend, adjust to previous Friday
+            if ($midMonth->isWeekend()) {
+                $midMonth = $midMonth->copy()->previous(Carbon::FRIDAY);
+            }
+            
             $payDays[] = [
                 'title' => 'Pay Day (Mid Month)',
-                'date' => $midMonth,
+                'date' => $midMonth->format('Y-m-d'),
                 'type' => 'pay-day'
             ];
             
             // Last day of the month
-            $lastDay = Carbon::createFromDate($currentYear, $month, 1)->endOfMonth()->toDateString();
+            $lastDay = Carbon::createFromDate($currentYear, $month, 1)->endOfMonth();
+            // If last day falls on weekend, adjust to previous Friday
+            if ($lastDay->isWeekend()) {
+                $lastDay = $lastDay->copy()->previous(Carbon::FRIDAY);
+            }
+            
             $payDays[] = [
                 'title' => 'Pay Day (Month End)',
-                'date' => $lastDay,
+                'date' => $lastDay->format('Y-m-d'),
                 'type' => 'pay-day'
             ];
         }

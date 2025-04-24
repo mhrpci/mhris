@@ -179,7 +179,7 @@ class PayrollController extends Controller
         if ($user->hasRole('Super Admin')) {
             $payrolls = Payroll::with('employee')->get();
         } 
-        else if ($user->hasRole('Finance')) {
+        elseif ($user->hasRole('Finance')) {
             $payrolls = Payroll::with('employee')->get();
         }
         else {
@@ -558,6 +558,7 @@ class PayrollController extends Controller
             'adjustments.*.other_adjustments' => 'nullable|numeric',
             'adjustments.*.cash_bond' => 'nullable|numeric',
             'adjustments.*.other_deduction' => 'nullable|numeric',
+            'adjustments.*.other_deduction_description' => 'nullable|string|max:500',
         ]);
 
         $adjustments = $request->input('adjustments');
@@ -577,6 +578,7 @@ class PayrollController extends Controller
                 $originalOtherAdjustments = $payroll->other_adjustments ?? 0;
                 $originalCashBond = $payroll->cash_bond ?? 0;
                 $originalOtherDeduction = $payroll->other_deduction ?? 0;
+                $originalOtherDeductionDescription = $payroll->other_deduction_description ?? '';
                 
                 // Get new values with proper handling of null, empty, and zero values
                 // Use is_numeric to check if the value is a number (including zero)
@@ -601,6 +603,11 @@ class PayrollController extends Controller
                     ? (float) $adjustment['other_deduction'] 
                     : null;
                 
+                // Get the other deduction description (a string field, so no need for numeric checking)
+                $newOtherDeductionDescription = isset($adjustment['other_deduction_description']) 
+                    ? $adjustment['other_deduction_description'] 
+                    : null;
+                
                 // Calculate the differences (new - original), handling null values
                 // Only calculate difference if a new value was explicitly provided (even if zero)
                 $adjustmentsDiff = $newAdjustments !== null ? $newAdjustments - $originalAdjustments : 0;
@@ -623,6 +630,7 @@ class PayrollController extends Controller
                 if ($newOtherAdjustments !== null) $payroll->other_adjustments = $newOtherAdjustments;
                 if ($newCashBond !== null) $payroll->cash_bond = $newCashBond;
                 if ($newOtherDeduction !== null) $payroll->other_deduction = $newOtherDeduction;
+                if ($newOtherDeductionDescription !== null) $payroll->other_deduction_description = $newOtherDeductionDescription;
                 
                 $payroll->save();
                 
@@ -636,7 +644,8 @@ class PayrollController extends Controller
                     "Allowances: {$originalAllowances} → " . ($newAllowances !== null ? $newAllowances : 'unchanged') . ", " . 
                     "Other Adj: {$originalOtherAdjustments} → " . ($newOtherAdjustments !== null ? $newOtherAdjustments : 'unchanged') . ", " .
                     "Cash Bond: {$originalCashBond} → " . ($newCashBond !== null ? $newCashBond : 'unchanged') . ", " .
-                    "Other Deduct: {$originalOtherDeduction} → " . ($newOtherDeduction !== null ? $newOtherDeduction : 'unchanged'));
+                    "Other Deduct: {$originalOtherDeduction} → " . ($newOtherDeduction !== null ? $newOtherDeduction : 'unchanged') . ", " .
+                    "Other Deduct Desc: '" . ($originalOtherDeductionDescription ?: 'none') . "' → '" . ($newOtherDeductionDescription !== null ? $newOtherDeductionDescription : 'unchanged') . "'");
             }
 
             \DB::commit();

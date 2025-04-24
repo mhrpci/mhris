@@ -23,7 +23,7 @@
                     </button>
                 </li>
                 @endif
-                @if(auth()->user()->hasRole('HR Comben') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('VP Finance'))
+                @if(auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('VP Finance'))
                 <!-- Search Icon and Popup -->
                 <li class="nav-item">
                     <a class="nav-link" href="#" id="search-toggle" data-tooltip="Search">
@@ -70,7 +70,7 @@
                         <i class="far fa-bell"></i>
                         <span class="badge badge-danger navbar-badge notification-count">0</span>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right notifications-dropdown">
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right notifications-dropdown" aria-labelledby="notifications-dropdown-toggle">
                         <span class="dropdown-header"><span id="notification-header-count">0</span> Notifications</span>
                         <div class="dropdown-divider"></div>
                         
@@ -821,266 +821,294 @@
 
                 <script>
                     $(document).ready(function() {
-                        // Show search popup with animations
-                        $('#search-toggle').click(function(e) {
-                            e.preventDefault();
-                            $('#search-popup').css('display', 'flex').addClass('visible');
-                            setTimeout(function() {
-                                $('#search-input').focus();
-                            }, 100);
-                            
-                            // Show empty state initially
-                            showEmptyState();
-                        });
-
-                        // Close search popup with animations
-                        $('#search-close').click(function() {
-                            closeSearchPopup();
-                        });
-
-                        // Close search popup when clicking outside
-                        $(document).click(function(e) {
-                            if ($('#search-popup').is(':visible') && !$(e.target).closest('#search-popup, #search-toggle').length) {
-                                closeSearchPopup();
-                            }
-                        });
+                        // Global notification variables
+                        let latestNotificationTimestamp = 0;
+                        let notificationCheckInterval = null;
+                        let initialLoad = true;
+                        let notificationsData = [];
                         
-                        // Function to close search popup with animation
-                        function closeSearchPopup() {
-                            $('#search-popup').removeClass('visible');
-                            setTimeout(function() {
-                                $('#search-popup').css('display', 'none');
-                            }, 300);
-                        }
-
-                        // Variable to track the timeout for debouncing
-                        let searchTimeout = null;
-                        let lastQuery = '';
-                        
-                        // Handle search input with debounce (250ms for faster responses)
-                        $('#search-input').on('keyup', function(e) {
-                            const query = $(this).val().trim();
+                        // Function to load notifications
+                        function loadNotifications() {
+                            $.ajax({
+                                url: '{{ route("notifications.get") }}',
+                                method: 'GET',
+                                cache: false,
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Cache-Control': 'no-cache, no-store, must-revalidate'
+                                },
+                                success: function(response) {
+                                    updateNotifications(response);
                             
-                            // Clear any existing timeout
-                            clearTimeout(searchTimeout);
-                            
-                            // If query is empty, show empty state
-                            if (query === '') {
-                                showEmptyState();
-                                return;
-                            }
-                            
-                            // Don't search again if query hasn't changed
-                            if (query === lastQuery) {
-                                return;
-                            }
-                            
-                            // Show loading state
-                            showSearchingState(query);
-                            
-                            // Set a new timeout for improved performance
-                            searchTimeout = setTimeout(function() {
-                                lastQuery = query;
-                                performSearch(query);
-                            }, 250);
-                        });
-
-                        // Close on escape key
-                        $(document).keyup(function(e) {
-                            if (e.key === "Escape" && $('#search-popup').is(':visible')) {
-                                closeSearchPopup();
-                            }
-                        });
-                        
-                        // Function to perform search
-                        function performSearch(query) {
-                                $.ajax({
-                                url: '{{ route("global.search") }}',
-                                    type: 'GET',
-                                    data: {
-                                    query: query,
-                                    limit: 10 // Show more results per category for better usability
-                                    },
-                                    dataType: 'json',
-                                    success: function(response) {
-                                    // Hide loading spinner
-                                    $('.loading-spinner').hide();
+                                    // Store the latest notification timestamp for future checks
+                                    if (response.notifications && response.notifications.length > 0) {
+                                        notificationsData = response.notifications;
+                                        const timestamps = response.notifications.map(notification => 
+                                            new Date(notification.created_at).getTime()
+                                        );
+                                        latestNotificationTimestamp = Math.max(...timestamps);
+                                    }
                                     
-                                    if (response.success) {
-                                        const results = response.results;
-                                        
-                                        // Check if we have any results
-                                        if (results.total_count === 0) {
-                                            showNoResults(query);
-                                            return;
-                                        }
-                                        
-                                        // Clear previous results
-                                        $('.search-categories').empty();
-                                        
-                                        // Render employees with staggered animation
-                                        if (results.employees && results.employees.length > 0) {
-                                            renderResultsCategory('Employees', results.employees, 'bg-primary', 'fas fa-user');
-                                        }
-                                        
-                                        // Render leaves
-                                        if (results.leaves && results.leaves.length > 0) {
-                                            renderResultsCategory('Leave Requests', results.leaves, 'bg-success', 'fas fa-calendar-alt');
-                                        }
-                                        
-                                        // Render attendance
-                                        if (results.attendances && results.attendances.length > 0) {
-                                            renderResultsCategory('Attendance Records', results.attendances, 'bg-info', 'fas fa-clock');
-                                        }
-                                                        } else {
-                                        showSearchError(response.message || 'An error occurred while searching');
+                                    // If this is the first load, start checking for updates
+                                    if (initialLoad) {
+                                        initialLoad = false;
+                                        startNotificationUpdateChecks();
                                     }
                                 },
                                 error: function(xhr) {
-                                    // Hide loading spinner
-                                    $('.loading-spinner').hide();
-                                    
-                                    showSearchError('An error occurred while searching. Please try again.');
-                                    console.error('Search error:', xhr.responseText);
+                                    console.error('Error loading notifications:', xhr);
+                                    $('.loading-notifications').html('<div class="text-danger p-3 text-center">Error loading notifications. Please try again.</div>');
+                            }
+                        });
+                        }
+                        
+                        // Update the notification UI
+                        function updateNotifications(data) {
+                            // Update notification count
+                            const count = data.unread_count || 0;
+                            $('.notification-count').text(count > 99 ? '99+' : count);
+                            $('#notification-header-count').text(count);
+                            
+                            // Update notification list
+                            if (data.notifications && data.notifications.length > 0) {
+                                renderNotifications(data.notifications);
+                            } else {
+                                $('.notifications-container').html('<div class="text-muted p-3 text-center">No notifications</div>');
+                            }
+                        }
+
+                        // Render notifications in the dropdown
+                        function renderNotifications(notifications) {
+                            const container = $('.notifications-container');
+                            container.empty();
+                        
+                            // Only display the most recent 5 notifications in the dropdown
+                            const recentNotifications = notifications.slice(0, 5);
+                            
+                            recentNotifications.forEach(notification => {
+                                const createdDate = new Date(notification.created_at);
+                                const formattedTime = formatNotificationTime(createdDate);
+                                
+                                let notificationHTML = `
+                                    <div class="notification-item ${notification.read_at ? '' : 'unread'}" data-id="${notification.id}">
+                                        <div class="notification-icon ${getNotificationColor(notification.type)}">
+                                            <i class="${notification.icon}"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-text">${notification.title}</div>
+                                            <div class="notification-description">${notification.message}</div>
+                                            <div class="notification-time">${formattedTime}</div>
+                                        </div>
+                                        <div class="notification-action">
+                                            <button class="btn btn-sm btn-link mark-read-btn" data-id="${notification.id}">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                container.append(notificationHTML);
+                            });
+                            
+                            // Add event handlers for mark as read buttons
+                            $('.mark-read-btn').on('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const id = $(this).data('id');
+                                markAsRead(id);
+                        });
+
+                            // Make the notification items clickable to view details
+                            $('.notification-item').on('click', function() {
+                                const id = $(this).data('id');
+                                const notification = notifications.find(n => n.id === id);
+                                if (notification) {
+                                    markAsRead(id);
+                                    window.location.href = getNotificationUrl(notification);
+                            }
+                        });
+                        }
+                        
+                        // Get notification background color based on type
+                        function getNotificationColor(type) {
+                            switch(type) {
+                                case 'leave':
+                                    return 'bg-info';
+                                case 'cash_advance':
+                                    return 'bg-warning';
+                                case 'overtime':
+                                    return 'bg-success';
+                                case 'night_premium':
+                                    return 'bg-primary';
+                                default:
+                                    return 'bg-secondary';
+                            }
+                        }
+                        
+                        // Format notification time to be more readable
+                        function formatNotificationTime(date) {
+                            const now = new Date();
+                            const diff = Math.floor((now - date) / 1000); // seconds
+                            
+                            if (diff < 60) {
+                                return 'Just now';
+                            } else if (diff < 3600) {
+                                const minutes = Math.floor(diff / 60);
+                                return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+                            } else if (diff < 86400) {
+                                const hours = Math.floor(diff / 3600);
+                                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                            } else if (diff < 604800) {
+                                const days = Math.floor(diff / 86400);
+                                return `${days} day${days > 1 ? 's' : ''} ago`;
+                            } else {
+                                return date.toLocaleDateString();
+                            }
+                        }
+                        
+                        // Get appropriate URL for a notification
+                        function getNotificationUrl(notification) {
+                            const type = notification.type;
+                            const details = notification.details;
+                            
+                            if (type.includes('leave')) {
+                                return '{{ url("leaves") }}/' + (details.id || '');
+                            } else if (type.includes('cash_advance')) {
+                                return '{{ url("cash_advances") }}/' + (details.id || '');
+                            } else if (type.includes('overtime')) {
+                                return '{{ url("overtime") }}/' + (details.id || '');
+                            } else if (type.includes('night_premium')) {
+                                return '{{ url("night-premium") }}/' + (details.id || '');
+                            }
+                            
+                            return '{{ route("notifications.all") }}';
+                                        }
+                                        
+                        // Mark a notification as read
+                        function markAsRead(id) {
+                            $.ajax({
+                                url: '{{ route("notifications.mark-read") }}',
+                                method: 'POST',
+                                data: { id: id },
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(response) {
+                                    // Refresh notifications after marking as read
+                                    loadNotifications();
+                                },
+                                error: function(xhr) {
+                                    console.error('Error marking notification as read:', xhr);
                                 }
                             });
                         }
                         
-                        // Function to render a category of results
-                        function renderResultsCategory(title, items, iconClass, iconName) {
-                            const $category = $('<div class="search-category"></div>');
-                            const $title = $('<div class="search-category-title"></div>')
-                                .text(title)
-                                .append($('<span class="search-category-count"></span>').text(items.length));
-                            
-                            $category.append($title);
-                            
-                            const $itemsContainer = $('<div class="search-results-items"></div>');
-                            
-                            items.forEach(function(item, index) {
-                                const $item = $('<a></a>')
-                                    .addClass('search-result-item')
-                                    .attr('href', item.url)
-                                    .attr('title', 'View details for ' + item.title);
+                        // Mark all notifications as read
+                        $('.mark-all-read').on('click', function() {
+                            $.ajax({
+                                url: '{{ route("notifications.mark-all-read") }}',
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(response) {
+                                    // Refresh notifications after marking all as read
+                                    loadNotifications();
                                 
-                                // Determine icon and color based on type and status
-                                let icon = iconName;
-                                let bgClass = item.status_color ? 'bg-' + item.status_color : iconClass;
-                                
-                                // Create icon element
-                                let $icon;
-                                if (item.image) {
-                                    $icon = $('<div class="search-result-icon" style="background-image: url(' + item.image + ');"></div>');
-                                                        } else {
-                                    $icon = $('<div class="search-result-icon ' + bgClass + '"><i class="' + icon + '"></i></div>');
-                                }
-                                
-                                // Create status badge if applicable
-                                let statusBadge = '';
-                                if (item.status) {
-                                    const badgeClass = item.status_color ? 'bg-' + item.status_color : 'bg-secondary';
-                                    statusBadge = '<span class="search-result-badge ' + badgeClass + '">' + 
-                                        (item.status.charAt(0).toUpperCase() + item.status.slice(1)) + '</span>';
-                                }
-                                
-                                // Create content
-                                const $content = $('<div class="search-result-info"></div>');
-                                $content.append('<div class="search-result-title">' + item.title + statusBadge + '</div>');
-                                $content.append('<div class="search-result-subtitle">' + item.subtitle + '</div>');
-                                $content.append('<div class="search-result-desc">' + item.description + '</div>');
-                                
-                                // Add metadata if available
-                                if (item.meta) {
-                                    const $meta = $('<div class="search-result-meta"></div>');
+                                    // Show success message
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'All notifications marked as read',
+                                        toast: true,
+                                        position: 'bottom-end',
+                                        showConfirmButton: false,
+                                        timer: 3000,
+                                        timerProgressBar: true
+                                    });
+                                },
+                                error: function(xhr) {
+                                    console.error('Error marking all notifications as read:', xhr);
                                     
-                                    if (item.type === 'employee') {
-                                        // Employee-specific metadata
-                                        if (item.meta.company_id) {
-                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-id-badge"></i> ' + item.meta.company_id + '</span>');
-                                        }
-                                        if (item.meta.email) {
-                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-envelope"></i> ' + item.meta.email + '</span>');
-                                        }
-                                        if (item.meta.date_hired) {
-                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-calendar-check"></i> Hired: ' + item.meta.date_hired + '</span>');
-                                        }
-                                    } else if (item.type === 'leave') {
-                                        // Leave-specific metadata
-                                        if (item.meta.days) {
-                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-calendar-day"></i> ' + item.meta.days + ' day(s)</span>');
-                                        }
-                                        if (item.meta.payment_status) {
-                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-money-bill-wave"></i> ' + item.meta.payment_status + '</span>');
-                                        }
-                                    } else if (item.type === 'attendance') {
-                                        // Attendance-specific metadata
-                                        if (item.meta.time_in && item.meta.time_in !== 'N/A') {
-                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-sign-in-alt"></i> In: ' + item.meta.time_in + '</span>');
-                                        }
-                                        if (item.meta.time_out && item.meta.time_out !== 'N/A') {
-                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-sign-out-alt"></i> Out: ' + item.meta.time_out + '</span>');
-                                        }
-                                        if (item.meta.hours_worked) {
-                                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-hourglass-half"></i> ' + item.meta.hours_worked + '</span>');
+                                    // Show error message
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Failed to mark notifications as read',
+                                        toast: true,
+                                        position: 'bottom-end',
+                                        showConfirmButton: false,
+                                        timer: 3000,
+                                        timerProgressBar: true
+                                    });
+                                }
+                            });
+                        });
+                        
+                        // Check for notification updates
+                        function checkForUpdates() {
+                            $.ajax({
+                                url: '{{ route("notifications.check-updates") }}',
+                                method: 'GET',
+                                data: { 
+                                    timestamp: latestNotificationTimestamp 
+                                },
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Cache-Control': 'no-cache, no-store, must-revalidate'
+                                },
+                                success: function(response) {
+                                    if (response.has_updates) {
+                                        // Reload notifications if there are updates
+                                        loadNotifications();
+                                        
+                                        // Show notification toast if we have new ones
+                                        if (response.new_count > 0) {
+                                            Swal.fire({
+                                                icon: 'info',
+                                                title: 'New Notifications',
+                                                text: `You have ${response.new_count} new notification${response.new_count !== 1 ? 's' : ''}`,
+                                                toast: true,
+                                                position: 'bottom-end',
+                                                showConfirmButton: false,
+                                                timer: 5000,
+                                                timerProgressBar: true
+                                            });
                                         }
                                     }
-                                    
-                                    $content.append($meta);
+                                },
+                                error: function(xhr) {
+                                    console.error('Error checking for notification updates:', xhr);
                                 }
-                                
-                                $item.append($icon).append($content);
-                                $itemsContainer.append($item);
                             });
+                        }
+                        
+                        // Start periodic checks for new notifications
+                        function startNotificationUpdateChecks() {
+                            // Clear any existing interval
+                            if (notificationCheckInterval) {
+                                clearInterval(notificationCheckInterval);
+                            }
                             
-                            $category.append($itemsContainer);
-                            $('.search-categories').append($category);
+                            // Check for updates every 30 seconds
+                            notificationCheckInterval = setInterval(checkForUpdates, 30000);
                         }
                         
-                        // Function to show searching state
-                        function showSearchingState(query) {
-                            $('.loading-spinner').show().html(
-                                '<div class="text-center">' +
-                                '<div class="spinner-border text-primary mb-2" role="status">' +
-                                '<span class="sr-only">Loading...</span>' +
-                                '</div>' +
-                                '<p class="searching-text mb-0">Searching</p>' +
-                                '</div>'
-                            );
-                            $('.search-categories').empty();
-                        }
+                        // Initial load of notifications
+                        loadNotifications();
                         
-                        // Function to show empty state
-                        function showEmptyState() {
-                            $('.loading-spinner').hide();
-                            $('.search-categories').html(
-                                '<div class="search-empty-state">' +
-                                '<i class="fas fa-search"></i>' +
-                                '<p>Start typing to search</p>' +
-                                '<div class="hint">Find employees, leave requests, and attendance records</div>' +
-                                '</div>'
-                            );
-                        }
-                        
-                        // Function to show no results message
-                        function showNoResults(query) {
-                            $('.search-categories').html(
-                                '<div class="no-results-found">' +
-                                '<i class="fas fa-search"></i>' +
-                                '<p>No results found for "' + query + '"</p>' +
-                                '<div class="hint">Try different keywords or check your spelling</div>' +
-                                '</div>'
-                            );
-                        }
-                        
-                        // Function to show search error
-                        function showSearchError(message) {
-                            $('.search-categories').html(
-                                '<div class="no-results-found">' +
-                                '<i class="fas fa-exclamation-circle text-danger"></i>' +
-                                '<p>' + message + '</p>' +
-                                '<div class="hint">Please try again or contact support if the issue persists</div>' +
-                                '</div>'
-                            );
+                        // Add specific event for opening the dropdown to refresh notifications
+                        $('#notifications-dropdown-toggle').on('click', function() {
+                            loadNotifications();
+                        });
+
+                        // Add desktop notification support when supported
+                        if ('Notification' in window) {
+                            // Handle notification permission
+                            if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                                // We'll request permission when the user interacts with notifications
+                                $('#notifications-dropdown-toggle').on('click', function() {
+                                    Notification.requestPermission();
+                                });
+                            }
                         }
                     });
                 </script>
@@ -1098,79 +1126,79 @@
                 @endif
 
 
-                @canany(['admin', 'super-admin', 'hrcomben', 'hrcompliance', 'hrpolicy','vpfinance-admin'])
+                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('HR Policy') || auth()->user()->hasRole('VP Finance'))
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#" data-tooltip="Announcements and Holidays">
                         <i class="fas fa-bullhorn"></i>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        @canany(['super-admin'])
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" aria-labelledby="announcements-dropdown">
+                        @if(auth()->user()->hasRole('Super Admin'))
                         <a href="{{ url('types') }}" class="dropdown-item">
                             <i class="fas fa-folder mr-2"></i> Leave Type
                         </a>
-                        @endcanany
-                        @canany(['admin', 'super-admin', 'hrcompliance', 'hrpolicy','vpfinance-admin'])
+                        @endif
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('HR Policy') || auth()->user()->hasRole('VP Finance'))
                         <a href="{{ url('posts') }}" class="dropdown-item">
                             <i class="fas fa-bullhorn mr-2"></i> Announcement
                         </a>
-                        @endcanany
-                        @canany(['admin', 'super-admin', 'supervisor','vpfinance-admin'])
+                        @endif
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance'))
                         <a href="{{ url('tasks') }}" class="dropdown-item">
                             <i class="fas fa-tasks mr-2"></i> Send Task
                         </a>
-                        @endcanany
-                        @canany(['admin', 'super-admin', 'hrcomben'])
+                        @endif
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen'))
                         <a href="{{ url('holidays') }}" class="dropdown-item">
                             <i class="fas fa-calendar-alt mr-2"></i> Holiday
                         </a>
-                        @endcanany
-                        @can('system-admin')
+                        @endif
+                        @if(auth()->user()->hasRole('Super Admin'))
                         <a href="{{ url('system-updates') }}" class="dropdown-item">
                             <i class="fas fa-sync-alt mr-2"></i> System Updates
                         </a>
-                        @endcan
+                        @endif
                     </div>
                 </li>
-                @endcanany
+                @endif
 
-                @canany(['admin', 'super-admin', 'hrcomben'])
+                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen'))
                 <li class="nav-item">
                     <a class="nav-link contribution-notify-btn" href="#" data-toggle="modal" data-target="#contributeNotifyModal" data-tooltip="Send Contribution Notifications">
                         <i class="fas fa-money-bill-wave"></i>
                         <span class="badge badge-warning navbar-badge notification-badge"><i class="fas fa-bell fa-xs"></i></span>
                     </a>
                 </li>
-                @endcanany
+                @endif
 
-                @canany(['admin', 'super-admin', 'supervisor'])
+                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Supervisor'))
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#" data-tooltip="User Management">
                         <i class="fas fa-users"></i>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        @canany(['admin', 'super-admin', 'vpfinance-admin'])
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" aria-labelledby="user-management-dropdown">
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('VP Finance'))
                         <a href="{{ url('users') }}" class="dropdown-item">
                             <i class="fas fa-user-cog mr-2"></i> User Management
                         </a>
-                        @endcanany
+                        @endif
                         @if(auth()->user()->hasRole('Supervisor'))
                         <a href="{{ route('activity-logs.index') }}" class="dropdown-item">
                             <i class="fas fa-history mr-2"></i> Departmental User Activity
                         </a>
                         @endif
-                        @canany(['admin', 'super-admin', 'vpfinance-admin'])
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('VP Finance'))
                         <a href="{{ url('/user-activity') }}" class="dropdown-item">
                             <i class="fas fa-history mr-2"></i> User General Logs
                         </a>
-                        @endcanany
-                        @canany(['super-admin'])
+                        @endif
+                        @if(auth()->user()->hasRole('Super Admin'))
                         <a href="{{ route('database.backups') }}" class="dropdown-item">
                             <i class="fas fa-database mr-2"></i> Database Backups
                         </a>
-                        @endcanany
+                        @endif
                     </div>
                 </li>
-                @endcanany
+                @endif
 
 
                 @guest
@@ -1182,17 +1210,18 @@
                     </li>
                 @else
                     <li class="nav-item dropdown user-menu">
-                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" data-tooltip="Profile Management">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" data-tooltip="Profile Management" id="profile-dropdown">
                             @if(Auth::user()->adminlte_image())
                                 <img src="{{ Auth::user()->adminlte_image() }}" class="user-image img-circle elevation-1" alt="User Image">
-                                {{Auth::user()->first_name}} {{Auth::user()->last_name}}
+                                <span class="d-none d-md-inline">{{Auth::user()->first_name}} {{Auth::user()->last_name}}</span>
                             @else
                                 <div class="user-image img-circle elevation-1 d-flex justify-content-center align-items-center">
                                     {{ strtoupper(substr(Auth::user()->first_name, 0, 1) . substr(Auth::user()->last_name, 0, 1)) }}
                                 </div>
+                                <span class="d-none d-md-inline">{{Auth::user()->first_name}} {{Auth::user()->last_name}}</span>
                             @endif
                         </a>
-                        <div class="dropdown-menu">
+                        <div class="dropdown-menu dropdown-menu-user" aria-labelledby="profile-dropdown">
                             <div class="user-header">
                                 @if(Auth::user()->adminlte_image())
                                     <img src="{{ Auth::user()->adminlte_image() }}" class="img-circle elevation-2" alt="User Image">
@@ -1439,6 +1468,30 @@
         from { width: 100%; }
         to { width: 0%; }
     }
+
+    /* Additional mobile responsiveness for dropdowns */
+    @media (max-width: 767.98px) {
+        /* Profile name display */
+        .nav-link .d-md-inline {
+            display: none;
+        }
+        
+        /* Ensure dropdown toggle is properly sized */
+        .dropdown-toggle {
+            padding-right: 1.5rem;
+        }
+        
+        /* Fix button touch targets */
+        .navbar-nav .nav-link {
+            padding: 0.75rem 1rem;
+        }
+        
+        /* Improve dropdown item touch targets */
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
+    }
 </style><script>
     $(document).ready(function() {
         // Initialize tooltips with custom configuration
@@ -1475,6 +1528,273 @@
         $(document).on('remove', '[data-tooltip]', function() {
             $(this).tooltip('dispose');
         });
+    });
+</script>
+
+<!-- Search Functionality Script -->
+<script>
+    $(document).ready(function() {
+        // Show search popup with animations
+        $('#search-toggle').click(function(e) {
+            e.preventDefault();
+            $('#search-popup').css('display', 'flex').addClass('visible');
+            setTimeout(function() {
+                $('#search-input').focus();
+            }, 100);
+            
+            // Show empty state initially
+            showEmptyState();
+        });
+
+        // Close search popup with animations
+        $('#search-close').click(function() {
+            closeSearchPopup();
+        });
+
+        // Close search popup when clicking outside
+        $(document).click(function(e) {
+            if ($('#search-popup').is(':visible') && !$(e.target).closest('#search-popup, #search-toggle').length) {
+                closeSearchPopup();
+            }
+        });
+        
+        // Function to close search popup with animation
+        function closeSearchPopup() {
+            $('#search-popup').removeClass('visible');
+            setTimeout(function() {
+                $('#search-popup').css('display', 'none');
+            }, 300);
+        }
+
+        // Variable to track the timeout for debouncing
+        let searchTimeout = null;
+        let lastQuery = '';
+        
+        // Handle search input with debounce (250ms for faster responses)
+        $('#search-input').on('keyup', function(e) {
+            const query = $(this).val().trim();
+            
+            // Clear any existing timeout
+            clearTimeout(searchTimeout);
+            
+            // If query is empty, show empty state
+            if (query === '') {
+                showEmptyState();
+                return;
+            }
+            
+            // Don't search again if query hasn't changed
+            if (query === lastQuery) {
+                return;
+            }
+            
+            // Show loading state
+            showSearchingState(query);
+            
+            // Set a new timeout for improved performance
+            searchTimeout = setTimeout(function() {
+                lastQuery = query;
+                performSearch(query);
+            }, 250);
+        });
+
+        // Close on escape key
+        $(document).keyup(function(e) {
+            if (e.key === "Escape" && $('#search-popup').is(':visible')) {
+                closeSearchPopup();
+            }
+        });
+        
+        // Function to perform search
+        function performSearch(query) {
+            $.ajax({
+                url: '{{ route("global.search") }}',
+                type: 'GET',
+                data: {
+                    query: query,
+                    limit: 10 // Show more results per category for better usability
+                },
+                dataType: 'json',
+                success: function(response) {
+                    // Hide loading spinner
+                    $('.loading-spinner').hide();
+                    
+                    if (response.success) {
+                        const results = response.results;
+                        
+                        // Check if we have any results
+                        if (results.total_count === 0) {
+                            showNoResults(query);
+                            return;
+                        }
+                        
+                        // Clear previous results
+                        $('.search-categories').empty();
+                        
+                        // Render employees with staggered animation
+                        if (results.employees && results.employees.length > 0) {
+                            renderResultsCategory('Employees', results.employees, 'bg-primary', 'fas fa-user');
+                        }
+                        
+                        // Render leaves
+                        if (results.leaves && results.leaves.length > 0) {
+                            renderResultsCategory('Leave Requests', results.leaves, 'bg-success', 'fas fa-calendar-alt');
+                        }
+                        
+                        // Render attendance
+                        if (results.attendances && results.attendances.length > 0) {
+                            renderResultsCategory('Attendance Records', results.attendances, 'bg-info', 'fas fa-clock');
+                        }
+                    } else {
+                        showSearchError(response.message || 'An error occurred while searching');
+                    }
+                },
+                error: function(xhr) {
+                    // Hide loading spinner
+                    $('.loading-spinner').hide();
+                    
+                    showSearchError('An error occurred while searching. Please try again.');
+                    console.error('Search error:', xhr.responseText);
+                }
+            });
+        }
+        
+        // Function to render a category of results
+        function renderResultsCategory(title, items, iconClass, iconName) {
+            const $category = $('<div class="search-category"></div>');
+            const $title = $('<div class="search-category-title"></div>')
+                .text(title)
+                .append($('<span class="search-category-count"></span>').text(items.length));
+            
+            $category.append($title);
+            
+            const $itemsContainer = $('<div class="search-results-items"></div>');
+            
+            items.forEach(function(item, index) {
+                const $item = $('<a></a>')
+                    .addClass('search-result-item')
+                    .attr('href', item.url)
+                    .attr('title', 'View details for ' + item.title);
+                
+                // Determine icon and color based on type and status
+                let icon = iconName;
+                let bgClass = item.status_color ? 'bg-' + item.status_color : iconClass;
+                
+                // Create icon element
+                let $icon;
+                if (item.image) {
+                    $icon = $('<div class="search-result-icon" style="background-image: url(' + item.image + ');"></div>');
+                } else {
+                    $icon = $('<div class="search-result-icon ' + bgClass + '"><i class="' + icon + '"></i></div>');
+                }
+                
+                // Create status badge if applicable
+                let statusBadge = '';
+                if (item.status) {
+                    const badgeClass = item.status_color ? 'bg-' + item.status_color : 'bg-secondary';
+                    statusBadge = '<span class="search-result-badge ' + badgeClass + '">' + 
+                        (item.status.charAt(0).toUpperCase() + item.status.slice(1)) + '</span>';
+                }
+                
+                // Create content
+                const $content = $('<div class="search-result-info"></div>');
+                $content.append('<div class="search-result-title">' + item.title + statusBadge + '</div>');
+                $content.append('<div class="search-result-subtitle">' + item.subtitle + '</div>');
+                $content.append('<div class="search-result-desc">' + item.description + '</div>');
+                
+                // Add metadata if available
+                if (item.meta) {
+                    const $meta = $('<div class="search-result-meta"></div>');
+                    
+                    if (item.type === 'employee') {
+                        // Employee-specific metadata
+                        if (item.meta.company_id) {
+                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-id-badge"></i> ' + item.meta.company_id + '</span>');
+                        }
+                        if (item.meta.email) {
+                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-envelope"></i> ' + item.meta.email + '</span>');
+                        }
+                        if (item.meta.date_hired) {
+                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-calendar-check"></i> Hired: ' + item.meta.date_hired + '</span>');
+                        }
+                    } else if (item.type === 'leave') {
+                        // Leave-specific metadata
+                        if (item.meta.days) {
+                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-calendar-day"></i> ' + item.meta.days + ' day(s)</span>');
+                        }
+                        if (item.meta.payment_status) {
+                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-money-bill-wave"></i> ' + item.meta.payment_status + '</span>');
+                        }
+                    } else if (item.type === 'attendance') {
+                        // Attendance-specific metadata
+                        if (item.meta.time_in && item.meta.time_in !== 'N/A') {
+                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-sign-in-alt"></i> In: ' + item.meta.time_in + '</span>');
+                        }
+                        if (item.meta.time_out && item.meta.time_out !== 'N/A') {
+                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-sign-out-alt"></i> Out: ' + item.meta.time_out + '</span>');
+                        }
+                        if (item.meta.hours_worked) {
+                            $meta.append('<span class="search-result-meta-item"><i class="fas fa-hourglass-half"></i> ' + item.meta.hours_worked + '</span>');
+                        }
+                    }
+                    
+                    $content.append($meta);
+                }
+                
+                $item.append($icon).append($content);
+                $itemsContainer.append($item);
+            });
+            
+            $category.append($itemsContainer);
+            $('.search-categories').append($category);
+        }
+        
+        // Function to show searching state
+        function showSearchingState(query) {
+            $('.loading-spinner').show().html(
+                '<div class="text-center">' +
+                '<div class="spinner-border text-primary mb-2" role="status">' +
+                '<span class="sr-only">Loading...</span>' +
+                '</div>' +
+                '<p class="searching-text mb-0">Searching</p>' +
+                '</div>'
+            );
+            $('.search-categories').empty();
+        }
+        
+        // Function to show empty state
+        function showEmptyState() {
+            $('.loading-spinner').hide();
+            $('.search-categories').html(
+                '<div class="search-empty-state">' +
+                '<i class="fas fa-search"></i>' +
+                '<p>Start typing to search</p>' +
+                '<div class="hint">Find employees, leave requests, and attendance records</div>' +
+                '</div>'
+            );
+        }
+        
+        // Function to show no results message
+        function showNoResults(query) {
+            $('.search-categories').html(
+                '<div class="no-results-found">' +
+                '<i class="fas fa-search"></i>' +
+                '<p>No results found for "' + query + '"</p>' +
+                '<div class="hint">Try different keywords or check your spelling</div>' +
+                '</div>'
+            );
+        }
+        
+        // Function to show search error
+        function showSearchError(message) {
+            $('.search-categories').html(
+                '<div class="no-results-found">' +
+                '<i class="fas fa-exclamation-circle text-danger"></i>' +
+                '<p>' + message + '</p>' +
+                '<div class="hint">Please try again or contact support if the issue persists</div>' +
+                '</div>'
+            );
+        }
     });
 </script>
 

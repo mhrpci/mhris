@@ -1,16 +1,32 @@
 {
+  "_pusher-DHLPHH5Z.js": {
+    "file": "assets/pusher-DHLPHH5Z.js",
+    "name": "pusher"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-DDBcUJZH.css",
+    "file": "assets/app-tn0RQdqM.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-hMqcJuu0.js",
+    "file": "assets/app-8yjS9oK2.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
+    "imports": [
+      "_pusher-DHLPHH5Z.js"
+    ],
     "css": [
-      "assets/app-DDBcUJZH.css"
+      "assets/app-tn0RQdqM.css"
+    ]
+  },
+  "resources/js/notifications.js": {
+    "file": "assets/notifications-mvaJSWrt.js",
+    "name": "notifications",
+    "src": "resources/js/notifications.js",
+    "isEntry": true,
+    "imports": [
+      "_pusher-DHLPHH5Z.js"
     ]
   }
 }

@@ -68,6 +68,7 @@ class Payroll extends Model
         'other_adjustments',   // Other positive adjustments
         'cash_bond',           // Cash bond deductions
         'other_deduction',     // Other negative adjustments/deductions
+        'other_deduction_description', // Description for other deductions
 
         // Time tracking details
         'late_time',

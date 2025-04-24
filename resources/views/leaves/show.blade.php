@@ -532,7 +532,7 @@
     </div>
 
     <div class="form-group">
-        <label>easons for leave</label>
+        <label>Reasons for leave</label>
         <span class="input-line" data-field="reason">{{ $leave->reason_to_leave ?? '' }}</span>
     </div>
 

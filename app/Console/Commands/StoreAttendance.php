@@ -15,7 +15,7 @@ class StoreAttendance extends Command
 
     public function handle()
     {
-        $startDate = Carbon::createFromFormat('Y-m-d', '2025-01-01');
+        $startDate = Carbon::createFromFormat('Y-m-d', '2025-04-10');
         $today = Carbon::now();
 
         if ($today->lt($startDate)) {

@@ -2,7 +2,7 @@
             <!-- Brand Logo -->
             <a href="{{ url('/home') }}" class="brand-link">
                 <img src="{{ asset('vendor/adminlte/dist/img/whiteICON_APP.png') }}" alt="Task List Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-                <span class="brand-text font-weight-light">MHRPCI-HRIS</span>
+                <span class="brand-text font-weight-light">{{env('APP_NAME')}}</span>
             </a>
 
             <!-- Sidebar -->
@@ -31,14 +31,14 @@
                             </a>
                         </li>
 
-                        @canany(['admin', 'super-admin', 'hrcompliance','finance','vpfinance-admin'])
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('VP Finance'))
                         <li class="nav-item">
                             <a href="{{ url('/employees') }}" class="nav-link {{ Request::is('employees*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-user-tie"></i>
                                 <p>Employee Management</p>
                             </a>
                         </li>
-                        @endcanany
+                        @endif
 
                         @auth
                             @if(auth()->user()->hasRole('Employee'))
@@ -50,7 +50,7 @@
                         </li>
                         @endif
                       @endauth
-                        @canany(['admin', 'super-admin', 'hrcomben', 'normal-employee','supervisor','vpfinance-admin','finance'])
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance') || auth()->user()->hasRole('Finance'))
                         <li class="nav-item has-treeview {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*', 'employee-overtime*', 'employee-night-premium*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*', 'employee-overtime*', 'employee-night-premium*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-clock"></i>
@@ -60,19 +60,11 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
-                                @canany(['admin', 'super-admin', 'hrcomben','supervisor','vpfinance-admin'])
+                                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance') || auth()->user()->hasRole('Finance'))
                                 <li class="nav-item">
                                     <a href="{{ url('/attendances') }}" class="nav-link {{ Request::is('attendances*') || Request::is('timesheets*') || Request::is('overtime*') || Request::is('night-premium*') ? 'active' : '' }}">
                                         <i class="fas fa-clipboard-list nav-icon"></i>
                                         <p>Attendance</p>
-                                    </a>
-                                </li>
-                                @endcanany
-                                @if(auth()->user()->hasRole('Finance'))
-                                <li class="nav-item">
-                                    <a href="{{ url('/overtime') }}" class="nav-link {{ Request::is('overtime*') ? 'active' : '' }}">
-                                        <i class="fas fa-clipboard-list nav-icon"></i>
-                                        <p>Overtime</p>
                                     </a>
                                 </li>
                                 @endif
@@ -106,8 +98,8 @@
                                 @endauth
                             </ul>
                         </li>
-                    @endcanany
-                    @canany(['admin', 'super-admin', 'hrcomben','normal-employee','supervisor','vpfinance-admin'])
+                    @endif
+                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance'))
                     <li class="nav-item has-treeview {{ Request::is('leaves*') || Request::is('leaves-employees*') || Request::is('my-leave-sheet*') || Request::is('my-leave-detail*') ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link {{ Request::is('leaves*') || Request::is('leaves-employees*') || Request::is('my-leave-sheet*') || Request::is('my-leave-detail*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar"></i>
@@ -117,14 +109,14 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
-                                @canany(['admin', 'super-admin', 'hrcomben','supervisor','vpfinance-admin'])
+                                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance'))
                                 <li class="nav-item">
                                     <a href="{{ url('/leaves') }}" class="nav-link {{ Request::is('leaves') || request()->routeIs('leaves.show*') ? 'active' : '' }}">
                                         <i class="fas fa-list nav-icon"></i>
                                         <p>Leave List</p>
                                     </a>
                                 </li>
-                                @endcanany
+                                @endif
                                 @auth
                                     @if(auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor'))
                                 <li class="nav-item">
@@ -135,14 +127,14 @@
                                 </li>
                                 @endif
                                 @endauth
-                                @canany(['admin', 'super-admin', 'hrcomben'])
+                                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen'))
                                 <li class="nav-item">
                                     <a href="{{ url('/leaves-employees') }}" class="nav-link {{ Request::is('leaves-employees*') ? 'active' : '' }}">
                                         <i class="fas fa-file nav-icon"></i>
                                         <p>Leave Sheet</p>
                                     </a>
                                 </li>
-                                @endcanany
+                                @endif
                                 @auth
                                     @if(auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor'))
                                 <li class="nav-item">
@@ -155,8 +147,8 @@
                                 @endauth
                             </ul>
                         </li>
-                        @endcanany
-                        @canany(['admin', 'super-admin', 'hrcomben','finance','normal-employee','vpfinance-admin'])
+                        @endif
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('VP Finance'))
                         <li class="nav-item has-treeview {{ Request::is('payroll*', 'my-payrolls*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Request::is('payroll*', 'my-payrolls*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-coins"></i>
@@ -166,14 +158,14 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
-                                @canany(['admin', 'super-admin','hrcomben','finance','vpfinance-admin'])
+                                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('VP Finance'))
                                 <li class="nav-item">
                                     <a href="{{ url('/payroll') }}" class="nav-link {{ Request::is('payroll*') ? 'active' : '' }}">
                                         <i class="fas fa-money-bill-wave nav-icon"></i>
                                         <p>Payroll</p>
                                     </a>
                                 </li>
-                                @endcanany
+                                @endif
                                 @auth
                                     @if(auth()->user()->hasRole('Employee'))
                                 <li class="nav-item">
@@ -186,8 +178,8 @@
                                 @endauth
                             </ul>
                         </li>
-                        @endcanany
-                        @canany(['admin', 'super-admin', 'hrcomben', 'finance', 'normal-employee', 'supervisor','vpfinance-admin'])
+                        @endif
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance'))
                         <li class="nav-item has-treeview {{ Request::is('sss*', 'philhealth*', 'pagibig*', 'loan_sss*','loan_pagibig*', 'cash_advances*', 'my-contributions*', 'my-loans*', 'contributions-employees-list*', 'loans-employees-list*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Request::is('sss*', 'philhealth*', 'pagibig*', 'loan_sss*', 'loan_pagibig*', 'cash_advances*', 'my-contributions*', 'my-loans*', 'contributions-employees-list*', 'loans-employees-list*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-hands-helping"></i>
@@ -197,7 +189,7 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
-                                @canany(['admin', 'super-admin', 'hrcomben', 'finance','vpfinance-admin'])
+                                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('VP Finance'))
                                 <li class="nav-item">
                                     <a href="{{ url('/sss') }}" class="nav-link {{ Request::is('sss*', 'philhealth*', 'pagibig*','contributions-employees-list') ? 'active' : '' }}">
                                         <i class="fas fa-file-alt nav-icon"></i>
@@ -210,7 +202,7 @@
                                         <p>Loans</p>
                                     </a>
                                 </li>
-                                @endcanany
+                                @endif
                                 @auth
                                     @if(auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor'))
                                     <li class="nav-item">
@@ -235,8 +227,8 @@
                                 @endauth
                             </ul>
                         </li>
-                        @endcanany
-                        @can('hrhiring')
+                        @endif
+                        @if(auth()->user()->hasRole('HR Hiring'))
                         <li class="nav-item">
                             <a href="{{ url('/hirings') }}" class="nav-link {{ Request::is('hirings*', 'all-careers*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-briefcase"></i>
@@ -249,9 +241,9 @@
                                 </p>
                             </a>
                         </li>
-                        @endcan
+                        @endif
 
-                        @canany(['admin', 'super-admin', 'hrcompliance', 'it-staff', 'hrpolicy'])
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('IT Staff') || auth()->user()->hasRole('HR Policy'))
                         <li class="nav-item has-treeview {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'subsidiaries*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'subsidiaries*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-cogs"></i>
@@ -261,33 +253,33 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
-                                @can('hrcompliance')
+                                @if(auth()->user()->hasRole('HR Compliance'))
                                 <li class="nav-item">
                                     <a href="{{ url('/accountabilities') }}" class="nav-link {{ Request::is('accountabilities*') ? 'active' : '' }}">
                                         <i class="fas fa-check-circle nav-icon"></i>
                                         <p>Employee Accountability</p>
                                     </a>
                                 </li>
-                                @endcan
-                                @can('hrpolicy')
+                                @endif
+                                @if(auth()->user()->hasRole('HR Policy'))
                                 <li class="nav-item">
                                     <a href="{{ url('/credentials') }}" class="nav-link {{ Request::is('credentials*') ? 'active' : '' }}">
                                         <i class="fas fa-phone nav-icon"></i>
                                         <p>Contacts and Emails</p>
                                     </a>
                                 </li>
-                                @endcan
-                                @canany(['hrcompliance', 'it-staff'])
+                                @endif
+                                @if(auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('IT Staff'))
                                 <li class="nav-item">
                                     <a href="{{ url('/inventory') }}" class="nav-link {{ Request::is('inventory*') ? 'active' : '' }}">
                                         <i class="fas fa-cubes nav-icon"></i>
                                         <p>Inventory</p>
                                     </a>
                                 </li>
-                                @endcanany
+                                @endif
                             </ul>
                         </li>
-                        @endcanany
+                        @endif
                         @auth
                             @if(auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor'))
                         <li class="nav-item">
@@ -310,15 +302,15 @@
                                 <p>MHR Calendar</p>
                             </a>
                         </li>
-                        @canany(['product-manager', 'super-admin'])
+                        @if(auth()->user()->hasRole('Product Manager') || auth()->user()->hasRole('Super Admin'))
                         <li class="nav-item">
                             <a href="{{ route('analytics.dashboard') }}" class="nav-link {{ Request::is('analytics*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-pills"></i>
                                 <p>MHRHCI Management</p>
                             </a>
                         </li>
-                        @endcanany
-                        @can('super-admin')
+                        @endif
+                        @if(auth()->user()->hasRole('Super Admin'))
                         <li class="nav-item">
                             <a href="{{ url('/reports') }}" class="nav-link {{ Request::is('reports*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-chart-bar"></i>
@@ -332,7 +324,7 @@
                             </a>
                         </li>
                     </ul>
-                    @endcanany
+                    @endif
                     @if(auth()->user()->hasRole('Employee'))
                     <li class="nav-item">
                         <a href="{{ url('/get-the-app') }}" class="nav-link {{ Request::is('get-the-app*') ? 'active' : '' }}">

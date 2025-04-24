@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -42,7 +44,6 @@ use App\Http\Controllers\EmployeeBirthdayController;
 use App\Http\Controllers\ControllerAnalysisController;
 use App\Http\Controllers\UserActivityController;
 use App\Http\Controllers\SearchController;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ActivityLogController;
@@ -54,7 +55,6 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\RouteManagementController;
-use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\NightPremiumController;
 use App\Http\Controllers\DatabaseBackupController;
 use App\Http\Controllers\ReportController;
@@ -62,6 +62,7 @@ use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentReactionController;
 use App\Http\Controllers\GetAppController;
+use App\Http\Controllers\WebNotificationsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -475,6 +476,17 @@ Route::middleware('auth')->group(function () {
     // Holiday import and export routes
     Route::post('holidays/import', [App\Http\Controllers\HolidayController::class, 'import'])->name('holidays.import');
     Route::match(['get', 'post'], 'holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
+
+    // Web Push Notification Routes
+    Route::prefix('web-notifications')->name('web-notifications.')->group(function () {
+        Route::get('/vapid-public-key', [WebNotificationsController::class, 'getVapidPublicKey'])->name('vapid-public-key');
+        Route::get('/status', [WebNotificationsController::class, 'checkNotificationStatus'])->name('status');
+        Route::post('/subscribe', [WebNotificationsController::class, 'storePushSubscription'])->name('subscribe');
+        Route::post('/test', [WebNotificationsController::class, 'testPushNotification'])->name('test');
+        Route::post('/check-updates', [WebNotificationsController::class, 'checkBackgroundUpdates'])->name('check-updates');
+        Route::post('/mark-as-read', [WebNotificationsController::class, 'markAsReadFromBackground'])->name('mark-as-read');
+        Route::post('/send', [WebNotificationsController::class, 'sendBackgroundNotification'])->name('send');
+    });
 });
 
 // Route Management routes
@@ -496,8 +508,8 @@ Route::middleware(['auth', 'role:Super Admin'])->group(function () {
 
 // Search routes
 Route::get('/api/search', [SearchController::class, 'globalSearch'])->name('global.search');
-
 // Get the App routes
 Route::get('/get-the-app', [GetAppController::class, 'index'])->name('get-the-app');
 
 Auth::routes();
+

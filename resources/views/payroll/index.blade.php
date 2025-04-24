@@ -965,6 +965,7 @@
                     const otherAdjustmentsField = $row.find('td:nth-child(14) input');
                     const cashBondField = $row.find('td:nth-child(22) input');
                     const otherDeductionField = $row.find('td:nth-child(23) input');
+                    const otherDeductionDescField = $row.find('td:nth-child(24) input.other-deduct-desc-field');
 
                     // Get values, ensuring explicit zeros are included
                     const adjustmentValue = adjustmentField.val() !== '' ? parseFloat(adjustmentField.val()) : null;
@@ -972,6 +973,7 @@
                     const otherAdjustmentsValue = otherAdjustmentsField.val() !== '' ? parseFloat(otherAdjustmentsField.val()) : null;
                     const cashBondValue = cashBondField.val() !== '' ? parseFloat(cashBondField.val()) : null;
                     const otherDeductionValue = otherDeductionField.val() !== '' ? parseFloat(otherDeductionField.val()) : null;
+                    const otherDeductionDescValue = otherDeductionDescField.val() !== '' ? otherDeductionDescField.val() : null;
 
                     // Check if any field has been explicitly set (including to zero)
                     // Only include fields in the array if they have an explicit value
@@ -998,6 +1000,10 @@
 
                     if (otherDeductionValue !== null) {
                         adjustmentData.other_deduction = otherDeductionValue;
+                    }
+
+                    if (otherDeductionDescValue !== null) {
+                        adjustmentData.other_deduction_description = otherDeductionDescValue;
                     }
 
                     // Only add to adjustments if there's at least one field set

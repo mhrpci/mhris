@@ -113,7 +113,7 @@
                                 </tr>
                                 <tr>
                                     <td>Other Deductions</td>
-                                    <td class="text-end">₱{{ number_format($payroll->other_deduction, 2) }}</td>
+                                    <td class="text-end">₱{{ number_format($payroll->other_deduction, 2) }} - {{ $payroll->other_deduction_description }}</td>
                                 </tr>
                                 <tr class="fw-bold">
                                     <td>Total Deductions</td>
