@@ -48,8 +48,9 @@
                                 <p>My Task</p>
                             </a>
                         </li>
-                        @endif
-                      @endauth
+                            @endif
+                        @endauth
+                        
                         @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance') || auth()->user()->hasRole('Finance'))
                         <li class="nav-item has-treeview {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*', 'employee-overtime*', 'employee-night-premium*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Request::is('attendances*', 'timesheets*', 'my-timesheet', 'attendance', 'overtime*', 'night-premium*', 'employee-overtime*', 'employee-night-premium*') ? 'active' : '' }}">
@@ -98,10 +99,11 @@
                                 @endauth
                             </ul>
                         </li>
-                    @endif
-                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance'))
-                    <li class="nav-item has-treeview {{ Request::is('leaves*') || Request::is('leaves-employees*') || Request::is('my-leave-sheet*') || Request::is('my-leave-detail*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ Request::is('leaves*') || Request::is('leaves-employees*') || Request::is('my-leave-sheet*') || Request::is('my-leave-detail*') ? 'active' : '' }}">
+                        @endif
+
+                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance'))
+                        <li class="nav-item has-treeview {{ Request::is('leaves*') || Request::is('leaves-employees*') || Request::is('my-leave-sheet*') || Request::is('my-leave-detail*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ Request::is('leaves*') || Request::is('leaves-employees*') || Request::is('my-leave-sheet*') || Request::is('my-leave-detail*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar"></i>
                                 <p>
                                     Leave Management
@@ -125,7 +127,7 @@
                                         <p>Apply Leave</p>
                                     </a>
                                 </li>
-                                @endif
+                                    @endif
                                 @endauth
                                 @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen'))
                                 <li class="nav-item">
@@ -143,11 +145,12 @@
                                         <p>My Leaves</p>
                                     </a>
                                 </li>
-                                @endif
+                                    @endif
                                 @endauth
                             </ul>
                         </li>
                         @endif
+
                         @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('VP Finance'))
                         <li class="nav-item has-treeview {{ Request::is('payroll*', 'my-payrolls*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Request::is('payroll*', 'my-payrolls*') ? 'active' : '' }}">
@@ -174,11 +177,12 @@
                                         <p>My Payroll</p>
                                     </a>
                                 </li>
-                                @endif
+                                    @endif
                                 @endauth
                             </ul>
                         </li>
                         @endif
+
                         @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance'))
                         <li class="nav-item has-treeview {{ Request::is('sss*', 'philhealth*', 'pagibig*', 'loan_sss*','loan_pagibig*', 'cash_advances*', 'my-contributions*', 'my-loans*', 'contributions-employees-list*', 'loans-employees-list*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Request::is('sss*', 'philhealth*', 'pagibig*', 'loan_sss*', 'loan_pagibig*', 'cash_advances*', 'my-contributions*', 'my-loans*', 'contributions-employees-list*', 'loans-employees-list*') ? 'active' : '' }}">
@@ -228,7 +232,8 @@
                             </ul>
                         </li>
                         @endif
-                        @if(auth()->user()->hasRole('HR Hiring'))
+
+                        @if(auth()->user()->hasRole('HR Hiring') || auth()->user()->hasRole('Super Admin'))
                         <li class="nav-item">
                             <a href="{{ url('/hirings') }}" class="nav-link {{ Request::is('hirings*', 'all-careers*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-briefcase"></i>
@@ -280,6 +285,7 @@
                             </ul>
                         </li>
                         @endif
+
                         @auth
                             @if(auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor'))
                         <li class="nav-item">
@@ -288,20 +294,23 @@
                                 <p>My Profile</p>
                             </a>
                         </li>
-                        @endif
+                            @endif
                         @endauth
+
                         <li class="nav-item">
                             <a href="{{ url('/birthdays') }}" class="nav-link {{ Request::is('birthdays*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-birthday-cake"></i>
                                 <p>Birthdays</p>
                             </a>
                         </li>
+
                         <li class="nav-item">
                             <a href="{{ route('holidays.calendar') }}" class="nav-link {{ Request::is('holidays-calendar') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar-alt"></i>
                                 <p>MHR Calendar</p>
                             </a>
                         </li>
+
                         @if(auth()->user()->hasRole('Product Manager') || auth()->user()->hasRole('Super Admin'))
                         <li class="nav-item">
                             <a href="{{ route('analytics.dashboard') }}" class="nav-link {{ Request::is('analytics*') ? 'active' : '' }}">
@@ -310,6 +319,7 @@
                             </a>
                         </li>
                         @endif
+
                         @if(auth()->user()->hasRole('Super Admin'))
                         <li class="nav-item">
                             <a href="{{ url('/reports') }}" class="nav-link {{ Request::is('reports*') ? 'active' : '' }}">
@@ -323,17 +333,17 @@
                                 <p>System Routes Reports</p>
                             </a>
                         </li>
+                        @endif
+
+                        @if(auth()->user()->hasRole('Employee'))
+                        <li class="nav-item">
+                            <a href="{{ url('/get-the-app') }}" class="nav-link {{ Request::is('get-the-app*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-mobile-screen-button"></i>
+                                <p>Get the App</p> <i class="fas fa-info-circle float-right"></i>
+                            </a>
+                        </li>
+                        @endif
                     </ul>
-                    @endif
-                    @if(auth()->user()->hasRole('Employee'))
-                    <li class="nav-item">
-                        <a href="{{ url('/get-the-app') }}" class="nav-link {{ Request::is('get-the-app*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-mobile-screen-button"></i>
-                            <p>Get the App</p> <i class="fas fa-info-circle float-right"></i>
-                        </a>
-                    </li>
-                    @endif
-                    
                 </nav>
                 <!-- /.sidebar-menu -->
             </div>
@@ -344,9 +354,8 @@
             $(document).ready(function() {
                 // Function to update the unread careers count
                 function updateUnreadCareersCount() {
-                    var ajaxUrl = '{{ url("/careers/unread-count") }}';
                     $.ajax({
-                        url: ajaxUrl,
+                        url: '{{ route("careers.unread-count") }}',
                         type: 'GET',
                         dataType: 'json',
                         success: function(response) {
