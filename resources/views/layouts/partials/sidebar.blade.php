@@ -344,8 +344,9 @@
             $(document).ready(function() {
                 // Function to update the unread careers count
                 function updateUnreadCareersCount() {
+                    var ajaxUrl = '{{ url("/careers/unread-count") }}';
                     $.ajax({
-                        url: '{{ route("careers.unread-count") }}',
+                        url: ajaxUrl,
                         type: 'GET',
                         dataType: 'json',
                         success: function(response) {
