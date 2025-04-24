@@ -11,19 +11,13 @@
     <!-- Responsive Dropdowns CSS -->
     <link rel="stylesheet" href="{{ asset('css/responsive-dropdowns.css') }}">
     <!-- Toast Notification System - Removed -->
+
     <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js')
                 .then(reg => {
                     console.log("Service Worker Registered");
-                    
-                    // Handle incoming messages from service worker
-                    navigator.serviceWorker.addEventListener('message', event => {
-                        if (event.data && event.data.action === 'PLAY_NOTIFICATION_SOUND') {
-                            playNotificationSound(event.data.soundUrl);
-                        }
-                    });
                     
                     // Check if push is supported
                     if ('PushManager' in window) {
@@ -34,42 +28,15 @@
                     } else {
                         console.log('Push messaging is not supported');
                     }
-                    
-                    // Register background sync if available
-                    if ('sync' in reg) {
-                        // Background sync is available
-                        console.log('Background sync is supported');
-                    }
-                    
-                    // Register periodic background sync for notification updates if available
-                    if ('periodicSync' in reg) {
-                        // Request permission for periodic background sync
-                        navigator.permissions.query({ name: 'periodic-background-sync' })
-                            .then(status => {
-                                if (status.state === 'granted') {
-                                    reg.periodicSync.register('update-notifications', {
-                                        minInterval: 24 * 60 * 60 * 1000 // Once a day
-                                    });
-                                }
-                            });
-                    }
                 })
                 .catch(err => console.log("Service Worker Failed", err));
-        }
-
-        // Function to play notification sound
-        function playNotificationSound(soundUrl = '/sounds/notification.mp3') {
-            const audio = new Audio(soundUrl);
-            audio.play().catch(error => {
-                console.error('Error playing notification sound:', error);
-            });
         }
 
         // Function to initialize push notifications
         async function initPushNotifications(registration) {
             try {
                 // Check if already subscribed
-                const status = await fetch('{{ route("web-notifications.status") }}');
+                const status = await fetch('{{ route("notifications.status") }}');
                 const statusData = await status.json();
                 
                 if (!statusData.enabled) {
@@ -84,37 +51,9 @@
                         }
                     }
                 }
-                
-                // Initialize IndexedDB for offline notifications
-                initNotificationsDB();
             } catch (error) {
                 console.error('Error initializing push notifications:', error);
             }
-        }
-        
-        // Initialize IndexedDB for offline notifications
-        function initNotificationsDB() {
-            const request = indexedDB.open('NotificationsDB', 1);
-            
-            request.onerror = event => {
-                console.error('IndexedDB error:', event.target.errorCode);
-            };
-            
-            request.onupgradeneeded = event => {
-                const db = event.target.result;
-                // Create object stores if they don't exist
-                if (!db.objectStoreNames.contains('pendingNotifications')) {
-                    db.createObjectStore('pendingNotifications', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('notificationHistory')) {
-                    db.createObjectStore('notificationHistory', { keyPath: 'id', autoIncrement: true });
-                }
-            };
-            
-            request.onsuccess = event => {
-                console.log('NotificationsDB initialized successfully');
-                window.notificationsDB = event.target.result;
-            };
         }
 
         // Function to request notification permission and subscribe
@@ -141,11 +80,6 @@
                         timer: 3000,
                         timerProgressBar: true
                     });
-                    
-                    // Register for background sync
-                    if ('sync' in registration) {
-                        registration.sync.register('sync-notifications');
-                    }
                 } else {
                     // Show warning message using SweetAlert2 instead of toast
                     Swal.fire({
@@ -173,7 +107,7 @@
         async function subscribeToPush(registration) {
             try {
                 // Get VAPID public key from server
-                const response = await fetch('{{ route("web-notifications.vapid-public-key") }}');
+                const response = await fetch('{{ route("notifications.vapid-public-key") }}');
                 const data = await response.json();
                 
                 // Convert VAPID key to Uint8Array
@@ -186,7 +120,7 @@
                 });
                 
                 // Send subscription to server
-                await fetch('{{ route("web-notifications.subscribe") }}', {
+                await fetch('{{ route("push-subscription.store") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -200,7 +134,7 @@
                 // Test the notification
                 setTimeout(async () => {
                     try {
-                        await fetch('{{ route("web-notifications.test") }}', {
+                        await fetch('{{ route("notifications.test") }}', {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
@@ -211,98 +145,9 @@
                     }
                 }, 2000);
                 
-                // Schedule a periodic check for notifications (similar to Facebook)
-                setupNotificationPoller();
-                
             } catch (error) {
                 console.error('Error subscribing to push:', error);
             }
-        }
-        
-        // Set up a notification polling system (similar to Facebook)
-        function setupNotificationPoller() {
-            // Check for new notifications every 30 seconds
-            const POLLING_INTERVAL = 30000; // 30 seconds
-            
-            // Function to check for new notifications
-            async function checkForNotifications() {
-                if (!navigator.onLine) {
-                    // Skip if offline
-                    return;
-                }
-                
-                try {
-                    const response = await fetch('{{ route("web-notifications.check-updates") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            timestamp: Math.floor(Date.now() / 1000) - 60 // Last minute
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.has_updates && data.new_count > 0) {
-                        // Update notification badge if available
-                        updateNotificationBadge(data.new_count);
-                        
-                        // Play notification sound if user preference allows
-                        if (localStorage.getItem('notification_sound') !== 'disabled') {
-                            playNotificationSound();
-                        }
-                        
-                        // Show a browser notification if the page is not focused
-                        if (!document.hasFocus() && Notification.permission === 'granted') {
-                            const registration = await navigator.serviceWorker.ready;
-                            const iconUrl = '{!! asset("vendor/adminlte/dist/img/ICON_APP.png") !!}';
-                            const badgeUrl = '{!! asset("vendor/adminlte/dist/img/ICON_APP.png") !!}';
-                            const notificationUrl = '{!! route("notifications.all") !!}';
-                            
-                            registration.showNotification('New Notifications', {
-                                body: `You have ${data.new_count} new notification(s)`,
-                                icon: iconUrl,
-                                badge: badgeUrl,
-                                vibrate: [100, 50, 100],
-                                data: {
-                                    url: notificationUrl
-                                }
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking for notifications:', error);
-                }
-            }
-            
-            // Update notification badge in UI
-            function updateNotificationBadge(count) {
-                const badges = document.querySelectorAll('.notification-count');
-                badges.forEach(badge => {
-                    badge.textContent = count;
-                    if (count > 0) {
-                        badge.classList.remove('d-none');
-                    }
-                });
-            }
-            
-            // Initial check
-            checkForNotifications();
-            
-            // Set up interval for periodic checks
-            setInterval(checkForNotifications, POLLING_INTERVAL);
-            
-            // Also check when tab becomes visible again
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') {
-                    checkForNotifications();
-                }
-            });
-            
-            // Check when coming back online
-            window.addEventListener('online', checkForNotifications);
         }
 
         // Helper function to convert base64 to Uint8Array
@@ -1032,18 +877,5 @@
     @include('layouts.partials.script')
     <!-- Responsive Dropdowns JS -->
     <script src="{{ asset('js/responsive-dropdowns.js') }}"></script>
-    <!-- Pusher Configuration -->
-    <div id="laravelData" 
-         data-config="{{ json_encode([
-            'csrfToken' => csrf_token(),
-            'pusherKey' => config('broadcasting.connections.pusher.key'),
-            'pusherCluster' => config('broadcasting.connections.pusher.options.cluster'),
-            'baseUrl' => url('/')
-         ]) }}"
-         style="display:none;"></div>
-    <script>
-        // Parse Laravel configuration from data attribute
-        window.Laravel = JSON.parse(document.getElementById('laravelData').getAttribute('data-config'));
-    </script>
     </body>
 </html>

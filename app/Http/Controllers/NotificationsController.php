@@ -1029,51 +1029,6 @@ class NotificationsController extends Controller
     }
 
     /**
-     * Check for notification updates in background
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function checkBackgroundUpdates(Request $request)
-    {
-        try {
-            $timestamp = $request->input('timestamp', 0);
-            $newNotifications = $this->getNewNotificationsSince($timestamp);
-            
-            $hasUpdates = count($newNotifications) > 0;
-            $newCount = count($newNotifications);
-            
-            // Format notifications for push delivery
-            $formattedNotifications = [];
-            foreach ($newNotifications as $notification) {
-                $formattedNotifications[] = [
-                    'id' => $notification['id'],
-                    'title' => $this->getNotificationTitle($notification),
-                    'body' => $notification['text'],
-                    'icon' => $notification['icon'],
-                    'url' => $this->getNotificationUrl($notification),
-                    'type' => isset($notification['data']) ? ($notification['data']['type'] ?? '') : '',
-                    'timestamp' => $notification['timestamp'],
-                    'data' => $notification['data'] ?? []
-                ];
-            }
-            
-            return response()->json([
-                'has_updates' => $hasUpdates,
-                'new_count' => $newCount,
-                'notifications' => $formattedNotifications,
-                'timestamp' => time()
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error in checkBackgroundUpdates: ' . $e->getMessage());
-            return response()->json([
-                'has_updates' => false,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
      * Generate notifications for pending overtime pay
      * Visible to Super Admin, Supervisors, and Finance
      */
