@@ -11,17 +11,6 @@
     <!-- Responsive Dropdowns CSS -->
     <link rel="stylesheet" href="{{ asset('css/responsive-dropdowns.css') }}">
     <!-- Toast Notification System - Removed -->
-
-    <!-- Pusher Configuration -->
-    <script>
-        window.Laravel = {!! json_encode([
-            'csrfToken' => csrf_token(),
-            'pusherKey' => config('broadcasting.connections.pusher.key'),
-            'pusherCluster' => config('broadcasting.connections.pusher.options.cluster'),
-            'baseUrl' => url('/')
-        ]) !!};
-    </script>
-
     <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
@@ -268,13 +257,17 @@
                         // Show a browser notification if the page is not focused
                         if (!document.hasFocus() && Notification.permission === 'granted') {
                             const registration = await navigator.serviceWorker.ready;
+                            const iconUrl = '{!! asset("vendor/adminlte/dist/img/ICON_APP.png") !!}';
+                            const badgeUrl = '{!! asset("vendor/adminlte/dist/img/ICON_APP.png") !!}';
+                            const notificationUrl = '{!! route("notifications.all") !!}';
+                            
                             registration.showNotification('New Notifications', {
                                 body: `You have ${data.new_count} new notification(s)`,
-                                icon: '{{ asset('vendor/adminlte/dist/img/ICON_APP.png') }}',
-                                badge: '{{ asset('vendor/adminlte/dist/img/ICON_APP.png') }}',
+                                icon: iconUrl,
+                                badge: badgeUrl,
                                 vibrate: [100, 50, 100],
                                 data: {
-                                    url: '{{ route("notifications.all") }}'
+                                    url: notificationUrl
                                 }
                             });
                         }
@@ -1039,5 +1032,18 @@
     @include('layouts.partials.script')
     <!-- Responsive Dropdowns JS -->
     <script src="{{ asset('js/responsive-dropdowns.js') }}"></script>
+    <!-- Pusher Configuration -->
+    <div id="laravelData" 
+         data-config="{{ json_encode([
+            'csrfToken' => csrf_token(),
+            'pusherKey' => config('broadcasting.connections.pusher.key'),
+            'pusherCluster' => config('broadcasting.connections.pusher.options.cluster'),
+            'baseUrl' => url('/')
+         ]) }}"
+         style="display:none;"></div>
+    <script>
+        // Parse Laravel configuration from data attribute
+        window.Laravel = JSON.parse(document.getElementById('laravelData').getAttribute('data-config'));
+    </script>
     </body>
 </html>
