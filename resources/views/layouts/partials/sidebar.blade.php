@@ -237,7 +237,7 @@
                                     @php
                                         $unreadCareersCount = \App\Models\Career::where('is_read', false)->count();
                                     @endphp
-                                    <span id="unread-careers-badge" class="badge badge-danger right" style="{{ $unreadCareersCount > 0 ? '' : 'display: none;' }}">{{ $unreadCareersCount }}</span>
+                                    <span id="unread-careers-badge" class="badge badge-danger right {{ $unreadCareersCount > 0 ? '' : 'd-none' }}">{{ $unreadCareersCount }}</span>
                                 </p>
                             </a>
                         </li>
