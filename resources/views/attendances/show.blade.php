@@ -8,7 +8,7 @@
                 <div class="card-header bg-primary text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="card-title mb-0">
-                            <i class="fas fa-calendar-check me-2"></i>Attendance Details
+                            <i class="fas fa-calendar-check me-2"></i> Attendance Details
                         </h3>
                         @if(Auth::user()->hasRole('Super Admin'))
                         <a href="{{ route('attendances.index') }}" class="btn btn-light btn-sm">

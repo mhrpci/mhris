@@ -87,6 +87,34 @@ class Attendance extends Model
             $employmentStatus = $this->employee->employment_status ?? null;
             $daysEmployed = Carbon::parse($this->employee->date_hired)->diffInDays(Carbon::now());
 
+            // Check if time_in and time_out already have values (employee actually clocked in/out)
+            if ($this->time_in && $this->time_out) {
+                $shiftStart = Carbon::parse('08:00:00');
+                $shiftEnd = Carbon::parse('17:00:00');
+                $timeIn = Carbon::parse($this->time_in);
+                $timeOut = Carbon::parse($this->time_out);
+                $this->remarks = 'Saturday';
+                
+                // Check for Late
+                if ($timeIn->gt($shiftStart)) {
+                    $this->remarks = 'Late';
+                    $lateDuration = $timeIn->diffInMinutes($shiftStart);
+                    $this->late_time = sprintf('%02d:%02d', floor($lateDuration / 60), $lateDuration % 60);
+                    
+                    // Calculate hours worked as 8:00:00 minus late time
+                    $lateHours = floor($lateDuration / 60);
+                    $lateMinutes = $lateDuration % 60;
+                    $totalWorkMinutes = (8 * 60) - $lateDuration;
+                    $this->hours_worked = sprintf('%02d:%02d:00', floor($totalWorkMinutes / 60), $totalWorkMinutes % 60);
+                }
+                else {
+                    $this->hours_worked = '08:00:00';
+                }
+                
+                $this->leave_payment_status = 'With Pay';
+                return;
+            }
+
             // For non-regular employees with 30 or more days of employment
             if ($employmentStatus !== 'REGULAR EMPLOYEE' && $daysEmployed >= 30) {
                 $this->time_in = '08:00:00';
