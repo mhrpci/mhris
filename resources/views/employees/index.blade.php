@@ -86,7 +86,6 @@
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="filterDropdown">
                                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#monthModal">Month</a>
                                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#yearModal">Year</a>
-                                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#statusModal">Status</a>
                                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#departmentModal">Department</a>
                                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#rankModal">Rank</a>
                                 </div>
@@ -514,36 +513,6 @@
                     </div>
                 </div>
             </div>
-            <!-- Status Modal -->
-            <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title" id="statusModalLabel">Filter by Employment Status</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <form id="statusForm">
-                            <div class="modal-body">
-                                <div class="form-group">
-                                    <label for="employee_status">Employment Status</label>
-                                    <select class="form-control" id="employee_status" name="employee_status" required>
-                                        <option value="">Select Status</option>
-                                        <option value="Active">Active</option>
-                                        <option value="Resigned">Resigned</option>
-                                        <option value="Terminated">Terminated</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Apply Filter</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
 
             <!-- Department Modal -->
             <div class="modal fade" id="departmentModal" tabindex="-1" role="dialog" aria-labelledby="departmentModalLabel" aria-hidden="true">
@@ -956,15 +925,6 @@
         });
     @endif
 
-    // Status Filter
-    $('#statusForm').on('submit', function (e) {
-        e.preventDefault();
-        table.draw();
-        $('#statusModal').modal('hide');
-        showToast('Employment Status filter applied successfully!');
-        $(this).trigger('reset'); // Clear the filter form fields
-    });
-
     // Month Filter
     $('#monthForm').on('submit', function (e) {
         e.preventDefault();
@@ -1111,7 +1071,7 @@
     // Clear all filters
     $('#clearFiltersBtn').on('click', function() {
         // Reset all filter forms
-        $('#statusForm, #monthForm, #yearForm, #departmentForm, #rankForm').trigger('reset');
+        $('#monthForm, #yearForm, #departmentForm, #rankForm').trigger('reset');
         
         // Clear DataTable search and draw
         table.search('').columns().search('').draw();

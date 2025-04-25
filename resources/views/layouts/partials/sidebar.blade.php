@@ -31,14 +31,14 @@
                             </a>
                         </li>
 
-                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('VP Finance'))
+                        @canany(['admin', 'super-admin', 'hrcompliance', 'vpfinance-admin','finance'])
                         <li class="nav-item">
                             <a href="{{ url('/employees') }}" class="nav-link {{ Request::is('employees*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-user-tie"></i>
                                 <p>Employee Management</p>
                             </a>
                         </li>
-                        @endif
+                        @endcanany
 
                         @auth
                             @if(auth()->user()->hasRole('Employee'))

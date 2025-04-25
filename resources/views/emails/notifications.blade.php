@@ -58,7 +58,7 @@
             @endforeach
         </ul>
         <div class="footer">
-            &copy; {{ date('Y') }} Your Company. All rights reserved.
+            &copy; {{ date('Y') }} {{config('app.name')}}. All rights reserved.
         </div>
     </div>
 </body>
