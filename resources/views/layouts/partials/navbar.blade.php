@@ -32,7 +32,7 @@
                     <div id="search-popup" class="search-popup" style="display: none;">
                         <div class="search-content">
                             <div class="search-header">
-                                <h5 class="mb-0">MHR Search</h5>
+                                <h5 class="mb-0">Enterprise Search</h5>
                                 <button type="button" class="close" id="search-close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -1126,79 +1126,79 @@
                 @endif
 
 
-                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('HR Policy') || auth()->user()->hasRole('VP Finance'))
+                @canany(['admin', 'super-admin', 'hrcomben', 'hrcompliance', 'hrpolicy','vpfinance-admin'])
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#" data-tooltip="Announcements and Holidays">
                         <i class="fas fa-bullhorn"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" aria-labelledby="announcements-dropdown">
-                        @if(auth()->user()->hasRole('Super Admin'))
+                        @canany(['super-admin'])
                         <a href="{{ url('types') }}" class="dropdown-item">
                             <i class="fas fa-folder mr-2"></i> Leave Type
                         </a>
-                        @endif
-                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('HR Policy') || auth()->user()->hasRole('VP Finance'))
+                        @endcanany
+                        @canany(['admin', 'super-admin', 'hrcompliance', 'hrpolicy','vpfinance-admin'])
                         <a href="{{ url('posts') }}" class="dropdown-item">
                             <i class="fas fa-bullhorn mr-2"></i> Announcement
                         </a>
-                        @endif
-                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('VP Finance'))
+                        @endcanany
+                        @canany(['admin', 'super-admin', 'supervisor','vpfinance-admin'])
                         <a href="{{ url('tasks') }}" class="dropdown-item">
                             <i class="fas fa-tasks mr-2"></i> Send Task
                         </a>
-                        @endif
-                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen'))
+                        @endcanany
+                        @canany(['admin', 'super-admin', 'hrcomben'])
                         <a href="{{ url('holidays') }}" class="dropdown-item">
                             <i class="fas fa-calendar-alt mr-2"></i> Holiday
                         </a>
-                        @endif
-                        @if(auth()->user()->hasRole('Super Admin'))
+                        @endcanany
+                        @can('system-admin')
                         <a href="{{ url('system-updates') }}" class="dropdown-item">
                             <i class="fas fa-sync-alt mr-2"></i> System Updates
                         </a>
-                        @endif
+                        @endcan
                     </div>
                 </li>
-                @endif
+                @endcanany
 
-                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen'))
+                @canany(['admin', 'super-admin', 'hrcomben'])
                 <li class="nav-item">
                     <a class="nav-link contribution-notify-btn" href="#" data-toggle="modal" data-target="#contributeNotifyModal" data-tooltip="Send Contribution Notifications">
                         <i class="fas fa-money-bill-wave"></i>
                         <span class="badge badge-warning navbar-badge notification-badge"><i class="fas fa-bell fa-xs"></i></span>
                     </a>
                 </li>
-                @endif
+                @endcanany
 
-                @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Supervisor'))
+                @canany(['admin', 'super-admin', 'supervisor'])
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#" data-tooltip="User Management">
                         <i class="fas fa-users"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" aria-labelledby="user-management-dropdown">
-                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('VP Finance'))
+                        @canany(['admin', 'super-admin', 'vpfinance-admin'])
                         <a href="{{ url('users') }}" class="dropdown-item">
                             <i class="fas fa-user-cog mr-2"></i> User Management
                         </a>
-                        @endif
+                        @endcanany
                         @if(auth()->user()->hasRole('Supervisor'))
                         <a href="{{ route('activity-logs.index') }}" class="dropdown-item">
                             <i class="fas fa-history mr-2"></i> Departmental User Activity
                         </a>
                         @endif
-                        @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('VP Finance'))
+                        @canany(['admin', 'super-admin', 'vpfinance-admin'])
                         <a href="{{ url('/user-activity') }}" class="dropdown-item">
                             <i class="fas fa-history mr-2"></i> User General Logs
                         </a>
-                        @endif
-                        @if(auth()->user()->hasRole('Super Admin'))
+                        @endcanany
+                        @canany(['super-admin'])
                         <a href="{{ route('database.backups') }}" class="dropdown-item">
                             <i class="fas fa-database mr-2"></i> Database Backups
                         </a>
-                        @endif
+                        @endcanany
                     </div>
                 </li>
-                @endif
+                @endcanany
 
 
                 @guest

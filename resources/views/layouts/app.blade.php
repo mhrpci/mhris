@@ -782,7 +782,7 @@
         </div>
     </div>
     <!-- Add this before the closing </body> tag -->
-@if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('HR Policy') || auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Supervisor') || auth()->user()->hasRole('Finance'))
+@canany(['admin', 'super-admin', 'hrcomben', 'hrcompliance', 'hrpolicy', 'normal-employee', 'supervisor', 'finance'])
     <div class="quick-actions-fab">
         <button class="quick-actions-button" id="quickActionsToggle" title="Quick Actions">
             <i class="fas fa-cog"></i>
@@ -827,7 +827,7 @@
             </div>
         </div>
     </div>
-@endif
+@endcanany
 
     <!-- Link Account Modal -->
     <div class="modal fade" id="linkAccountModal" tabindex="-1" role="dialog" aria-labelledby="linkAccountModalLabel" aria-hidden="true">
