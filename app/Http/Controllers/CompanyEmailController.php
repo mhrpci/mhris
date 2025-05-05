@@ -63,7 +63,7 @@ class CompanyEmailController extends Controller
     {
         $request->validate([
             'email' => 'required|email|unique:company_emails,email,' . $companyEmail->id,
-            'password' => 'required|min:8',
+            'password' => 'nullable|min:8',
         ]);
 
         $companyEmail->update($request->all());
