@@ -172,6 +172,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('overtime', OverTimePayController::class);
     Route::resource('posts', PostController::class);
     Route::resource('company-emails', CompanyEmailController::class);
+    Route::post('/company-emails/store-and-create-another', [CompanyEmailController::class, 'storeAndCreateAnother'])->name('company-emails.store-and-create-another');
     
     // Company Email Sharing routes
     Route::get('/company-emails-share', [CompanyEmailController::class, 'showShareForm'])->name('company-emails.share-form');

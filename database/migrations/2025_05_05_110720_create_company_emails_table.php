@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('company_emails', function (Blueprint $table) {
             $table->id();
             $table->string('email');
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });

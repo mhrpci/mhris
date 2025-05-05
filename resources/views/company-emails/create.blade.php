@@ -45,6 +45,34 @@
                         </div>
                     </div>
 
+                    @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show mb-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-check-circle fs-4"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0">{{ session('success') }}</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    @endif
+
+                    @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show mb-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-exclamation-circle fs-4"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0">{{ session('error') }}</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    @endif
+
                     <form method="POST" action="{{ route('company-emails.store') }}" class="form-horizontal">
                         @csrf
 
@@ -75,7 +103,7 @@
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <input id="password" type="text" class="form-control @error('password') is-invalid @enderror" 
-                                        name="password" required autocomplete="new-password"
+                                        name="password" autocomplete="new-password"
                                         placeholder="Enter secure password">
                                     
                                     <button class="btn btn-outline-secondary" type="button" id="generatePassword" title="Generate Strong Password">
@@ -89,7 +117,7 @@
                                     </span>
                                 @enderror
                                 <small class="form-text text-muted">
-                                    Password must be at least 8 characters long. 
+                                    Password must be at least 8 characters long if provided. Leave blank if not needed.
                                     <a href="#" id="securePasswordInfo">How to create a secure password?</a>
                                 </small>
                                 
@@ -127,6 +155,9 @@
                             <div class="col-md-6 offset-md-3">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save me-1"></i> Save New Email Account
+                                </button>
+                                <button type="submit" class="btn btn-info ms-2" formaction="{{ route('company-emails.store-and-create-another') }}">
+                                   <i class="fas fa-plus ms-1"></i> Save & Add Another
                                 </button>
                                 <a href="{{ route('company-emails.index') }}" class="btn btn-secondary ms-2">
                                     <i class="fas fa-times me-1"></i> Cancel
@@ -173,6 +204,23 @@
                 showConfirmButton: false,
                 timer: 3000,
                 background: '#dc3545',
+                color: '#fff',
+                iconColor: 'white'
+            });
+        }
+
+        // Check for success messages
+        const successMessage = "{{ session('success') }}";
+        if (successMessage) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: successMessage,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                background: '#28a745',
                 color: '#fff',
                 iconColor: 'white'
             });

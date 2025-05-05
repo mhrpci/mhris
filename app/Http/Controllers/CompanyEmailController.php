@@ -33,11 +33,25 @@ class CompanyEmailController extends Controller
     {
         $request->validate([
             'email' => 'required|email|unique:company_emails',
-            'password' => 'required|min:8',
+            'password' => 'nullable|min:8',
         ]);
 
         CompanyEmail::create($request->all());
         return redirect()->route('company-emails.index')->with('success', 'Company email created successfully');
+    }
+
+    /**
+     * Store a new company email and redirect back to create form.
+     */
+    public function storeAndCreateAnother(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|unique:company_emails',
+            'password' => 'nullable|min:8',
+        ]);
+
+        CompanyEmail::create($request->all());
+        return redirect()->route('company-emails.create')->with('success', 'Company email created successfully. You can add another one.');
     }
 
     public function edit(CompanyEmail $companyEmail)
