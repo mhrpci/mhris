@@ -14,6 +14,12 @@
                             Add credential <i class="fas fa-plus-circle"></i>
                         </a>
                         @endcan
+                        <a href="{{ route('credentials.share-form') }}" class="btn btn-primary btn-sm rounded-pill ms-2">
+                            Share Credentials <i class="fas fa-share-alt"></i>
+                        </a>
+                        <a href="{{ route('credentials.shareable-links') }}" class="btn btn-info btn-sm rounded-pill ms-2">
+                            Shareable Links <i class="fas fa-link"></i>
+                        </a>
                     </div>
                 </div>
                 <!-- /.card-header -->
@@ -123,11 +129,15 @@
         .card-tools {
             margin-top: 10px;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
-        .btn-success {
+        .btn-success, .btn-primary, .btn-info {
             width: 100%;
             margin-top: 5px;
+            margin-left: 0 !important;
         }
     }
 

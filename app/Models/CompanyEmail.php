@@ -22,4 +22,12 @@ class CompanyEmail extends Model
     {
         return $this->belongsToMany(ShareableEmailLink::class, 'company_email_shareable_link');
     }
+    
+    /**
+     * Get the credentials associated with this company email.
+     */
+    public function credentials()
+    {
+        return $this->hasMany(Credentials::class, 'company_email', 'email');
+    }
 }
