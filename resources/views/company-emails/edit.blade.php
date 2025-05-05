@@ -76,7 +76,7 @@
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <input id="password" type="text" class="form-control @error('password') is-invalid @enderror" 
-                                        name="password" value="{{ old('password', $companyEmail->password) }}" required autocomplete="new-password">
+                                        name="password" value="{{ old('password', $companyEmail->password) }}" autocomplete="new-password">
                                     
                                     <button class="btn btn-outline-secondary" type="button" id="generatePassword" title="Generate Strong Password">
                                         <i class="fas fa-sync-alt"></i>
