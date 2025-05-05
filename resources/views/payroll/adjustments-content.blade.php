@@ -160,7 +160,7 @@
                             
                             // Determine the main group
                             $mainGroup = "";
-                            if (in_array($deptName, ['Admin Department', 'Supply Chain Department', 'Finance and Accounting Department'])) {
+                            if (in_array($deptName, ['Admin Department', 'Supply Chain Department', 'Finance and Accounting Department', 'Human Resources Department'])) {
                                 $mainGroup = "Support Personnel";
                             } elseif (in_array($deptName, ['Marketing Department', 'Technical Department'])) {
                                 $mainGroup = "MHRHCI";

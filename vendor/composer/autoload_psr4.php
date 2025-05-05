@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'voku\\' => array($vendorDir . '/voku/portable-ascii/src/voku'),
+    'thiagoalessio\\TesseractOCR\\' => array($vendorDir . '/thiagoalessio/tesseract_ocr/src'),
     'phpseclib3\\' => array($vendorDir . '/phpseclib/phpseclib/phpseclib'),
     'ZipStream\\' => array($vendorDir . '/maennchen/zipstream-php/src'),
     'Yajra\\DataTables\\' => array($vendorDir . '/yajra/laravel-datatables-oracle/src'),
@@ -118,6 +119,7 @@ return array(
     'Google\\Protobuf\\' => array($vendorDir . '/google/protobuf/src/Google/Protobuf'),
     'Google\\LongRunning\\' => array($vendorDir . '/google/longrunning/src/LongRunning'),
     'Google\\Iam\\' => array($vendorDir . '/google/common-protos/src/Iam'),
+    'Google\\Cloud\\Vision\\' => array($vendorDir . '/google/cloud-vision/src'),
     'Google\\Cloud\\Storage\\' => array($vendorDir . '/google/cloud-storage/src'),
     'Google\\Cloud\\Core\\' => array($vendorDir . '/google/cloud-core/src'),
     'Google\\Cloud\\' => array($vendorDir . '/google/common-protos/src/Cloud'),
@@ -131,6 +133,7 @@ return array(
     'GPBMetadata\\Google\\Longrunning\\' => array($vendorDir . '/google/longrunning/metadata/Longrunning'),
     'GPBMetadata\\Google\\Logging\\' => array($vendorDir . '/google/common-protos/metadata/Logging'),
     'GPBMetadata\\Google\\Iam\\' => array($vendorDir . '/google/common-protos/metadata/Iam'),
+    'GPBMetadata\\Google\\Cloud\\Vision\\' => array($vendorDir . '/google/cloud-vision/metadata'),
     'GPBMetadata\\Google\\Cloud\\' => array($vendorDir . '/google/common-protos/metadata/Cloud'),
     'GPBMetadata\\Google\\Api\\' => array($vendorDir . '/google/common-protos/metadata/Api'),
     'GPBMetadata\\ApiCore\\' => array($vendorDir . '/google/gax/metadata/ApiCore'),

@@ -62,6 +62,7 @@ use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentReactionController;
 use App\Http\Controllers\GetAppController;
+use App\Http\Controllers\CompanyEmailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -141,7 +142,8 @@ Route::get('/test-mail', function () {
     return 'Test email sent!';
 });
 
-
+// Public access to shared company emails
+Route::get('/shared-emails/{token}', [CompanyEmailController::class, 'accessSharedEmails'])->name('public.shared-emails');
 
 // Public Profile routes
 Route::get('/employees-public/{slug}', [EmployeeController::class, 'publicProfile'])->name('employees.public');
@@ -169,6 +171,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('inventory', ItInventoryController::class);
     Route::resource('overtime', OverTimePayController::class);
     Route::resource('posts', PostController::class);
+    Route::resource('company-emails', CompanyEmailController::class);
+    
+    // Company Email Sharing routes
+    Route::get('/company-emails-share', [CompanyEmailController::class, 'showShareForm'])->name('company-emails.share-form');
+    Route::post('/company-emails-share', [CompanyEmailController::class, 'generateShareableLink'])->name('company-emails.generate-share');
+    Route::get('/company-emails-shareable-links', [CompanyEmailController::class, 'listShareableLinks'])->name('company-emails.shareable-links');
+    Route::get('/company-emails-share/{token}', [CompanyEmailController::class, 'showShareableLink'])->name('company-emails.share-link');
+    Route::delete('/company-emails-share/{shareableLink}', [CompanyEmailController::class, 'deleteShareableLink'])->name('company-emails.delete-share');
     
     // Post reactions and comments routes
     Route::post('/posts/{post}/reactions', [ReactionController::class, 'store'])->name('posts.reactions.store');

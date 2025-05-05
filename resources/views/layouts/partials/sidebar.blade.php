@@ -244,8 +244,8 @@
                         @endcan
 
                         @canany(['admin', 'super-admin', 'hrcompliance', 'it-staff', 'hrpolicy'])
-                        <li class="nav-item has-treeview {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'subsidiaries*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'subsidiaries*') ? 'active' : '' }}">
+                        <li class="nav-item has-treeview {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'subsidiaries*', 'company-emails*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ Request::is('accountabilities*', 'credentials*', 'inventory*', 'properties*', 'subsidiaries*', 'company-emails*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
                                     Others
@@ -258,6 +258,12 @@
                                     <a href="{{ url('/accountabilities') }}" class="nav-link {{ Request::is('accountabilities*') ? 'active' : '' }}">
                                         <i class="fas fa-check-circle nav-icon"></i>
                                         <p>Employee Accountability</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url('/company-emails') }}" class="nav-link {{ Request::is('company-emails*') ? 'active' : '' }}">
+                                        <i class="fas fa-envelope nav-icon"></i>
+                                        <p>Company Emails</p>
                                     </a>
                                 </li>
                                 @endcan
