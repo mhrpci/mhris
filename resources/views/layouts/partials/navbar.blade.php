@@ -15,7 +15,7 @@
             <!-- Right navbar links --> 
             <ul class="navbar-nav ml-auto">
                 <!-- Add the tour guide button before notifications -->
-                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('VP Finance'))
+                @if(auth()->check() && (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('VP Finance')))
                 <li class="nav-item">
                     <button id="startTour" class="nav-link btn btn-link" data-tooltip="Start App Tour">
                         <i class="fas fa-route"></i>
@@ -23,7 +23,7 @@
                     </button>
                 </li>
                 @endif
-                @if(auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('VP Finance'))
+                @if(auth()->check() && (auth()->user()->hasRole('HR ComBen') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Finance') || auth()->user()->hasRole('HR Compliance') || auth()->user()->hasRole('VP Finance')))
                 <!-- Search Icon and Popup -->
                 <li class="nav-item">
                     <a class="nav-link" href="#" id="search-toggle" data-tooltip="Search">
@@ -1181,7 +1181,7 @@
                             <i class="fas fa-user-cog mr-2"></i> User Management
                         </a>
                         @endcanany
-                        @if(auth()->user()->hasRole('Supervisor'))
+                        @if(auth()->check() && auth()->user()->hasRole('Supervisor'))
                         <a href="{{ route('activity-logs.index') }}" class="dropdown-item">
                             <i class="fas fa-history mr-2"></i> Departmental User Activity
                         </a>
@@ -1384,7 +1384,7 @@
                                     <i class="fas fa-link"></i>
                                     Link Another Account
                                 </a>
-                                @if(auth()->user()->hasRole('Super Admin'))
+                                @if(auth()->check() && auth()->user()->hasRole('Super Admin'))
                                 <div class="dropdown-divider"></div>
                                 <a href="{{ route('route-management.index') }}" class="dropdown-item">
                                     <i class="fas fa-route"></i>

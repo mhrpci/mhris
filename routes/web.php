@@ -63,7 +63,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentReactionController;
 use App\Http\Controllers\GetAppController;
 use App\Http\Controllers\CompanyEmailController;
-
+use App\Http\Controllers\ChatController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -145,8 +145,13 @@ Route::get('/test-mail', function () {
 // Public access to shared company emails
 Route::get('/shared-emails/{token}', [CompanyEmailController::class, 'accessSharedEmails'])->name('public.shared-emails');
 
-// Public access to shared credentials
-Route::get('/shared-credentials/{token}', [CredentialController::class, 'accessSharedCredentials'])->name('public.shared-credentials');
+// Public access to shared credentials - specific routes must come before generic ones
+Route::get('/shared-credentials/verify-otp/{token}', [CredentialController::class, 'showOtpVerification'])->name('credentials.verify-otp');
+Route::post('/shared-credentials/verify-otp/{token}', [CredentialController::class, 'verifyOtp'])->name('credentials.verify-otp-submit');
+Route::get('/shared-credentials/resend-otp/{token}', [CredentialController::class, 'resendOtp'])->name('credentials.resend-otp');
+Route::get('/shared-credentials/auth/{token}', [CredentialController::class, 'showEmailAuthForm'])->name('credentials.email-auth');
+Route::post('/shared-credentials/auth/{token}', [CredentialController::class, 'processEmailAuth'])->name('credentials.process-email-auth');
+Route::get('/shared-credentials/{token}', [CredentialController::class, 'accessSharedCredentials'])->name('credentials.access-shared');
 
 // Public Profile routes
 Route::get('/employees-public/{slug}', [EmployeeController::class, 'publicProfile'])->name('employees.public');
@@ -202,6 +207,15 @@ Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class);
     Route::resource('credentials', CredentialController::class);
     Route::get('/credentials-get-email-password', [CredentialController::class, 'getEmailPassword'])->name('credentials.get-email-password');
+    
+    // Credential Sharing routes
+    Route::get('/credentials-share', [CredentialController::class, 'showShareForm'])->name('credentials.share-form');
+    Route::post('/credentials-share', [CredentialController::class, 'generateShareableLink'])->name('credentials.generate-share');
+    Route::get('/credentials-shareable-links', [CredentialController::class, 'listShareableLinks'])->name('credentials.shareable-links');
+    Route::get('/credentials-share/{id}', [CredentialController::class, 'showShareableLink'])->name('credentials.show-link');
+    Route::get('/credentials-share/{id}/tracking', [CredentialController::class, 'showLinkTracking'])->name('credentials.tracking');
+    Route::delete('/credentials-share/{shareableLink}', [CredentialController::class, 'deleteShareableLink'])->name('credentials.delete-share');
+    
     Route::resource('hirings', HiringController::class);
     Route::resource('pagibig', PagibigController::class);
     Route::resource('accountabilities', AccountabilityController::class);
@@ -490,13 +504,6 @@ Route::middleware('auth')->group(function () {
     // Holiday import and export routes
     Route::post('holidays/import', [App\Http\Controllers\HolidayController::class, 'import'])->name('holidays.import');
     Route::match(['get', 'post'], 'holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
-
-    // Credential Sharing routes
-    Route::get('/credentials-share', [CredentialController::class, 'showShareForm'])->name('credentials.share-form');
-    Route::post('/credentials-share', [CredentialController::class, 'generateShareableLink'])->name('credentials.generate-share');
-    Route::get('/credentials-shareable-links', [CredentialController::class, 'listShareableLinks'])->name('credentials.shareable-links');
-    Route::get('/credentials-share/{token}', [CredentialController::class, 'showShareableLink'])->name('credentials.share-link');
-    Route::delete('/credentials-share/{shareableLink}', [CredentialController::class, 'deleteShareableLink'])->name('credentials.delete-share');
 });
 
 // Route Management routes
@@ -521,5 +528,8 @@ Route::get('/api/search', [SearchController::class, 'globalSearch'])->name('glob
 
 // Get the App routes
 Route::get('/get-the-app', [GetAppController::class, 'index'])->name('get-the-app');
+
+// Chat routes
+Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
 
 Auth::routes();

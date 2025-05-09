@@ -21,6 +21,15 @@
                             </div>
                         @endif
 
+                        @if(session('success'))
+                            <div class="alert alert-success alert-dismissible fade show">
+                                <strong>Success!</strong> {{ session('success') }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        @endif
+
                         <form action="{{ route('credentials.store') }}" method="POST">
                             @csrf
                             <div class="row">
@@ -58,25 +67,23 @@
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <div class="mt-2">
-                                            <small class="text-muted">Select from registered company emails or enter a custom email</small>
-                                        </div>
-                                        <div class="mt-2">
-                                            <input type="email" id="custom_company_email" class="form-control" placeholder="Or enter custom email (if not in the list)">
-                                        </div>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="email_password">Email Password<span class="text-danger">*</span></label>
-                                        <input type="text" id="email_password" name="email_password" class="form-control" placeholder="Password will auto-fill when selecting a registered email" value="{{ old('email_password') }}" >
-                                        <div class="form-check mt-2">
-                                            <input class="form-check-input" type="checkbox" id="show_password">
-                                            <label class="form-check-label" for="show_password">
-                                                Show Password
-                                            </label>
+                                        <div class="input-group">
+                                            <input type="password" id="email_password" name="email_password" class="form-control" 
+                                                placeholder="Password will auto-fill when selecting a registered email" 
+                                                value="{{ old('email_password') }}">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" id="toggle_password">
+                                                    <i class="fa fa-eye-slash" id="eye_icon"></i>
+                                                </button>
+                                            </div>
                                         </div>
+                                        <small class="form-text text-muted">Password will be automatically populated when selecting a registered email</small>
                                     </div>
                                 </div>
                             </div>
@@ -84,7 +91,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="btn-group" role="group" aria-label="Button group">
-                                        <button type="submit" class="btn btn-primary">Create</button>&nbsp;&nbsp;
+                                        <button type="submit" class="btn btn-primary" name="action" value="save">Create</button>&nbsp;&nbsp;
+                                        <button type="submit" class="btn btn-success" name="action" value="save_and_create">Save & Create Another</button>&nbsp;&nbsp;
                                         <a href="{{ route('credentials.index') }}" class="btn btn-info">Back</a>
                                     </div>
                                 </div>
@@ -99,6 +107,16 @@
 @section('css')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <style>
+        .input-group-append .btn {
+            border-top-right-radius: 0.25rem !important;
+            border-bottom-right-radius: 0.25rem !important;
+        }
+        .input-group-append .btn:focus {
+            box-shadow: none;
+        }
+    </style>
 @stop
 @section('js')
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -157,10 +175,12 @@
             });
             
             // Show/hide password
-            $('#show_password').change(function() {
+            $('#toggle_password').click(function() {
                 const passwordField = $('#email_password');
                 const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
                 passwordField.attr('type', type);
+                const eyeIcon = $('#eye_icon');
+                eyeIcon.toggleClass('fa-eye fa-eye-slash');
             });
             
             // Set password field type to password initially

@@ -30,6 +30,14 @@ class ShareableCredentialLink extends Model
     }
 
     /**
+     * Get the views associated with this shareable link.
+     */
+    public function views()
+    {
+        return $this->hasMany(ShareableCredentialView::class, 'shareable_credential_link_id');
+    }
+
+    /**
      * Check if the link is still active.
      */
     public function isActive()

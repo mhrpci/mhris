@@ -11,6 +11,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+use App\Models\ShareableCredentialView;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class CredentialController extends Controller
 {
@@ -66,7 +70,15 @@ class CredentialController extends Controller
         }
 
         $credential = Credentials::create($validatedData);
-        return redirect()->route('credentials.index')->with('success', 'Credentials created successfully.');
+        
+        // Check if the action is "save_and_create" to determine the redirect
+        if ($request->input('action') === 'save_and_create') {
+            return redirect()->route('credentials.create')
+                ->with('success', 'Credentials created successfully. You can now add another.');
+        }
+        
+        return redirect()->route('credentials.index')
+            ->with('success', 'Credentials created successfully.');
     }
 
     /**
@@ -134,108 +146,402 @@ class CredentialController extends Controller
         
         return response()->json(['success' => false]);
     }
-    
+
     /**
-     * Show form to create a shareable link for credentials.
+     * Show form to share credentials
      */
     public function showShareForm()
     {
-        $credentials = Credentials::all();
+        $credentials = Credentials::with('employee')->get();
         return view('credentials.share', compact('credentials'));
     }
 
     /**
-     * Generate shareable link for selected credentials.
+     * Generate shareable link for credentials
      */
     public function generateShareableLink(Request $request)
     {
         $request->validate([
-            'credentials' => 'required|array',
-            'credentials.*' => 'exists:credentials,id',
+            'credential_ids' => 'required|array',
+            'credential_ids.*' => 'exists:credentials,id',
             'description' => 'nullable|string|max:255',
-            'expiration_time' => 'required|in:10,20,30,40,50,60',
+            'expiration' => 'required|integer|min:1|max:720', // Maximum 30 days (720 hours)
         ]);
 
-        // Create shareable link with selected expiry time
-        $expirationMinutes = (int) $request->expiration_time;
+        // Create shareable link
         $shareableLink = ShareableCredentialLink::create([
             'token' => Str::random(64),
-            'created_by' => auth()->id(),
+            'created_by' => Auth::id(),
             'description' => $request->description,
-            'expires_at' => Carbon::now()->addMinutes($expirationMinutes),
+            'expires_at' => Carbon::now()->addHours($request->expiration),
         ]);
 
-        // Attach selected credentials
-        $shareableLink->credentials()->attach($request->credentials);
+        // Attach selected credentials to the shareable link
+        $shareableLink->credentials()->attach($request->credential_ids);
 
-        // If the request is AJAX, return JSON response
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'token' => $shareableLink->token,
-                'message' => 'Shareable link generated successfully.'
-            ]);
-        }
-
-        // For regular form submission
-        return redirect()->route('credentials.share-link', $shareableLink->token)
-            ->with('success', 'Shareable link generated successfully.');
+        return redirect()->route('credentials.shareable-links')
+            ->with('success', 'Shareable link created successfully!');
     }
 
     /**
-     * Show the shareable link details.
-     */
-    public function showShareableLink(string $token)
-    {
-        $shareableLink = ShareableCredentialLink::where('token', $token)->firstOrFail();
-        
-        return view('credentials.share-link', compact('shareableLink'));
-    }
-
-    /**
-     * Access a shared credential list via the public link.
-     */
-    public function accessSharedCredentials(string $token)
-    {
-        $shareableLink = ShareableCredentialLink::where('token', $token)
-            ->where('expires_at', '>', Carbon::now())
-            ->firstOrFail();
-
-        $credentials = $shareableLink->credentials;
-        $remainingTime = $shareableLink->remainingTimeInMinutes();
-
-        return view('credentials.public-share', compact('credentials', 'shareableLink', 'remainingTime'));
-    }
-
-    /**
-     * List all active shareable links for the current user.
+     * List all shareable links created by the authenticated user
      */
     public function listShareableLinks()
     {
-        $shareableLinks = ShareableCredentialLink::where('created_by', auth()->id())
-            ->active()
-            ->with('credentials')
-            ->orderBy('expires_at', 'desc')
+        $shareableLinks = ShareableCredentialLink::where('created_by', Auth::id())
+            ->orderBy('created_at', 'desc')
             ->get();
-
+            
         return view('credentials.shareable-links', compact('shareableLinks'));
     }
 
     /**
-     * Delete a shareable link.
+     * View a specific shareable link details
+     */
+    public function showShareableLink($id)
+    {
+        $shareableLink = ShareableCredentialLink::findOrFail($id);
+        
+        // Check if user is authorized to view this link details
+        if ($shareableLink->created_by !== Auth::id()) {
+            return redirect()->route('credentials.shareable-links')
+                ->with('error', 'You are not authorized to view this shareable link details');
+        }
+        
+        return view('credentials.show-shareable-link', compact('shareableLink'));
+    }
+
+    /**
+     * Delete a shareable link
      */
     public function deleteShareableLink(ShareableCredentialLink $shareableLink)
     {
-        // Only allow the creator or a Super Admin to delete
-        $user = Auth::user();
-        $isSuperAdmin = $user->roles->where('name', 'Super Admin')->count() > 0;
-
-        if (auth()->id() !== $shareableLink->created_by && !$isSuperAdmin) {
-            return redirect()->back()->with('error', 'You do not have permission to delete this link.');
+        // Check if user is authorized to delete this link
+        if ($shareableLink->created_by !== Auth::id()) {
+            return redirect()->route('credentials.shareable-links')
+                ->with('error', 'You are not authorized to delete this shareable link');
         }
-
+        
         $shareableLink->delete();
+        
         return redirect()->route('credentials.shareable-links')
-            ->with('success', 'Shareable link deleted successfully.');
+            ->with('success', 'Shareable link deleted successfully');
+    }
+
+    /**
+     * Public access to shared credentials
+     */
+    public function accessSharedCredentials($token)
+    {
+        // Find the shareable link by token
+        $shareableLink = ShareableCredentialLink::where('token', $token)->first();
+        
+        // Check if the link exists and is still valid
+        if (!$shareableLink || !$shareableLink->isActive()) {
+            return view('credentials.shared-credentials-error', [
+                'error' => $shareableLink ? 'This link has expired.' : 'Invalid or expired link.'
+            ]);
+        }
+        
+        // Get authentication status from session, default to not authenticated
+        $isAuthenticated = Session::get('email_auth', false);
+        
+        // Record view
+        $this->recordLinkView($shareableLink, $isAuthenticated);
+        
+        // Load credentials associated with this link
+        $credentials = $shareableLink->credentials;
+        
+        // Store the original shared URL in session for post-authentication redirect
+        Session::put('original_shared_credential_url', request()->fullUrl());
+        
+        return view('credentials.shared-credentials', [
+            'credentials' => $credentials,
+            'shareableLink' => $shareableLink,
+            'isAuthenticated' => $isAuthenticated,
+            'token' => $token
+        ]);
+    }
+    
+    /**
+     * Record a view of the shared credential link
+     */
+    private function recordLinkView($shareableLink, $isAuthenticated = false)
+    {
+        ShareableCredentialView::create([
+            'shareable_credential_link_id' => $shareableLink->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'email' => Session::get('authenticated_email'),
+            'auth_provider' => $isAuthenticated ? 'email_otp' : null,
+            'timestamp' => now(),
+            'is_authenticated' => $isAuthenticated
+        ]);
+    }
+    
+    /**
+     * Show email authentication form
+     */
+    public function showEmailAuthForm($token)
+    {
+        // Store the token for later use
+        Session::put('credential_token', $token);
+        
+        // Store the full URL of the shared credentials page to redirect back to after auth
+        if (!Session::has('original_shared_credential_url')) {
+            Session::put('original_shared_credential_url', request()->fullUrl());
+        }
+        
+        return view('credentials.email-auth', ['token' => $token]);
+    }
+    
+    /**
+     * Process email request and send OTP
+     */
+    public function processEmailAuth(Request $request, $token)
+    {
+        // Validate email
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ]);
+        
+        // Generate OTP
+        $otp = mt_rand(100000, 999999);
+        
+        // Store OTP and email in session
+        Session::put('otp', $otp);
+        Session::put('email_for_auth', $validated['email']);
+        Session::put('otp_created_at', now()->timestamp);
+        
+        // Send OTP to email
+        try {
+            Mail::raw("Your OTP for credential access is: $otp. This code will expire in 10 minutes.", function ($message) use ($validated) {
+                $message->to($validated['email'])
+                        ->subject('Your Access Code for Shared Credentials');
+            });
+            
+            // Redirect to OTP verification page
+            return redirect()->route('credentials.verify-otp', $token)
+                ->with('success', 'We have sent a verification code to your email address.');
+                
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP email: ' . $e->getMessage());
+            return back()->with('error', 'Failed to send verification code. Please try again.');
+        }
+    }
+    
+    /**
+     * Show OTP verification form
+     */
+    public function showOtpVerification($token)
+    {
+        // Check if email and OTP exist in session
+        if (!Session::has('email_for_auth') || !Session::has('otp')) {
+            return redirect()->route('credentials.email-auth', $token)
+                ->with('error', 'Please enter your email first.');
+        }
+        
+        // Check if OTP has expired (10 minutes)
+        $otpCreatedAt = Session::get('otp_created_at', 0);
+        if (now()->timestamp - $otpCreatedAt > 600) {
+            Session::forget(['otp', 'otp_created_at']);
+            return redirect()->route('credentials.email-auth', $token)
+                ->with('error', 'Your verification code has expired. Please request a new one.');
+        }
+        
+        $email = Session::get('email_for_auth');
+        $maskedEmail = $this->maskEmail($email);
+        
+        return view('credentials.verify-otp', [
+            'token' => $token,
+            'maskedEmail' => $maskedEmail
+        ]);
+    }
+    
+    /**
+     * Verify OTP entered by user
+     */
+    public function verifyOtp(Request $request, $token)
+    {
+        // Validate OTP
+        $validated = $request->validate([
+            'otp' => 'required|numeric|digits:6',
+        ]);
+        
+        // Check if OTP matches
+        $storedOtp = Session::get('otp');
+        if (!$storedOtp || $validated['otp'] != $storedOtp) {
+            return back()->with('error', 'Invalid verification code. Please try again.');
+        }
+        
+        // Check if OTP has expired (10 minutes)
+        $otpCreatedAt = Session::get('otp_created_at', 0);
+        if (now()->timestamp - $otpCreatedAt > 600) {
+            Session::forget(['otp', 'otp_created_at']);
+            return redirect()->route('credentials.email-auth', $token)
+                ->with('error', 'Your verification code has expired. Please request a new one.');
+        }
+        
+        // Get the original URL to redirect back to
+        $originalUrl = Session::get('original_shared_credential_url');
+        
+        // Fallback to route if somehow the original URL wasn't stored
+        if (!$originalUrl) {
+            $originalUrl = route('credentials.access-shared', $token);
+        }
+        
+        // Retrieve the shareable link
+        $shareableLink = ShareableCredentialLink::where('token', $token)->first();
+        
+        if (!$shareableLink || !$shareableLink->isActive()) {
+            return redirect()->route('welcome')
+                ->with('error', 'Invalid or expired credential sharing link');
+        }
+        
+        $email = Session::get('email_for_auth');
+        
+        // Store authentication data in session
+        Session::put('email_auth', true);
+        Session::put('authenticated_email', $email);
+        Session::put('auth_timestamp', now()->toIso8601String());
+        
+        // Clear OTP data
+        Session::forget(['otp', 'otp_created_at', 'email_for_auth']);
+        
+        // Log the successful authentication
+        $this->recordAuthenticationSuccess($shareableLink, $email);
+        
+        // Redirect to the exact same URL the user initially accessed
+        return redirect($originalUrl)
+            ->with('success', 'Authentication successful. You can now view the credentials.');
+    }
+    
+    /**
+     * Mask email for display in the UI
+     */
+    private function maskEmail($email)
+    {
+        $parts = explode('@', $email);
+        if (count($parts) != 2) return $email;
+        
+        $namePart = $parts[0];
+        $domainPart = $parts[1];
+        
+        if (strlen($namePart) <= 2) {
+            $maskedName = str_repeat('*', strlen($namePart));
+        } else {
+            $maskedName = substr($namePart, 0, 1) . str_repeat('*', strlen($namePart) - 2) . substr($namePart, -1);
+        }
+        
+        return $maskedName . '@' . $domainPart;
+    }
+    
+    /**
+     * Resend OTP to the user's email
+     */
+    public function resendOtp($token)
+    {
+        // Check if email exists in session
+        if (!Session::has('email_for_auth')) {
+            return redirect()->route('credentials.email-auth', $token)
+                ->with('error', 'Please enter your email first.');
+        }
+        
+        $email = Session::get('email_for_auth');
+        
+        // Generate new OTP
+        $otp = mt_rand(100000, 999999);
+        
+        // Update OTP in session
+        Session::put('otp', $otp);
+        Session::put('otp_created_at', now()->timestamp);
+        
+        // Send OTP to email
+        try {
+            Mail::raw("Your new OTP for credential access is: $otp. This code will expire in 10 minutes.", function ($message) use ($email) {
+                $message->to($email)
+                        ->subject('Your New Access Code for Shared Credentials');
+            });
+            
+            return redirect()->route('credentials.verify-otp', $token)
+                ->with('success', 'We have sent a new verification code to your email address.');
+                
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP email: ' . $e->getMessage());
+            return back()->with('error', 'Failed to send verification code. Please try again.');
+        }
+    }
+    
+    /**
+     * Record a successful authentication
+     */
+    private function recordAuthenticationSuccess($shareableLink, $email)
+    {
+        // Check if there's an existing view from this session
+        $existingView = ShareableCredentialView::where('shareable_credential_link_id', $shareableLink->id)
+            ->where('ip_address', request()->ip())
+            ->where('email', null)
+            ->latest()
+            ->first();
+            
+        if ($existingView) {
+            // Update the existing view with the authentication info
+            $existingView->update([
+                'email' => $email,
+                'auth_provider' => 'email_otp',
+                'is_authenticated' => true
+            ]);
+        } else {
+            // Create a new view record
+            ShareableCredentialView::create([
+                'shareable_credential_link_id' => $shareableLink->id,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'email' => $email,
+                'auth_provider' => 'email_otp',
+                'timestamp' => now(),
+                'is_authenticated' => true
+            ]);
+        }
+    }
+
+    /**
+     * Show tracking information for a shareable link
+     */
+    public function showLinkTracking($id)
+    {
+        try {
+            // Try to load with views relationship
+            $shareableLink = ShareableCredentialLink::with(['credentials'])->findOrFail($id);
+            
+            // Check if user is authorized to view this link tracking
+            if ($shareableLink->created_by !== Auth::id()) {
+                return redirect()->route('credentials.shareable-links')
+                    ->with('error', 'You are not authorized to view tracking information for this link');
+            }
+            
+            // Manually load views to handle cases where the relationship might not work
+            try {
+                $views = ShareableCredentialView::where('shareable_credential_link_id', $shareableLink->id)->get();
+            } catch (\Exception $e) {
+                // If this fails, try the other possible column name
+                try {
+                    $views = ShareableCredentialView::where('shareable_link_id', $shareableLink->id)->get();
+                } catch (\Exception $innerEx) {
+                    // If both fail, set views to empty collection
+                    $views = collect([]);
+                }
+            }
+            
+            // Manually attach the views to the model
+            $shareableLink->setRelation('views', $views);
+            
+            return view('credentials.share-tracking', compact('shareableLink'));
+            
+        } catch (\Exception $exception) {
+            // Handle any exceptions
+            return redirect()->route('credentials.shareable-links')
+                ->with('error', 'There was an error loading the tracking information: ' . $exception->getMessage());
+        }
     }
 }

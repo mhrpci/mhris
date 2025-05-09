@@ -14,12 +14,14 @@
                             Add credential <i class="fas fa-plus-circle"></i>
                         </a>
                         @endcan
-                        <a href="{{ route('credentials.share-form') }}" class="btn btn-primary btn-sm rounded-pill ms-2">
-                            Share Credentials <i class="fas fa-share-alt"></i>
+                        @can('credential-list')
+                        <a href="{{ route('credentials.share-form') }}" class="btn btn-primary btn-sm rounded-pill ml-2">
+                            Share credentials <i class="fas fa-share-alt"></i>
                         </a>
-                        <a href="{{ route('credentials.shareable-links') }}" class="btn btn-info btn-sm rounded-pill ms-2">
-                            Shareable Links <i class="fas fa-link"></i>
+                        <a href="{{ route('credentials.shareable-links') }}" class="btn btn-info btn-sm rounded-pill ml-2">
+                            My shared links <i class="fas fa-link"></i>
                         </a>
+                        @endcan
                     </div>
                 </div>
                 <!-- /.card-header -->
@@ -57,13 +59,13 @@
                                                     @can('credential-edit')
                                                         <a class="dropdown-item" href="{{ route('credentials.edit',$credential->id) }}"><i class="fas fa-edit"></i>&nbsp;Edit</a>
                                                     @endcan
-                                                    @can('credential-delete')
+                                                    @if(Auth::user()->role == 'Super Admin')
                                                         <form action="{{ route('credentials.destroy', $credential->id) }}" method="POST" class="delete-form">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="dropdown-item"><i class="fas fa-trash"></i>&nbsp;Delete</button>
                                                         </form>
-                                                    @endcan
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>
