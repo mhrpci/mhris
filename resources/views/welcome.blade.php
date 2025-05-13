@@ -570,7 +570,7 @@
                             <span>Satisfying Services</span>
                         </li>
                     </ul>
-                    <a href="{{ route('cio') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center p-1 text-sm sm:text-base">
+                    <a href="{{ route('vhi') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center p-1 text-sm sm:text-base">
                         Learn More <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
