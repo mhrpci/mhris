@@ -1,0 +1,11 @@
+.env
+.env.example
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+
+# VS Code / OS files
+*.log
+.DS_Store
+.idea/
