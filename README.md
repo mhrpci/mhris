@@ -4,11 +4,12 @@
 [![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com)
 [![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)](https://vuejs.org)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 ## 📋 Overview
-A state-of-the-art Human Resources Information System engineered to revolutionize HR operations and enhance organizational efficiency. This comprehensive solution provides a centralized platform for managing the complete employee lifecycle, from recruitment to retirement.
+A comprehensive Human Resources Information System designed to streamline HR operations and enhance organizational efficiency. This solution provides a centralized platform for managing the complete employee lifecycle, from recruitment to retirement.
 
 ### 🎯 Key Objectives
 - Streamline HR processes and reduce administrative overhead
@@ -25,12 +26,12 @@ A state-of-the-art Human Resources Information System engineered to revolutioniz
 - Employee onboarding and offboarding workflows
 - Organization chart and reporting structure
 
-### ⏰ Time &Attendance
+### ⏰ Time & Attendance
 - Automated attendance tracking
 - Work schedule management
 - Overtime calculation and management
+- Night premium calculations
 - Real-time attendance monitoring
-- Integration with biometric devices
 
 ### 📅 Leave Management
 - Comprehensive leave policy implementation
@@ -47,15 +48,22 @@ A state-of-the-art Human Resources Information System engineered to revolutioniz
 - Offer letter generation
 
 ### 📊 Performance Management
-- KPI and goal setting
+- Task management
 - Performance review cycles
-- 360-degree feedback
+- Goal setting and tracking
 - Training and development tracking
 - Performance analytics
 
+### 💰 Payroll Management
+- Automated payroll calculation
+- Tax deductions and contributions (SSS, PhilHealth, Pagibig)
+- Overtime pay computation
+- Night premium pay
+- Loan and cash advance management
+
 ### 📑 Document Management
 - Centralized document repository
-- Document version control
+- Credential management
 - Access control and permissions
 - Document expiry notifications
 - Digital signature support
@@ -65,26 +73,43 @@ A state-of-the-art Human Resources Information System engineered to revolutioniz
 - Real-time dashboards
 - Export capabilities (PDF, Excel, CSV)
 - Data visualization
-- Trend analysis
+- User activity tracking
+
+### 🔔 Notifications & Communication
+- Real-time notifications
+- Email alerts
+- Internal messaging system
+- Push notifications support
+- Event-based reminders
 
 ## 🛠 Tech Stack
-- **Backend Framework:** PHP/Laravel 9.x
+- **Backend Framework:** PHP/Laravel 10.x
 - **Database:** MySQL 8.0
 - **Frontend:** 
   - HTML5/CSS3
-  - JavaScript/jQuery
+  - JavaScript
   - Bootstrap 5
-  - Vue.js
+  - Vue.js 3
+- **Real-time Features:**
+  - Pusher
+  - Laravel Echo
+  - WebSockets
+- **AI Integration:**
+  - OpenAI integration for smart features
 - **Development Tools:**
   - Docker
   - Git
   - Composer
   - NPM
+  - Vite
 - **Testing:** PHPUnit
-- **CI/CD:** GitHub Actions
+- **Authentication:** 
+  - Laravel Sanctum
+  - Social login (Google)
+  - Role-based permissions (Spatie)
 
 ## ⚙️ Prerequisites
-- PHP >= 8.0
+- PHP >= 8.2
 - Composer >= 2.0
 - Node.js >= 14.x
 - NPM >= 6.x
@@ -103,7 +128,7 @@ cd hris
 
 2. **Install PHP dependencies**
 ```bash
-composer install --optimize-autoloader --no-dev
+composer install
 ```
 
 3. **Install JavaScript dependencies**
@@ -140,6 +165,11 @@ php artisan migrate --seed
 php artisan serve
 ```
 
+8. **Run frontend development server (optional)**
+```bash
+npm run dev
+```
+
 ### 🐳 Docker Setup
 1. **Build and start containers**
 ```bash
@@ -154,12 +184,43 @@ php artisan key:generate
 php artisan migrate --seed
 ```
 
+3. **Frontend build**
+```bash
+npm install
+npm run build
+```
+
 ## 🌐 Usage
 - **Development:** `http://localhost:8000`
 - **Production:** Configure your domain with proper SSL certificate
 - **Default Admin Credentials:**
   - Email: `admin@example.com`
   - Password: `password`
+
+## 📱 Key Features Usage
+
+### Employee Management
+- Add, edit, and view comprehensive employee profiles
+- Manage departments, positions, and job levels
+- Track employee documents and credentials
+
+### Attendance System
+- Clock in/out functionality
+- Track attendance history
+- Generate attendance reports
+- Calculate overtime and night premium pay
+
+### Leave Management
+- Apply for leave with approval workflow
+- Track leave balances and history
+- Generate leave reports
+- Holiday calendar integration
+
+### Payroll System
+- Automated payroll calculation
+- Government contribution management (SSS, PhilHealth, Pagibig)
+- Cash advance and loan management
+- Payslip generation
 
 ## 🧪 Testing
 ```bash
