@@ -529,7 +529,4 @@ Route::get('/api/search', [SearchController::class, 'globalSearch'])->name('glob
 // Get the App routes
 Route::get('/get-the-app', [GetAppController::class, 'index'])->name('get-the-app');
 
-// Chat routes
-Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
-
 Auth::routes();
