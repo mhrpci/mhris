@@ -182,6 +182,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('company-emails', CompanyEmailController::class);
     Route::post('/company-emails/store-and-create-another', [CompanyEmailController::class, 'storeAndCreateAnother'])->name('company-emails.store-and-create-another');
     
+    
     // Company Email Sharing routes
     Route::get('/company-emails-share', [CompanyEmailController::class, 'showShareForm'])->name('company-emails.share-form');
     Route::post('/company-emails-share', [CompanyEmailController::class, 'generateShareableLink'])->name('company-emails.generate-share');
@@ -504,6 +505,10 @@ Route::middleware('auth')->group(function () {
     // Holiday import and export routes
     Route::post('holidays/import', [App\Http\Controllers\HolidayController::class, 'import'])->name('holidays.import');
     Route::match(['get', 'post'], 'holidays/export', [App\Http\Controllers\HolidayController::class, 'export'])->name('holidays.export');
+
+    // User online status routes
+    Route::post('/user/update-last-seen', [UserController::class, 'updateLastSeen'])->name('user.update-last-seen');
+    Route::get('/user/online-status', [UserController::class, 'getOnlineStatus'])->name('user.online-status');
 });
 
 // Route Management routes
@@ -528,5 +533,8 @@ Route::get('/api/search', [SearchController::class, 'globalSearch'])->name('glob
 
 // Get the App routes
 Route::get('/get-the-app', [GetAppController::class, 'index'])->name('get-the-app');
+
+// Chat routes
+Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
 
 Auth::routes();
